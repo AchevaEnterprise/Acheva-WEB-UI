@@ -1,11 +1,11 @@
-@use "./app/@core/styles/abstracts" as *;
+@use './app/@core/styles/abstracts' as *;
+
 // @use './app/@core/styles/components' as *;
 
 // Custom Theming for Angular Material
 // For more information: https://material.angular.dev/guide/theming
-@use "@angular/material" as mat;
-
-@use "tailwindcss";
+@use '@angular/material' as mat;
+@use 'tailwindcss';
 
 html {
   @include mat.theme(
@@ -25,7 +25,8 @@ html,
 body {
   height: 100%;
 }
+
 body {
   margin: 0;
-  font-family: Roboto, "Helvetica Neue", sans-serif;
+  font-family: Roboto, 'Helvetica Neue', sans-serif;
 }

@@ -1,4 +1,4 @@
-@use "sass:map";
+@use 'sass:map';
 
 $min-width-breakpoints: (
   acva-sm: 576px,
@@ -7,7 +7,6 @@ $min-width-breakpoints: (
   acva-xl: 1200px,
   acva-xxl: 1400px,
 );
-
 $max-width-breakpoints: (
   acva-xsm: 575.98px,
   acva-sm: 767.98px,
