@@ -1,0 +1,14 @@
+.login-container {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+
+  .banner-section {
+    flex: 1;
+  }
+
+  .login-form {
+    flex: 1;
+  }
+}
