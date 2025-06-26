@@ -1,13 +1,39 @@
-@use "./app/@core/styles/abstracts" as *;
-// @use './app/@core/styles/components' as *;
+/* stylelint-disable selector-class-pattern */
+/* stylelint-disable property-no-vendor-prefix */
 
-// Custom Theming for Angular Material
-// For more information: https://material.angular.dev/guide/theming
-@use "@angular/material" as mat;
+@use './app/@core/styles/abstracts/' as *;
+@use './app/@core/styles/components/' as *;
+@use 'tailwindcss';
+@use '@angular/material' as mat;
 
-@use "tailwindcss";
+// Reset Tailwind's border-style to avoid conflicts with Angular Material
+@layer base {
+  *,
+  ::before,
+  ::after {
+    border-style: none; /* Neutralize Tailwind's border-style: solid */
+  }
+}
+
+// Fix for mat-form-field outline appearance
+
+.mdc-notched-outline__notch {
+  /* Remove unwanted border line */
+
+  border-right: none !important;
+}
+
+*,
+*::before,
+*::after {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}
 
 html {
+  scroll-behavior: smooth;
+
   @include mat.theme(
     (
       color: (
@@ -19,13 +45,33 @@ html {
       density: 0,
     )
   );
-} /* You can add global styles to this file, and also import other style files */
+}
 
 html,
 body {
   height: 100%;
-}
-body {
   margin: 0;
-  font-family: Roboto, "Helvetica Neue", sans-serif;
+  font-family: Roboto, 'Helvetica Neue', sans-serif;
+  cursor: auto !important;
+}
+
+[role='button'] {
+  cursor: pointer;
+}
+
+::-webkit-scrollbar {
+  width: 9.5px;
+  height: 9.5px;
+}
+
+.no-select {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.cdk-overlay-container {
+  z-index: 9999 !important;
 }

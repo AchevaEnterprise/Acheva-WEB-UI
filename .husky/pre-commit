@@ -1,0 +1,4 @@
+# ng test
+ng lint --fix
+npx stylelint "**/*.scss" --fix
+git add ${added_files}
