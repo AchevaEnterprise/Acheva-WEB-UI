@@ -7,5 +7,6 @@
   "useTabs": false,
   "bracketSpacing": true,
   "htmlWhitespaceSensitivity": "css",
-  "angularTemplate": true
+  "angularTemplate": true,
+  "endOfLine": "auto"
 }

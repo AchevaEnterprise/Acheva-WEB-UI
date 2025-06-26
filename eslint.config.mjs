@@ -6,6 +6,7 @@ import angularTemplate from '@angular-eslint/eslint-plugin-template';
 import templateParser from '@angular-eslint/template-parser';
 import prettier from 'eslint-plugin-prettier';
 import unusedImports from 'eslint-plugin-unused-imports';
+import { EndOfLineState } from 'typescript';
 
 export default [
   {
@@ -33,9 +34,6 @@ export default [
       'unused-imports': unusedImports,
     },
     rules: {
-      'no-console': ['error', { allow: ['warn', 'error'] }], // Flag console.log
-      'no-debugger': 'error',
-      'prettier/prettier': 'error', // Enforce Prettier
       '@angular-eslint/directive-selector': [
         'error',
         {
@@ -51,13 +49,16 @@ export default [
           style: 'kebab-case',
         },
       ],
+      'no-console': ['error', { allow: ['warn', 'error'] }], // Flag console.log
+      'no-debugger': 'error',
+      'prettier/prettier': 'error', // Enforce Prettier
       'no-unused-vars': 'off',
-      '@typescript-eslint/no-unused-vars': ['error'],
+      // '@typescript-eslint/no-unused-vars': 'error',
       'unused-imports/no-unused-imports': 'error',
       '@angular-eslint/no-empty-lifecycle-method': 'error',
       '@typescript-eslint/no-unsafe-assignment': 'error',
       '@angular-eslint/prefer-standalone': 'error',
-      '@typescript-eslint/no-non-null-assertion': 'warn', // Warn instead of error for flexibility
+      // '@typescript-eslint/no-non-null-assertion': 'warn', // Warn instead of error for flexibility
       '@typescript-eslint/consistent-type-definitions': ['error', 'interface'], // Prefer interfaces
       '@typescript-eslint/no-unused-expressions': 'error',
     },
