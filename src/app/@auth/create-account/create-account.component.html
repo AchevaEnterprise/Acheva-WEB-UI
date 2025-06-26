@@ -1,30 +1,103 @@
-<p>create-account works!</p>
+<div id="login-container">
+  <app-create-account-banner class="banner-section"></app-create-account-banner>
 
-<h1>Angular Router App</h1>
+  <form
+    [formGroup]="userForm"
+    class="login-wrapper md:w-full"
+    (ngSubmit)="submitForm()"
+  >
+    <!-- md-screen -->
+    <div class="acheva-logo-container logo-md">
+      <app-svg src="assets/icons/logos/acheva-letter.svg"></app-svg>
 
-<nav>
-  <ul>
-    <li>
-      <a
-        class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-        routerLink="/login"
-        routerLinkActive="active"
-        ariaCurrentWhenActive="page"
-        >Login</a
+      <app-svg
+        class="company-logo-name"
+        src="assets/icons/logos/company-name-logo.svg"
+      ></app-svg>
+    </div>
+
+    <div class="form-section-wrapper">
+      <div class="header">
+        <p class="acva-heading-3 fw-600">Create an Account</p>
+      </div>
+
+      <div class="form-wrap">
+        <div class="input-style-1 acheva-input w-full">
+          <p class="acva-para-2 fw-400 label-text">School email</p>
+
+          <mat-form-field [style.width.%]="100" appearance="outline">
+            <!-- <mat-label>Clearable input</mat-label> -->
+
+            <input
+              matInput
+              type="text"
+              placeholder=""
+              formControlName="email"
+            />
+
+            <span
+              matTextPrefix
+              mat-icon-button
+              aria-label="Clear"
+              (click)="patchFormValue('email', '')"
+            >
+              <app-svg
+                svgWidth="1rem"
+                svgHeight="1rem"
+                src="assets/icons/general/email-icon.svg"
+              ></app-svg>
+            </span>
+          </mat-form-field>
+        </div>
+
+        <div class="input-style-1 acheva-input w-full">
+          <p class="acva-para-2 fw-400 label-text">Password</p>
+
+          <mat-form-field [style.width.%]="100" appearance="outline">
+            <!-- <mat-label>Clearable input</mat-label> -->
+
+            <input
+              matInput
+              [type]="hide() ? 'password' : 'text'"
+              formControlName="password"
+            />
+
+            <span matTextPrefix>
+              <app-svg
+                svgWidth="1rem"
+                svgHeight="1rem"
+                src="assets/icons/general/lock-icon.svg"
+              ></app-svg
+            ></span>
+
+            <span
+              role="button"
+              matTextSuffix
+              (click)="togglePasswordVisibility($event)"
+              ><mat-icon>{{
+                hide() ? 'visibility_off' : 'visibility'
+              }}</mat-icon></span
+            >
+          </mat-form-field>
+
+          <p class="acva-para-1 place-self-end underline text-blue-400">
+            Forgot your password?
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="submit-section">
+      <button
+        class="bg-gradient-to-b from-blue-500 to-blue-400 text-white py-3 px-6 rounded-lg w-96 text-center"
       >
-    </li>
-    <li>
-      <a
-        class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-        routerLink="/create-account"
-        routerLinkActive="active"
-        ariaCurrentWhenActive="page"
-        >Create account</a
-      >
-    </li>
-  </ul>
-</nav>
+        Login
+      </button>
 
-<section class="auth-banner">
-  <p>auth-banner works!</p>
-</section>
+      <p class="acva-para-3 place-self-center">
+        Don’t have an Account?
+        <span role="button" class="text-blue-400">Sign In</span>
+      </p>
+    </div>
+  </form>
+</div>

@@ -1,12 +1,27 @@
+/* stylelint-disable selector-class-pattern */
 /* stylelint-disable property-no-vendor-prefix */
-@use './app/@core/styles/abstracts' as *;
 
-// @use './app/@core/styles/components' as *;
-
-// Custom Theming for Angular Material
-// For more information: https://material.angular.dev/guide/theming
-@use '@angular/material' as mat;
+@use './app/@core/styles/abstracts/' as *;
+@use './app/@core/styles/components/' as *;
 @use 'tailwindcss';
+@use '@angular/material' as mat;
+
+// Reset Tailwind's border-style to avoid conflicts with Angular Material
+@layer base {
+  *,
+  ::before,
+  ::after {
+    border-style: none; /* Neutralize Tailwind's border-style: solid */
+  }
+}
+
+// Fix for mat-form-field outline appearance
+
+.mdc-notched-outline__notch {
+  /* Remove unwanted border line */
+
+  border-right: none !important;
+}
 
 *,
 *::before,
@@ -30,17 +45,18 @@ html {
       density: 0,
     )
   );
-} /* You can add global styles to this file, and also import other style files */
+}
 
 html,
 body {
   height: 100%;
-}
-
-body {
   margin: 0;
   font-family: Roboto, 'Helvetica Neue', sans-serif;
   cursor: auto !important;
+}
+
+[role='button'] {
+  cursor: pointer;
 }
 
 ::-webkit-scrollbar {
@@ -49,12 +65,11 @@ body {
 }
 
 .no-select {
-  -webkit-touch-callout: none; /* iOS Safari */
-  -webkit-user-select: none; /* Safari */ /* Konqueror HTML */
-  -moz-user-select: none; /* Old versions of Firefox */
-  -ms-user-select: none; /* Internet Explorer/Edge */
-  user-select: none; /* Non-prefixed version, currently
-                                supported by Chrome, Edge, Opera and Firefox */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 .cdk-overlay-container {
