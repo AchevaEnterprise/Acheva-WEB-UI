@@ -28,7 +28,7 @@ import { Subscription } from 'rxjs';
   ],
 })
 export class SvgComponent implements OnChanges, OnDestroy {
-  private subscription = new Subscription();
+  private readonly subscription = new Subscription();
 
   @Input() src!: string;
   @Input() svgClass!: string;
@@ -50,10 +50,10 @@ export class SvgComponent implements OnChanges, OnDestroy {
   @HostBinding('innerHTML') innerHTML!: SafeHtml;
 
   constructor(
-    private elementRef: ElementRef,
-    private http: HttpClient,
-    private renderer: Renderer2,
-    private sanitizer: DomSanitizer
+    private readonly elementRef: ElementRef,
+    private readonly http: HttpClient,
+    private readonly renderer: Renderer2,
+    private readonly sanitizer: DomSanitizer
   ) {}
   ngOnChanges(changes: SimpleChanges): void {
     if (

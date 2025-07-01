@@ -1,10 +1,12 @@
 /* stylelint-disable selector-class-pattern */
 /* stylelint-disable property-no-vendor-prefix */
 
-@use './app/@core/styles/abstracts/' as *;
-@use './app/@core/styles/components/' as *;
+@use '../public/styles/abstracts/index' as *;
+@use '../public/styles/components/index' as *;
 @use 'tailwindcss';
 @use '@angular/material' as mat;
+
+@import url('https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap');
 
 // Reset Tailwind's border-style to avoid conflicts with Angular Material
 @layer base {
@@ -19,7 +21,6 @@
 
 .mdc-notched-outline__notch {
   /* Remove unwanted border line */
-
   border-right: none !important;
 }
 
@@ -41,7 +42,6 @@ html {
         primary: mat.$azure-palette,
         tertiary: mat.$blue-palette,
       ),
-      typography: Roboto,
       density: 0,
     )
   );
@@ -51,8 +51,10 @@ html,
 body {
   height: 100%;
   margin: 0;
-  font-family: Roboto, 'Helvetica Neue', sans-serif;
   cursor: auto !important;
+  font-family: "Rubik", sans-serif;
+  font-optical-sizing: auto;
+  font-style: normal;
 }
 
 [role='button'] {

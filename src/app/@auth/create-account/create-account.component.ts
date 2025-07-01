@@ -7,23 +7,27 @@ import {
   Validators,
 } from '@angular/forms';
 
-import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatFormFieldModule, MatPrefix, MatSuffix } from '@angular/material/form-field';
 import { MatRippleModule } from '@angular/material/core';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
-import { SvgComponent } from '../../@core/shared/svg/svg.component';
-import { CreateAccountBannerComponent } from './auth-banner/create-account-banner.component';
+import { SvgComponent } from '../../@shared/svg/svg.component';
+import { RouterLink } from '@angular/router';
+import { AuthBannerComponent } from '../auth-banner/auth-banner.component';
 @Component({
   selector: 'app-create-account',
   imports: [
     CommonModule,
+    RouterLink,
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,
     MatRippleModule,
     MatIconModule,
     SvgComponent,
-    CreateAccountBannerComponent,
+    AuthBannerComponent,
+    MatSuffix,
+    MatPrefix
   ],
   templateUrl: './create-account.component.html',
   styleUrl: './create-account.component.scss',

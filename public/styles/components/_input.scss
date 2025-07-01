@@ -7,7 +7,8 @@ input::-webkit-inner-spin-button {
   .mat-mdc-form-field {
     .mat-mdc-text-field-wrapper {
       .mat-mdc-form-field-flex {
-        gap: 0.5rem !important;
+        align-items: center;
+        padding-inline: 1rem !important;
       }
     }
   }

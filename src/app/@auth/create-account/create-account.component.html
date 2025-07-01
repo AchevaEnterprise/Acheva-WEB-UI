@@ -1,5 +1,5 @@
 <div id="login-container">
-  <app-create-account-banner class="banner-section"></app-create-account-banner>
+  <app-auth-banner class="banner-section" />
 
   <form
     [formGroup]="userForm"
@@ -8,11 +8,11 @@
   >
     <!-- md-screen -->
     <div class="acheva-logo-container logo-md">
-      <app-svg src="assets/icons/logos/acheva-letter.svg"></app-svg>
+      <app-svg src="icons/logos/acheva-letter.svg"></app-svg>
 
       <app-svg
         class="company-logo-name"
-        src="assets/icons/logos/company-name-logo.svg"
+        src="icons/logos/company-name-logo.svg"
       ></app-svg>
     </div>
 
@@ -22,12 +22,10 @@
       </div>
 
       <div class="form-wrap">
-        <div class="input-style-1 acheva-input w-full">
-          <p class="acva-para-2 fw-400 label-text">School email</p>
+         <div class="input-style-1 acheva-input w-full">
+          <p class="acva-para-2 fw-400 label-text">School Email</p>
 
           <mat-form-field [style.width.%]="100" appearance="outline">
-            <!-- <mat-label>Clearable input</mat-label> -->
-
             <input
               matInput
               type="text"
@@ -36,15 +34,13 @@
             />
 
             <span
-              matTextPrefix
+              matPrefix
               mat-icon-button
-              aria-label="Clear"
-              (click)="patchFormValue('email', '')"
             >
               <app-svg
                 svgWidth="1rem"
                 svgHeight="1rem"
-                src="assets/icons/general/email-icon.svg"
+                src="icons/general/email-icon.svg"
               ></app-svg>
             </span>
           </mat-form-field>
@@ -62,17 +58,17 @@
               formControlName="password"
             />
 
-            <span matTextPrefix>
+            <span matPrefix>
               <app-svg
                 svgWidth="1rem"
                 svgHeight="1rem"
-                src="assets/icons/general/lock-icon.svg"
+                src="icons/general/lock-icon.svg"
               ></app-svg
             ></span>
 
             <span
               role="button"
-              matTextSuffix
+              matSuffix
               (click)="togglePasswordVisibility($event)"
               ><mat-icon>{{
                 hide() ? 'visibility_off' : 'visibility'
@@ -96,7 +92,7 @@
 
       <p class="acva-para-3 place-self-center">
         Don’t have an Account?
-        <span role="button" class="text-blue-400">Sign In</span>
+        <a class="text-blue-400" routerLink="/login">Log In</a>
       </p>
     </div>
   </form>

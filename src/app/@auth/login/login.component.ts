@@ -1,6 +1,5 @@
-import { Component, signal } from '@angular/core';
-import { LoginBannerComponent } from './login-banner/login-banner.component';
 import { CommonModule } from '@angular/common';
+import { Component, signal } from '@angular/core';
 import {
   FormControl,
   FormGroup,
@@ -8,24 +7,28 @@ import {
   Validators,
 } from '@angular/forms';
 
-import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatRippleModule } from '@angular/material/core';
-import { MatInputModule } from '@angular/material/input';
+import { MatFormFieldModule, MatPrefix, MatSuffix } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
-import { SvgComponent } from '../../@core/shared/svg/svg.component';
-// import { RouterLink, RouterLinkActive } from '@angular/router';
+import { MatInputModule } from '@angular/material/input';
+import { RouterLink } from '@angular/router';
+import { SvgComponent } from '../../@shared/svg/svg.component';
+import { AuthBannerComponent } from '../auth-banner/auth-banner.component';
 
 @Component({
   selector: 'app-login',
   imports: [
     CommonModule,
-    LoginBannerComponent,
+    RouterLink,
+    AuthBannerComponent,
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,
     MatRippleModule,
     MatIconModule,
     SvgComponent,
+    MatPrefix,
+    MatSuffix
   ],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',

@@ -20,7 +20,8 @@
     "importHelpers": true,
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "target": "ES2022",
-    "module": "ES2022"
+    "module": "ES2022",
+    "noUnusedLocals": true
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,
