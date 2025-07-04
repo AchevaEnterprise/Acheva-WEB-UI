@@ -6,7 +6,6 @@
   @include mat.progress-bar-overrides(
     (
       track-shape: '50px',
-      track-height: '10px',
     )
   );
 }
