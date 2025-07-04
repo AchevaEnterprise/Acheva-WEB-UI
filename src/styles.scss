@@ -5,8 +5,7 @@
 @use '../public/styles/components/index' as *;
 @use 'tailwindcss';
 @use '@angular/material' as mat;
-
-@import url('https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap');
+@use '../public/styles/acheva-mat-theme' as acheva-mat-theme;
 
 // Reset Tailwind's border-style to avoid conflicts with Angular Material
 @layer base {
@@ -15,13 +14,6 @@
   ::after {
     border-style: none; /* Neutralize Tailwind's border-style: solid */
   }
-}
-
-// Fix for mat-form-field outline appearance
-
-.mdc-notched-outline__notch {
-  /* Remove unwanted border line */
-  border-right: none !important;
 }
 
 *,
@@ -39,10 +31,10 @@ html {
     (
       color: (
         theme-type: light,
-        primary: mat.$azure-palette,
-        tertiary: mat.$blue-palette,
+        primary: acheva-mat-theme.$primary-palette,
+        tertiary: acheva-mat-theme.$tertiary-palette,
       ),
-      density: 0,
+      density: -3,
     )
   );
 }
@@ -52,7 +44,7 @@ body {
   height: 100%;
   margin: 0;
   cursor: auto !important;
-  font-family: "Rubik", sans-serif;
+  font-family: Rubik, sans-serif;
   font-optical-sizing: auto;
   font-style: normal;
 }

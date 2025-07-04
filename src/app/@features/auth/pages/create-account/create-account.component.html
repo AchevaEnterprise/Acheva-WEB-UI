@@ -1,0 +1,225 @@
+<div id="container">
+  <app-auth-banner
+    class="banner-section"
+    title="Efficient Grading Made Easy"
+    description="Simplify the complexities of academic assessments with Acheva's
+    user-friendly platform, designed for efficient result compilation and
+    analysis"
+  />
+
+  <form [formGroup]="form" class="login-wrapper md:w-full overflow-auto">
+    <!-- md-screen -->
+    <div class="acheva-logo-container logo-md">
+      <app-svg src="icons/logos/acheva-letter.svg"></app-svg>
+
+      <app-svg
+        class="company-logo-name"
+        src="icons/logos/company-name-logo.svg"
+      ></app-svg>
+    </div>
+
+    <div class="form-section-wrapper">
+      <div class="text-center">
+        <p class="acva-para-1">New to Acheva?</p>
+        <p class="acva-heading-3 fw-600">Create an Account</p>
+        <p class="acva-para-1">
+          Sign up to access exclusive resources for lecturer
+        </p>
+      </div>
+
+      <div class="form-wrap">
+        <div class="input-style-1 acheva-input w-full">
+          <p class="acva-para-2 fw-400 label-text">Full Name</p>
+
+          <mat-form-field [style.width.%]="100" appearance="outline">
+            <input
+              matInput
+              type="text"
+              placeholder="Surname &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; First Name &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Middle Name"
+              formControlName="fullname"
+            />
+          </mat-form-field>
+        </div>
+
+        <div class="input-style-1 acheva-input w-full">
+          <p class="acva-para-2 fw-400 label-text">School Email</p>
+
+          <mat-form-field [style.width.%]="100" appearance="outline">
+            <span matPrefix mat-icon-button>
+              <app-svg
+                svgWidth="1rem"
+                svgHeight="1rem"
+                src="icons/general/email-icon.svg"
+              ></app-svg>
+            </span>
+
+            <input
+              matInput
+              type="text"
+              placeholder="Enter your email address"
+              formControlName="email"
+            />
+          </mat-form-field>
+        </div>
+
+        <div class="input-style-1 acheva-input w-full">
+          <p class="acva-para-2 fw-400 label-text">School Faculty</p>
+
+          <mat-form-field [style.width.%]="100" appearance="outline">
+            <span matPrefix mat-icon-button>
+              <app-svg
+                svgWidth="1rem"
+                svgHeight="1rem"
+                src="icons/general/faculty-icon.svg"
+              ></app-svg>
+            </span>
+
+            <mat-select
+              placeholder="Select your faculty"
+              formControlName="faculty"
+            >
+              <mat-option [value]="'Science'">Science</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <div class="input-style-1 acheva-input w-full">
+          <p class="acva-para-2 fw-400 label-text">School Department</p>
+
+          <mat-form-field [style.width.%]="100" appearance="outline">
+            <span matPrefix mat-icon-button>
+              <app-svg
+                svgWidth="1rem"
+                svgHeight="1rem"
+                src="icons/general/department-icon.svg"
+              ></app-svg>
+            </span>
+
+            <mat-select
+              placeholder="Select your department"
+              formControlName="department"
+            >
+              <mat-option [value]="'Science'">Science</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 w-full">
+          <div class="input-style-1 acheva-input w-full">
+            <p class="acva-para-2 fw-400 label-text">Title</p>
+
+            <mat-form-field [style.width.%]="100" appearance="outline">
+              <span matPrefix mat-icon-button>
+                <app-svg
+                  svgWidth="1rem"
+                  svgHeight="1rem"
+                  src="icons/general/email-icon.svg"
+                ></app-svg>
+              </span>
+
+              <mat-select
+                placeholder="Select your title"
+                formControlName="title"
+              >
+                <mat-option [value]="'Science'">Science</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <div class="input-style-1 acheva-input w-full">
+            <p class="acva-para-2 fw-400 label-text">Role</p>
+
+            <mat-form-field [style.width.%]="100" appearance="outline">
+              <span matPrefix mat-icon-button>
+                <app-svg
+                  svgWidth="1rem"
+                  svgHeight="1rem"
+                  src="icons/general/role-icon.svg"
+                ></app-svg>
+              </span>
+
+              <mat-select placeholder="Select your role" formControlName="role">
+                <mat-option [value]="'Science'">Science</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+        </div>
+
+        <div class="input-style-1 acheva-input w-full">
+          <p class="acva-para-2 fw-400 label-text">Create Password</p>
+
+          <mat-form-field [style.width.%]="100" appearance="outline">
+            <span matPrefix>
+              <app-svg
+                svgWidth="1rem"
+                svgHeight="1rem"
+                src="icons/general/lock-icon.svg"
+              ></app-svg
+            ></span>
+
+            <input
+              matInput
+              placeholder="Create a strong password"
+              [type]="showPassword() ? 'text' : 'password'"
+              formControlName="password"
+            />
+
+            <button
+              class="cursor-pointer"
+              matSuffix
+              (click)="togglePasswordVisibility()"
+            >
+              <mat-icon>{{
+                showPassword() ? 'visibility' : 'visibility_off'
+              }}</mat-icon>
+            </button>
+
+            <mat-hint class="flex w-full">
+              <app-password-validity [password]="form.get('password')?.value" />
+            </mat-hint>
+          </mat-form-field>
+        </div>
+
+        <div class="input-style-1 acheva-input w-full mt-3">
+          <p class="acva-para-2 fw-400 label-text">Confirm Password</p>
+
+          <mat-form-field [style.width.%]="100" appearance="outline">
+            <span matPrefix>
+              <app-svg
+                svgWidth="1rem"
+                svgHeight="1rem"
+                src="icons/general/lock-icon.svg"
+              ></app-svg
+            ></span>
+
+            <input
+              matInput
+              placeholder="Confirm your password"
+              [type]="showConfirmPassword() ? 'text' : 'password'"
+              formControlName="confirm_password"
+            />
+
+            <button
+              class="cursor-pointer"
+              matSuffix
+              (click)="toggleConfirmPasswordVisibility()"
+            >
+              <mat-icon>{{
+                showConfirmPassword() ? 'visibility' : 'visibility_off'
+              }}</mat-icon>
+            </button>
+          </mat-form-field>
+        </div>
+      </div>
+    </div>
+
+    <div class="submit-section">
+      <app-button label="Create Account" (clickEvent)="submitForm()" />
+
+      <p class="acva-para-1 place-self-center">
+        Don’t have an Account?
+        <a class="text-blue-400" routerLink="/login">Log In</a>
+      </p>
+    </div>
+  </form>
+</div>

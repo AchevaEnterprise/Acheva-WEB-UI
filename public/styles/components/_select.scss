@@ -1,0 +1,9 @@
+@use '@angular/material' as mat;
+
+:root {
+  @include mat.select-overrides(
+    (
+      placeholder-text-color: #b4b3b2,
+    )
+  );
+}

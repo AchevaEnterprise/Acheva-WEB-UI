@@ -1,22 +1,43 @@
+@use '@angular/material' as mat;
+
+:root {
+  @include mat.form-field-overrides(
+    (
+      outlined-outline-width: '.8px',
+      outlined-container-shape: '8px',
+      outlined-outline-color: #d9e1ec,
+      outlined-focus-outline-color: #77bbff,
+      outlined-input-text-placeholder-color: #b4b3b2,
+    )
+  );
+}
+
+.mdc-text-field,
+.mat-mdc-form-field-hint-wrapper {
+  padding: 0 !important;
+}
+
+// Fix for mat-form-field outline appearance
+
+.mdc-notched-outline__notch {
+  /* Remove unwanted border line */
+  border-right: none !important;
+}
+
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
-  display: none;
+  @apply hidden;
 }
 
 .acheva-input {
   .mat-mdc-form-field {
     .mat-mdc-text-field-wrapper {
       .mat-mdc-form-field-flex {
-        align-items: center;
-        padding-inline: 1rem !important;
+        @apply items-center px-4 gap-[5px];
       }
     }
   }
 }
-
-// .acheva-input-radius{
-
-// }
 
 .input-style-1 {
   mat-form-field + mat-form-field {

@@ -1,0 +1,32 @@
+<div class="bg-white">
+  <mat-progress-bar mode="determinate" [value]="progress()"></mat-progress-bar>
+
+  <div class="flex px-3">
+    @if (data.type === 'success') {
+      <app-svg
+        svgWidth="2rem"
+        svgHeight="2rem"
+        src="icons/general/success-icon.svg"
+      ></app-svg>
+    }
+
+    <div matSnackBarLabel class="flex-1">
+      <h3 class="acva-heading-6 text-black">{{ data.title }}</h3>
+      <p class="acva-para-1 text-neutral-500">{{ data.message }}</p>
+    </div>
+
+    <span matSnackBarActions>
+      <button
+        matSnackBarAction
+        (click)="snackBarRef.dismissWithAction()"
+        class="cursor-pointer"
+      >
+        <app-svg
+          svgWidth="1.5rem"
+          svgHeight="1.5rem"
+          src="icons/general/close-icon.svg"
+        ></app-svg>
+      </button>
+    </span>
+  </div>
+</div>

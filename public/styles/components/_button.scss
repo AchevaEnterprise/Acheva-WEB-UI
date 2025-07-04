@@ -1,0 +1,20 @@
+@use '@angular/material' as mat;
+
+:root {
+  @include mat.button-overrides(
+    (
+      filled-container-shape: '8px',
+      filled-container-height: '50px',
+    )
+  );
+}
+
+.mdc-button__label {
+  @apply flex gap-3 items-center;
+}
+
+.mat-mdc-unelevated-button.btn-gradient {
+  background: linear-gradient(180deg, #2793ff, #7bf) !important;
+
+  @apply text-white py-3 px-6 w-96;
+}

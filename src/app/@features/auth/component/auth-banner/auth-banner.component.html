@@ -1,0 +1,49 @@
+<section id="create-account-banner">
+  <div class="acheva-logo-container">
+    <app-svg src="icons/logos/acheva-letter.svg"></app-svg>
+
+    <app-svg
+      class="company-logo-name"
+      src="icons/logos/company-name-logo.svg"
+    ></app-svg>
+  </div>
+
+  <div class="poligons-overlays">
+    <div class="poligons">
+      <app-svg src="icons/auth/double-poligon.svg"></app-svg>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="banner-contents">
+      <div class="banner-img">
+        <img src="images/auth/create-banner.png" alt="banner" />
+
+        <div class="table-clock">
+          <app-svg src="icons/auth/table-clock.svg"></app-svg>
+        </div>
+
+        <div class="automate-gist">
+          <app-svg svgWidth="10.5rem" src="icons/auth/automate.svg"></app-svg>
+        </div>
+
+        <div class="mobility-gist">
+          <app-svg
+            svgHeight="10rem"
+            src="icons/auth/mobility-info.svg"
+          ></app-svg>
+        </div>
+      </div>
+
+      <p class="acva-heading-2 text-center fw-400 pb-0 mb-0">
+        {{ title() }}
+      </p>
+
+      <p
+        class="acva-para-1 text-center text-neutral-500 fw-400 pb-0 mb-0 text-blue-950 w-1/2"
+      >
+        {{ description() }}
+      </p>
+    </div>
+  </div>
+</section>

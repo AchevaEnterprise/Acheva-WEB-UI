@@ -1,0 +1,10 @@
+@use '@angular/material' as mat;
+
+:root {
+  @include mat.menu-overrides(
+    (
+      container-shape: '8px',
+      container-color: #fff,
+    )
+  );
+}

@@ -1,12 +1,11 @@
-import globals from 'globals';
-import ts from '@typescript-eslint/eslint-plugin';
-import tsParser from '@typescript-eslint/parser';
 import angular from '@angular-eslint/eslint-plugin';
 import angularTemplate from '@angular-eslint/eslint-plugin-template';
 import templateParser from '@angular-eslint/template-parser';
+import ts from '@typescript-eslint/eslint-plugin';
+import tsParser from '@typescript-eslint/parser';
 import prettier from 'eslint-plugin-prettier';
 import unusedImports from 'eslint-plugin-unused-imports';
-import { EndOfLineState } from 'typescript';
+import globals from 'globals';
 
 export default [
   {
