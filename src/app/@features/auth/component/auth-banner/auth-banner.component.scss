@@ -53,7 +53,7 @@
           top: -2rem;
           right: 1rem;
           z-index: 4;
-          animation: slide-in-from-right 0.5s ease-in;
+          animation: slide-in-from-right 1.5s ease-in;
         }
 
         .mobility-gist {
@@ -62,7 +62,7 @@
           top: 50%;
           right: -4.0116rem;
           z-index: 2;
-          animation: slide-in-from-right 0.5s ease-in-out;
+          animation: slide-in-from-right 2s ease-in-out;
         }
 
         .automate-gist {
@@ -71,7 +71,7 @@
           top: 20%;
           left: -4.0116rem;
           z-index: 2;
-          animation: slide-in-from-left 0.5s ease-in-out;
+          animation: slide-in-from-left 3s ease-in-out;
         }
       }
     }

@@ -1,0 +1,139 @@
+<div
+  class="flex flex-col justify-between bg-[#D9D9D966] transition-all duration-200 ease-in-out fixed z-10 top-0 w-[5rem] h-[100vh] border-[1px] border-r-[#D2D1D1]"
+  [class.sidenav-expanded]="expanded()"
+>
+  <div>
+    <div class="flex items-center justify-between p-[0.938rem] w-full h-[8vh]">
+      <button class="cursor-pointer" (click)="toggleSideBar()">
+        <app-svg
+          svgWidth="3rem"
+          svgHeight="rem"
+          src="icons/logos/acheva-letter.svg"
+        ></app-svg>
+      </button>
+
+      @if (expanded()) {
+        <button
+          class="cursor-pointer border-[1px] border-[#D2D1D1] rounded-lg"
+          (click)="toggleSideBar()"
+        >
+          <app-svg
+            svgWidth="1.5rem"
+            svgHeight="1.5rem"
+            src="icons/general/close-icon.svg"
+          ></app-svg>
+        </button>
+      }
+    </div>
+
+    <ul
+      class="list-style-none p-[0.938rem] m-0 flex flex-col items-center h-[calc(100vh_-_48vh)] overflow-y-auto"
+    >
+      @for (menu of appMenu(); track $index) {
+        @if (menu.isActive) {
+          <li
+            class="w-full mb-[0.625rem] hover:bg-[#D4E9FF] hover:text-[#000] rounded-[1rem] cursor-pointer"
+          >
+            <a
+              class="flex items-center gap-2 pl-[0.5rem] h-[3rem] text-decoration-none rounded-[1rem] transition-all duration-200 ease-in-out acva-para-2"
+              [routerLink]="menu.route"
+              routerLinkActive="bg-gradient-to-b from-[#2793FF] to-[#77BBFF] text-white"
+              [routerLinkActiveOptions]="{ exact: true }"
+            >
+              @if (isActiveRoute()) {
+                <app-svg
+                  svgWidth="1.5rem"
+                  svgHeight="1.5rem"
+                  [src]="menu.active_icon"
+                ></app-svg>
+              } @else {
+                <app-svg
+                  svgWidth="1.5rem"
+                  svgHeight="1.5rem"
+                  [src]="menu.inactive_icon"
+                ></app-svg>
+              }
+
+              @if (expanded()) {
+                <span>{{ menu.label }}</span>
+              }
+            </a>
+          </li>
+        } @else {
+          <li class="w-full mb-[0.625rem]">
+            <a
+              class="flex items-center gap-2 pl-[0.5rem] h-[3rem] text-neutral-300 text-decoration-none cursor-not-allowed"
+              href="javascript:void(0)"
+            >
+              <app-svg
+                svgWidth="2rem"
+                svgHeight="2rem"
+                [src]="menu.inactive_icon"
+              ></app-svg>
+
+              @if (expanded()) {
+                <span class="ml-[1.5rem]">{{ menu.label }}</span>
+              }
+            </a>
+          </li>
+        }
+      }
+
+      <!-- Switch Account Button -->
+      <li>
+        <mat-divider></mat-divider>
+        <button
+          (click)="switchAccount('11')"
+          class="flex items-center justify-between gap-4 border-[1px] border-[#D2D1D1] p-3 rounded-2xl mt-4 cursor-pointer"
+        >
+          <div class="flex items-center gap-2">
+            <img
+              src=""
+              [appImageFallback]="'icons/general/profile-pic-placeholder.svg'"
+              alt="Avatar"
+              class="w-6 h-6 aspect-square object-cover rounded-full"
+            />
+
+            @if (expanded()) {
+              Course Advisor
+            }
+          </div>
+
+          @if (expanded()) {
+            <app-svg
+              svgWidth="1rem"
+              svgHeight="1rem"
+              src="icons/general/arrow-right-icon.svg"
+            ></app-svg>
+          }
+        </button>
+      </li>
+    </ul>
+  </div>
+
+  <div class="p-[0.938rem]">
+    <button class="flex items-center gap-2 p-3 cursor-pointer">
+      <app-svg
+        svgWidth="1.5rem"
+        svgHeight="1.5rem"
+        src="icons/auth/logout-icon.svg"
+      ></app-svg>
+
+      @if (expanded()) {
+        Logout
+      }
+    </button>
+
+    <div
+      class="rounded-2xl h-[10rem] bg-blue-500 mt-2 relative overflow-hidden"
+    >
+      <div class="absolute right-0 -top-4">
+        <app-svg
+          svgWidth="10rem"
+          svgHeight="10rem"
+          src="icons/menu/plane.svg"
+        ></app-svg>
+      </div>
+    </div>
+  </div>
+</div>

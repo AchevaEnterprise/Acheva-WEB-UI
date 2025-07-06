@@ -4,5 +4,7 @@ import { Injectable } from '@angular/core';
   providedIn: 'root',
 })
 export class UtilityService {
-  constructor() {}
+  formatCount(count: number) {
+    return count > 10 ? '10+' : count.toString();
+  }
 }

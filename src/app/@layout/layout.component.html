@@ -1,0 +1,12 @@
+<app-side-bar (onToggleSideNav)="onToggleSideNav($event)" />
+
+<div
+  class="w-[calc(100%_-_5rem)] h-full ml-[5rem] z-0 relative top-0 bg-[#f4f7fa] transition-all duration-300 ease-in-out"
+  [class]="getBodyClass()"
+>
+  <app-tool-bar />
+
+  <div class="h-[calc(100vh_-_5rem)] overflow-y-auto p-[2rem]">
+    <router-outlet></router-outlet>
+  </div>
+</div>

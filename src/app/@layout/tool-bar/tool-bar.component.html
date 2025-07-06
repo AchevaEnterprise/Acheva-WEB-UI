@@ -1,0 +1,29 @@
+<div
+  class="h-[5rem] border-b-[1px] border-b-[#D2D1D1] flex justify-between items-center px-[2rem]"
+>
+  <h3 class="acva-heading-5">{{ pageTitle() }}</h3>
+
+  <div class="flex items-center gap-4">
+    <button class="cursor-pointer" [matBadge]="badgeCount()">
+      <app-svg
+        svgWidth="1.5rem"
+        svgHeight="1.5rem"
+        src="icons/general/notification-bell.svg"
+      ></app-svg>
+    </button>
+
+    <div class="flex items-center gap-3">
+      <img
+        src=""
+        [appImageFallback]="'icons/general/profile-pic-placeholder.svg'"
+        alt="Avatar"
+        class="w-8 h-8 aspect-square object-cover rounded-full"
+      />
+
+      <p>
+        Engr. Daniel Chika <br />
+        <span class="text-neutral-300 text-sm">Course Cordinator</span>
+      </p>
+    </div>
+  </div>
+</div>
