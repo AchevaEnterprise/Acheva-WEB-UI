@@ -14,7 +14,7 @@ export class ButtonComponent {
   disabled = input<boolean>(false);
   label = input<string>('');
   type = input<'clear' | 'outline' | 'fill'>('fill');
-  classNames = input<string>('');
+  class = input<string>('');
 
   clickEvent = output();
 

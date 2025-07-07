@@ -1,9 +1,9 @@
 <div
-  class="flex flex-col justify-between bg-[#D9D9D966] transition-all duration-200 ease-in-out fixed z-10 top-0 w-[5rem] h-[100vh] border-[1px] border-r-[#D2D1D1]"
+  class="flex flex-col justify-between gap-4 bg-[#D9D9D966] transition-all duration-200 ease-in-out fixed z-10 top-0 w-[5rem] h-[100vh] border-[1px] border-r-[#D2D1D1]"
   [class.sidenav-expanded]="expanded()"
 >
   <div>
-    <div class="flex items-center justify-between p-[0.938rem] w-full h-[8vh]">
+    <div class="flex items-center justify-between p-[0.938rem] w-full h-[5rem]">
       <button class="cursor-pointer" (click)="toggleSideBar()">
         <app-svg
           svgWidth="3rem"
@@ -27,7 +27,7 @@
     </div>
 
     <ul
-      class="list-style-none p-[0.938rem] m-0 flex flex-col items-center h-[calc(100vh_-_48vh)] overflow-y-auto"
+      class="list-style-none p-[0.938rem] m-0 flex flex-col items-center overflow-y-auto h-[calc(100vh_-_21rem)]"
     >
       @for (menu of appMenu(); track $index) {
         @if (menu.isActive) {
@@ -125,7 +125,7 @@
     </button>
 
     <div
-      class="rounded-2xl h-[10rem] bg-blue-500 mt-2 relative overflow-hidden"
+      class="rounded-2xl h-[10rem] bg-blue-500 mt-2 relative overflow-hidden bg-gradient-to-b from-[#2793FF] to-[#77BBFF]"
     >
       <div class="absolute right-0 -top-4">
         <app-svg

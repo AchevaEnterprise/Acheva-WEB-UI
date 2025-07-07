@@ -2,7 +2,7 @@
   <button
     mat-flat-button
     [disabled]="disabled()"
-    [class]="`${classNames()} btn-gradient`"
+    [class]="`${class()} btn-gradient`"
     (click)="onBtnclick()"
   >
     {{ label() }}
@@ -17,7 +17,7 @@
   <button
     mat-button
     [disabled]="disabled()"
-    [class]="`${classNames()}`"
+    [class]="`${class()}`"
     (click)="onBtnclick()"
   >
     {{ label() }}
@@ -32,7 +32,7 @@
   <button
     mat-stroked-button
     [disabled]="disabled()"
-    [class]="`${classNames()}`"
+    [class]="`${class()}`"
     (click)="onBtnclick()"
   >
     {{ label() }}

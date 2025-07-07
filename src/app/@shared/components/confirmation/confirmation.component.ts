@@ -4,8 +4,6 @@ import { Component } from '@angular/core';
   selector: 'app-confirmation',
   imports: [],
   templateUrl: './confirmation.component.html',
-  styleUrl: './confirmation.component.scss'
+  styleUrl: './confirmation.component.scss',
 })
-export class ConfirmationComponent {
-
-}
+export class ConfirmationComponent {}

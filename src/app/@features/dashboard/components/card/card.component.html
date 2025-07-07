@@ -1,0 +1,26 @@
+<div class="border-2 border-neutral-300 rounded-2xl w-full">
+  <div class="flex justify-between flex-wrap items-baseline px-4 pt-4">
+    <div class="flex items-center gap-4">
+      @if (iconSrc()) {
+        <app-svg svgWidth="1rem" svgHeight="1rem" [src]="iconSrc()!"></app-svg>
+      }
+
+      <div>
+        <h3 class="text-[0.9rem] fw-500">{{ label() }}</h3>
+        @if (description()) {
+          <p class="acva-para-1 text-neutral-400 text-sm">
+            {{ description() }}
+          </p>
+        }
+      </div>
+    </div>
+
+    <ng-content select="[rightHeaderContent]"></ng-content>
+  </div>
+
+  @if (showDivider()) {
+    <mat-divider></mat-divider>
+  }
+
+  <ng-content select="[content]"></ng-content>
+</div>

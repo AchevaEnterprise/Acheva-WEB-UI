@@ -2,10 +2,12 @@
   @for (segment of segments(); track $index) {
     <button
       (click)="switchSegment(segment.value)"
-      class="rounded-md px-3 cursor-pointer"
-      [ngClass]="{
-        'text-blue-400 bg-white': segment.value === activeSegment()?.value,
-      }"
+      class="rounded-md px-3 cursor-pointer transition-all"
+      [ngClass]="
+        segment.value === activeSegment()?.value
+          ? 'text-blue-400 bg-white'
+          : 'text-neutral-500'
+      "
     >
       {{ segment.label }}
     </button>

@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AppNotificationType } from '../models/notification.model';
-import { NotificationComponent } from '../../@shared/components/notification/notification.component';
+import { ToastComponent } from '../../@shared/components/toast/toast.component';
 
 @Injectable({
   providedIn: 'root',
@@ -15,7 +15,7 @@ export class NotificationService {
     message: string,
     duration = 5
   ): void {
-    this.snackBar.openFromComponent(NotificationComponent, {
+    this.snackBar.openFromComponent(ToastComponent, {
       data: {
         type,
         title,

@@ -4,8 +4,6 @@ import { Component } from '@angular/core';
   selector: 'app-file-upload',
   imports: [],
   templateUrl: './file-upload.component.html',
-  styleUrl: './file-upload.component.scss'
+  styleUrl: './file-upload.component.scss',
 })
-export class FileUploadComponent {
-
-}
+export class FileUploadComponent {}

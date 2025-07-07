@@ -4,8 +4,6 @@ import { Component } from '@angular/core';
   selector: 'app-result-management',
   imports: [],
   templateUrl: './result-management.component.html',
-  styleUrl: './result-management.component.scss'
+  styleUrl: './result-management.component.scss',
 })
-export class ResultManagementComponent {
-
-}
+export class ResultManagementComponent {}

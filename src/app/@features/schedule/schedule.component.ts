@@ -4,8 +4,6 @@ import { Component } from '@angular/core';
   selector: 'app-schedule',
   imports: [],
   templateUrl: './schedule.component.html',
-  styleUrl: './schedule.component.scss'
+  styleUrl: './schedule.component.scss',
 })
-export class ScheduleComponent {
-
-}
+export class ScheduleComponent {}

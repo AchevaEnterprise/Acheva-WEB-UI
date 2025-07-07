@@ -1,9 +1,10 @@
 import { NgClass } from '@angular/common';
 import { Component, input, output } from '@angular/core';
 
-interface ISegmentSwitcher {
+export interface ISegmentSwitcher {
   label: string;
   value:
+    | 'drafts'
     | 'pending'
     | 'unverified'
     | 'verified'

@@ -1,0 +1,26 @@
+<div
+  class="flex flex-col justify-between border-2 border-neutral-300 rounded-2xl w-full p-3 h-[max(10rem,13rem)] overflow-hidden"
+>
+  <div class="flex justify-between items-center">
+    <div>
+      <h4 class="acva-para-2 text-neutral-500">{{ analtyics()?.label }}</h4>
+      <h2 class="acva-heading-4 fw-500">{{ analtyics()?.count }}</h2>
+    </div>
+
+    <app-svg
+      svgWidth="3rem"
+      svgHeight="3rem"
+      [src]="analtyics()?.iconSrc!"
+    ></app-svg>
+  </div>
+
+  <p class="acva-caption fw-200 text-neutral-400 flex items-center gap-2">
+    <app-svg
+      svgWidth="1rem"
+      svgHeight="1rem"
+      src="icons/general/info-icon.svg"
+    ></app-svg>
+
+    <span>{{ analtyics()?.infoLabel }}</span>
+  </p>
+</div>

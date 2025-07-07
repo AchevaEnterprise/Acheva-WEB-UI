@@ -1,0 +1,11 @@
+@use '@angular/material' as mat;
+
+// Customize the entire app. Change :root to your selector if you want to scope the styles.
+:root {
+  @include mat.divider-overrides(
+    (
+      color: oklch(87% 0 0),
+      width: '2px',
+    )
+  );
+}

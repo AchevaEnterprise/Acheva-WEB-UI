@@ -1,4 +1,6 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 import {
   MAT_SNACK_BAR_DATA,
   MatSnackBarAction,
@@ -6,13 +8,11 @@ import {
   MatSnackBarLabel,
   MatSnackBarRef,
 } from '@angular/material/snack-bar';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatButtonModule } from '@angular/material/button';
-import { SvgComponent } from '../svg/svg.component';
 import { IAppNotification } from '../../../@core/models/notification.model';
+import { SvgComponent } from '../svg/svg.component';
 
 @Component({
-  selector: 'app-notification',
+  selector: 'app-toast',
   imports: [
     MatProgressBarModule,
     MatButtonModule,
@@ -21,10 +21,10 @@ import { IAppNotification } from '../../../@core/models/notification.model';
     MatSnackBarLabel,
     SvgComponent,
   ],
-  templateUrl: './notification.component.html',
-  styleUrl: './notification.component.scss',
+  templateUrl: './toast.component.html',
+  styleUrl: './toast.component.scss',
 })
-export class NotificationComponent implements OnInit {
+export class ToastComponent {
   snackBarRef = inject(MatSnackBarRef);
   progress = signal<number>(0);
 
