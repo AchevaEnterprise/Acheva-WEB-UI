@@ -27,7 +27,7 @@
     </div>
 
     <ul
-      class="list-style-none p-[0.938rem] m-0 flex flex-col items-center overflow-y-auto h-[calc(100vh_-_21rem)]"
+      class="list-style-none py-[0.938rem] pl-[0.938rem] pr-[0.5rem] m-0 flex flex-col items-center overflow-y-auto h-[calc(100vh_-_21rem)]"
     >
       @for (menu of appMenu(); track $index) {
         @if (menu.isActive) {
@@ -35,7 +35,7 @@
             class="w-full mb-[0.625rem] hover:bg-[#D4E9FF] hover:text-[#000] rounded-[1rem] cursor-pointer"
           >
             <a
-              class="flex items-center gap-2 pl-[0.5rem] h-[3rem] text-decoration-none rounded-[1rem] transition-all duration-200 ease-in-out acva-para-2"
+              class="flex items-center gap-2 pl-[0.65rem] h-[3rem] text-decoration-none rounded-[1rem] transition-all duration-200 ease-in-out acva-para-2"
               [routerLink]="menu.route"
               routerLinkActive="bg-gradient-to-b from-[#2793FF] to-[#77BBFF] text-white"
               [routerLinkActiveOptions]="{ exact: true }"

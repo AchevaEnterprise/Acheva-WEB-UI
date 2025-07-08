@@ -1,0 +1,26 @@
+<div class="flex gap-3 items-center my-2">
+  <app-svg
+    svgWidth="1.2rem"
+    svgHeight="1.2rem"
+    [src]="
+      activity()?.type === 'submit'
+        ? 'icons/general/green-check-icon.svg'
+        : activity()?.type === 'add'
+          ? 'icons/general/purple-add-icon.svg'
+          : activity()?.type === 'edit'
+            ? 'icons/general/orange-edit-icon.svg'
+            : activity()?.type === 'reminder'
+              ? 'icons/general/blue-bell-icon.svg'
+              : 'icons/general/blue-bell-icon.svg'
+    "
+  ></app-svg>
+
+  <div>
+    <h4 class="acva-para-1">{{ activity()?.message }}</h4>
+    <p class="acva-caption text-neutral-400">
+      {{ activity()?.date | date: 'mediumDate' }} -
+      {{ activity()?.date | date: 'h:mm a' }}
+    </p>
+  </div>
+</div>
+<mat-divider></mat-divider>

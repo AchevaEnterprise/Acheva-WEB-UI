@@ -34,6 +34,7 @@ html {
         primary: acheva-mat-theme.$primary-palette,
         tertiary: acheva-mat-theme.$tertiary-palette,
       ),
+      typography: Rubik,
       density: -3,
     )
   );
@@ -63,7 +64,7 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: #77bbff;
+  background-color: #7bf;
   border-radius: 4px;
 }
 
@@ -72,9 +73,10 @@ body {
 }
 
 // /* For Firefox */
+
 * {
   scrollbar-width: thin; /* "auto" | "thin" | "none" */
-  scrollbar-color: #77bbff #f1f1f1; /* thumb color | track color */
+  scrollbar-color: #7bf #f1f1f1; /* thumb color | track color */
 }
 
 .no-select {

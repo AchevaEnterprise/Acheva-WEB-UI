@@ -1,14 +1,14 @@
 import { Component, computed, inject, output, signal } from '@angular/core';
-import { IMenu } from '../../@core/models/menu.modal';
-import { Router, RouterLink, RouterLinkActive } from '@angular/router';
-import { SvgComponent } from '../../@shared/components/svg/svg.component';
 import { MatDividerModule } from '@angular/material/divider';
-import { AuthenticationService } from '../../@features/auth/service/auth.service';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import {
   COURSE_ADVISOR_MENU,
   COURSE_CORDINATOR_MENU,
 } from '../../@core/constant/menu';
 import { ImageFallbackDirective } from '../../@core/directives/image-fallback.directive';
+import { IMenu } from '../../@core/models/menu.model';
+import { AuthenticationService } from '../../@features/auth/service/auth.service';
+import { SvgComponent } from '../../@shared/components/svg/svg.component';
 
 @Component({
   selector: 'app-side-bar',

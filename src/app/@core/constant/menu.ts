@@ -1,4 +1,4 @@
-import { IMenu } from '../models/menu.modal';
+import { IMenu } from '../models/menu.model';
 
 export const COURSE_ADVISOR_MENU: IMenu[] = [
   {
