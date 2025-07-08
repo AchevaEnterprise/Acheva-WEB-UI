@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import {
   FormControl,
   FormGroup,
@@ -15,7 +15,7 @@ import {
 } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthBannerComponent } from '../../component/auth-banner/auth-banner.component';
 import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
@@ -40,6 +40,8 @@ import { ButtonComponent } from '../../../../@shared/components/forms/button/but
   styleUrl: './login.component.scss',
 })
 export class LoginComponent {
+  private readonly router = inject(Router);
+
   userForm: FormGroup = new FormGroup({
     email: new FormControl(null, [Validators.required]),
     password: new FormControl(null, [Validators.required]),
@@ -61,6 +63,7 @@ export class LoginComponent {
 
   submitForm() {
     console.warn(this.userForm.value);
+    this.router.navigate(['/dashboard']);
   }
 
   togglePasswordVisibility(event: MouseEvent) {

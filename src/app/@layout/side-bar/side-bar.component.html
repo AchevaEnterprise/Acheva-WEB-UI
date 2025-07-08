@@ -27,7 +27,7 @@
     </div>
 
     <ul
-      class="list-style-none py-[0.938rem] pl-[0.938rem] pr-[0.5rem] m-0 flex flex-col items-center overflow-y-auto h-[calc(100vh_-_21rem)]"
+      class="list-style-none p-[0.938rem] m-0 flex flex-col items-center overflow-y-auto h-[calc(100vh_-_21rem)]"
     >
       @for (menu of appMenu(); track $index) {
         @if (menu.isActive) {
@@ -112,7 +112,10 @@
   </div>
 
   <div class="p-[0.938rem]">
-    <button class="flex items-center gap-2 p-3 cursor-pointer">
+    <button
+      class="flex items-center gap-2 p-3 cursor-pointer text-[#134980]"
+      (click)="logout()"
+    >
       <app-svg
         svgWidth="1.5rem"
         svgHeight="1.5rem"

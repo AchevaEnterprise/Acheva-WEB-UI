@@ -1,5 +1,5 @@
 <div>
-  <h1 class="acva-heading-2 fw-500">Good Morning, Daniel👋</h1>
+  <h1 class="acva-heading-2 fw-500">Good {{ '' | greeting }}, Daniel👋</h1>
   <p class="acva-para-1 text-neutral-500">
     Create and initiate result approval process
   </p>
@@ -40,8 +40,8 @@
   <div class="mt-3">
     <app-card
       [label]="activeSegment().label"
-      description="Access your recent drafts from here"
-      iconSrc="icons/general/edit-icon.svg"
+      [description]="segmentCardLabel()"
+      [iconSrc]="segmentCardIconSrc()"
     >
       <div class="input-style-1 acheva-input" rightHeaderContent>
         <mat-form-field appearance="outline">
@@ -171,8 +171,8 @@
                   ></app-svg>
                 </button>
                 <mat-menu #menu="matMenu">
-                  <button mat-menu-item>Edit</button>
-                  <button mat-menu-item>Delete</button>
+                  <button mat-menu-item>Send to HOD</button>
+                  <button mat-menu-item>Preview</button>
                 </mat-menu>
               </td>
             </ng-container>
@@ -218,6 +218,7 @@
         <mat-form-field appearance="outline">
           <mat-select value="newest">
             <mat-option [value]="'newest'">Newest</mat-option>
+            <mat-option [value]="'oldest'">Oldest</mat-option>
           </mat-select>
         </mat-form-field>
       </div>
@@ -243,6 +244,13 @@
         <mat-form-field appearance="outline">
           <mat-select value="today">
             <mat-option [value]="'today'">Today</mat-option>
+            <mat-option [value]="'yesterday'">Yesterday</mat-option>
+            <mat-option [value]="'1week'">1 Week</mat-option>
+            <mat-option [value]="'2week'">2 Weeks</mat-option>
+            <mat-option [value]="'3week'">3 Weeks</mat-option>
+            <mat-option [value]="'monthly'">Last Month</mat-option>
+            <mat-option [value]="'session'">Session</mat-option>
+            <mat-option [value]="'custom'">Custom Date Rage</mat-option>
           </mat-select>
         </mat-form-field>
       </div>

@@ -1,8 +1,8 @@
-<div class="bg-neutral-300 rounded-md p-1 h-[2.5rem] flex gap-[5px] w-fit">
+<div class="bg-[#C4C4C433] rounded-[10px] p-1 h-[2.5rem] flex gap-[5px] w-fit">
   @for (segment of segments(); track $index) {
     <button
       (click)="switchSegment(segment.value)"
-      class="rounded-md px-3 cursor-pointer transition-all"
+      class="rounded-[8px] px-3 cursor-pointer transition-all"
       [ngClass]="
         segment.value === activeSegment()?.value
           ? 'text-blue-400 bg-white'

@@ -1,3 +1,4 @@
+import { DatePipe } from '@angular/common';
 import { Component, model, signal } from '@angular/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatFormFieldModule, MatPrefix } from '@angular/material/form-field';
@@ -7,6 +8,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
 import { COURSES } from '../../@core/constant/course-mock';
 import { ICourse } from '../../@core/models/course.model';
+import { GreetingPipe } from '../../@core/pipes/greeting.pipe';
 import { EmptyStateComponent } from '../../@shared/components/empty-state/empty-state.component';
 import {
   ISegmentSwitcher,
@@ -23,7 +25,6 @@ import {
 } from './components/analytics-card/analytics-card.component';
 import { CardComponent } from './components/card/card.component';
 import { ChartComponent } from './components/chart/chart.component';
-import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-dashboard',
@@ -44,6 +45,7 @@ import { DatePipe } from '@angular/common';
     MatMenuModule,
     SvgComponent,
     DatePipe,
+    GreetingPipe,
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
@@ -152,6 +154,8 @@ export class DashboardComponent {
   ]);
 
   selectedCalendarDate = model<number>(Date.now());
+  segmentCardLabel = signal<string>('Access your recent drafts from here');
+  segmentCardIconSrc = signal<string>('icons/general/draft-icon.svg');
 
   switchSegment(switchValue: ISegmentSwitcher['value']) {
     this.activeSegment.update(
@@ -160,5 +164,33 @@ export class DashboardComponent {
           (segment: ISegmentSwitcher) => segment.value === switchValue
         )!
     );
+
+    switch (switchValue) {
+      case 'drafts': {
+        this.segmentCardLabel.set('Access your recent drafts from here');
+        this.segmentCardIconSrc.set('icons/general/draft-icon.svg');
+        break;
+      }
+      case 'pending': {
+        this.segmentCardLabel.set('Access your pending results from here');
+        this.segmentCardIconSrc.set('icons/general/pending-icon.svg');
+        break;
+      }
+      case 'unverified': {
+        this.segmentCardLabel.set('Access your unverified results from here');
+        this.segmentCardIconSrc.set('icons/general/unverified-icon.svg');
+        break;
+      }
+      case 'verified': {
+        this.segmentCardLabel.set('Access your verified results from here');
+        this.segmentCardIconSrc.set('icons/general/verified-icon.svg');
+        break;
+      }
+      case 'published': {
+        this.segmentCardLabel.set('Access your published results from here');
+        this.segmentCardIconSrc.set('icons/general/published-icon.svg');
+        break;
+      }
+    }
   }
 }

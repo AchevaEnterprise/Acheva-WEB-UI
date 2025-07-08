@@ -2,7 +2,11 @@
   <div class="flex justify-between flex-wrap items-baseline px-4 pt-4">
     <div class="flex items-center gap-4">
       @if (iconSrc()) {
-        <app-svg svgWidth="1rem" svgHeight="1rem" [src]="iconSrc()!"></app-svg>
+        <app-svg
+          svgWidth="1.5rem"
+          svgHeight="1.5rem"
+          [src]="iconSrc()!"
+        ></app-svg>
       }
 
       <div>

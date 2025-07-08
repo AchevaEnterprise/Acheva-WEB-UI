@@ -19,4 +19,21 @@ export class PasswordValidityComponent {
       min8Characters: value.length >= 8,
     };
   });
+
+  checkList = computed(() => {
+    return [
+      {
+        label: 'At least 1 uppercase',
+        valid: this.validity().contains1UpperCase,
+      },
+      {
+        label: ' At least 1 number',
+        valid: this.validity().contains1Number,
+      },
+      {
+        label: 'At least 8 characters',
+        valid: this.validity().min8Characters,
+      },
+    ];
+  });
 }
