@@ -1,0 +1,44 @@
+@if (type() === 'fill') {
+  <button
+    mat-flat-button
+    [disabled]="disabled()"
+    [class]="`${class()} btn-gradient`"
+    (click)="onBtnclick()"
+  >
+    {{ label() }}
+
+    @if (loading()) {
+      <mat-spinner diameter="16"></mat-spinner>
+    }
+  </button>
+}
+
+@if (type() === 'clear') {
+  <button
+    mat-button
+    [disabled]="disabled()"
+    [class]="`${class()}`"
+    (click)="onBtnclick()"
+  >
+    {{ label() }}
+
+    @if (loading()) {
+      <mat-spinner diameter="16"></mat-spinner>
+    }
+  </button>
+}
+
+@if (type() === 'outline') {
+  <button
+    mat-stroked-button
+    [disabled]="disabled()"
+    [class]="`${class()}`"
+    (click)="onBtnclick()"
+  >
+    {{ label() }}
+
+    @if (loading()) {
+      <mat-spinner diameter="16"></mat-spinner>
+    }
+  </button>
+}

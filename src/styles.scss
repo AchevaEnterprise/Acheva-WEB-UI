@@ -1,10 +1,11 @@
 /* stylelint-disable selector-class-pattern */
 /* stylelint-disable property-no-vendor-prefix */
 
-@use './app/@core/styles/abstracts/' as *;
-@use './app/@core/styles/components/' as *;
+@use '../public/styles/abstracts/index' as *;
+@use '../public/styles/components/index' as *;
 @use 'tailwindcss';
 @use '@angular/material' as mat;
+@use '../public/styles/acheva-mat-theme' as acheva-mat-theme;
 
 // Reset Tailwind's border-style to avoid conflicts with Angular Material
 @layer base {
@@ -13,14 +14,6 @@
   ::after {
     border-style: none; /* Neutralize Tailwind's border-style: solid */
   }
-}
-
-// Fix for mat-form-field outline appearance
-
-.mdc-notched-outline__notch {
-  /* Remove unwanted border line */
-
-  border-right: none !important;
 }
 
 *,
@@ -38,11 +31,11 @@ html {
     (
       color: (
         theme-type: light,
-        primary: mat.$azure-palette,
-        tertiary: mat.$blue-palette,
+        primary: acheva-mat-theme.$primary-palette,
+        tertiary: acheva-mat-theme.$tertiary-palette,
       ),
-      typography: Roboto,
-      density: 0,
+      typography: Rubik,
+      density: -3,
     )
   );
 }
@@ -51,8 +44,10 @@ html,
 body {
   height: 100%;
   margin: 0;
-  font-family: Roboto, 'Helvetica Neue', sans-serif;
   cursor: auto !important;
+  font-family: Rubik, sans-serif;
+  font-optical-sizing: auto;
+  font-style: normal;
 }
 
 [role='button'] {
@@ -60,8 +55,28 @@ body {
 }
 
 ::-webkit-scrollbar {
-  width: 9.5px;
-  height: 9.5px;
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #7bf;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #2793ff;
+}
+
+// /* For Firefox */
+
+* {
+  scrollbar-width: thin; /* "auto" | "thin" | "none" */
+  scrollbar-color: #7bf #f1f1f1; /* thumb color | track color */
 }
 
 .no-select {

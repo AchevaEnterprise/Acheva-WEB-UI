@@ -1,0 +1,27 @@
+.spin {
+  animation: spin 2s infinite 1s;
+}
+
+.scale {
+  animation: scale 0.9s ease-in;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes scale {
+  from {
+    transform: scale(2);
+  }
+
+  to {
+    transform: rotate(1);
+  }
+}

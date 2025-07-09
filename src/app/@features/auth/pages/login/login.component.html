@@ -1,0 +1,100 @@
+<div id="container">
+  <app-auth-banner
+    class="banner-section"
+    title="Effortless Grading, Accurate Reporting"
+    description="Enhance educational outcomes by leveraging Acheva's
+    innovative features for accurate grading, detailed analytics,
+    and streamlined reporting."
+  />
+
+  <form [formGroup]="userForm" class="login-wrapper md:w-full">
+    <!-- md-screen -->
+    <div class="acheva-logo-container logo-md">
+      <app-svg src="icons/logos/acheva-letter.svg"></app-svg>
+
+      <app-svg
+        class="company-logo-name"
+        src="icons/logos/company-name-logo.svg"
+      ></app-svg>
+    </div>
+
+    <div class="form-section-wrapper">
+      <div class="text-center">
+        <p class="acva-para-1 text-neutral-500">Welcome Back</p>
+        <p class="acva-heading-3 fw-600">Login</p>
+        <p class="acva-para-1 text-neutral-500">
+          Access your dashboard by logging in below
+        </p>
+      </div>
+
+      <div class="form-wrap">
+        <div class="input-style-1 acheva-input w-full">
+          <p class="acva-para-2 fw-400 label-text">School Email</p>
+
+          <mat-form-field [style.width.%]="100" appearance="outline">
+            <input
+              matInput
+              type="text"
+              placeholder=""
+              formControlName="email"
+            />
+
+            <span matPrefix mat-icon-button>
+              <app-svg
+                svgWidth="1rem"
+                svgHeight="1rem"
+                src="icons/general/email-icon.svg"
+              ></app-svg>
+            </span>
+          </mat-form-field>
+        </div>
+
+        <div class="input-style-1 acheva-input w-full">
+          <p class="acva-para-2 fw-400 label-text">Password</p>
+
+          <mat-form-field [style.width.%]="100" appearance="outline">
+            <input
+              matInput
+              [type]="hide() ? 'password' : 'text'"
+              formControlName="password"
+            />
+
+            <span matPrefix>
+              <app-svg
+                svgWidth="1rem"
+                svgHeight="1rem"
+                src="icons/general/lock-icon.svg"
+              ></app-svg
+            ></span>
+
+            <button
+              class="cursor-pointer"
+              matSuffix
+              (click)="togglePasswordVisibility($event)"
+            >
+              <mat-icon>{{
+                hide() ? 'visibility_off' : 'visibility'
+              }}</mat-icon>
+            </button>
+          </mat-form-field>
+
+          <a
+            class="acva-para-1 place-self-end text-blue-400 block float-right underline"
+            routerLink="../password-reset"
+          >
+            Forgot your password?
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="submit-section">
+      <app-button class="w-96" label="Log In" (clickEvent)="submitForm()" />
+
+      <p class="acva-para-1 place-self-center">
+        Don’t have an Account?
+        <a class="text-blue-400" routerLink="../create-account">Sign Up</a>
+      </p>
+    </div>
+  </form>
+</div>

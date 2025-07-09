@@ -1,0 +1,46 @@
+@use '@angular/material' as mat;
+
+:root {
+  @include mat.button-overrides(
+    (
+      filled-container-shape: '8px',
+      filled-container-height: '50px',
+      outlined-container-shape: '8px',
+      outlined-container-height: '50px',
+      outlined-label-text-color: #2793ff,
+      text-container-shape: '8px',
+      text-container-height: '50px',
+      text-label-text-color: #2793ff,
+    )
+  );
+}
+
+.mdc-button.btn-sm {
+  @include mat.button-overrides(
+    (
+      filled-container-height: '30px',
+      outlined-container-height: '30px',
+      text-container-height: '30px',
+    )
+  );
+}
+
+.mdc-button.btn-md {
+  @include mat.button-overrides(
+    (
+      filled-container-height: '40px',
+      outlined-container-height: '40px',
+      text-container-height: '40px',
+    )
+  );
+}
+
+.mdc-button__label {
+  @apply flex gap-3 items-center;
+}
+
+.mat-mdc-unelevated-button.btn-gradient {
+  background: linear-gradient(180deg, #2793ff, #7bf) !important;
+
+  @apply p-0;
+}

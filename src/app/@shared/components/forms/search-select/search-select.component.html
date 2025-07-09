@@ -1,0 +1,21 @@
+<mat-form-field [style.width.%]="100" appearance="outline">
+  <mat-select
+    [placeholder]="placeholder()"
+    (selectionChange)="onSelected($event)"
+  >
+    <mat-option>
+      <ngx-mat-select-search
+        placeholderLabel="Enter search"
+        noEntriesFoundLabel="No record exist"
+        [searching]="loading()"
+        [formControl]="searchCtrl"
+      ></ngx-mat-select-search>
+    </mat-option>
+
+    @for (option of options(); track $index) {
+      <mat-option [value]="option.value">
+        {{ option.label }}
+      </mat-option>
+    }
+  </mat-select>
+</mat-form-field>

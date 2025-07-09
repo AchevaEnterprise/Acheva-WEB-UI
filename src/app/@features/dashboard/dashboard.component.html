@@ -1,0 +1,266 @@
+<div>
+  <h1 class="acva-heading-2 fw-500">Good {{ '' | greeting }}, Daniel👋</h1>
+  <p class="acva-para-1 text-neutral-500">
+    Create and initiate result approval process
+  </p>
+</div>
+
+<!-- ANALYTICS -->
+<div class="grid lg:grid-cols-5 md:grid-cols-3 sm:grid-cols-2 gap-4 mt-4">
+  @for (data of analtyics(); track $index) {
+    <app-analytics-card [analtyics]="data" />
+  }
+</div>
+
+<!-- CHART -->
+<div class="mt-8">
+  <app-card label="Academic Performance">
+    <div class="input-style-1 acheva-input" rightHeaderContent>
+      <mat-form-field appearance="outline">
+        <mat-select value="1">
+          <mat-option [value]="'1'">1st Semester</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div content class="p-4">
+      <app-chart />
+    </div>
+  </app-card>
+</div>
+
+<!-- SEGMENTS -->
+<div class="mt-8">
+  <app-segment-switcher
+    [activeSegment]="activeSegment()"
+    [segments]="segments()"
+    (switchEvent)="switchSegment($event)"
+  />
+
+  <div class="mt-3">
+    <app-card
+      [label]="activeSegment().label"
+      [description]="segmentCardLabel()"
+      [iconSrc]="segmentCardIconSrc()"
+    >
+      <div class="input-style-1 acheva-input" rightHeaderContent>
+        <mat-form-field appearance="outline">
+          <input
+            matInput
+            type="text"
+            placeholder="Search record..."
+            formControlName="fullname"
+          />
+        </mat-form-field>
+      </div>
+
+      <div content class="p-4">
+        <div class="flex flex-wrap justify-between items-end">
+          <div class="flex gap-4">
+            <div class="input-style-1 acheva-input">
+              <p class="acva-para-2 fw-400 label-text">Faculty</p>
+
+              <mat-form-field [style.width.%]="100" appearance="outline">
+                <mat-select
+                  placeholder="Select faculty"
+                  formControlName="title"
+                >
+                  <mat-option [value]="'Science'">Science</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+
+            <div class="input-style-1 acheva-input">
+              <p class="acva-para-2 fw-400 label-text">Department</p>
+
+              <mat-form-field appearance="outline">
+                <mat-select
+                  placeholder="Select department"
+                  formControlName="role"
+                >
+                  <mat-option [value]="'Science'">Science</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+          </div>
+
+          <div class="input-style-1 acheva-input">
+            <mat-form-field [style.width.%]="100" appearance="outline">
+              <span matPrefix>
+                <app-svg
+                  svgWidth="1.3rem"
+                  svgHeight="1.3rem"
+                  src="icons/general/filter-icon.svg"
+                ></app-svg>
+              </span>
+
+              <mat-select placeholder="Filter" formControlName="title">
+                <mat-option [value]="'Science'">Science</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+        </div>
+
+        <!-- <app-empty-state
+          iconSrc="images/general/empty-doc.svg"
+          description="Your drafts is empty, create a course and input results to fill this page"
+        /> -->
+
+        <div class="w-full overflow-auto">
+          <table mat-table [dataSource]="dataSource()">
+            <ng-container matColumnDef="courseCode">
+              <th mat-header-cell *matHeaderCellDef>COURSE CODE</th>
+              <td mat-cell *matCellDef="let element">
+                {{ element.courseCode }}
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="courseTitle">
+              <th mat-header-cell *matHeaderCellDef>COURSE TITLE</th>
+              <td mat-cell *matCellDef="let element">
+                {{ element.courseTitle }}
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="session">
+              <th mat-header-cell *matHeaderCellDef>SESSION</th>
+              <td mat-cell *matCellDef="let element">{{ element.session }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="department">
+              <th mat-header-cell *matHeaderCellDef>DEPARTMENT</th>
+              <td mat-cell *matCellDef="let element">
+                {{ element.department }}
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="faculty">
+              <th mat-header-cell *matHeaderCellDef>FACULTY</th>
+              <td mat-cell *matCellDef="let element">{{ element.faculty }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="uploadedDate">
+              <th mat-header-cell *matHeaderCellDef>UPLOADED DATE</th>
+              <td mat-cell *matCellDef="let element">
+                {{ element.uploadedDate | date: 'mediumDate' }}
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="sentDate">
+              <th mat-header-cell *matHeaderCellDef>SENT DATE</th>
+              <td mat-cell *matCellDef="let element">
+                {{ element.sentDate | date: 'mediumDate' }}
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="modifiedDate">
+              <th mat-header-cell *matHeaderCellDef>MODIFIED DATE</th>
+              <td mat-cell *matCellDef="let element">
+                {{ element.modifiedDate | date: 'mediumDate' }}
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>ACTIONS</th>
+              <td mat-cell *matCellDef="let element">
+                <button [matMenuTriggerFor]="menu" class="cursor-pointer">
+                  <app-svg
+                    svgWidth="3rem"
+                    svgHeight="3rem"
+                    src="icons/general/option-icon.svg"
+                  ></app-svg>
+                </button>
+                <mat-menu #menu="matMenu">
+                  <button mat-menu-item>Send to HOD</button>
+                  <button mat-menu-item>Preview</button>
+                </mat-menu>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+          </table>
+        </div>
+      </div>
+    </app-card>
+  </div>
+</div>
+
+<!-- ACADEMIC CALENDAR -->
+<div class="mt-8 grid grid-cols-2 gap-4">
+  <app-card
+    label="Academic Calendar"
+    iconSrc="icons/general/calendar-icon.svg"
+    [showDivider]="true"
+  >
+    <div class="input-style-1 acheva-input" rightHeaderContent>
+      <mat-form-field appearance="outline">
+        <mat-select value="week">
+          <mat-option [value]="'week'">Week</mat-option>
+          <mat-option [value]="'month'">Month</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div content class="p-4">
+      <mat-calendar [(selected)]="selectedCalendarDate"></mat-calendar>
+    </div>
+  </app-card>
+
+  <div class="flex flex-col gap-4">
+    <!-- RECENT ACTIVITY -->
+    <app-card
+      label="Recent Activity"
+      iconSrc="icons/general/recent-icon.svg"
+      [showDivider]="true"
+    >
+      <div class="input-style-1 acheva-input" rightHeaderContent>
+        <mat-form-field appearance="outline">
+          <mat-select value="newest">
+            <mat-option [value]="'newest'">Newest</mat-option>
+            <mat-option [value]="'oldest'">Oldest</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div content class="p-4 h-[35vh] overflow-y-auto">
+        @for (activity of activities(); track $index) {
+          <app-activity [activity]="activity" />
+        }
+        <!-- <app-empty-state
+          iconSrc="images/general/empty-disk.svg"
+          description="You have no recent activities"
+        /> -->
+      </div>
+    </app-card>
+
+    <!-- UPCOMING DEADLINES -->
+    <app-card
+      label="Upcoming Deadlines/Schedule"
+      iconSrc="icons/general/recent-icon.svg"
+      [showDivider]="true"
+    >
+      <div class="input-style-1 acheva-input" rightHeaderContent>
+        <mat-form-field appearance="outline">
+          <mat-select value="today">
+            <mat-option [value]="'today'">Today</mat-option>
+            <mat-option [value]="'yesterday'">Yesterday</mat-option>
+            <mat-option [value]="'1week'">1 Week</mat-option>
+            <mat-option [value]="'2week'">2 Weeks</mat-option>
+            <mat-option [value]="'3week'">3 Weeks</mat-option>
+            <mat-option [value]="'monthly'">Last Month</mat-option>
+            <mat-option [value]="'session'">Session</mat-option>
+            <mat-option [value]="'custom'">Custom Date Rage</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div content class="p-4 h-[35vh] overflow-y-auto">
+        <app-empty-state
+          iconSrc="images/general/empty-cup.svg"
+          description="You have no active schedules at the moment"
+        />
+      </div>
+    </app-card>
+  </div>
+</div>
