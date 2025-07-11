@@ -41,6 +41,5 @@
 
 .mat-mdc-unelevated-button.btn-gradient {
   background: linear-gradient(180deg, #2793ff, #7bf) !important;
-
-  @apply p-0;
+  @apply px-4;
 }

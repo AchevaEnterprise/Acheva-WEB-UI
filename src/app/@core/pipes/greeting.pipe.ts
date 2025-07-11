@@ -8,11 +8,11 @@ export class GreetingPipe implements PipeTransform {
     const hour = new Date().getHours();
 
     if (hour < 12) {
-      return 'Morning';
+      return 'Good Morning';
     } else if (hour < 17) {
-      return 'Afternoon';
+      return 'Good Afternoon';
     } else {
-      return 'Evening';
+      return 'Good Evening';
     }
   }
 }

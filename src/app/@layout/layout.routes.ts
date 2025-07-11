@@ -23,13 +23,8 @@ export const routes: Routes = [
       },
       {
         path: 'courses',
-        data: {
-          title: 'Courses',
-        },
-        loadComponent: () =>
-          import('../@features/courses/courses.component').then(
-            (m) => m.CoursesComponent
-          ),
+        loadChildren: () =>
+          import('../@features/courses/course.routes').then((m) => m.routes),
       },
       {
         path: 'my-result',

@@ -1,5 +1,5 @@
 <div>
-  <h1 class="acva-heading-2 fw-500">Good {{ '' | greeting }}, Daniel👋</h1>
+  <h1 class="acva-heading-2 fw-500">{{ '' | greeting }}, Daniel👋</h1>
   <p class="acva-para-1 text-neutral-500">
     Create and initiate result approval process
   </p>
@@ -43,16 +43,7 @@
       [description]="segmentCardLabel()"
       [iconSrc]="segmentCardIconSrc()"
     >
-      <div class="input-style-1 acheva-input" rightHeaderContent>
-        <mat-form-field appearance="outline">
-          <input
-            matInput
-            type="text"
-            placeholder="Search record..."
-            formControlName="fullname"
-          />
-        </mat-form-field>
-      </div>
+      <app-search-input rightHeaderContent />
 
       <div content class="p-4">
         <div class="flex flex-wrap justify-between items-end">
@@ -142,21 +133,21 @@
             <ng-container matColumnDef="uploadedDate">
               <th mat-header-cell *matHeaderCellDef>UPLOADED DATE</th>
               <td mat-cell *matCellDef="let element">
-                {{ element.uploadedDate | date: 'mediumDate' }}
+                {{ element.uploadedDate | date: 'MMM d, YYYY h:mm a' }}
               </td>
             </ng-container>
 
             <ng-container matColumnDef="sentDate">
               <th mat-header-cell *matHeaderCellDef>SENT DATE</th>
               <td mat-cell *matCellDef="let element">
-                {{ element.sentDate | date: 'mediumDate' }}
+                {{ element.sentDate | date: 'MMM d, YYYY h:mm a' }}
               </td>
             </ng-container>
 
             <ng-container matColumnDef="modifiedDate">
               <th mat-header-cell *matHeaderCellDef>MODIFIED DATE</th>
               <td mat-cell *matCellDef="let element">
-                {{ element.modifiedDate | date: 'mediumDate' }}
+                {{ element.modifiedDate | date: 'MMM d, YYYY h:mm a' }}
               </td>
             </ng-container>
 

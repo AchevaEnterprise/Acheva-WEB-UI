@@ -9,6 +9,7 @@ import { MatTableModule } from '@angular/material/table';
 import { COURSES } from '../../@core/constant/course-mock';
 import { ICourse } from '../../@core/models/course.model';
 import { GreetingPipe } from '../../@core/pipes/greeting.pipe';
+import { CardComponent } from '../../@shared/components/card/card.component';
 import { EmptyStateComponent } from '../../@shared/components/empty-state/empty-state.component';
 import {
   ISegmentSwitcher,
@@ -23,8 +24,9 @@ import {
   AnalyticsCardComponent,
   IAnalytics,
 } from './components/analytics-card/analytics-card.component';
-import { CardComponent } from './components/card/card.component';
 import { ChartComponent } from './components/chart/chart.component';
+import { RoleEnum } from '../auth/model/auth.model';
+import { SearchInputComponent } from "../../@shared/components/forms/search-input/search-input.component";
 
 @Component({
   selector: 'app-dashboard',
@@ -46,7 +48,8 @@ import { ChartComponent } from './components/chart/chart.component';
     SvgComponent,
     DatePipe,
     GreetingPipe,
-  ],
+    SearchInputComponent
+],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
 })
@@ -99,27 +102,33 @@ export class DashboardComponent {
   activeSegment = signal<ISegmentSwitcher>({
     label: 'Drafts',
     value: 'drafts',
+    roleAccess: RoleEnum.ALL,
   });
   segments = signal<ISegmentSwitcher[]>([
     {
       label: 'Drafts',
       value: 'drafts',
+      roleAccess: RoleEnum.ALL,
     },
     {
       label: 'Pending',
       value: 'pending',
+      roleAccess: RoleEnum.ALL,
     },
     {
       label: 'Unverified',
       value: 'unverified',
+      roleAccess: RoleEnum.ALL,
     },
     {
       label: 'Verified',
       value: 'verified',
+      roleAccess: RoleEnum.ALL,
     },
     {
       label: 'Published',
       value: 'published',
+      roleAccess: RoleEnum.ALL,
     },
   ]);
 
