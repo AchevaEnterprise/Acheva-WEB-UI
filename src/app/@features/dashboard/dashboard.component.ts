@@ -26,7 +26,7 @@ import {
 } from './components/analytics-card/analytics-card.component';
 import { ChartComponent } from './components/chart/chart.component';
 import { RoleEnum } from '../auth/model/auth.model';
-import { SearchInputComponent } from "../../@shared/components/forms/search-input/search-input.component";
+import { SearchInputComponent } from '../../@shared/components/forms/search-input/search-input.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -48,8 +48,8 @@ import { SearchInputComponent } from "../../@shared/components/forms/search-inpu
     SvgComponent,
     DatePipe,
     GreetingPipe,
-    SearchInputComponent
-],
+    SearchInputComponent,
+  ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
 })
