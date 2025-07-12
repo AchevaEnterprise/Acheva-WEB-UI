@@ -1,5 +1,6 @@
 @if (type() === 'fill') {
   <button
+    type="button"
     mat-flat-button
     [disabled]="disabled()"
     [class]="`${class()} btn-gradient`"
@@ -15,6 +16,7 @@
 
 @if (type() === 'clear') {
   <button
+    type="button"
     mat-button
     [disabled]="disabled()"
     [class]="`${class()}`"
@@ -30,6 +32,7 @@
 
 @if (type() === 'outline') {
   <button
+    type="button"
     mat-stroked-button
     [disabled]="disabled()"
     [class]="`${class()}`"

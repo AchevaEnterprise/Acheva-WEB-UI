@@ -1,6 +1,6 @@
 import { Component, input } from '@angular/core';
 import { MatDividerModule } from '@angular/material/divider';
-import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
+import { SvgComponent } from '../svg/svg.component';
 
 @Component({
   selector: 'app-card',
@@ -13,4 +13,5 @@ export class CardComponent {
   description = input<string>();
   iconSrc = input<string>();
   showDivider = input<boolean>(false);
+  dividerClass = input<string>();
 }

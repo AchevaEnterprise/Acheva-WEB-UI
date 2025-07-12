@@ -1,1 +1,62 @@
-<p>courses works!</p>
+<div id="container">
+  <header class="flex justify-between gap-4 items-baseline">
+    <div class="flex items-center gap-2">
+      <app-svg
+        svgWidth="1.3rem"
+        svgHeight="1.3rem"
+        src="icons/general/course-icon.svg"
+      ></app-svg>
+      <h3 class="acva-heading-4 fw-500">Course Template</h3>
+    </div>
+
+    <app-search-input placeholder="Search Courses..." />
+  </header>
+
+  <div class="grid lg:grid-cols-[30%_1fr] md:grid-cols-2 lg:grid-cols-1 gap-4">
+    <app-card>
+      <div
+        content
+        class="border-[1px] border-dashed rounded-[8px] grid place-content-center place-items-center h-[28vh] mx-4 mb-4 cursor-pointer"
+      >
+        <app-svg
+          svgWidth="5rem"
+          svgHeight="5rem"
+          src="icons/general/file-icon.svg"
+        ></app-svg>
+        <p class="text-neutral-500 acva-para-2 mt-4">Create a new course</p>
+      </div>
+    </app-card>
+
+    <app-card
+      [label]="'Recently used courses'"
+      [showDivider]="true"
+      [dividerClass]="'!mt-4'"
+    >
+      <div content class="h-[25vh]">
+        <app-empty-state
+          iconSrc="images/general/empty-doc.svg"
+          description="You have no recent templates"
+        />
+      </div>
+    </app-card>
+  </div>
+
+  <mat-divider class="!mt-8"></mat-divider>
+
+  <header class="flex justify-between gap-4 items-baseline my-4">
+    <h3 class="acva-heading-4 fw-500">Suggested Template</h3>
+    <a class="text-blue-500" routerLink="/">View all</a>
+  </header>
+
+  <mat-divider></mat-divider>
+
+  <!-- COURSE TEMPLATE CARDS -->
+  <div class="grid lg:grid-cols-3 sm:grid-cols-2 gap-4 mt-4">
+    @for (template of courseTemplates(); track $index) {
+      <app-course-card
+        [courseTemplate]="template"
+        (useTemplateEvent)="createResult($event)"
+      />
+    }
+  </div>
+</div>

@@ -1,0 +1,127 @@
+<div id="container">
+  <header class="mb-8">
+    <h3 class="acva-heading-3 fw-500">Course Details</h3>
+    <p class="acva-para-1 text-neutral-500">
+      Complete the fields below to set up your course and reach your students
+    </p>
+  </header>
+
+  <div class="grid lg:grid-cols-[1fr_40%] md:grid-cols-2 sm:grid-cols-1 gap-8">
+    <form [formGroup]="form()">
+      <div class="input-style-1 acheva-input w-full">
+        <p class="acva-para-2 fw-400 label-text">Session</p>
+
+        <mat-form-field [style.width.%]="100" appearance="outline">
+          <mat-select
+            placeholder="Select your faculty"
+            formControlName="session"
+          >
+            <mat-option [value]="'2024/2025'">2024/2025</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div class="input-style-1 acheva-input w-full">
+        <p class="acva-para-2 fw-400 label-text">Semester</p>
+
+        <mat-form-field [style.width.%]="100" appearance="outline">
+          <input matInput type="text" formControlName="semester" />
+        </mat-form-field>
+      </div>
+
+      <div class="input-style-1 acheva-input w-full">
+        <p class="acva-para-2 fw-400 label-text">Course Title</p>
+
+        <mat-form-field [style.width.%]="100" appearance="outline">
+          <input matInput type="text" formControlName="course_title" />
+        </mat-form-field>
+      </div>
+
+      <div class="input-style-1 acheva-input w-full">
+        <p class="acva-para-2 fw-400 label-text">Course Code</p>
+
+        <mat-form-field [style.width.%]="100" appearance="outline">
+          <input matInput type="text" formControlName="course_code" />
+        </mat-form-field>
+      </div>
+
+      <div class="input-style-1 acheva-input w-full">
+        <p class="acva-para-2 fw-400 label-text">Course Coordinator</p>
+
+        <mat-form-field [style.width.%]="100" appearance="outline">
+          <input matInput type="text" formControlName="course_cordinator" />
+        </mat-form-field>
+      </div>
+
+      <div class="input-style-1 acheva-input w-full">
+        <p class="acva-para-2 fw-400 label-text">Faculty</p>
+
+        <mat-form-field [style.width.%]="100" appearance="outline">
+          <mat-select
+            placeholder="Select your faculty"
+            formControlName="faculty"
+          >
+            <mat-option [value]="'Engineering'">Engineering</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div class="input-style-1 acheva-input w-full">
+        <p class="acva-para-2 fw-400 label-text">Department</p>
+
+        <mat-form-field [style.width.%]="100" appearance="outline">
+          <mat-select
+            placeholder="Select your department"
+            formControlName="department"
+          >
+            <mat-option [value]="'Mechanical Engineering'"
+              >Mechanical Engineering</mat-option
+            >
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div class="input-style-1 acheva-input w-full">
+        <p class="acva-para-2 fw-400 label-text">Level</p>
+
+        <mat-form-field [style.width.%]="100" appearance="outline">
+          <input matInput type="text" formControlName="level" />
+        </mat-form-field>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <div class="input-style-1 acheva-input">
+          <p class="acva-para-2 fw-400 label-text">Course Unit</p>
+
+          <mat-form-field [style.width.%]="100" appearance="outline">
+            <input
+              matInput
+              type="text"
+              formControlName="course_unit"
+              readonly
+            />
+          </mat-form-field>
+        </div>
+
+        <app-button
+          type="outline"
+          label="-"
+          class="btn-sm"
+          (clickEvent)="decreaseCourseUnit()"
+        />
+        <app-button
+          label="+"
+          class="btn-sm"
+          (clickEvent)="increaseCourseUnit()"
+        />
+      </div>
+    </form>
+
+    <app-course-preview [courseTemplate]="this.form().getRawValue()" />
+  </div>
+
+  <div class="flex gap-3 justify-end">
+    <app-button type="outline" label="Cancel" />
+    <app-button label="Submit" (clickEvent)="submit()" />
+  </div>
+</div>

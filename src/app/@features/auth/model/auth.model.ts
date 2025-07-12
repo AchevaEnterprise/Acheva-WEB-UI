@@ -3,6 +3,14 @@ export interface ILogIn {
   password: string;
 }
 
+export enum RoleEnum {
+  ALL = '',
+  DEAN = 'dean',
+  HOD = 'hod',
+  COURSE_ADVISER = 'course-adviser',
+  COURSE_CORDINATOR = 'course-cordinator',
+}
+
 export interface ISignUp {
   first_name: string;
   last_name: string;
@@ -11,7 +19,7 @@ export interface ISignUp {
   faculty: string;
   department: string;
   title: string;
-  role: string;
+  role: RoleEnum;
   password: string;
 }
 

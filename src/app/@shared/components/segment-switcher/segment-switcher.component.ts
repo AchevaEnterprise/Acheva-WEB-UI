@@ -1,5 +1,6 @@
 import { NgClass } from '@angular/common';
 import { Component, input, output } from '@angular/core';
+import { RoleEnum } from '../../../@features/auth/model/auth.model';
 
 export interface ISegmentSwitcher {
   label: string;
@@ -12,6 +13,7 @@ export interface ISegmentSwitcher {
     | 'imported'
     | 'regular'
     | 'reference';
+  roleAccess: RoleEnum | RoleEnum[];
 }
 
 @Component({

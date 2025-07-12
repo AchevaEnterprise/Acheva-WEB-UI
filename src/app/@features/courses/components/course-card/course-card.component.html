@@ -1,0 +1,50 @@
+<div
+  class="flex flex-col justify-between border-[1px] border-neutral-300 rounded-[8px] w-full h-full p-4 relative"
+>
+  <div>
+    <h4 class="acva-clamp-2 acva-heading-5 fw-500">
+      {{ courseTemplate()?.course_title }}
+    </h4>
+    <p class="text-neutral-500">
+      {{ courseTemplate()?.course_code }} -
+      {{ courseTemplate()?.course_unit }} Unit(s)
+    </p>
+
+    <div class="my-4 grid gap-[8px]">
+      <p class="text-neutral-400 text-sm flex items-center gap-2">
+        <app-svg
+          svgWidth="1rem"
+          svgHeight="1rem"
+          src="icons/general/calendar-icon.svg"
+        ></app-svg>
+        {{ courseTemplate()?.semester }} - {{ courseTemplate()?.session }}
+      </p>
+
+      <p class="text-neutral-400 text-sm flex items-center gap-2">
+        <app-svg
+          svgWidth="1rem"
+          svgHeight="1rem"
+          src="icons/general/role-icon.svg"
+        ></app-svg
+        >{{ courseTemplate()?.level }}
+      </p>
+
+      <p class="text-neutral-400 text-sm flex items-center gap-2">
+        <app-svg
+          svgWidth="1rem"
+          svgHeight="1rem"
+          src="icons/general/building-icon.svg"
+        ></app-svg
+        >{{ courseTemplate()?.department }}
+      </p>
+    </div>
+  </div>
+
+  <div class="flex justify-end">
+    <app-button
+      label="Create Result"
+      class="btn-md"
+      (clickEvent)="createResult()"
+    />
+  </div>
+</div>

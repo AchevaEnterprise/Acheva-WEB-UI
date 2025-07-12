@@ -1,5 +1,5 @@
 <div class="border-[1px] border-neutral-300 rounded-[8px] w-full">
-  <div class="flex justify-between flex-wrap items-baseline px-4 pt-4">
+  <div class="flex justify-between gap-4 flex-wrap items-center px-4 pt-4">
     <div class="flex items-center gap-4">
       @if (iconSrc()) {
         <app-svg
@@ -23,7 +23,7 @@
   </div>
 
   @if (showDivider()) {
-    <mat-divider></mat-divider>
+    <mat-divider [class]="dividerClass()"></mat-divider>
   }
 
   <ng-content select="[content]"></ng-content>

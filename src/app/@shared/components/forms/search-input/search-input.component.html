@@ -1,0 +1,18 @@
+<div class="input-style-1 acheva-input">
+  <mat-form-field appearance="outline">
+    <span matPrefix>
+      <app-svg
+        svgWidth="1.3rem"
+        svgHeight="1.3rem"
+        src="icons/general/search-icon.svg"
+      ></app-svg>
+    </span>
+
+    <input
+      matInput
+      type="text"
+      [placeholder]="placeholder()"
+      [formControl]="searchCtrl"
+    />
+  </mat-form-field>
+</div>
