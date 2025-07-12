@@ -47,7 +47,9 @@ export class SideBarComponent {
   onToggleSideNav = output<{ expanded: boolean }>();
 
   isActiveRoute = computed(() =>
-    this.appMenu()?.some((menu: IMenu) => this.router.url.includes(menu.route))
+    this.appMenu()?.some((menu: IMenu) =>
+      this.router.url.startsWith(menu.route)
+    )
   );
 
   toggleSideBar() {
