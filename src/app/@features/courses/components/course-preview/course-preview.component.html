@@ -1,0 +1,42 @@
+<div class="rounded-[8px] bg-[#D9D9D94D] p-4">
+  <h3 class="acva-heading-5 fw-500 mb-8">Course Preview</h3>
+
+  <div class="mb-4">
+    <p class="acva-para-1 text-neutral-500">Session</p>
+    <p class="acva-para-2">{{ courseTemplate()?.session }}</p>
+  </div>
+  <div class="mb-4">
+    <p class="acva-para-1 text-neutral-500">Semester</p>
+    <p class="acva-para-2">{{ courseTemplate()?.semester }}</p>
+  </div>
+  <div class="mb-4">
+    <p class="acva-para-1 text-neutral-500">Course Title</p>
+    <p class="acva-para-2">{{ courseTemplate()?.course_title }}</p>
+  </div>
+  <div class="mb-4">
+    <p class="acva-para-1 text-neutral-500">Course Code</p>
+    <p class="acva-para-2">{{ courseTemplate()?.course_code }}</p>
+  </div>
+  <div class="mb-4">
+    <p class="acva-para-1 text-neutral-500">Course Coordinator</p>
+    <p class="acva-para-2">{{ courseTemplate()?.course_cordinator }}</p>
+  </div>
+  <div class="mb-4">
+    <p class="acva-para-1 text-neutral-500">Faculty</p>
+    <p class="acva-para-2">{{ courseTemplate()?.faculty }}</p>
+  </div>
+  <div class="mb-4">
+    <p class="acva-para-1 text-neutral-500">Department</p>
+    <p class="acva-para-2">{{ courseTemplate()?.department }}</p>
+  </div>
+  <div class="mb-4">
+    <p class="acva-para-1 text-neutral-500">Course Load</p>
+    <p class="acva-para-2">{{ courseTemplate()?.course_unit }}</p>
+  </div>
+  <div class="mb-4">
+    <p class="acva-para-1 text-neutral-500">Date Created</p>
+    <p class="acva-para-2">
+      {{ courseTemplate()?.date_created | date: 'MMM d, YYYY h:mm a' }}
+    </p>
+  </div>
+</div>

@@ -40,10 +40,10 @@ export class SideBarComponent {
     }
   });
 
-  // TODO: Make a popover that shows other accounts
+  // TODO: Make a popover that shows other accounts if it includes one
   accounts = this.authService.accounts();
 
-  expanded = signal<boolean>(true);
+  expanded = signal<boolean>(window.innerWidth > 768);
   onToggleSideNav = output<{ expanded: boolean }>();
 
   isActiveRoute = computed(() =>
