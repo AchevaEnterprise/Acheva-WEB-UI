@@ -4,8 +4,6 @@ import { Component } from '@angular/core';
   selector: 'app-time-line',
   imports: [],
   templateUrl: './time-line.component.html',
-  styleUrl: './time-line.component.scss'
+  styleUrl: './time-line.component.scss',
 })
-export class TimeLineComponent {
-
-}
+export class TimeLineComponent {}
