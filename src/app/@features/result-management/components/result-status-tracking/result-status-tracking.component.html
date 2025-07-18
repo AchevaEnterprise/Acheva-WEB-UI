@@ -1,0 +1,29 @@
+<div
+  class="border-[1px] border-neutral-300 rounded-[8px] w-full h-full p-4 relative"
+>
+  <header class="flex gap-8 justify-between items-center mb-4">
+    <h6 class="acva-clamp-2 acva-para-2 fw-500">Result Status Tracking</h6>
+
+    <div class="input-style-1 acheva-input w-[40%]">
+      <mat-form-field [style.width.%]="100" appearance="outline">
+        <mat-select placeholder="Course">
+          <mat-option [value]="'csc100'">CSC 100</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+  </header>
+
+  <!-- INFO CARD -->
+  <div
+    class="bg-[#D4E9FF] border-[#93C9FF] border-[1px] rounded-[8px] px-3 py-4 mb-4"
+  >
+    <p class="acva-para-1 fw-500 text-[#207AD4]">
+      Last updated: Today at 10:45 AM
+    </p>
+  </div>
+
+  <div>
+    <h6 class="acva-para-2">Status Timeline</h6>
+    <app-time-line />
+  </div>
+</div>

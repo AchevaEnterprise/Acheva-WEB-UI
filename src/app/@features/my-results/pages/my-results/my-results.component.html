@@ -1,0 +1,75 @@
+<div id="container">
+  <header class="flex justify-between gap-4 items-baseline mb-8">
+    <div class="flex items-center gap-2">
+      <app-svg
+        svgWidth="1.3rem"
+        svgHeight="1.3rem"
+        src="icons/menu/courses-inactive.svg"
+      ></app-svg>
+      <h3 class="acva-heading-5 fw-500">My Results</h3>
+    </div>
+
+    <app-button label="View Courses" class="btn-md" />
+  </header>
+
+  <!-- SEARCH FILTERS -->
+  <div class="flex flex-wrap justify-between gap-3">
+    <div class="flex flex-wrap gap-3">
+      <app-search-input placeholder="Search Results" />
+
+      <div class="input-style-1 acheva-input">
+        <mat-form-field appearance="outline">
+          <mat-select placeholder="Select semester">
+            <mat-option [value]="'all-semster'">All Semester</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <!-- <div class="input-style-1 acheva-input">
+        <mat-form-field [style.width.%]="100" appearance="outline">
+          <span matPrefix>
+            <app-svg
+              svgWidth="1.3rem"
+              svgHeight="1.3rem"
+              src="icons/general/filter-icon.svg"
+            ></app-svg>
+          </span>
+
+          <mat-select placeholder="Filter" formControlName="title">
+            <mat-option [value]="'Science'">Science</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div> -->
+    </div>
+
+    <app-button
+      [label]="viewLabel()"
+      type="outline"
+      class="btn-md"
+      [icon]="viewIcon()"
+      (clickEvent)="toggleView()"
+    />
+  </div>
+
+  <app-segment-switcher
+    [activeSegment]="activeSegment()"
+    [segments]="segments()"
+    (switchEvent)="switchSegment($event)"
+  />
+  <div class="mt-3">
+    <!-- <app-empty-state
+      iconSrc="images/general/empty-cup.svg"
+      description="View course details by selecting a course with the session and level you want to work on"
+    /> -->
+
+    @if (view() === 'grid') {
+      <div class="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <app-my-result-grid-card (viewEvent)="uploadResults()" />
+      </div>
+    } @else {
+      <div>
+        <app-my-result-list-card (viewEvent)="uploadResults()" />
+      </div>
+    }
+  </div>
+</div>

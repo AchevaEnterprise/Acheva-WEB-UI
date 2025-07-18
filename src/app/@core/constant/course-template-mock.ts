@@ -1,4 +1,4 @@
-import { ICourseTemplate } from '../models/course.model';
+import { ICourseTemplate } from '../../@features/courses/models/course.model';
 
 export const COURSE_TEMPLATE: Partial<ICourseTemplate>[] = [
   {

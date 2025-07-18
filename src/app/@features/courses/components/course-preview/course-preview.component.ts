@@ -1,5 +1,5 @@
 import { Component, input } from '@angular/core';
-import { ICourseTemplate } from '../../../../@core/models/course.model';
+import { ICourseTemplate } from '../../models/course.model';
 import { DatePipe } from '@angular/common';
 
 @Component({

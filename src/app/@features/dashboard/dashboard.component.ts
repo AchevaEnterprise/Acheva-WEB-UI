@@ -7,15 +7,18 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
 import { COURSES } from '../../@core/constant/course-mock';
-import { ICourse } from '../../@core/models/course.model';
 import { GreetingPipe } from '../../@core/pipes/greeting.pipe';
 import { CardComponent } from '../../@shared/components/card/card.component';
 import { EmptyStateComponent } from '../../@shared/components/empty-state/empty-state.component';
+import { SearchInputComponent } from '../../@shared/components/forms/search-input/search-input.component';
+import { PaginatorComponent } from '../../@shared/components/paginator/paginator.component';
 import {
   ISegmentSwitcher,
   SegmentSwitcherComponent,
 } from '../../@shared/components/segment-switcher/segment-switcher.component';
 import { SvgComponent } from '../../@shared/components/svg/svg.component';
+import { RoleEnum } from '../auth/model/auth.model';
+import { ICourse } from '../courses/models/course.model';
 import {
   ActivityComponent,
   IActivity,
@@ -25,8 +28,6 @@ import {
   IAnalytics,
 } from './components/analytics-card/analytics-card.component';
 import { ChartComponent } from './components/chart/chart.component';
-import { RoleEnum } from '../auth/model/auth.model';
-import { SearchInputComponent } from '../../@shared/components/forms/search-input/search-input.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -49,6 +50,7 @@ import { SearchInputComponent } from '../../@shared/components/forms/search-inpu
     DatePipe,
     GreetingPipe,
     SearchInputComponent,
+    PaginatorComponent,
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
@@ -131,6 +133,9 @@ export class DashboardComponent {
       roleAccess: RoleEnum.ALL,
     },
   ]);
+  selectedCalendarDate = model<number>(Date.now());
+  segmentCardLabel = signal<string>('Access your recent drafts from here');
+  segmentCardIconSrc = signal<string>('icons/general/draft-icon.svg');
 
   activities = signal<IActivity[]>([
     {
@@ -161,10 +166,6 @@ export class DashboardComponent {
       date: new Date(),
     },
   ]);
-
-  selectedCalendarDate = model<number>(Date.now());
-  segmentCardLabel = signal<string>('Access your recent drafts from here');
-  segmentCardIconSrc = signal<string>('icons/general/draft-icon.svg');
 
   switchSegment(switchValue: ISegmentSwitcher['value']) {
     this.activeSegment.update(

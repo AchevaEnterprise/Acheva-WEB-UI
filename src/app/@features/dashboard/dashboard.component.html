@@ -48,7 +48,7 @@
       <div content class="p-4">
         <div class="flex flex-wrap justify-between items-end">
           <div class="flex gap-4">
-            <div class="input-style-1 acheva-input">
+            <div class="input-style-1 acheva-input w-[40%]">
               <p class="acva-para-2 fw-400 label-text">Faculty</p>
 
               <mat-form-field [style.width.%]="100" appearance="outline">
@@ -61,10 +61,10 @@
               </mat-form-field>
             </div>
 
-            <div class="input-style-1 acheva-input">
+            <div class="input-style-1 acheva-input w-[40%]">
               <p class="acva-para-2 fw-400 label-text">Department</p>
 
-              <mat-form-field appearance="outline">
+              <mat-form-field [style.width.%]="100" appearance="outline">
                 <mat-select
                   placeholder="Select department"
                   formControlName="role"
@@ -75,7 +75,7 @@
             </div>
           </div>
 
-          <div class="input-style-1 acheva-input">
+          <div class="input-style-1 acheva-input w-[20%]">
             <mat-form-field [style.width.%]="100" appearance="outline">
               <span matPrefix>
                 <app-svg
@@ -172,6 +172,7 @@
             <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
           </table>
         </div>
+        <app-paginator />
       </div>
     </app-card>
   </div>

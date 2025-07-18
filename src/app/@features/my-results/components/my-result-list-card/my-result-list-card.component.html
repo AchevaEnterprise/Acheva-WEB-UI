@@ -1,0 +1,30 @@
+<!-- class="grid [grid-template-columns:repeat(auto-fit,_minmax(0,_1fr))] gap-4 items-center" -->
+<div class="flex flex-wrap gap-4 items-center w-full justify-between my-4">
+  <div>
+    <h5 class="acva-para-2 fw-500">Introduction to Computer Science</h5>
+    <p class="acva-para-1 fw-400 text-neutral-500">CSC 101</p>
+  </div>
+
+  <p class="acva-para-1 fw-400">3 Units</p>
+  <p class="acva-para-1 fw-400">1st Semester</p>
+  <p class="acva-para-1 fw-400">2024/2025</p>
+  <p class="acva-para-1 fw-400">67 Students</p>
+
+  <div class="progress-container w-[20%]">
+    <p class="acva-caption text-neutral-500 text-right">40% Done</p>
+    <mat-progress-bar mode="determinate" value="40"></mat-progress-bar>
+  </div>
+
+  <button [matMenuTriggerFor]="menu" class="cursor-pointer">
+    <app-svg
+      svgWidth="3rem"
+      svgHeight="3rem"
+      src="icons/general/option-icon.svg"
+    ></app-svg>
+  </button>
+  <mat-menu #menu="matMenu">
+    <button mat-menu-item (click)="viewResult()">View Result</button>
+  </mat-menu>
+</div>
+
+<mat-divider></mat-divider>

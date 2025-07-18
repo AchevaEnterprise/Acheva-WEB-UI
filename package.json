@@ -29,6 +29,7 @@
     "@tailwindcss/postcss": "^4.1.10",
     "date-fns": "^4.1.0",
     "eslint-plugin-unused-imports": "^4.1.4",
+    "file-saver": "^2.0.5",
     "highcharts": "^12.2.0",
     "highcharts-angular": "^5.1.0",
     "ngx-mat-select-search": "^8.0.2",
@@ -36,6 +37,7 @@
     "rxjs": "~7.8.0",
     "tailwindcss": "^4.1.10",
     "tslib": "^2.3.0",
+    "xlsx": "^0.18.5",
     "zone.js": "~0.15.0"
   },
   "overrides": {
@@ -51,6 +53,7 @@
     "@angular/cli": "^19.2.13",
     "@angular/compiler-cli": "^19.2.0",
     "@eslint/js": "^9.29.0",
+    "@types/file-saver": "^2.0.7",
     "@types/jasmine": "~5.1.0",
     "angular-eslint": "20.1.1",
     "eslint": "^9.29.0",

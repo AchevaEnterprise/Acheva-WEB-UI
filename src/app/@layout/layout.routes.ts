@@ -28,23 +28,17 @@ export const routes: Routes = [
       },
       {
         path: 'my-result',
-        data: {
-          title: 'My Results',
-        },
-        loadComponent: () =>
-          import('../@features/my-results/my-results.component').then(
-            (m) => m.MyResultsComponent
+        loadChildren: () =>
+          import('../@features/my-results/my-result.routes').then(
+            (m) => m.routes
           ),
       },
       {
         path: 'result-management',
-        data: {
-          title: 'Result Management',
-        },
-        loadComponent: () =>
+        loadChildren: () =>
           import(
-            '../@features/result-management/result-management.component'
-          ).then((m) => m.ResultManagementComponent),
+            '../@features/result-management/result-management.routes'
+          ).then((m) => m.routes),
       },
       {
         path: 'schedule',

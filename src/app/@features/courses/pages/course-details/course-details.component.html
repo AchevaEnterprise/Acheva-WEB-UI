@@ -13,10 +13,52 @@
 
         <mat-form-field [style.width.%]="100" appearance="outline">
           <mat-select
-            placeholder="Select your faculty"
+            placeholder="Select your ession"
             formControlName="session"
           >
             <mat-option [value]="'2024/2025'">2024/2025</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div class="input-style-1 acheva-input w-full">
+        <p class="acva-para-2 fw-400 label-text">Faculty</p>
+
+        <mat-form-field [style.width.%]="100" appearance="outline">
+          <mat-select
+            placeholder="Select your faculty"
+            formControlName="faculty"
+          >
+            <mat-option [value]="'Engineering'">Engineering</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div class="input-style-1 acheva-input w-full">
+        <p class="acva-para-2 fw-400 label-text">Department</p>
+
+        <mat-form-field [style.width.%]="100" appearance="outline">
+          <mat-select
+            placeholder="Select your department"
+            formControlName="department"
+          >
+            <mat-option [value]="'Mechanical Engineering'"
+              >Mechanical Engineering</mat-option
+            >
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div class="input-style-1 acheva-input w-full">
+        <p class="acva-para-2 fw-400 label-text">Level</p>
+
+        <mat-form-field [style.width.%]="100" appearance="outline">
+          <mat-select placeholder="Select level" formControlName="department">
+            <mat-option [value]="'100 LVL'">100 LVL</mat-option>
+            <mat-option [value]="'200 LVL'">200 LVL</mat-option>
+            <mat-option [value]="'300 LVL'">300 LVL</mat-option>
+            <mat-option [value]="'400 LVL'">400 LVL</mat-option>
+            <mat-option [value]="'500 LVL'">500 LVL</mat-option>
           </mat-select>
         </mat-form-field>
       </div>
@@ -53,42 +95,6 @@
         </mat-form-field>
       </div>
 
-      <div class="input-style-1 acheva-input w-full">
-        <p class="acva-para-2 fw-400 label-text">Faculty</p>
-
-        <mat-form-field [style.width.%]="100" appearance="outline">
-          <mat-select
-            placeholder="Select your faculty"
-            formControlName="faculty"
-          >
-            <mat-option [value]="'Engineering'">Engineering</mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
-
-      <div class="input-style-1 acheva-input w-full">
-        <p class="acva-para-2 fw-400 label-text">Department</p>
-
-        <mat-form-field [style.width.%]="100" appearance="outline">
-          <mat-select
-            placeholder="Select your department"
-            formControlName="department"
-          >
-            <mat-option [value]="'Mechanical Engineering'"
-              >Mechanical Engineering</mat-option
-            >
-          </mat-select>
-        </mat-form-field>
-      </div>
-
-      <div class="input-style-1 acheva-input w-full">
-        <p class="acva-para-2 fw-400 label-text">Level</p>
-
-        <mat-form-field [style.width.%]="100" appearance="outline">
-          <input matInput type="text" formControlName="level" />
-        </mat-form-field>
-      </div>
-
       <div class="flex items-center gap-3">
         <div class="input-style-1 acheva-input">
           <p class="acva-para-2 fw-400 label-text">Course Unit</p>
@@ -121,7 +127,7 @@
   </div>
 
   <div class="flex gap-3 justify-end">
-    <app-button type="outline" label="Cancel" />
-    <app-button label="Submit" (clickEvent)="submit()" />
+    <app-button type="clear" label="Cancel" />
+    <app-button label="Create Result" (clickEvent)="submit()" />
   </div>
 </div>

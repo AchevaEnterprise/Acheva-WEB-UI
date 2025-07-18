@@ -1,0 +1,14 @@
+<div class="flex gap-4 justify-between items-center">
+  <p class="acva-caption text-neutral-500">
+    Showing 1 to {{ paginator()?.pageSize }} of {{ paginator()?.total }}
+  </p>
+
+  <mat-paginator
+    [length]="paginator()?.total"
+    [pageSize]="paginator()?.pageSize"
+    [pageSizeOptions]="[10, 25, 50, 70, 100]"
+    [showFirstLastButtons]="true"
+    aria-label="Select page"
+  >
+  </mat-paginator>
+</div>
