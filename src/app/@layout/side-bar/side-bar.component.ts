@@ -1,13 +1,10 @@
 import { Component, computed, inject, output, signal } from '@angular/core';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatMenuModule } from '@angular/material/menu';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
-import {
-  COURSE_ADVISOR_MENU,
-  COURSE_CORDINATOR_MENU,
-} from '../../@core/constant/menu';
+import { MENU } from '../../@core/constant/menu';
 import { ImageFallbackDirective } from '../../@core/directives/image-fallback.directive';
 import { IMenu } from '../../@core/models/menu.model';
-import { RoleEnum } from '../../@features/auth/model/auth.model';
 import { AuthenticationService } from '../../@features/auth/service/auth.service';
 import { SvgComponent } from '../../@shared/components/svg/svg.component';
 
@@ -19,6 +16,8 @@ import { SvgComponent } from '../../@shared/components/svg/svg.component';
     SvgComponent,
     MatDividerModule,
     ImageFallbackDirective,
+    // RoleAccessDirective,
+    MatMenuModule,
   ],
   templateUrl: './side-bar.component.html',
   styleUrl: './side-bar.component.scss',
@@ -27,21 +26,10 @@ export class SideBarComponent {
   private readonly authService = inject(AuthenticationService);
   private readonly router = inject(Router);
 
-  appMenu = computed(() => {
-    const account = this.authService.activeAccount();
-    if (!account) return COURSE_ADVISOR_MENU; // This is for test, change to empty array
+  switchAccountEvent = output<string>();
 
-    switch (account.role) {
-      case RoleEnum.COURSE_ADVISOR:
-        return COURSE_ADVISOR_MENU;
-      case RoleEnum.COURSE_COORDINATOR:
-        return COURSE_CORDINATOR_MENU;
-      default:
-        return [];
-    }
-  });
-
-  accounts = this.authService.accounts();
+  appMenu = signal<IMenu[]>(MENU);
+  accounts = this.authService.accounts;
 
   expanded = signal<boolean>(window.innerWidth > 768);
   onToggleSideNav = output<{ expanded: boolean }>();
@@ -60,9 +48,7 @@ export class SideBarComponent {
   }
 
   switchAccount(accountId: string) {
-    this.authService.switchAccount(accountId).subscribe(() => {
-      this.router.navigate(['/dashboard']);
-    });
+    this.switchAccountEvent.emit(accountId);
   }
 
   logout() {

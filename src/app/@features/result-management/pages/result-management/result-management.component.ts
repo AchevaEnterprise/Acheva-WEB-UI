@@ -58,38 +58,60 @@ export class ResultManagementComponent {
   dataSource = signal<ICourse[]>(COURSES);
   selection = new SelectionModel<ICourse>(true, []);
 
-  activeSegment = signal<ISegmentSwitcher>({
-    label: 'Drafts',
-    value: 'drafts',
-    roleAccess: RoleEnum.ALL,
-  });
   segments = signal<ISegmentSwitcher[]>([
     {
       label: 'Drafts',
       value: 'drafts',
-      roleAccess: RoleEnum.ALL,
+      accessRole: [RoleEnum.LECTURER, RoleEnum.COURSE_COORDINATOR],
     },
     {
       label: 'Pending',
       value: 'pending',
-      roleAccess: RoleEnum.ALL,
+      accessRole: [
+        RoleEnum.HOD,
+        RoleEnum.COURSE_COORDINATOR,
+        RoleEnum.LECTURER,
+      ],
     },
     {
       label: 'Unverified',
       value: 'unverified',
-      roleAccess: RoleEnum.ALL,
+      accessRole: [
+        RoleEnum.DEAN,
+        RoleEnum.HOD,
+        RoleEnum.COURSE_COORDINATOR,
+        RoleEnum.LECTURER,
+      ],
     },
     {
       label: 'Verified',
       value: 'verified',
-      roleAccess: RoleEnum.ALL,
+      accessRole: [
+        RoleEnum.DEAN,
+        RoleEnum.HOD,
+        RoleEnum.COURSE_ADVISOR,
+        RoleEnum.COURSE_COORDINATOR,
+        RoleEnum.LECTURER,
+      ],
     },
     {
       label: 'Published',
       value: 'published',
-      roleAccess: RoleEnum.ALL,
+      accessRole: [
+        RoleEnum.DEAN,
+        RoleEnum.HOD,
+        RoleEnum.COURSE_ADVISOR,
+        RoleEnum.COURSE_COORDINATOR,
+        RoleEnum.LECTURER,
+      ],
+    },
+    {
+      label: 'Imported',
+      value: 'imported',
+      accessRole: [RoleEnum.DEAN, RoleEnum.HOD, RoleEnum.COURSE_ADVISOR],
     },
   ]);
+  activeSegment = signal<ISegmentSwitcher>(this.segments()[0]);
   segmentCardLabel = signal<string>('Access your recent drafts from here');
   segmentCardIconSrc = signal<string>('icons/general/draft-icon.svg');
 

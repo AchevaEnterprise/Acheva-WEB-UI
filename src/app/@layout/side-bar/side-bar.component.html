@@ -32,6 +32,7 @@
     >
       @for (menu of appMenu(); track $index) {
         @if (menu.isActive) {
+          <!-- Include the directive *appRoleAccess="menu.accessRole" to restrict view -->
           <li
             class="w-full mb-[0.625rem] hover:bg-[#D4E9FF] hover:text-[#000] rounded-[1rem] cursor-pointer"
           >
@@ -83,7 +84,7 @@
       <li>
         <mat-divider></mat-divider>
         <button
-          (click)="switchAccount('11')"
+          [matMenuTriggerFor]="menu"
           class="flex items-center justify-between gap-4 border-[1px] border-[#D2D1D1] p-3 rounded-2xl mt-4 cursor-pointer"
         >
           <div class="flex items-center gap-2">
@@ -107,6 +108,13 @@
             ></app-svg>
           }
         </button>
+        <mat-menu #menu="matMenu">
+          @for (account of accounts(); track $index) {
+            <button mat-menu-item (click)="switchAccount(account.id)">
+              {{ account.role }}
+            </button>
+          }
+        </mat-menu>
       </li>
     </ul>
   </div>

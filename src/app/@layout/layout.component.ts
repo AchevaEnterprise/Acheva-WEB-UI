@@ -55,4 +55,8 @@ export class LayoutComponent implements OnInit {
 
     return styleClass;
   });
+
+  switchAccount(accountId: string) {
+    this.authService.switchAccount(accountId).subscribe();
+  }
 }

@@ -68,23 +68,31 @@ export class ResultUploadComponent {
   dataSource = signal<Partial<IStudentGrade>[]>(STUDENT_GRADES);
   selection = new SelectionModel<Partial<IStudentGrade>>(true, []);
 
-  activeSegment = signal<ISegmentSwitcher>({
-    label: 'Regular',
-    value: 'regular',
-    roleAccess: RoleEnum.ALL,
-  });
   segments = signal<ISegmentSwitcher[]>([
     {
       label: 'Regular',
       value: 'regular',
-      roleAccess: RoleEnum.ALL,
+      accessRole: [
+        RoleEnum.DEAN,
+        RoleEnum.HOD,
+        RoleEnum.COURSE_ADVISOR,
+        RoleEnum.COURSE_COORDINATOR,
+        RoleEnum.LECTURER,
+      ],
     },
     {
       label: 'Reference',
       value: 'reference',
-      roleAccess: RoleEnum.ALL,
+      accessRole: [
+        RoleEnum.DEAN,
+        RoleEnum.HOD,
+        RoleEnum.COURSE_ADVISOR,
+        RoleEnum.COURSE_COORDINATOR,
+        RoleEnum.LECTURER,
+      ],
     },
   ]);
+  activeSegment = signal<ISegmentSwitcher>(this.segments()[0]);
 
   courseForm = new FormGroup({
     course: new FormControl(''),

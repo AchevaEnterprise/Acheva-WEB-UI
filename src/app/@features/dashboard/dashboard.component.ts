@@ -62,30 +62,63 @@ export class DashboardComponent {
       count: 0,
       iconSrc: 'images/general/dash-card-draft.svg',
       infoLabel: 'Results that are being compiled',
+      accessRole: [RoleEnum.LECTURER, RoleEnum.COURSE_COORDINATOR],
     },
     {
-      label: 'Pending Results',
+      label: 'Pending',
       count: 0,
       iconSrc: 'images/general/dash-card-pending.svg',
       infoLabel: "Results awaiting HOD's approval",
+      accessRole: [
+        RoleEnum.HOD,
+        RoleEnum.COURSE_COORDINATOR,
+        RoleEnum.LECTURER,
+      ],
     },
     {
       label: 'Unverified',
       count: 0,
       iconSrc: 'images/general/dash-card-unverified.svg',
       infoLabel: "Results awaiting Dean's approval",
+      accessRole: [
+        RoleEnum.DEAN,
+        RoleEnum.HOD,
+        RoleEnum.COURSE_COORDINATOR,
+        RoleEnum.LECTURER,
+      ],
     },
     {
       label: 'Verified',
       count: 0,
       iconSrc: 'images/general/dash-card-verified.svg',
       infoLabel: 'Results approved by the Dean',
+      accessRole: [
+        RoleEnum.DEAN,
+        RoleEnum.HOD,
+        RoleEnum.COURSE_ADVISOR,
+        RoleEnum.COURSE_COORDINATOR,
+        RoleEnum.LECTURER,
+      ],
     },
     {
       label: 'Published',
       count: 0,
       iconSrc: 'images/general/dash-card-published.svg',
       infoLabel: 'Results published by the CA',
+      accessRole: [
+        RoleEnum.DEAN,
+        RoleEnum.HOD,
+        RoleEnum.COURSE_ADVISOR,
+        RoleEnum.COURSE_COORDINATOR,
+        RoleEnum.LECTURER,
+      ],
+    },
+    {
+      label: 'Imported',
+      count: 0,
+      iconSrc: 'images/general/dash-card-imported.svg',
+      infoLabel: 'Manually approved results',
+      accessRole: [RoleEnum.DEAN, RoleEnum.HOD, RoleEnum.COURSE_ADVISOR],
     },
   ]);
 
@@ -101,43 +134,60 @@ export class DashboardComponent {
   ];
   dataSource = signal<ICourse[]>(COURSES);
 
-  activeSegment = signal<ISegmentSwitcher>({
-    label: 'Drafts',
-    value: 'drafts',
-    roleAccess: RoleEnum.ALL,
-  });
   segments = signal<ISegmentSwitcher[]>([
     {
       label: 'Drafts',
       value: 'drafts',
-      roleAccess: RoleEnum.ALL, // Course Cordinator
+      accessRole: [RoleEnum.LECTURER, RoleEnum.COURSE_COORDINATOR],
     },
     {
       label: 'Pending',
       value: 'pending',
-      roleAccess: RoleEnum.ALL, // Course Cordinator, HOD
+      accessRole: [
+        RoleEnum.HOD,
+        RoleEnum.COURSE_COORDINATOR,
+        RoleEnum.LECTURER,
+      ],
     },
     {
       label: 'Unverified',
       value: 'unverified',
-      roleAccess: RoleEnum.ALL, // Course Cordinator, HOD, Dean
+      accessRole: [
+        RoleEnum.DEAN,
+        RoleEnum.HOD,
+        RoleEnum.COURSE_COORDINATOR,
+        RoleEnum.LECTURER,
+      ],
     },
     {
       label: 'Verified',
       value: 'verified',
-      roleAccess: RoleEnum.ALL, // Course Cordinator, Class Adviser, HOD, Dean
+      accessRole: [
+        RoleEnum.DEAN,
+        RoleEnum.HOD,
+        RoleEnum.COURSE_ADVISOR,
+        RoleEnum.COURSE_COORDINATOR,
+        RoleEnum.LECTURER,
+      ],
     },
     {
       label: 'Published',
       value: 'published',
-      roleAccess: RoleEnum.ALL, // All
+      accessRole: [
+        RoleEnum.DEAN,
+        RoleEnum.HOD,
+        RoleEnum.COURSE_ADVISOR,
+        RoleEnum.COURSE_COORDINATOR,
+        RoleEnum.LECTURER,
+      ],
     },
     {
       label: 'Imported',
       value: 'imported',
-      roleAccess: RoleEnum.ALL, // Course Adviser, HOD, Dean
+      accessRole: [RoleEnum.DEAN, RoleEnum.HOD, RoleEnum.COURSE_ADVISOR],
     },
   ]);
+  activeSegment = signal<ISegmentSwitcher>(this.segments()[0]);
   selectedCalendarDate = model<number>(Date.now());
   segmentCardLabel = signal<string>('Access your recent drafts from here');
   segmentCardIconSrc = signal<string>('icons/general/draft-icon.svg');

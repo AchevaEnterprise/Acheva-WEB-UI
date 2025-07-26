@@ -6,7 +6,7 @@
 </div>
 
 <!-- ANALYTICS -->
-<div class="grid lg:grid-cols-5 md:grid-cols-3 sm:grid-cols-2 gap-4 mt-4">
+<div class="grid grid-cols-[repeat(auto-fit,_minmax(0,_1fr))] gap-4 mt-4">
   @for (data of analtyics(); track $index) {
     <app-analytics-card [analtyics]="data" />
   }
