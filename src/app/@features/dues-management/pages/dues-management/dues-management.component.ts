@@ -4,8 +4,6 @@ import { Component } from '@angular/core';
   selector: 'app-dues-management',
   imports: [],
   templateUrl: './dues-management.component.html',
-  styleUrl: './dues-management.component.scss'
+  styleUrl: './dues-management.component.scss',
 })
-export class DuesManagementComponent {
-
-}
+export class DuesManagementComponent {}
