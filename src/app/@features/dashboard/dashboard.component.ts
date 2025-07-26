@@ -110,27 +110,32 @@ export class DashboardComponent {
     {
       label: 'Drafts',
       value: 'drafts',
-      roleAccess: RoleEnum.ALL,
+      roleAccess: RoleEnum.ALL, // Course Cordinator
     },
     {
       label: 'Pending',
       value: 'pending',
-      roleAccess: RoleEnum.ALL,
+      roleAccess: RoleEnum.ALL, // Course Cordinator, HOD
     },
     {
       label: 'Unverified',
       value: 'unverified',
-      roleAccess: RoleEnum.ALL,
+      roleAccess: RoleEnum.ALL, // Course Cordinator, HOD, Dean
     },
     {
       label: 'Verified',
       value: 'verified',
-      roleAccess: RoleEnum.ALL,
+      roleAccess: RoleEnum.ALL, // Course Cordinator, Class Adviser, HOD, Dean
     },
     {
       label: 'Published',
       value: 'published',
-      roleAccess: RoleEnum.ALL,
+      roleAccess: RoleEnum.ALL, // All
+    },
+    {
+      label: 'Imported',
+      value: 'imported',
+      roleAccess: RoleEnum.ALL, // Course Adviser, HOD, Dean
     },
   ]);
   selectedCalendarDate = model<number>(Date.now());
@@ -201,6 +206,11 @@ export class DashboardComponent {
         this.segmentCardIconSrc.set('icons/general/published-icon.svg');
         break;
       }
+      // case 'imported': {
+      //   this.segmentCardLabel.set('Access your imported results from here');
+      //   this.segmentCardIconSrc.set('icons/general/imported-icon.svg');
+      //   break;
+      // }
     }
   }
 }

@@ -7,7 +7,7 @@
     and streamlined reporting."
   />
 
-  <form [formGroup]="userForm" class="login-wrapper md:w-full">
+  <form [formGroup]="form" class="login-wrapper md:w-full">
     <!-- md-screen -->
     <div class="acheva-logo-container logo-md">
       <app-svg src="icons/logos/acheva-letter.svg"></app-svg>
@@ -55,7 +55,7 @@
           <mat-form-field [style.width.%]="100" appearance="outline">
             <input
               matInput
-              [type]="hide() ? 'password' : 'text'"
+              [type]="showPassword() ? 'text' : 'password'"
               formControlName="password"
             />
 
@@ -68,12 +68,13 @@
             ></span>
 
             <button
+              type="button"
               class="cursor-pointer"
               matSuffix
-              (click)="togglePasswordVisibility($event)"
+              (click)="togglePasswordVisibility()"
             >
               <mat-icon>{{
-                hide() ? 'visibility_off' : 'visibility'
+                showPassword() ? 'visibility_off' : 'visibility'
               }}</mat-icon>
             </button>
           </mat-form-field>
@@ -89,7 +90,13 @@
     </div>
 
     <div class="submit-section">
-      <app-button class="w-96" label="Log In" (clickEvent)="submitForm()" />
+      <app-button
+        class="w-96"
+        label="Log In"
+        [disabled]="form.invalid"
+        [loading]="isLoading()"
+        (clickEvent)="submitForm()"
+      />
 
       <p class="acva-para-1 place-self-center">
         Don’t have an Account?

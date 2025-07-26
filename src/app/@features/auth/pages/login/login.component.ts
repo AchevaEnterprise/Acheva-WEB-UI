@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, OnDestroy, signal } from '@angular/core';
 import {
   FormControl,
   FormGroup,
@@ -16,9 +16,10 @@ import {
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { Router, RouterLink } from '@angular/router';
-import { AuthBannerComponent } from '../../component/auth-banner/auth-banner.component';
-import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
+import { Subscription } from 'rxjs';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
+import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
+import { AuthBannerComponent } from '../../component/auth-banner/auth-banner.component';
 
 @Component({
   selector: 'app-login',
@@ -39,35 +40,42 @@ import { ButtonComponent } from '../../../../@shared/components/forms/button/but
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
 })
-export class LoginComponent {
+export class LoginComponent implements OnDestroy {
+  // private readonly authService = inject(AuthenticationService);
   private readonly router = inject(Router);
 
-  userForm: FormGroup = new FormGroup({
-    email: new FormControl(null, [Validators.required]),
-    password: new FormControl(null, [Validators.required]),
+  showPassword = signal(false);
+  isLoading = signal(false);
+  private readonly sub: Subscription = new Subscription();
+
+  form: FormGroup = new FormGroup({
+    email: new FormControl<string>('', [Validators.required, Validators.email]),
+    password: new FormControl<string>('', Validators.required),
   });
 
-  hide = signal(true);
-
-  get userEmail() {
-    return this.userForm.controls['email'].value;
-  }
-
-  get userPassword() {
-    return this.userForm.controls['password'].value;
-  }
-
-  patchFormValue(key: string, value: string) {
-    this.userForm.patchValue({ [key]: value }, { emitEvent: false });
-  }
-
   submitForm() {
-    console.warn(this.userForm.value);
+    this.isLoading.set(true);
+
+    // Uncomment if API is ready
+    // this.sub.add(
+    //   this.authService
+    //     .signIn(this.form.value)
+    //     .pipe(finalize(() => this.isLoading.set(false)))
+    //     .subscribe({
+    //       next: (res) => {
+    //         if (res.status) this.router.navigate(['/dashboard']);
+    //       },
+    //     })
+    // );
+
     this.router.navigate(['/dashboard']);
   }
 
-  togglePasswordVisibility(event: MouseEvent) {
-    this.hide.set(!this.hide());
-    event.stopPropagation();
+  togglePasswordVisibility() {
+    this.showPassword.update((show) => !show);
+  }
+
+  ngOnDestroy(): void {
+    this.sub.unsubscribe();
   }
 }

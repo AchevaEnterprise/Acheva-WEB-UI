@@ -21,8 +21,9 @@ export class RoleAccessDirective {
   private readonly allowedRoles: RoleEnum[] = [
     RoleEnum.DEAN,
     RoleEnum.HOD,
-    RoleEnum.COURSE_ADVISER,
-    RoleEnum.COURSE_CORDINATOR,
+    RoleEnum.COURSE_ADVISOR,
+    RoleEnum.COURSE_COORDINATOR,
+    RoleEnum.LECTURER,
   ];
 
   private rolesToMatch: RoleEnum[] = [];

@@ -1,11 +1,12 @@
 import { SelectionModel } from '@angular/cdk/collections';
 import { DatePipe, NgClass } from '@angular/common';
-import { Component, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { COURSES } from '../../../../@core/constant/course-mock';
 import { CardComponent } from '../../../../@shared/components/card/card.component';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
@@ -19,6 +20,7 @@ import { RoleEnum } from '../../../auth/model/auth.model';
 import { ICourse } from '../../../courses/models/course.model';
 import { CommentComponent } from '../../components/comment/comment.component';
 import { ResultStatusTrackingComponent } from '../../components/result-status-tracking/result-status-tracking.component';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-result-management',
@@ -37,11 +39,14 @@ import { ResultStatusTrackingComponent } from '../../components/result-status-tr
     MatCheckboxModule,
     PaginatorComponent,
     CommentComponent,
+    MatTooltipModule,
   ],
   templateUrl: './result-management.component.html',
   styleUrl: './result-management.component.scss',
 })
 export class ResultManagementComponent {
+  private readonly router = inject(Router);
+
   displayedColumns: string[] = [
     'select',
     'courseCode',
@@ -162,5 +167,9 @@ export class ResultManagementComponent {
         break;
       }
     }
+  }
+
+  viewResultDetails(course: ICourse) {
+    this.router.navigate(['courses/result-upload']);
   }
 }

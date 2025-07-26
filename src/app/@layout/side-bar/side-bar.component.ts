@@ -7,6 +7,7 @@ import {
 } from '../../@core/constant/menu';
 import { ImageFallbackDirective } from '../../@core/directives/image-fallback.directive';
 import { IMenu } from '../../@core/models/menu.model';
+import { RoleEnum } from '../../@features/auth/model/auth.model';
 import { AuthenticationService } from '../../@features/auth/service/auth.service';
 import { SvgComponent } from '../../@shared/components/svg/svg.component';
 
@@ -23,24 +24,23 @@ import { SvgComponent } from '../../@shared/components/svg/svg.component';
   styleUrl: './side-bar.component.scss',
 })
 export class SideBarComponent {
-  private readonly router = inject(Router);
   private readonly authService = inject(AuthenticationService);
+  private readonly router = inject(Router);
 
   appMenu = computed(() => {
     const account = this.authService.activeAccount();
-    if (!account) return COURSE_ADVISOR_MENU; // TODO: Should be changed to an empty array once integrations/logic is implemented
+    if (!account) return COURSE_ADVISOR_MENU; // This is for test, change to empty array
 
     switch (account.role) {
-      case 'advisor':
+      case RoleEnum.COURSE_ADVISOR:
         return COURSE_ADVISOR_MENU;
-      case 'cordinator':
+      case RoleEnum.COURSE_COORDINATOR:
         return COURSE_CORDINATOR_MENU;
       default:
-        return COURSE_ADVISOR_MENU; // TODO: Should be changed to an empty array once integrations/logic is implemented
+        return [];
     }
   });
 
-  // TODO: Make a popover that shows other accounts if it includes one
   accounts = this.authService.accounts();
 
   expanded = signal<boolean>(window.innerWidth > 768);
