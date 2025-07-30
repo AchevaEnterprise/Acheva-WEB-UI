@@ -1,0 +1,18 @@
+<ul class="list-style-none">
+  @for (timeline of timelines(); track $index) {
+    <li class="mb-8 flex gap-3 items-center">
+      <span>
+        <app-svg
+          svgWidth="1.3rem"
+          svgHeight="1.3rem"
+          src="icons/menu/courses-inactive.svg"
+        ></app-svg>
+      </span>
+
+      <div>
+        <p class="acva-para-2">{{ timeline.status }}</p>
+        <p class="acva-para-1 text-neutral-500">{{ timeline.time }}</p>
+      </div>
+    </li>
+  }
+</ul>

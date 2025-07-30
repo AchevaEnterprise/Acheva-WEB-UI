@@ -1,0 +1,291 @@
+<!-- ANALTYICS -->
+<div
+  class="grid grid-cols-[60%_1fr] gap-4 p-4 border-[1px] border-neutral-300 rounded-[8px]"
+>
+  <!-- FORM -->
+  <div [formGroup]="courseForm">
+    <div class="input-style-1 acheva-input w-full">
+      <p class="acva-para-2 fw-400 label-text">Courses</p>
+
+      <mat-form-field [style.width.%]="100" appearance="outline">
+        <input matInput type="text" placeholder="" formControlName="course" />
+      </mat-form-field>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div class="input-style-1 acheva-input w-full">
+        <p class="acva-para-2 fw-400 label-text">Session</p>
+
+        <mat-form-field [style.width.%]="100" appearance="outline">
+          <input
+            matInput
+            type="text"
+            placeholder=""
+            formControlName="session"
+          />
+        </mat-form-field>
+      </div>
+
+      <div class="input-style-1 acheva-input w-full">
+        <p class="acva-para-2 fw-400 label-text">Level</p>
+
+        <mat-form-field [style.width.%]="100" appearance="outline">
+          <input matInput type="text" placeholder="" formControlName="level" />
+        </mat-form-field>
+      </div>
+    </div>
+
+    <header class="mt-4 mb-3">
+      <h4 class="acva-heading-6 fw-500">Student Category</h4>
+      <p class="acva-para-1 text-neutral-500">
+        Select which type of students this course will be available for.
+      </p>
+    </header>
+
+    <!-- STUDENT CATEGORY -->
+    <mat-radio-group
+      formControlName="category"
+      aria-label="Select Student Category"
+      class="grid gap-2 lg:grid-cols-3 md:grid-cols-2 lg:grid-cols-1"
+    >
+      <div
+        class="flex flew-wrap items-start border-[1px] border-neutral-300 p-2 rounded-[8px]"
+      >
+        <mat-radio-button value="regular"></mat-radio-button>
+        <div>
+          <h4 class="fw-400 acva-para-1">Regular Students</h4>
+          <p class="acva-caption text-neutral-500">
+            Students taking the course for the first time
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="flex items-start border-[1px] border-neutral-300 p-4 rounded-[8px]"
+      >
+        <mat-radio-button value="reference"></mat-radio-button>
+        <div>
+          <h4 class="fw-400 acva-para-1">Reference Students</h4>
+          <p class="acva-caption text-neutral-500">
+            Students retaking the course
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="flex items-start border-[1px] border-neutral-300 p-4 rounded-[8px]"
+      >
+        <mat-radio-button value="unregistered"></mat-radio-button>
+        <div>
+          <h4 class="fw-400 acva-para-1">Unregistered Students</h4>
+          <p class="acva-caption text-neutral-500">
+            Students retaking the course
+          </p>
+        </div>
+      </div>
+    </mat-radio-group>
+  </div>
+
+  <app-card label="Course Analtyics" [showDivider]="true" dividerClass="!mt-4">
+    <p rightHeaderContent class="acva-para-1 text-neutral-500">
+      Average Grade <span class="text-neutral-800">86.9%</span>
+    </p>
+
+    <div content>
+      <app-analytics-chart />
+
+      <div class="leading-[1.3rem] acva-caption text text-neutral-500 p-4">
+        <p class="flex items-center gap-4 w-full">
+          <span class="w-[20%]">Total Students</span>
+          <mat-divider class="w-full"></mat-divider>
+          <span>800</span>
+        </p>
+        <p class="flex items-center gap-4 w-full">
+          <span class="w-[20%]">Total Pass</span>
+          <mat-divider class="w-full"></mat-divider>
+          <span>376</span>
+        </p>
+        <p class="flex items-center gap-4 w-full">
+          <span class="w-[20%]">Total Fail</span>
+          <mat-divider class="w-full"></mat-divider>
+          <span>422</span>
+        </p>
+      </div>
+    </div>
+  </app-card>
+</div>
+
+<mat-divider class="!my-4"></mat-divider>
+
+<!-- STUDENT GRADE TABLE -->
+<div>
+  <header class="mt-4 mb-3">
+    <h4 class="acva-heading-6 fw-500">Student Grade</h4>
+  </header>
+
+  <div class="flex gap-3 items-center justify-between">
+    <app-search-input placeholder="Search students" />
+
+    <div class="flex gap-3 items-center">
+      <app-button
+        label="Save Changes"
+        icon="icons/general/save-btn-icon.svg"
+        class="btn-md"
+        (clickEvent)="saveChanges()"
+      />
+      <app-button
+        label="Upload Results"
+        type="outline"
+        icon="icons/general/download-icon.svg"
+        class="btn-md"
+      />
+      <app-button
+        label="Delete File"
+        type="clear"
+        icon="icons/general/trash-icon.svg"
+        class="btn-md"
+      />
+    </div>
+  </div>
+
+  <app-segment-switcher
+    [activeSegment]="activeSegment()"
+    [segments]="segments()"
+    (switchEvent)="switchSegment($event)"
+  />
+
+  <div class="mt-4">
+    <!-- <app-empty-state
+          iconSrc="images/general/empty-doc.svg"
+          description="Your drafts is empty, create a course and input results to fill this page"
+        /> -->
+
+    <div class="w-full overflow-auto">
+      <table mat-table [dataSource]="dataSource()">
+        <!-- Checkbox Column -->
+        <ng-container matColumnDef="select">
+          <th mat-header-cell *matHeaderCellDef>
+            <mat-checkbox
+              (change)="$event ? toggleAllRows() : null"
+              [checked]="selection.hasValue() && isAllSelected()"
+              [indeterminate]="selection.hasValue() && !isAllSelected()"
+              [aria-label]="checkboxLabel()"
+            >
+            </mat-checkbox>
+          </th>
+          <td mat-cell *matCellDef="let row">
+            <mat-checkbox
+              (click)="$event.stopPropagation()"
+              (change)="$event ? selection.toggle(row) : null"
+              [checked]="selection.isSelected(row)"
+              [aria-label]="checkboxLabel(row)"
+            >
+            </mat-checkbox>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="regNo">
+          <th mat-header-cell *matHeaderCellDef>REGISTRATION NUMBER</th>
+          <td mat-cell *matCellDef="let element">
+            {{ element.regNo }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef>NAME</th>
+          <td mat-cell *matCellDef="let element">
+            {{ element.name }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="assessment1">
+          <th mat-header-cell *matHeaderCellDef>ASSESSMENT 1</th>
+          <td mat-cell *matCellDef="let element" class="text-center">
+            <input
+              type="text"
+              class="border w-full border-neutral-300 rounded-[8px] p-2 my-4"
+              name="assessment1"
+              [(ngModel)]="element.assessment1"
+            />
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="assessment2">
+          <th mat-header-cell *matHeaderCellDef>ASSESSMENT 2</th>
+          <td mat-cell *matCellDef="let element">
+            <input
+              type="text"
+              class="border w-full border-neutral-300 rounded-[8px] p-2"
+              name="assessment2"
+              [(ngModel)]="element.assessment2"
+            />
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="project1">
+          <th mat-header-cell *matHeaderCellDef>PROJECT 1</th>
+          <td mat-cell *matCellDef="let element">
+            <input
+              type="text"
+              class="border w-full border-neutral-300 rounded-[8px] p-2"
+              name="project1"
+              [(ngModel)]="element.project1"
+            />
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="project2">
+          <th mat-header-cell *matHeaderCellDef>PROJECT 2</th>
+          <td mat-cell *matCellDef="let element">
+            <input
+              type="text"
+              class="border w-full border-neutral-300 rounded-[8px] p-2"
+              name="project2"
+              [(ngModel)]="element.project2"
+            />
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="attendance">
+          <th mat-header-cell *matHeaderCellDef>ATTENDANCE</th>
+          <td mat-cell *matCellDef="let element">
+            <input
+              type="text"
+              class="border w-full border-neutral-300 rounded-[8px] p-2"
+              name="attendance"
+              [(ngModel)]="element.attendance"
+            />
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="exam">
+          <th mat-header-cell *matHeaderCellDef>EXAM</th>
+          <td mat-cell *matCellDef="let element">
+            <input
+              type="text"
+              class="border w-full border-neutral-300 rounded-[8px] p-2"
+              name="exam"
+              [(ngModel)]="element.exam"
+            />
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="finalGrade">
+          <th mat-header-cell *matHeaderCellDef>FINAL GRADE</th>
+          <td mat-cell *matCellDef="let element">
+            <input
+              type="text"
+              class="border w-full border-neutral-300 rounded-[8px] p-2"
+              name="finalGrade"
+              [(ngModel)]="element.finalGrade"
+            />
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="folderDisplayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: folderDisplayedColumns"></tr>
+      </table>
+    </div>
+    <app-paginator />
+  </div>
+</div>

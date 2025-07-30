@@ -4,7 +4,13 @@ import { of } from 'rxjs';
 import { catchError, map, mergeMap } from 'rxjs/operators';
 import { IAuthProfile } from '../../../@features/auth/model/auth.model';
 import { AuthenticationService } from '../../../@features/auth/service/auth.service';
-import { loadProfile, saveProfile, saveProfileError } from './profile.action';
+import {
+  loadProfile,
+  saveProfile,
+  saveProfileError,
+  saveProfileErrorLinkedAccounts,
+  saveProfileLinkedAccounts,
+} from './profile.action';
 
 @Injectable()
 export class ProfileEffects {
@@ -23,6 +29,31 @@ export class ProfileEffects {
           }),
           catchError((error) =>
             of(saveProfileError({ error: error.message as string }))
+          )
+        )
+      )
+    );
+  });
+
+  getLinkedAccounts$ = createEffect(() => {
+    return this.actions$.pipe(
+      ofType(loadProfile),
+      mergeMap(() =>
+        this.authService.getLinkedAccounts().pipe(
+          map((resp) => {
+            if (resp.status)
+              return saveProfileLinkedAccounts({
+                accounts: resp.data,
+              });
+            else
+              return saveProfileErrorLinkedAccounts({
+                error: 'Error fetching linked accounts',
+              });
+          }),
+          catchError((error) =>
+            of(
+              saveProfileErrorLinkedAccounts({ error: error.message as string })
+            )
           )
         )
       )

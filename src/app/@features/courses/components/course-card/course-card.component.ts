@@ -1,5 +1,5 @@
 import { Component, input, output } from '@angular/core';
-import { ICourseTemplate } from '../../../../@core/models/course.model';
+import { ICourseTemplate } from '../../models/course.model';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
 import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
 

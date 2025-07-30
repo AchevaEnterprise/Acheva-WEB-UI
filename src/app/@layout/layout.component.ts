@@ -1,10 +1,15 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { SideBarComponent } from './side-bar/side-bar.component';
-import { ToolBarComponent } from './tool-bar/tool-bar.component';
 import { Store } from '@ngrx/store';
 import { AppState } from '../@core/store/app.state';
-import { loadProfile } from '../@core/store/profile/profile.action';
+import {
+  loadProfile,
+  loadProfileLinkedAccounts,
+} from '../@core/store/profile/profile.action';
+import { linkedAccountsSelector } from '../@core/store/profile/profile.selector';
+import { AuthenticationService } from '../@features/auth/service/auth.service';
+import { SideBarComponent } from './side-bar/side-bar.component';
+import { ToolBarComponent } from './tool-bar/tool-bar.component';
 
 @Component({
   selector: 'app-layout',
@@ -14,12 +19,24 @@ import { loadProfile } from '../@core/store/profile/profile.action';
 })
 export class LayoutComponent implements OnInit {
   private readonly store = inject(Store<AppState>);
+  private readonly authService = inject(AuthenticationService);
+
   expanded = signal<boolean>(true);
   screenWidth = signal<number>(window.innerWidth);
 
   ngOnInit(): void {
-    // When authenticated load user profile
+    // When authenticated load user profile and linked accounts
     this.store.dispatch(loadProfile());
+    this.authService.loadInitialSession();
+    this.setLinkedAccounts();
+  }
+
+  setLinkedAccounts() {
+    this.store.dispatch(loadProfileLinkedAccounts());
+
+    this.store.select(linkedAccountsSelector).subscribe({
+      next: (accounts) => this.authService.accounts.set(accounts),
+    });
   }
 
   onToggleSideNav(data: { expanded: boolean }) {
@@ -38,4 +55,8 @@ export class LayoutComponent implements OnInit {
 
     return styleClass;
   });
+
+  switchAccount(accountId: string) {
+    this.authService.switchAccount(accountId).subscribe();
+  }
 }

@@ -1,0 +1,246 @@
+<div id="container">
+  <h3 class="acva-heading-5 fw-500">Result Management</h3>
+
+  <!-- SEGMENTS -->
+  <div class="mt-8">
+    <div class="flex justify-between items-center">
+      <app-segment-switcher
+        [activeSegment]="activeSegment()"
+        [segments]="segments()"
+        (switchEvent)="switchSegment($event)"
+      />
+
+      <div class="flex gap-2">
+        <app-button
+          label="Send to CC"
+          class="btn-md"
+          matTooltip="Send to Course Cordinator"
+        />
+        <app-button
+          [label]="expandView() ? 'Collapse' : 'Expand'"
+          type="outline"
+          class="btn-md"
+          (clickEvent)="toggleView()"
+        />
+      </div>
+    </div>
+
+    <div
+      class="grid grid-cols-[1fr_30%] gap-4 mt-4"
+      [ngClass]="{
+        'grid-cols-1': expandView(),
+        'grid-cols-[1fr_30%]': !expandView(),
+      }"
+    >
+      <app-card
+        [label]="activeSegment().label"
+        [description]="segmentCardLabel()"
+        [iconSrc]="segmentCardIconSrc()"
+      >
+        <div content class="p-4">
+          <div class="flex flex-wrap justify-between items-end">
+            <div class="flex gap-4">
+              <div class="input-style-1 acheva-input w-[40%]">
+                <p class="acva-para-2 fw-400 label-text">Faculty</p>
+
+                <mat-form-field [style.width.%]="100" appearance="outline">
+                  <mat-select
+                    placeholder="Select faculty"
+                    formControlName="title"
+                  >
+                    <mat-option [value]="'Science'">Science</mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+
+              <div class="input-style-1 acheva-input w-[40%]">
+                <p class="acva-para-2 fw-400 label-text">Department</p>
+
+                <mat-form-field [style.width.%]="100" appearance="outline">
+                  <mat-select
+                    placeholder="Select department"
+                    formControlName="role"
+                  >
+                    <mat-option [value]="'Science'">Science</mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+            </div>
+
+            <div class="input-style-1 acheva-input w-[20%]">
+              <mat-form-field [style.width.%]="100" appearance="outline">
+                <span matPrefix>
+                  <app-svg
+                    svgWidth="1.3rem"
+                    svgHeight="1.3rem"
+                    src="icons/general/filter-icon.svg"
+                  ></app-svg>
+                </span>
+
+                <mat-select placeholder="Filter" formControlName="title">
+                  <mat-option [value]="'Science'">Science</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+          </div>
+
+          <!-- <app-empty-state
+          iconSrc="images/general/empty-doc.svg"
+          description="Your drafts is empty, create a course and input results to fill this page"
+        /> -->
+
+          <div class="w-full overflow-auto">
+            <table mat-table [dataSource]="dataSource()">
+              <!-- Checkbox Column -->
+              <ng-container matColumnDef="select">
+                <th mat-header-cell *matHeaderCellDef>
+                  <mat-checkbox
+                    (change)="$event ? toggleAllRows() : null"
+                    [checked]="selection.hasValue() && isAllSelected()"
+                    [indeterminate]="selection.hasValue() && !isAllSelected()"
+                    [aria-label]="checkboxLabel()"
+                  >
+                  </mat-checkbox>
+                </th>
+                <td mat-cell *matCellDef="let row">
+                  <mat-checkbox
+                    (click)="$event.stopPropagation()"
+                    (change)="$event ? selection.toggle(row) : null"
+                    [checked]="selection.isSelected(row)"
+                    [aria-label]="checkboxLabel(row)"
+                  >
+                  </mat-checkbox>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="courseCode">
+                <th mat-header-cell *matHeaderCellDef>COURSE CODE</th>
+                <td
+                  mat-cell
+                  *matCellDef="let element"
+                  class="cursor-pointer"
+                  (click)="viewResultDetails(element)"
+                >
+                  {{ element.courseCode }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="courseTitle">
+                <th mat-header-cell *matHeaderCellDef>COURSE TITLE</th>
+                <td
+                  mat-cell
+                  *matCellDef="let element"
+                  class="cursor-pointer"
+                  (click)="viewResultDetails(element)"
+                >
+                  {{ element.courseTitle }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="session">
+                <th mat-header-cell *matHeaderCellDef>SESSION</th>
+                <td
+                  mat-cell
+                  *matCellDef="let element"
+                  class="cursor-pointer"
+                  (click)="viewResultDetails(element)"
+                >
+                  {{ element.session }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="department">
+                <th mat-header-cell *matHeaderCellDef>DEPARTMENT</th>
+                <td
+                  mat-cell
+                  *matCellDef="let element"
+                  class="cursor-pointer"
+                  (click)="viewResultDetails(element)"
+                >
+                  {{ element.department }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="faculty">
+                <th mat-header-cell *matHeaderCellDef>FACULTY</th>
+                <td
+                  mat-cell
+                  *matCellDef="let element"
+                  class="cursor-pointer"
+                  (click)="viewResultDetails(element)"
+                >
+                  {{ element.faculty }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="uploadedDate">
+                <th mat-header-cell *matHeaderCellDef>UPLOADED DATE</th>
+                <td
+                  mat-cell
+                  *matCellDef="let element"
+                  class="cursor-pointer"
+                  (click)="viewResultDetails(element)"
+                >
+                  {{ element.uploadedDate | date: 'MMM d, YYYY h:mm a' }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="sentDate">
+                <th mat-header-cell *matHeaderCellDef>SENT DATE</th>
+                <td
+                  mat-cell
+                  *matCellDef="let element"
+                  class="cursor-pointer"
+                  (click)="viewResultDetails(element)"
+                >
+                  {{ element.sentDate | date: 'MMM d, YYYY h:mm a' }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="modifiedDate">
+                <th mat-header-cell *matHeaderCellDef>MODIFIED DATE</th>
+                <td
+                  mat-cell
+                  *matCellDef="let element"
+                  class="cursor-pointer"
+                  (click)="viewResultDetails(element)"
+                >
+                  {{ element.modifiedDate | date: 'MMM d, YYYY h:mm a' }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef>ACTIONS</th>
+                <td mat-cell *matCellDef="let element">
+                  <button [matMenuTriggerFor]="menu" class="cursor-pointer">
+                    <app-svg
+                      svgWidth="3rem"
+                      svgHeight="3rem"
+                      src="icons/general/option-icon.svg"
+                    ></app-svg>
+                  </button>
+                  <mat-menu #menu="matMenu">
+                    <button mat-menu-item>Send to HOD</button>
+                    <button mat-menu-item>Preview</button>
+                  </mat-menu>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+            </table>
+          </div>
+          <app-paginator />
+        </div>
+      </app-card>
+
+      <!-- RESULT STATUS TRACKING & COMMENT-->
+      @if (!expandView()) {
+        <div class="flex flex-col gap-4">
+          <app-result-status-tracking />
+          <app-comment />
+        </div>
+      }
+    </div>
+  </div>
+</div>

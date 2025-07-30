@@ -35,7 +35,7 @@
             <input
               matInput
               type="text"
-              placeholder="Surname &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; First Name &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Middle Name"
+              placeholder="First Name &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Middle Name &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Surname"
               formControlName="fullname"
             />
           </mat-form-field>
@@ -121,7 +121,11 @@
                 placeholder="Select your title"
                 formControlName="title"
               >
-                <mat-option [value]="'Science'">Science</mat-option>
+                @for (title of titleOptions(); track $index) {
+                  <mat-option [value]="title.value">{{
+                    title.label
+                  }}</mat-option>
+                }
               </mat-select>
             </mat-form-field>
           </div>
@@ -139,7 +143,9 @@
               </span>
 
               <mat-select placeholder="Select your role" formControlName="role">
-                <mat-option [value]="'Science'">Science</mat-option>
+                @for (role of roleOptions(); track $index) {
+                  <mat-option [value]="role.value">{{ role.label }}</mat-option>
+                }
               </mat-select>
             </mat-form-field>
           </div>
@@ -217,6 +223,8 @@
       <app-button
         class="w-96"
         label="Create Account"
+        [disabled]="form.invalid"
+        [loading]="isLoading()"
         (clickEvent)="submitForm()"
       />
 

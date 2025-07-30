@@ -13,7 +13,7 @@ export interface ISegmentSwitcher {
     | 'imported'
     | 'regular'
     | 'reference';
-  roleAccess: RoleEnum | RoleEnum[];
+  accessRole: RoleEnum[];
 }
 
 @Component({

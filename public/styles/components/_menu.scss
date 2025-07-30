@@ -9,3 +9,15 @@
     )
   );
 }
+
+.mat-mdc-menu-item {
+  min-height: 35px !important;
+}
+
+.mat-mdc-menu-item-text {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+
+  --mat-menu-item-label-text-weight: 400;
+}

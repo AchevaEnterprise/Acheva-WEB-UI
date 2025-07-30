@@ -1,12 +1,12 @@
 <div>
-  <h1 class="acva-heading-2 fw-500">{{ '' | greeting }}, Daniel👋</h1>
+  <h1 class="acva-heading-4 fw-500">{{ '' | greeting }}, Daniel👋</h1>
   <p class="acva-para-1 text-neutral-500">
     Create and initiate result approval process
   </p>
 </div>
 
 <!-- ANALYTICS -->
-<div class="grid lg:grid-cols-5 md:grid-cols-3 sm:grid-cols-2 gap-4 mt-4">
+<div class="grid grid-cols-[repeat(auto-fit,_minmax(0,_1fr))] gap-4 mt-4">
   @for (data of analtyics(); track $index) {
     <app-analytics-card [analtyics]="data" />
   }
@@ -64,7 +64,7 @@
             <div class="input-style-1 acheva-input">
               <p class="acva-para-2 fw-400 label-text">Department</p>
 
-              <mat-form-field appearance="outline">
+              <mat-form-field [style.width.%]="100" appearance="outline">
                 <mat-select
                   placeholder="Select department"
                   formControlName="role"
@@ -172,6 +172,7 @@
             <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
           </table>
         </div>
+        <app-paginator />
       </div>
     </app-card>
   </div>
@@ -185,7 +186,7 @@
     [showDivider]="true"
   >
     <div class="input-style-1 acheva-input" rightHeaderContent>
-      <mat-form-field appearance="outline">
+      <mat-form-field [style.width.%]="100" appearance="outline">
         <mat-select value="week">
           <mat-option [value]="'week'">Week</mat-option>
           <mat-option [value]="'month'">Month</mat-option>
@@ -206,7 +207,7 @@
       [showDivider]="true"
     >
       <div class="input-style-1 acheva-input" rightHeaderContent>
-        <mat-form-field appearance="outline">
+        <mat-form-field [style.width.%]="100" appearance="outline">
           <mat-select value="newest">
             <mat-option [value]="'newest'">Newest</mat-option>
             <mat-option [value]="'oldest'">Oldest</mat-option>
@@ -232,7 +233,7 @@
       [showDivider]="true"
     >
       <div class="input-style-1 acheva-input" rightHeaderContent>
-        <mat-form-field appearance="outline">
+        <mat-form-field [style.width.%]="100" appearance="outline">
           <mat-select value="today">
             <mat-option [value]="'today'">Today</mat-option>
             <mat-option [value]="'yesterday'">Yesterday</mat-option>

@@ -7,7 +7,9 @@ export const routes: Routes = [
       title: 'Courses',
     },
     loadComponent: () =>
-      import('./courses.component').then((m) => m.CoursesComponent),
+      import('./pages/courses/courses.component').then(
+        (m) => m.CoursesComponent
+      ),
   },
   {
     path: 'details/:templateId',
@@ -17,6 +19,16 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/course-details/course-details.component').then(
         (m) => m.CourseDetailsComponent
+      ),
+  },
+  {
+    path: 'result-upload',
+    data: {
+      title: 'Results Upload',
+    },
+    loadComponent: () =>
+      import('./pages/result-upload/result-upload.component').then(
+        (m) => m.ResultUploadComponent
       ),
   },
 ];

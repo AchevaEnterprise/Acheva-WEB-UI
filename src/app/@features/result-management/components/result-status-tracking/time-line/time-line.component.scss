@@ -1,0 +1,16 @@
+ul {
+  li:not(:last-child) {
+    span {
+      position: relative;
+
+      &::after {
+        content: '';
+        position: absolute;
+        border: 1px dashed grey;
+        height: 30px;
+        top: 2rem;
+        left: 9px;
+      }
+    }
+  }
+}

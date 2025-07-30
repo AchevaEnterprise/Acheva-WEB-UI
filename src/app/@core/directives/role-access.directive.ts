@@ -21,16 +21,18 @@ export class RoleAccessDirective {
   private readonly allowedRoles: RoleEnum[] = [
     RoleEnum.DEAN,
     RoleEnum.HOD,
-    RoleEnum.COURSE_ADVISER,
-    RoleEnum.COURSE_CORDINATOR,
+    RoleEnum.COURSE_ADVISOR,
+    RoleEnum.COURSE_COORDINATOR,
+    RoleEnum.LECTURER,
   ];
 
   private rolesToMatch: RoleEnum[] = [];
 
   @Input()
-  set appRoleAccess(value: RoleEnum | RoleEnum[]) {
+  set appRoleAccess(value: RoleEnum[]) {
     if (!value) return;
-    this.rolesToMatch = Array.isArray(value) ? value : [value];
+
+    this.rolesToMatch = value;
     this.updateView();
   }
 
@@ -46,8 +48,8 @@ export class RoleAccessDirective {
     if (!account || (account && !account.role)) return;
 
     const hasAccess =
-      this.allowedRoles.includes(account.role as RoleEnum) &&
-      this.rolesToMatch.includes(account.role as RoleEnum);
+      this.allowedRoles.includes(account.role) &&
+      this.rolesToMatch.includes(account.role);
 
     if (hasAccess) {
       this.viewContainer.createEmbeddedView(this.templateRef);

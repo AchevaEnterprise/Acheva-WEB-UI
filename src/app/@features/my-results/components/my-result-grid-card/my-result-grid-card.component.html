@@ -1,0 +1,52 @@
+<div class="border-[1px] border-neutral-300 rounded-[8px] w-full h-full">
+  <div class="p-4">
+    <header class="flex justify-between gap-8">
+      <div>
+        <h4 class="acva-clamp-2 acva-heading-6 fw-500">
+          Introduction to Computer Science
+        </h4>
+        <p class="text-neutral-500">CSC 100 - 3 Unit(s)</p>
+      </div>
+
+      <p class="acva-para-2 text-neutral-500 fw-500">Draft</p>
+    </header>
+
+    <div class="mt-4 grid gap-[8px]">
+      <p class="text-neutral-400 text-sm flex items-center gap-2">
+        <app-svg
+          svgWidth="1rem"
+          svgHeight="1rem"
+          src="icons/general/calendar-icon.svg"
+        ></app-svg>
+        1st Semester - 2024/2025
+      </p>
+
+      <p class="text-neutral-400 text-sm flex items-center gap-2">
+        <app-svg
+          svgWidth="1rem"
+          svgHeight="1rem"
+          src="icons/general/role-icon.svg"
+        ></app-svg
+        >67 Students
+      </p>
+
+      <div class="progress-container w-full">
+        <mat-progress-bar mode="determinate" value="56"></mat-progress-bar>
+        <p class="acva-caption text-neutral-500">56% Done</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex justify-end bg-[#D4D0D426] px-4">
+    <button [matMenuTriggerFor]="menu" class="cursor-pointer">
+      <app-svg
+        svgWidth="3rem"
+        svgHeight="3rem"
+        src="icons/general/option-icon.svg"
+      ></app-svg>
+    </button>
+    <mat-menu #menu="matMenu">
+      <button mat-menu-item (click)="viewResult()">View Result</button>
+    </mat-menu>
+  </div>
+</div>

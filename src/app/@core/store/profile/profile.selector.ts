@@ -13,3 +13,8 @@ export const profileSelector = createSelector(
   selectProfile,
   (state: ProfileState) => state.profile
 );
+
+export const linkedAccountsSelector = createSelector(
+  selectProfile,
+  (state: ProfileState) => state.accounts
+);

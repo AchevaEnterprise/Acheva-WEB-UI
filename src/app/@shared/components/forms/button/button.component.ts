@@ -2,10 +2,16 @@ import { Component, input, output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { SvgComponent } from '../../svg/svg.component';
 
 @Component({
   selector: 'app-button',
-  imports: [MatProgressSpinnerModule, MatButtonModule, MatFormFieldModule],
+  imports: [
+    MatProgressSpinnerModule,
+    MatButtonModule,
+    MatFormFieldModule,
+    SvgComponent,
+  ],
   templateUrl: './button.component.html',
   styleUrl: './button.component.scss',
 })
@@ -15,6 +21,7 @@ export class ButtonComponent {
   label = input<string>('');
   type = input<'clear' | 'outline' | 'fill'>('fill');
   class = input<string>('');
+  icon = input<string>('');
 
   clickEvent = output();
 

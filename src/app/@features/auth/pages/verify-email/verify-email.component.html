@@ -24,7 +24,7 @@
       <p class="acva-heading-3 fw-600">Verify your Email</p>
       <p class="acva-para-1 text-neutral-400">
         You are almost there! We've sent a verification email to
-        <strong>a*****&#64;gmail.com</strong> <br />
+        <strong>{{ email }}</strong> <br />
         You need to verify your email address to log in to Acheva
       </p>
     </div>
@@ -33,7 +33,17 @@
       Didn't receive any email?
     </p>
 
-    <app-button class="w-96" label="Reset Password" />
-    <app-button class="w-96" type="clear" label="Continue" />
+    <app-button
+      class="w-96"
+      label="Resend Email"
+      [loading]="isLoading()"
+      (clickEvent)="resendVerificationEmail()"
+    />
+    <app-button
+      class="w-96"
+      type="clear"
+      label="Continue"
+      (clickEvent)="continue()"
+    />
   </div>
 </app-svg-backgroud>

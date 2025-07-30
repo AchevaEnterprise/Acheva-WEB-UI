@@ -12,7 +12,10 @@
       ></app-svg>
     </button>
 
-    <div class="flex items-center gap-3">
+    <div
+      class="flex items-center gap-3 cursor-pointer"
+      [matMenuTriggerFor]="menu"
+    >
       <img
         src=""
         [appImageFallback]="'icons/general/profile-pic-placeholder.svg'"
@@ -25,5 +28,12 @@
         <span class="text-neutral-300 text-sm">Course Cordinator</span>
       </p>
     </div>
+    <mat-menu #menu="matMenu">
+      @for (account of accounts(); track $index) {
+        <button mat-menu-item (click)="switchAccount(account.id)">
+          {{ account.role }}
+        </button>
+      }
+    </mat-menu>
   </div>
 </div>

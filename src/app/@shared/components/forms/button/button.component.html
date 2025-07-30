@@ -6,6 +6,10 @@
     [class]="`${class()} btn-gradient`"
     (click)="onBtnclick()"
   >
+    @if (icon()) {
+      <app-svg svgWidth="1.3rem" svgHeight="1.3rem" [src]="icon()!"></app-svg>
+    }
+
     {{ label() }}
 
     @if (loading()) {
@@ -22,6 +26,10 @@
     [class]="`${class()}`"
     (click)="onBtnclick()"
   >
+    @if (icon()) {
+      <app-svg svgWidth="1.3rem" svgHeight="1.3rem" [src]="icon()!"></app-svg>
+    }
+
     {{ label() }}
 
     @if (loading()) {
@@ -38,6 +46,10 @@
     [class]="`${class()}`"
     (click)="onBtnclick()"
   >
+    @if (icon()) {
+      <app-svg svgWidth="1.3rem" svgHeight="1.3rem" [src]="icon()!"></app-svg>
+    }
+
     {{ label() }}
 
     @if (loading()) {
