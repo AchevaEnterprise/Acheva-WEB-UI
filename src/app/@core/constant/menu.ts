@@ -5,7 +5,7 @@ export const MENU: IMenu[] = [
   {
     label: 'Dashboard',
     active_icon: 'icons/menu/dashboard-active.svg',
-    inactive_icon: 'icons/menu/dashboard-active.svg',
+    inactive_icon: 'icons/menu/dashboard-inactive.svg',
     route: 'dashboard',
     isActive: true,
     accessRole: [
@@ -18,7 +18,7 @@ export const MENU: IMenu[] = [
   },
   {
     label: 'Courses',
-    active_icon: 'icons/menu/courses-inactive.svg',
+    active_icon: 'icons/menu/courses-active.svg',
     inactive_icon: 'icons/menu/courses-inactive.svg',
     route: 'courses',
     isActive: true,

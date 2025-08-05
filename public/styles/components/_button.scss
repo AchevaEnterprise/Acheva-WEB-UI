@@ -11,6 +11,7 @@
       text-container-shape: '8px',
       text-container-height: '50px',
       text-label-text-color: #2793ff,
+      filled-disabled-container-color: #d9e1ec,
     )
   );
 }
@@ -43,4 +44,10 @@
   background: linear-gradient(180deg, #2793ff, #7bf) !important;
 
   @apply px-4;
+}
+
+.mat-mdc-button-disabled {
+  --mdc-filled-button-disabled-label-text-color: #fff;
+  cursor: not-allowed !important;
+  opacity: 0.7 !important;
 }

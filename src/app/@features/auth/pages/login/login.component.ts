@@ -16,11 +16,10 @@ import {
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { Router, RouterLink } from '@angular/router';
-import { finalize, Subscription } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
 import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
 import { AuthBannerComponent } from '../../component/auth-banner/auth-banner.component';
-import { AuthenticationService } from '../../service/auth.service';
 
 @Component({
   selector: 'app-login',
@@ -42,7 +41,7 @@ import { AuthenticationService } from '../../service/auth.service';
   styleUrl: './login.component.scss',
 })
 export class LoginComponent implements OnDestroy {
-  private readonly authService = inject(AuthenticationService);
+  // private readonly authService = inject(AuthenticationService);
   private readonly router = inject(Router);
 
   showPassword = signal(false);
@@ -57,16 +56,18 @@ export class LoginComponent implements OnDestroy {
   submitForm() {
     this.isLoading.set(true);
 
-    this.sub.add(
-      this.authService
-        .signIn(this.form.value)
-        .pipe(finalize(() => this.isLoading.set(false)))
-        .subscribe({
-          next: (res) => {
-            if (res.status) this.router.navigate(['/dashboard']);
-          },
-        })
-    );
+    // this.sub.add(
+    //   this.authService
+    //     .signIn(this.form.value)
+    //     .pipe(finalize(() => this.isLoading.set(false)))
+    //     .subscribe({
+    //       next: (res) => {
+    //         if (res.status) this.router.navigate(['/dashboard']);
+    //       },
+    //     })
+    // );
+
+    this.router.navigate(['/dashboard']);
   }
 
   togglePasswordVisibility() {

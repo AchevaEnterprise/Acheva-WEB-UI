@@ -12,8 +12,8 @@
     <app-search-input placeholder="Search Courses..." />
   </header>
 
-  <div class="grid lg:grid-cols-[30%_1fr] md:grid-cols-2 lg:grid-cols-1 gap-4">
-    <app-card>
+  <div class="grid grid-cols-[30%_1fr] md:grid-cols-2 sm:grid-cols-1 gap-4">
+    <app-card *appRoleAccess="[RoleEnum.COURSE_COORDINATOR]">
       <div
         content
         class="border-[1px] border-dashed rounded-[8px] grid place-content-center place-items-center h-[28vh] mx-4 mb-4 cursor-pointer"

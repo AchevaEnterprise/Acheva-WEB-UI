@@ -12,6 +12,7 @@ export interface ISegmentSwitcher {
     | 'published'
     | 'imported'
     | 'regular'
+    | 'unregistered'
     | 'reference';
   accessRole: RoleEnum[];
 }

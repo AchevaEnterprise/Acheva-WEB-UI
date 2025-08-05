@@ -57,13 +57,12 @@ export class ResultUploadComponent {
     'select',
     'regNo',
     'name',
-    'assessment1',
-    'assessment2',
-    'project1',
-    'project2',
-    'attendance',
+    'test',
+    'lab',
     'exam',
+    'total',
     'finalGrade',
+    'status',
   ];
   dataSource = signal<Partial<IStudentGrade>[]>(STUDENT_GRADES);
   selection = new SelectionModel<Partial<IStudentGrade>>(true, []);
@@ -83,6 +82,17 @@ export class ResultUploadComponent {
     {
       label: 'Reference',
       value: 'reference',
+      accessRole: [
+        RoleEnum.DEAN,
+        RoleEnum.HOD,
+        RoleEnum.COURSE_ADVISOR,
+        RoleEnum.COURSE_COORDINATOR,
+        RoleEnum.LECTURER,
+      ],
+    },
+    {
+      label: 'Unregistered',
+      value: 'unregistered',
       accessRole: [
         RoleEnum.DEAN,
         RoleEnum.HOD,

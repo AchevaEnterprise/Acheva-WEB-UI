@@ -1,12 +1,30 @@
 export interface ICourse {
+  semester: string;
+  courseTitle: string;
+  courseCode: string;
+  faculty: string;
+  department: string;
+  school: string;
+  level: string;
+  courseLoad: number;
+  lecturer: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ICreateCourse {
+  semester: string;
+  courseTitle: string;
+  courseLoad: number;
+  courseCode: string;
+  faculty: string;
+  department: string;
+  level: string;
+}
+
+export interface ICourseQuery {
   courseCode: string;
   courseTitle: string;
-  session: string;
-  department: string;
-  faculty: string;
-  uploadedDate: Date;
-  sentDate: Date;
-  modifiedDate: Date;
 }
 
 export interface ICourseTemplate {

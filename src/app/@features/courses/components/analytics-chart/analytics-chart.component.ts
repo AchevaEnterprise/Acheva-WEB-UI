@@ -34,7 +34,7 @@ export class AnalyticsChartComponent {
         dataLabels: {
           enabled: true,
         },
-        groupPadding: 0.1,
+        groupPadding: 0,
       },
     },
     legend: {

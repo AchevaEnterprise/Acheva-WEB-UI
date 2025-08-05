@@ -1,4 +1,4 @@
-import { Component, computed, inject, output, signal } from '@angular/core';
+import { Component, inject, output, signal } from '@angular/core';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatMenuModule } from '@angular/material/menu';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
@@ -34,11 +34,9 @@ export class SideBarComponent {
   expanded = signal<boolean>(window.innerWidth > 768);
   onToggleSideNav = output<{ expanded: boolean }>();
 
-  isActiveRoute = computed(() =>
-    this.appMenu()?.some((menu: IMenu) =>
-      this.router.url.startsWith(menu.route)
-    )
-  );
+  isActiveRoute(menu: IMenu): boolean {
+    return this.router.url.includes(menu.route);
+  }
 
   toggleSideBar() {
     this.expanded.update((val) => !val);
