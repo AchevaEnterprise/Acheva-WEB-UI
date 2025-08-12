@@ -3,40 +3,40 @@
 
   <div class="mb-4">
     <p class="acva-para-1 text-neutral-500">Session</p>
-    <p class="acva-para-2">{{ courseTemplate()?.session }}</p>
+    <p class="acva-para-2">{{ template()?.session }}</p>
   </div>
   <div class="mb-4">
     <p class="acva-para-1 text-neutral-500">Semester</p>
-    <p class="acva-para-2">{{ courseTemplate()?.semester }}</p>
+    <p class="acva-para-2">{{ template()?.semester }}</p>
   </div>
   <div class="mb-4">
     <p class="acva-para-1 text-neutral-500">Course Title</p>
-    <p class="acva-para-2">{{ courseTemplate()?.course_title }}</p>
+    <p class="acva-para-2">{{ template()?.courseTitle }}</p>
   </div>
   <div class="mb-4">
     <p class="acva-para-1 text-neutral-500">Course Code</p>
-    <p class="acva-para-2">{{ courseTemplate()?.course_code }}</p>
+    <p class="acva-para-2">{{ template()?.courseCode }}</p>
   </div>
   <div class="mb-4">
     <p class="acva-para-1 text-neutral-500">Course Coordinator</p>
-    <p class="acva-para-2">{{ courseTemplate()?.course_cordinator }}</p>
+    <p class="acva-para-2">{{ template()?.courseCordinator }}</p>
   </div>
   <div class="mb-4">
     <p class="acva-para-1 text-neutral-500">Faculty</p>
-    <p class="acva-para-2">{{ courseTemplate()?.faculty }}</p>
+    <p class="acva-para-2">{{ template()?.faculty }}</p>
   </div>
   <div class="mb-4">
     <p class="acva-para-1 text-neutral-500">Department</p>
-    <p class="acva-para-2">{{ courseTemplate()?.department }}</p>
+    <p class="acva-para-2">{{ template()?.department }}</p>
   </div>
   <div class="mb-4">
     <p class="acva-para-1 text-neutral-500">Course Load</p>
-    <p class="acva-para-2">{{ courseTemplate()?.course_unit }}</p>
+    <p class="acva-para-2">{{ template()?.courseLoad }}</p>
   </div>
   <div class="mb-4">
     <p class="acva-para-1 text-neutral-500">Date Created</p>
     <p class="acva-para-2">
-      {{ courseTemplate()?.date_created | date: 'MMM d, YYYY h:mm a' }}
+      {{ template()?.createdAt | date: 'MMM d, YYYY h:mm a' }}
     </p>
   </div>
 </div>

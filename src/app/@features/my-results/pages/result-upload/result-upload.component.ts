@@ -1,12 +1,6 @@
-import { SelectionModel } from '@angular/cdk/collections';
 import { Component, inject, signal } from '@angular/core';
-import {
-  FormControl,
-  FormGroup,
-  FormsModule,
-  ReactiveFormsModule,
-} from '@angular/forms';
-import { MatCheckboxModule } from '@angular/material/checkbox';
+import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -14,24 +8,23 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
-import { STUDENT_GRADES } from '../../../../@core/constant/student-grade-mock';
-import { UtilityService } from '../../../../@core/utility/utility.service';
 import { CardComponent } from '../../../../@shared/components/card/card.component';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
 import { SearchInputComponent } from '../../../../@shared/components/forms/search-input/search-input.component';
-import { PaginatorComponent } from '../../../../@shared/components/paginator/paginator.component';
 import {
   ISegmentSwitcher,
   SegmentSwitcherComponent,
 } from '../../../../@shared/components/segment-switcher/segment-switcher.component';
+import { UploadResultDialogComponent } from '../../../../@shared/components/upload-result-dialog/upload-result-dialog.component';
 import { RoleEnum } from '../../../auth/model/auth.model';
-import { AnalyticsChartComponent } from '../../components/analytics-chart/analytics-chart.component';
-import { IStudentGrade } from '../../models/student-grade.model';
+import { AnalyticsChartComponent } from '../../../courses/components/analytics-chart/analytics-chart.component';
+import { ReferenceTableResultUploadComponent } from '../../components/reference-table-result-upload/reference-table-result-upload.component';
+import { RegularTableResultUploadComponent } from '../../components/regular-table-result-upload/regular-table-result-upload.component';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-result-upload',
   imports: [
-    FormsModule,
     ReactiveFormsModule,
     MatTableModule,
     CardComponent,
@@ -45,27 +38,17 @@ import { IStudentGrade } from '../../models/student-grade.model';
     ButtonComponent,
     MatRadioModule,
     SearchInputComponent,
-    PaginatorComponent,
-    MatCheckboxModule,
+    MatDialogModule,
+    RegularTableResultUploadComponent,
+    ReferenceTableResultUploadComponent,
   ],
   templateUrl: './result-upload.component.html',
   styleUrl: './result-upload.component.scss',
 })
 export class ResultUploadComponent {
-  private readonly utilityService = inject(UtilityService);
-  folderDisplayedColumns: string[] = [
-    'select',
-    'regNo',
-    'name',
-    'test',
-    'lab',
-    'exam',
-    'total',
-    'finalGrade',
-    'status',
-  ];
-  dataSource = signal<Partial<IStudentGrade>[]>(STUDENT_GRADES);
-  selection = new SelectionModel<Partial<IStudentGrade>>(true, []);
+  // private readonly utilityService = inject(UtilityService);
+  private readonly dialog = inject(MatDialog);
+  private readonly router = inject(Router);
 
   segments = signal<ISegmentSwitcher[]>([
     {
@@ -129,32 +112,26 @@ export class ResultUploadComponent {
     }
   }
 
-  /** Whether the number of selected elements matches the total number of rows. */
-  isAllSelected() {
-    const numSelected = this.selection.selected.length;
-    const numRows = this.dataSource().length;
-    return numSelected === numRows;
-  }
-
-  /** Selects all rows if they are not all selected; otherwise clear selection. */
-  toggleAllRows() {
-    if (this.isAllSelected()) {
-      this.selection.clear();
-      return;
-    }
-
-    this.selection.select(...this.dataSource());
-  }
-
-  /** The label for the checkbox on the passed row */
-  checkboxLabel(row?: IStudentGrade): string {
-    if (!row) {
-      return `${this.isAllSelected() ? 'deselect' : 'select'} all`;
-    }
-    return `${this.selection.isSelected(row) ? 'deselect' : 'select'} row ${row.name + 1}`;
+  uploadResult() {
+    this.dialog
+      .open(UploadResultDialogComponent, {
+        width: '600px',
+      })
+      .afterClosed()
+      .subscribe({
+        next: (file: File | null) => {
+          if (file) {
+            console.warn('Uploaded File: ', file);
+          }
+        },
+      });
   }
 
   saveChanges() {
-    this.utilityService.exportToExcel(this.dataSource(), 'Student-Result');
+    this.router.navigate(['my-results']);
   }
+
+  reject() {}
+
+  approve() {}
 }

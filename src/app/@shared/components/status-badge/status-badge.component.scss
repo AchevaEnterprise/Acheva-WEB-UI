@@ -1,0 +1,17 @@
+p {
+  text-align: center;
+  padding-inline: 10px;
+  padding-block: 5px;
+  border-radius: 50px;
+  width: fit-content;
+
+  &.pass {
+    color: #06a561;
+    background-color: #34c75933;
+  }
+
+  &.fail {
+    color: #b4294c;
+    background-color: #f7d6de;
+  }
+}

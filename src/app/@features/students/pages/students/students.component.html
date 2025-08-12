@@ -1,1 +1,54 @@
-<p>students works!</p>
+<div id="container">
+  <h3 class="acva-heading-5 fw-500">Student List</h3>
+
+  <div class="mt-8">
+    <!-- SEARCH FILTERS -->
+    <div class="flex flex-wrap justify-between gap-3">
+      <app-search-input placeholder="Search student name" />
+
+      <div class="flex gap-3">
+        <app-button
+          label="Upload file"
+          class="btn-md"
+          (clickEvent)="uploadFile()"
+        />
+
+        <app-button
+          label="Add new student"
+          class="btn-md"
+          type="outline"
+          (clickEvent)="addStudent()"
+        />
+      </div>
+    </div>
+
+    <!-- <app-empty-state
+          iconSrc="images/general/empty-doc.svg"
+          description="Your drafts is empty, create a course and input results to fill this page"
+        /> -->
+
+    <div class="w-full overflow-auto">
+      <table mat-table [dataSource]="dataSource()">
+        <ng-container matColumnDef="regNo">
+          <th mat-header-cell *matHeaderCellDef>REG NO</th>
+          <td mat-cell *matCellDef="let element">
+            {{ element.regNo }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef>NAME</th>
+          <td mat-cell *matCellDef="let element">
+            {{ element.name }}
+          </td>
+        </ng-container>
+
+        <tr
+          mat-header-row
+          *matHeaderRowDef="displayedColumns; sticky: true"
+        ></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
+    </div>
+  </div>
+</div>

@@ -1,4 +1,5 @@
 export interface ICourse {
+  session?: string;
   semester: string;
   courseTitle: string;
   courseCode: string;
@@ -6,6 +7,7 @@ export interface ICourse {
   department: string;
   school: string;
   level: string;
+  courseCordinator?: string;
   courseLoad: number;
   lecturer: string;
   createdAt: Date;
@@ -28,6 +30,7 @@ export interface ICourseQuery {
 }
 
 export interface ICourseTemplate {
+  id: string;
   course_title: string;
   course_code: string;
   course_cordinator: string;

@@ -1,0 +1,103 @@
+<form [formGroup]="form" class="w-full overflow-auto">
+  <table mat-table [dataSource]="dataSource()">
+    <!-- Checkbox Column -->
+    <ng-container matColumnDef="select">
+      <th mat-header-cell *matHeaderCellDef>
+        <mat-checkbox
+          (change)="$event ? toggleAllRows() : null"
+          [checked]="selection.hasValue() && isAllSelected()"
+          [indeterminate]="selection.hasValue() && !isAllSelected()"
+          [aria-label]="checkboxLabel()"
+        >
+        </mat-checkbox>
+      </th>
+      <td mat-cell *matCellDef="let row">
+        <mat-checkbox
+          (click)="$event.stopPropagation()"
+          (change)="$event ? selection.toggle(row) : null"
+          [checked]="selection.isSelected(row)"
+          [aria-label]="checkboxLabel(row)"
+        >
+        </mat-checkbox>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="regNo">
+      <th mat-header-cell *matHeaderCellDef>REG NO</th>
+      <td mat-cell *matCellDef="let element">
+        <app-search-select placeholder="Reg No" formControlName="regNo" />
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="name">
+      <th mat-header-cell *matHeaderCellDef>NAME</th>
+      <td mat-cell *matCellDef="let element">
+        {{ element.name }}
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="test">
+      <th mat-header-cell *matHeaderCellDef>TEST</th>
+      <td mat-cell *matCellDef="let element" class="text-center">
+        <input
+          type="text"
+          class="border border-neutral-300 rounded-[8px] p-2 my-4 w-full"
+          name="assessment1"
+          [(ngModel)]="element.test"
+          [ngModelOptions]="{ standalone: true }"
+        />
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="lab">
+      <th mat-header-cell *matHeaderCellDef>LAB</th>
+      <td mat-cell *matCellDef="let element">
+        <input
+          type="text"
+          class="border border-neutral-300 rounded-[8px] p-2 w-full"
+          name="assessment2"
+          [(ngModel)]="element.lab"
+          [ngModelOptions]="{ standalone: true }"
+        />
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="exam">
+      <th mat-header-cell *matHeaderCellDef>EXAM</th>
+      <td mat-cell *matCellDef="let element">
+        <input
+          type="text"
+          class="border border-neutral-300 rounded-[8px] p-2 w-full"
+          name="project1"
+          [(ngModel)]="element.exam"
+          [ngModelOptions]="{ standalone: true }"
+        />
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="total">
+      <th mat-header-cell *matHeaderCellDef>TOTAL</th>
+      <td mat-cell *matCellDef="let element">
+        {{ element.total || '-' }}
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="finalGrade">
+      <th mat-header-cell *matHeaderCellDef>FINAL GRADE</th>
+      <td mat-cell *matCellDef="let element">
+        {{ element.finalGrade || '-' }}
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="status">
+      <th mat-header-cell *matHeaderCellDef>STATUS</th>
+      <td mat-cell *matCellDef="let element">
+        {{ element.status || '-' }}
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+  </table>
+</form>
+<app-paginator />

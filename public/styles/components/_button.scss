@@ -36,6 +36,15 @@
   );
 }
 
+.mdc-button.btn-error {
+  @include mat.button-overrides(
+    (
+      outlined-label-text-color: #d8315b,
+      outlined-outline-color: #d8315b,
+    )
+  );
+}
+
 .mdc-button__label {
   @apply flex gap-2 items-center;
 }

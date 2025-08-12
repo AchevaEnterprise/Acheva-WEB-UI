@@ -7,13 +7,13 @@
   </header>
 
   <div class="grid lg:grid-cols-[1fr_40%] md:grid-cols-2 sm:grid-cols-1 gap-8">
-    <form [formGroup]="form()">
+    <form [formGroup]="form">
       <div class="input-style-1 acheva-input w-full">
         <p class="acva-para-2 fw-400 label-text">Session</p>
 
         <mat-form-field [style.width.%]="100" appearance="outline">
           <mat-select
-            placeholder="Select your ession"
+            placeholder="Select your session"
             formControlName="session"
           >
             <mat-option [value]="'2024/2025'">2024/2025</mat-option>
@@ -75,7 +75,7 @@
         <p class="acva-para-2 fw-400 label-text">Course Title</p>
 
         <mat-form-field [style.width.%]="100" appearance="outline">
-          <input matInput type="text" formControlName="course_title" />
+          <input matInput type="text" formControlName="courseTitle" />
         </mat-form-field>
       </div>
 
@@ -83,7 +83,7 @@
         <p class="acva-para-2 fw-400 label-text">Course Code</p>
 
         <mat-form-field [style.width.%]="100" appearance="outline">
-          <input matInput type="text" formControlName="course_code" />
+          <input matInput type="text" formControlName="courseCode" />
         </mat-form-field>
       </div>
 
@@ -91,7 +91,7 @@
         <p class="acva-para-2 fw-400 label-text">Course Coordinator</p>
 
         <mat-form-field [style.width.%]="100" appearance="outline">
-          <input matInput type="text" formControlName="course_cordinator" />
+          <input matInput type="text" formControlName="courseCordinator" />
         </mat-form-field>
       </div>
 
@@ -100,12 +100,7 @@
           <p class="acva-para-2 fw-400 label-text">Course Unit</p>
 
           <mat-form-field [style.width.%]="100" appearance="outline">
-            <input
-              matInput
-              type="text"
-              formControlName="course_unit"
-              readonly
-            />
+            <input matInput type="text" formControlName="courseLoad" readonly />
           </mat-form-field>
         </div>
 
@@ -123,7 +118,7 @@
       </div>
     </form>
 
-    <app-course-preview [courseTemplate]="this.form().getRawValue()" />
+    <app-course-preview [courseTemplate]="form.getRawValue()" />
   </div>
 
   <div class="flex gap-3 justify-end">

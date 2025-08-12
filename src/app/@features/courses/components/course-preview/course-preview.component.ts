@@ -1,6 +1,5 @@
-import { Component, input } from '@angular/core';
-import { ICourseTemplate } from '../../models/course.model';
 import { DatePipe } from '@angular/common';
+import { Component, computed, input } from '@angular/core';
 
 @Component({
   selector: 'app-course-preview',
@@ -9,5 +8,7 @@ import { DatePipe } from '@angular/common';
   styleUrl: './course-preview.component.scss',
 })
 export class CoursePreviewComponent {
-  courseTemplate = input<ICourseTemplate>();
+  courseTemplate = input<any>();
+
+  template = computed(() => this.courseTemplate());
 }

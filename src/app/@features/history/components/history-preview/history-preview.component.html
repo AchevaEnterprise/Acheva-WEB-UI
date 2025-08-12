@@ -1,0 +1,72 @@
+<section class="p-4 overflow-y-auto grid gap-4">
+  <div class="flex justify-between items-center">
+    <h2 class="font-medium text-[1.2rem]">History Preview</h2>
+    <button class="cursor-pointer" (click)="close()">
+      <app-svg src="icons/general/close-icon.svg"></app-svg>
+    </button>
+  </div>
+
+  <div class="grid grid-cols-2 gap-4">
+    <div>
+      <p class="text-sm text-gray-400">Received On</p>
+      <p class="acva-para-2">May 2nd, 2025, 8:09AM</p>
+    </div>
+
+    <div>
+      <p class="text-sm text-gray-400">Published On</p>
+      <p>May 2nd, 2025, 8:09AM</p>
+    </div>
+  </div>
+
+  <h4 class="bg-gray-200 px-2 rounded-sm">Course Summary</h4>
+  <div class="grid grid-cols-2 gap-4">
+    <div>
+      <p class="text-sm text-gray-400">Course Code</p>
+      <p>May 2nd, 2025, 8:09AM</p>
+    </div>
+
+    <div>
+      <p class="text-sm text-gray-400">Session</p>
+      <p>May 2nd, 2025, 8:09AM</p>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-2 gap-4">
+    <div>
+      <p class="text-sm text-gray-400">Department</p>
+      <p>May 2nd, 2025, 8:09AM</p>
+    </div>
+
+    <div>
+      <p class="text-sm text-gray-400">Course Title</p>
+      <p>May 2nd, 2025, 8:09AM</p>
+    </div>
+
+    <div>
+      <p class="text-sm text-gray-400">Course Coordinator</p>
+      <p>May 2nd, 2025, 8:09AM</p>
+    </div>
+  </div>
+
+  <h4 class="bg-gray-200 px-2 rounded-sm">Comments</h4>
+  <div class="mb-4">
+    <p class="flex gap-3 items-center">
+      <img
+        src=""
+        alt="Avatar"
+        width="50"
+        height="50"
+        class="w-6 h-6 aspect-square rounded-full object-cover"
+        [appImageFallback]="'icons/general/profile-pic-placeholder.svg'"
+      />
+      Engr. Daniel Chika
+      <span>HOD</span>
+    </p>
+    <p class="acva-para-1 text-gray-400 mt-2">
+      Please review the results of the reference students, especially that of
+      Nwaka Mathew, some of his scores don’t tally with the amount of work he
+      put into this semester.The number of students do not tally with the number
+      of results as well, look into that.
+    </p>
+  </div>
+</section>

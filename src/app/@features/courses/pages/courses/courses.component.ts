@@ -2,7 +2,6 @@ import { Component, inject, signal } from '@angular/core';
 import { MatDivider } from '@angular/material/divider';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { COURSE_TEMPLATE } from '../../../../@core/constant/course-template-mock';
-import { RoleAccessDirective } from '../../../../@core/directives/role-access.directive';
 import { CardComponent } from '../../../../@shared/components/card/card.component';
 import { EmptyStateComponent } from '../../../../@shared/components/empty-state/empty-state.component';
 import { SearchInputComponent } from '../../../../@shared/components/forms/search-input/search-input.component';
@@ -22,7 +21,6 @@ import { ICourseTemplate } from '../../models/course.model';
     MatDivider,
     CourseCardComponent,
     RouterLink,
-    RoleAccessDirective,
   ],
   templateUrl: './courses.component.html',
   styleUrl: './courses.component.scss',
@@ -36,9 +34,16 @@ export class CoursesComponent {
   RoleEnum = RoleEnum;
   activeAccount = this.authService.activeAccount;
 
-  createResult(courseTemplate: Partial<ICourseTemplate>) {
-    this.router.navigate(['details', 1], {
+  createCourse() {
+    this.router.navigate(['details'], {
       relativeTo: this.route,
+    });
+  }
+
+  createResult(courseTemplate: Partial<ICourseTemplate>) {
+    this.router.navigate(['details'], {
+      relativeTo: this.route,
+      queryParams: { templateId: courseTemplate.id },
     });
   }
 }

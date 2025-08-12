@@ -1,0 +1,29 @@
+tr.table-detail-row {
+  height: 0;
+}
+
+tr.table-element-row {
+  cursor: pointer;
+}
+
+tr.table-element-row:not(.table-expanded-row):hover {
+  background: #F7D6DE4D;
+}
+
+
+.table-element-row td {
+  border-bottom-width: 0;
+}
+
+.table-element-detail-wrapper {
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: 0fr;
+  grid-template-columns: 100%;
+  transition: grid-template-rows 225ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.table-element-detail-wrapper-expanded {
+  grid-template-rows: 1fr;
+//   padding-block: 10px;
+}

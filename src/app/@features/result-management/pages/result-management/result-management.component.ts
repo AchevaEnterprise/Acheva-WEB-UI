@@ -1,62 +1,38 @@
-import { SelectionModel } from '@angular/cdk/collections';
-import { DatePipe, NgClass } from '@angular/common';
+import { NgClass } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatMenuModule } from '@angular/material/menu';
-import { MatSelectModule } from '@angular/material/select';
-import { MatTableModule } from '@angular/material/table';
+import { MatDialog } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { COURSES } from '../../../../@core/constant/course-mock';
 import { CardComponent } from '../../../../@shared/components/card/card.component';
+import { ConfirmationComponent } from '../../../../@shared/components/confirmation/confirmation.component';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
-import { PaginatorComponent } from '../../../../@shared/components/paginator/paginator.component';
 import {
   ISegmentSwitcher,
   SegmentSwitcherComponent,
 } from '../../../../@shared/components/segment-switcher/segment-switcher.component';
-import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
 import { RoleEnum } from '../../../auth/model/auth.model';
-import { ICourse } from '../../../courses/models/course.model';
 import { CommentComponent } from '../../components/comment/comment.component';
+import { ResultManagementFileTableComponent } from '../../components/result-management-file-table/result-management-file-table.component';
+import { ResultManagementFolderTableComponent } from '../../components/result-management-folder-table/result-management-folder-table.component';
 import { ResultStatusTrackingComponent } from '../../components/result-status-tracking/result-status-tracking.component';
-import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-result-management',
   imports: [
     NgClass,
-    SvgComponent,
-    MatTableModule,
     SegmentSwitcherComponent,
-    DatePipe,
-    MatSelectModule,
-    MatFormFieldModule,
-    CardComponent,
-    MatMenuModule,
     ButtonComponent,
     ResultStatusTrackingComponent,
-    MatCheckboxModule,
-    PaginatorComponent,
     CommentComponent,
     MatTooltipModule,
+    CardComponent,
+    ResultManagementFolderTableComponent,
+    ResultManagementFileTableComponent,
   ],
   templateUrl: './result-management.component.html',
   styleUrl: './result-management.component.scss',
 })
 export class ResultManagementComponent {
-  private readonly router = inject(Router);
-
-  displayedColumns: string[] = [
-    'select',
-    'courseCode',
-    'courseTitle',
-    'session',
-    'department',
-    'faculty',
-  ];
-  dataSource = signal<ICourse[]>(COURSES);
-  selection = new SelectionModel<ICourse>(true, []);
+  private readonly dialog = inject(MatDialog);
 
   segments = signal<ISegmentSwitcher[]>([
     {
@@ -119,39 +95,6 @@ export class ResultManagementComponent {
 
   toggleView() {
     this.expandView.update((prev) => !prev);
-
-    if (this.expandView()) {
-      this.displayedColumns.push('uploadedDate', 'sentDate', 'actions');
-    } else {
-      this.displayedColumns = this.displayedColumns.filter(
-        (col) => !['uploadedDate', 'sentDate', 'actions'].includes(col)
-      );
-    }
-  }
-
-  /** Whether the number of selected elements matches the total number of rows. */
-  isAllSelected() {
-    const numSelected = this.selection.selected.length;
-    const numRows = this.dataSource().length;
-    return numSelected === numRows;
-  }
-
-  /** Selects all rows if they are not all selected; otherwise clear selection. */
-  toggleAllRows() {
-    if (this.isAllSelected()) {
-      this.selection.clear();
-      return;
-    }
-
-    this.selection.select(...this.dataSource());
-  }
-
-  /** The label for the checkbox on the passed row */
-  checkboxLabel(row?: ICourse): string {
-    if (!row) {
-      return `${this.isAllSelected() ? 'deselect' : 'select'} all`;
-    }
-    return `${this.selection.isSelected(row) ? 'deselect' : 'select'} row ${row.courseCode + 1}`;
   }
 
   switchSegment(switchValue: ISegmentSwitcher['value']) {
@@ -191,7 +134,39 @@ export class ResultManagementComponent {
     }
   }
 
-  viewResultDetails(course: ICourse) {
-    this.router.navigate(['courses/result-upload']);
+  sendToCC() {
+    this.dialog
+      .open(ConfirmationComponent, {
+        width: '600px',
+        data: {
+          message: `You're about to send this result to the Course Coordinator. This action is irreversible, Are you sure you want to continue?`,
+        },
+      })
+      .afterClosed()
+      .subscribe({
+        next: (file: File | null) => {
+          if (file) {
+            console.warn('Uploaded File: ', file);
+          }
+        },
+      });
+  }
+
+  sendToHOD() {
+    this.dialog
+      .open(ConfirmationComponent, {
+        width: '600px',
+        data: {
+          message: `You're about to send this result to the Head of Department. This action is irreversible, Are you sure you want to continue?`,
+        },
+      })
+      .afterClosed()
+      .subscribe({
+        next: (file: File | null) => {
+          if (file) {
+            console.warn('Uploaded File: ', file);
+          }
+        },
+      });
   }
 }

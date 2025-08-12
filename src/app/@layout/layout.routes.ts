@@ -80,6 +80,26 @@ export const routes: Routes = [
             (m) => m.UserSettingsComponent
           ),
       },
+      {
+        path: 'history',
+        data: {
+          title: 'History',
+        },
+        loadComponent: () =>
+          import('../@features/history/pages/history/history.component').then(
+            (m) => m.HistoryComponent
+          ),
+      },
+      {
+        path: 'students',
+        data: {
+          title: 'Students',
+        },
+        loadComponent: () =>
+          import(
+            '../@features/students/pages/students/students.component'
+          ).then((m) => m.StudentsComponent),
+      },
     ],
   },
 ];

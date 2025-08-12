@@ -1,6 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
 import { SearchInputComponent } from '../../../../@shared/components/forms/search-input/search-input.component';
 import {
@@ -11,7 +12,6 @@ import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
 import { RoleEnum } from '../../../auth/model/auth.model';
 import { MyResultGridCardComponent } from '../../components/my-result-grid-card/my-result-grid-card.component';
 import { MyResultListCardComponent } from '../../components/my-result-list-card/my-result-list-card.component';
-import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-my-results',
@@ -30,6 +30,8 @@ import { Router } from '@angular/router';
 })
 export class MyResultsComponent {
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+
   view = signal<'list' | 'grid'>('list');
   viewLabel = signal<string>('Grid View');
   viewIcon = signal<string>('icons/general/grid-icon.svg');
@@ -129,6 +131,6 @@ export class MyResultsComponent {
   }
 
   uploadResults() {
-    this.router.navigate(['courses/result-upload']);
+    this.router.navigate(['/upload-result'], { relativeTo: this.route });
   }
 }

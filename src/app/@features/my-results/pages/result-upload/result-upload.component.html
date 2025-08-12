@@ -126,7 +126,30 @@
   <div class="flex gap-3 items-center justify-between">
     <app-search-input placeholder="Search students" />
 
-    <div class="flex gap-3 items-center">
+    <div class="flex flex-wrap justify-end gap-3 items-center">
+      <app-button
+        label="Resend"
+        class="btn-md"
+        [matMenuTriggerFor]="resendMenu"
+      />
+      <mat-menu #resendMenu="matMenu">
+        <button mat-menu-item>Resend to CC</button>
+        <button mat-menu-item>Resend to Dean</button>
+      </mat-menu>
+
+      <app-button
+        label="Approve"
+        icon="icons/general/approve-btn-icon.svg"
+        class="btn-md"
+        (clickEvent)="approve()"
+      />
+      <app-button
+        label="Reject"
+        type="outline"
+        icon="icons/general/reject-btn-icon.svg"
+        class="btn-md btn-error"
+        (clickEvent)="reject()"
+      />
       <app-button
         label="Save Changes"
         icon="icons/general/save-btn-icon.svg"
@@ -136,8 +159,8 @@
       <app-button
         label="Upload Results"
         type="outline"
-        icon="icons/general/download-icon.svg"
         class="btn-md"
+        (clickEvent)="uploadResult()"
       />
       <app-button
         label="Delete File"
@@ -160,105 +183,16 @@
           description="Your drafts is empty, create a course and input results to fill this page"
         /> -->
 
-    <div class="w-full overflow-auto">
-      <table mat-table [dataSource]="dataSource()">
-        <!-- Checkbox Column -->
-        <ng-container matColumnDef="select">
-          <th mat-header-cell *matHeaderCellDef>
-            <mat-checkbox
-              (change)="$event ? toggleAllRows() : null"
-              [checked]="selection.hasValue() && isAllSelected()"
-              [indeterminate]="selection.hasValue() && !isAllSelected()"
-              [aria-label]="checkboxLabel()"
-            >
-            </mat-checkbox>
-          </th>
-          <td mat-cell *matCellDef="let row">
-            <mat-checkbox
-              (click)="$event.stopPropagation()"
-              (change)="$event ? selection.toggle(row) : null"
-              [checked]="selection.isSelected(row)"
-              [aria-label]="checkboxLabel(row)"
-            >
-            </mat-checkbox>
-          </td>
-        </ng-container>
-
-        <ng-container matColumnDef="regNo">
-          <th mat-header-cell *matHeaderCellDef>REG NO</th>
-          <td mat-cell *matCellDef="let element">
-            {{ element.regNo }}
-          </td>
-        </ng-container>
-
-        <ng-container matColumnDef="name">
-          <th mat-header-cell *matHeaderCellDef>NAME</th>
-          <td mat-cell *matCellDef="let element" class="w-[20%]">
-            {{ element.name }}
-          </td>
-        </ng-container>
-
-        <ng-container matColumnDef="test">
-          <th mat-header-cell *matHeaderCellDef>TEST</th>
-          <td mat-cell *matCellDef="let element" class="text-center">
-            <input
-              type="text"
-              class="border border-neutral-300 rounded-[8px] p-2 my-4 w-[40%]"
-              name="assessment1"
-              [(ngModel)]="element.test"
-            />
-          </td>
-        </ng-container>
-
-        <ng-container matColumnDef="lab">
-          <th mat-header-cell *matHeaderCellDef>LAB</th>
-          <td mat-cell *matCellDef="let element">
-            <input
-              type="text"
-              class="border border-neutral-300 rounded-[8px] p-2 w-[40%]"
-              name="assessment2"
-              [(ngModel)]="element.lab"
-            />
-          </td>
-        </ng-container>
-
-        <ng-container matColumnDef="exam">
-          <th mat-header-cell *matHeaderCellDef>EXAM</th>
-          <td mat-cell *matCellDef="let element">
-            <input
-              type="text"
-              class="border border-neutral-300 rounded-[8px] p-2 w-[40%]"
-              name="project1"
-              [(ngModel)]="element.exam"
-            />
-          </td>
-        </ng-container>
-
-        <ng-container matColumnDef="total">
-          <th mat-header-cell *matHeaderCellDef>TOTAL</th>
-          <td mat-cell *matCellDef="let element">
-            {{ element.total || '-' }}
-          </td>
-        </ng-container>
-
-        <ng-container matColumnDef="finalGrade">
-          <th mat-header-cell *matHeaderCellDef>FINAL GRADE</th>
-          <td mat-cell *matCellDef="let element">
-            {{ element.finalGrade || '-' }}
-          </td>
-        </ng-container>
-
-        <ng-container matColumnDef="status">
-          <th mat-header-cell *matHeaderCellDef>STATUS</th>
-          <td mat-cell *matCellDef="let element">
-            {{ element.status || '-' }}
-          </td>
-        </ng-container>
-
-        <tr mat-header-row *matHeaderRowDef="folderDisplayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: folderDisplayedColumns"></tr>
-      </table>
-    </div>
-    <app-paginator />
+    @switch (activeSegment().value) {
+      @case ('regular') {
+        <app-regular-table-result-upload />
+      }
+      @case ('reference') {
+        <app-reference-table-result-upload />
+      }
+      @case ('unregistered') {
+        <app-reference-table-result-upload />
+      }
+    }
   </div>
 </div>
