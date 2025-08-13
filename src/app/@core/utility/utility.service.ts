@@ -29,4 +29,17 @@ export class UtilityService {
 
     FileSaver.saveAs(blob, `${fileName}.xlsx`);
   }
+
+  generateSchoolSessions() {
+    const currentYear = new Date().getFullYear();
+    const startYear = 2000;
+    const sessions = [];
+
+    for (let year = startYear; year <= currentYear; year++) {
+      const session = `${year}/${year + 1}`;
+      sessions.push(session);
+    }
+
+    return sessions.reverse();
+  }
 }

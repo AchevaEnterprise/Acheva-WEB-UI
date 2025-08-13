@@ -7,11 +7,15 @@
   </div>
   <div class="mb-4">
     <p class="acva-para-1 text-neutral-500">Semester</p>
-    <p class="acva-para-2">{{ template()?.semester }}</p>
+    <p class="acva-para-2">{{ template()?.semester | titlecase }}</p>
+  </div>
+  <div class="mb-4">
+    <p class="acva-para-1 text-neutral-500">Level</p>
+    <p class="acva-para-2">{{ template()?.level }}</p>
   </div>
   <div class="mb-4">
     <p class="acva-para-1 text-neutral-500">Course Title</p>
-    <p class="acva-para-2">{{ template()?.courseTitle }}</p>
+    <p class="acva-para-2">{{ template()?.courseTitle | titlecase }}</p>
   </div>
   <div class="mb-4">
     <p class="acva-para-1 text-neutral-500">Course Code</p>
@@ -19,15 +23,15 @@
   </div>
   <div class="mb-4">
     <p class="acva-para-1 text-neutral-500">Course Coordinator</p>
-    <p class="acva-para-2">{{ template()?.courseCordinator }}</p>
+    <p class="acva-para-2">{{ template()?.courseCordinator | titlecase }}</p>
   </div>
   <div class="mb-4">
     <p class="acva-para-1 text-neutral-500">Faculty</p>
-    <p class="acva-para-2">{{ template()?.faculty }}</p>
+    <p class="acva-para-2">{{ template()?.faculty | titlecase }}</p>
   </div>
   <div class="mb-4">
     <p class="acva-para-1 text-neutral-500">Department</p>
-    <p class="acva-para-2">{{ template()?.department }}</p>
+    <p class="acva-para-2">{{ template()?.department | titlecase }}</p>
   </div>
   <div class="mb-4">
     <p class="acva-para-1 text-neutral-500">Course Load</p>

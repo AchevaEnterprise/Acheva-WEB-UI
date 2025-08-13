@@ -25,6 +25,7 @@ import { IStudentGrade } from '../../../courses/models/student-grade.model';
   ],
   templateUrl: './reference-table-result-upload.component.html',
   styleUrl: './reference-table-result-upload.component.scss',
+  exportAs: 'referenceTableResultUploadRef',
 })
 export class ReferenceTableResultUploadComponent {
   displayedColumns: string[] = [

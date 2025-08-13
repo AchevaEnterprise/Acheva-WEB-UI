@@ -1,4 +1,5 @@
 export interface ICourse {
+  _id?: string;
   session?: string;
   semester: string;
   courseTitle: string;

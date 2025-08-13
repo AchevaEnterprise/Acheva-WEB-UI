@@ -3,7 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { IAPIResponse } from '../../../@core/models/api-response.model';
-import { ICourseQuery, ICreateCourse } from '../models/course.model';
+import { ICourse, ICourseQuery, ICreateCourse } from '../models/course.model';
 
 @Injectable({
   providedIn: 'root',
@@ -24,8 +24,10 @@ export class CoursesService {
     return this.http.get<IAPIResponse<any>>(`${this.coursesUrl}/${courseId}`);
   }
 
-  getRecentCourses(): Observable<IAPIResponse<any>> {
-    return this.http.get<IAPIResponse<any>>(`${this.coursesUrl}/recently-used`);
+  getRecentCourses(): Observable<IAPIResponse<ICourse[]>> {
+    return this.http.get<IAPIResponse<ICourse[]>>(
+      `${this.coursesUrl}/recently-used`
+    );
   }
 
   createCourse(course: ICreateCourse): Observable<IAPIResponse<any>> {

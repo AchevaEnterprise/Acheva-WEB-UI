@@ -63,7 +63,31 @@
         </div>
 
         <div class="input-style-1 acheva-input w-full">
-          <p class="acva-para-2 fw-400 label-text">School Faculty</p>
+          <p class="acva-para-2 fw-400 label-text">School</p>
+
+          <mat-form-field [style.width.%]="100" appearance="outline">
+            <span matPrefix mat-icon-button>
+              <app-svg
+                svgWidth="1rem"
+                svgHeight="1rem"
+                src="icons/general/faculty-icon.svg"
+              ></app-svg>
+            </span>
+
+            <mat-select
+              placeholder="Select your school"
+              formControlName="school"
+              (selectionChange)="getFaculties($event)"
+            >
+              @for (school of schoolsOptions(); track $index) {
+                <mat-option [value]="school">{{ school.name }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <div class="input-style-1 acheva-input w-full">
+          <p class="acva-para-2 fw-400 label-text">Faculty</p>
 
           <mat-form-field [style.width.%]="100" appearance="outline">
             <span matPrefix mat-icon-button>
@@ -77,14 +101,17 @@
             <mat-select
               placeholder="Select your faculty"
               formControlName="faculty"
+              (selectionChange)="getDepartments($event)"
             >
-              <mat-option [value]="'Science'">Science</mat-option>
+              @for (faculty of facultiesOptions(); track $index) {
+                <mat-option [value]="faculty">{{ faculty.name }}</mat-option>
+              }
             </mat-select>
           </mat-form-field>
         </div>
 
         <div class="input-style-1 acheva-input w-full">
-          <p class="acva-para-2 fw-400 label-text">School Department</p>
+          <p class="acva-para-2 fw-400 label-text">Department</p>
 
           <mat-form-field [style.width.%]="100" appearance="outline">
             <span matPrefix mat-icon-button>
@@ -99,7 +126,11 @@
               placeholder="Select your department"
               formControlName="department"
             >
-              <mat-option [value]="'Science'">Science</mat-option>
+              @for (department of departmentsOptions(); track $index) {
+                <mat-option [value]="department">{{
+                  department.name
+                }}</mat-option>
+              }
             </mat-select>
           </mat-form-field>
         </div>

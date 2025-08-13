@@ -1,4 +1,4 @@
-import { Component, inject, OnDestroy, signal } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import {
   FormControl,
   FormGroup,
@@ -14,9 +14,26 @@ import {
 } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
+import { MatSelectChange, MatSelectModule } from '@angular/material/select';
 import { Router, RouterLink } from '@angular/router';
+import { Store } from '@ngrx/store';
 import { finalize, Subscription } from 'rxjs';
+import {
+  IDepartment,
+  IFaculty,
+  ISchool,
+} from '../../../../@core/models/school.model';
+import { AppState } from '../../../../@core/store/app.state';
+import {
+  loadDepartments,
+  loadFaculties,
+  loadSchools,
+} from '../../../../@core/store/school/school.action';
+import {
+  departmentsSelector,
+  facultiesSelector,
+  schoolsSelector,
+} from '../../../../@core/store/school/school.selector';
 import { NotificationService } from '../../../../@core/utility/notification.service';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
 import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
@@ -45,10 +62,11 @@ import { AuthenticationService } from '../../service/auth.service';
   templateUrl: './create-account.component.html',
   styleUrl: './create-account.component.scss',
 })
-export class CreateAccountComponent implements OnDestroy {
+export class CreateAccountComponent implements OnInit, OnDestroy {
   private readonly authService = inject(AuthenticationService);
   private readonly notificationService = inject(NotificationService);
   private readonly router = inject(Router);
+  private readonly store = inject(Store<AppState>);
 
   isLoading = signal(false);
   roleOptions = signal<{ label: string; value: RoleEnum }[]>([
@@ -96,11 +114,16 @@ export class CreateAccountComponent implements OnDestroy {
       value: 'Prof.',
     },
   ]);
+  schoolsOptions = signal<ISchool[]>([]);
+  facultiesOptions = signal<IFaculty[]>([]);
+  departmentsOptions = signal<IDepartment[]>([]);
+
   private readonly sub: Subscription = new Subscription();
 
   form: FormGroup = new FormGroup({
     fullname: new FormControl(null, Validators.required),
     email: new FormControl(null, [Validators.required, Validators.email]),
+    school: new FormControl(null, Validators.required),
     faculty: new FormControl(null, Validators.required),
     department: new FormControl(null, Validators.required),
     title: new FormControl(null, Validators.required),
@@ -112,6 +135,10 @@ export class CreateAccountComponent implements OnDestroy {
   showPassword = signal<boolean>(false);
   showConfirmPassword = signal<boolean>(false);
 
+  ngOnInit(): void {
+    this.getSchools();
+  }
+
   togglePasswordVisibility() {
     this.showPassword.update((val) => !val);
   }
@@ -120,10 +147,49 @@ export class CreateAccountComponent implements OnDestroy {
     this.showConfirmPassword.update((val) => !val);
   }
 
+  getSchools() {
+    this.store.dispatch(loadSchools());
+
+    this.sub.add(
+      this.store.select(schoolsSelector).subscribe({
+        next: (schools) => {
+          this.schoolsOptions.set(schools);
+        },
+      })
+    );
+  }
+
+  getFaculties(event: MatSelectChange) {
+    const { _id } = event.value as ISchool;
+    this.store.dispatch(loadFaculties({ schoolId: _id }));
+
+    this.sub.add(
+      this.store.select(facultiesSelector).subscribe({
+        next: (faculties) => {
+          this.facultiesOptions.set(faculties);
+        },
+      })
+    );
+  }
+
+  getDepartments(event: MatSelectChange) {
+    const { _id } = event.value as IFaculty;
+    this.store.dispatch(loadDepartments({ facultyId: _id }));
+
+    this.sub.add(
+      this.store.select(departmentsSelector).subscribe({
+        next: (departments) => {
+          this.departmentsOptions.set(departments);
+        },
+      })
+    );
+  }
+
   submitForm() {
     const {
       fullname,
       email,
+      school,
       faculty,
       department,
       title,
@@ -133,8 +199,9 @@ export class CreateAccountComponent implements OnDestroy {
     } = this.form.value as {
       fullname: string;
       email: string;
-      faculty: string;
-      department: string;
+      school: ISchool;
+      faculty: IFaculty;
+      department: IDepartment;
       title: string;
       role: RoleEnum;
       password: string;
@@ -161,10 +228,11 @@ export class CreateAccountComponent implements OnDestroy {
       email,
       password,
       confirmPassword: confirm_password,
-      faculty,
-      department,
+      faculty: faculty._id,
+      department: department._id,
       title,
       role,
+      school: school.name,
     } satisfies ISignUp;
 
     this.sub.add(

@@ -20,6 +20,7 @@ export interface ISignUp {
   confirmPassword: string;
   faculty: string;
   department: string;
+  school: string;
   title: string | string[];
   role: RoleEnum;
 }

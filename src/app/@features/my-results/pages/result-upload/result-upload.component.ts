@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, viewChild } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
@@ -20,7 +20,6 @@ import { RoleEnum } from '../../../auth/model/auth.model';
 import { AnalyticsChartComponent } from '../../../courses/components/analytics-chart/analytics-chart.component';
 import { ReferenceTableResultUploadComponent } from '../../components/reference-table-result-upload/reference-table-result-upload.component';
 import { RegularTableResultUploadComponent } from '../../components/regular-table-result-upload/regular-table-result-upload.component';
-import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-result-upload',
@@ -47,8 +46,17 @@ import { Router } from '@angular/router';
 })
 export class ResultUploadComponent {
   // private readonly utilityService = inject(UtilityService);
+  // private readonly resultsService = inject(ResultsService);
   private readonly dialog = inject(MatDialog);
-  private readonly router = inject(Router);
+  // private readonly router = inject(Router);
+
+  regularTableResultUploadRef = viewChild<RegularTableResultUploadComponent>(
+    'regularTableResultUploadRef'
+  );
+  referenceTableResultUploadRef =
+    viewChild<ReferenceTableResultUploadComponent>(
+      'referenceTableResultUploadRef'
+    );
 
   segments = signal<ISegmentSwitcher[]>([
     {
@@ -128,7 +136,13 @@ export class ResultUploadComponent {
   }
 
   saveChanges() {
-    this.router.navigate(['my-results']);
+    console.warn(
+      'Table Data: ',
+      this.regularTableResultUploadRef()?.dataSource()
+    );
+
+    // this.resultsService.createResult();
+    // this.router.navigate(['my-results']);
   }
 
   reject() {}

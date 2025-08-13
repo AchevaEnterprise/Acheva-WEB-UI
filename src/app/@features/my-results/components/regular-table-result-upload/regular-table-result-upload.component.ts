@@ -1,20 +1,29 @@
 import { SelectionModel } from '@angular/cdk/collections';
-import { Component, signal } from '@angular/core';
+import { Component, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatTableModule } from '@angular/material/table';
 import { STUDENT_GRADES } from '../../../../@core/constant/student-grade-mock';
 import { PaginatorComponent } from '../../../../@shared/components/paginator/paginator.component';
+import { StatusBadgeComponent } from '../../../../@shared/components/status-badge/status-badge.component';
 import { IStudentGrade } from '../../../courses/models/student-grade.model';
-import { StatusBadgeComponent } from "../../../../@shared/components/status-badge/status-badge.component";
 
 @Component({
   selector: 'app-regular-table-result-upload',
-  imports: [PaginatorComponent, MatTableModule, FormsModule, MatCheckboxModule, StatusBadgeComponent],
+  imports: [
+    PaginatorComponent,
+    MatTableModule,
+    FormsModule,
+    MatCheckboxModule,
+    StatusBadgeComponent,
+  ],
   templateUrl: './regular-table-result-upload.component.html',
   styleUrl: './regular-table-result-upload.component.scss',
+  exportAs: 'regularTableResultUploadRef',
 })
 export class RegularTableResultUploadComponent {
+  tableUpdateEvent = output<Partial<IStudentGrade>[]>();
+
   displayedColumns: string[] = [
     'select',
     'regNo',

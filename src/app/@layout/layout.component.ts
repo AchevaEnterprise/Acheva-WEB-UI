@@ -2,10 +2,7 @@ import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { AppState } from '../@core/store/app.state';
-import {
-  loadProfile,
-  loadProfileLinkedAccounts,
-} from '../@core/store/profile/profile.action';
+import { loadProfileLinkedAccounts } from '../@core/store/profile/profile.action';
 import { linkedAccountsSelector } from '../@core/store/profile/profile.selector';
 import { AuthenticationService } from '../@features/auth/service/auth.service';
 import { SideBarComponent } from './side-bar/side-bar.component';
@@ -26,9 +23,9 @@ export class LayoutComponent implements OnInit {
 
   ngOnInit(): void {
     // When authenticated load user profile and linked accounts
-    this.store.dispatch(loadProfile());
+    // this.store.dispatch(loadProfile());
     this.authService.loadInitialSession();
-    this.setLinkedAccounts();
+    // this.setLinkedAccounts();
   }
 
   setLinkedAccounts() {

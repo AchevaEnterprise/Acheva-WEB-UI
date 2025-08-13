@@ -16,7 +16,25 @@
             placeholder="Select your session"
             formControlName="session"
           >
-            <mat-option [value]="'2024/2025'">2024/2025</mat-option>
+            @for (session of sessionOptions(); track $index) {
+              <mat-option [value]="session">{{ session }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div class="input-style-1 acheva-input w-full">
+        <p class="acva-para-2 fw-400 label-text">School</p>
+
+        <mat-form-field [style.width.%]="100" appearance="outline">
+          <mat-select
+            placeholder="Select your school"
+            formControlName="school"
+            (selectionChange)="getFaculties($event)"
+          >
+            @for (school of schoolsOptions(); track $index) {
+              <mat-option [value]="school">{{ school.name }}</mat-option>
+            }
           </mat-select>
         </mat-form-field>
       </div>
@@ -28,8 +46,11 @@
           <mat-select
             placeholder="Select your faculty"
             formControlName="faculty"
+            (selectionChange)="getDepartments($event)"
           >
-            <mat-option [value]="'Engineering'">Engineering</mat-option>
+            @for (faculty of facultiesOptions(); track $index) {
+              <mat-option [value]="faculty">{{ faculty.name }}</mat-option>
+            }
           </mat-select>
         </mat-form-field>
       </div>
@@ -42,9 +63,11 @@
             placeholder="Select your department"
             formControlName="department"
           >
-            <mat-option [value]="'Mechanical Engineering'"
-              >Mechanical Engineering</mat-option
-            >
+            @for (department of departmentsOptions(); track $index) {
+              <mat-option [value]="department">{{
+                department.name
+              }}</mat-option>
+            }
           </mat-select>
         </mat-form-field>
       </div>
@@ -53,12 +76,10 @@
         <p class="acva-para-2 fw-400 label-text">Level</p>
 
         <mat-form-field [style.width.%]="100" appearance="outline">
-          <mat-select placeholder="Select level" formControlName="department">
-            <mat-option [value]="'100 LVL'">100 LVL</mat-option>
-            <mat-option [value]="'200 LVL'">200 LVL</mat-option>
-            <mat-option [value]="'300 LVL'">300 LVL</mat-option>
-            <mat-option [value]="'400 LVL'">400 LVL</mat-option>
-            <mat-option [value]="'500 LVL'">500 LVL</mat-option>
+          <mat-select placeholder="Select level" formControlName="level">
+            @for (level of levelOptions(); track $index) {
+              <mat-option [value]="level.value">{{ level.label }}</mat-option>
+            }
           </mat-select>
         </mat-form-field>
       </div>
@@ -67,7 +88,13 @@
         <p class="acva-para-2 fw-400 label-text">Semester</p>
 
         <mat-form-field [style.width.%]="100" appearance="outline">
-          <input matInput type="text" formControlName="semester" />
+          <mat-select placeholder="Select level" formControlName="semester">
+            @for (semester of semesterOptions(); track $index) {
+              <mat-option [value]="semester.value">{{
+                semester.label
+              }}</mat-option>
+            }
+          </mat-select>
         </mat-form-field>
       </div>
 
@@ -123,6 +150,10 @@
 
   <div class="flex gap-3 justify-end">
     <app-button type="clear" label="Cancel" />
-    <app-button label="Create Result" (clickEvent)="submit()" />
+    <app-button
+      label="Create Result"
+      [loading]="isLoading()"
+      (clickEvent)="submit()"
+    />
   </div>
 </div>
