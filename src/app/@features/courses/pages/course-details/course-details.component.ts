@@ -98,8 +98,8 @@ export class CourseDetailsComponent implements OnInit, OnDestroy {
       { value: 'Dr. Nnamdi Araka', disabled: true },
       Validators.required
     ),
-    faculty: new FormControl<string>('', Validators.required),
-    department: new FormControl<string>('', Validators.required),
+    faculty: new FormControl<IFaculty | null>(null, Validators.required),
+    department: new FormControl<IDepartment | null>(null, Validators.required),
     level: new FormControl<string>('', Validators.required),
     courseLoad: new FormControl<number>(1, Validators.required),
   });
@@ -189,8 +189,8 @@ export class CourseDetailsComponent implements OnInit, OnDestroy {
       courseTitle: courseTitle || '',
       courseCode: courseCode || '',
       courseLoad: courseLoad || 0,
-      faculty: faculty || '',
-      department: department || '',
+      faculty: faculty!.name || '',
+      department: department!.name || '',
       level: level || '',
     };
 

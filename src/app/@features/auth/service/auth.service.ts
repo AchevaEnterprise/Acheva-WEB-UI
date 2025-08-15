@@ -123,8 +123,8 @@ export class AuthenticationService {
       );
   }
 
-  forgotPassword(email: string): Observable<IAPIResponse<{ message: string }>> {
-    return this.http.post<IAPIResponse<{ message: string }>>(
+  forgotPassword(email: string): Observable<IAPIResponse<any>> {
+    return this.http.post<IAPIResponse<any>>(
       `${this.authUrl}/forgot-password`,
       { email },
       { params: { accountType: 'LECTURER' } }
@@ -139,9 +139,12 @@ export class AuthenticationService {
     );
   }
 
-  confirmCode(token: string): Observable<IAPIResponse<{ token: string }>> {
+  confirmCode(
+    accountId: string,
+    token: string
+  ): Observable<IAPIResponse<{ token: string }>> {
     return this.http.patch<IAPIResponse<{ token: string }>>(
-      `${this.authUrl}/verify-email`,
+      `${this.authUrl}/verify-email/${accountId}`,
       { token }
     );
   }

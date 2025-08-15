@@ -21,7 +21,7 @@ export interface ISignUp {
   faculty: string;
   department: string;
   school: string;
-  title: string | string[];
+  title?: string | string[];
   role: RoleEnum;
 }
 
@@ -48,7 +48,7 @@ export interface IAccount {
 }
 
 export interface IResetPassword {
-  token: string;
+  // token: string;
   password: string;
   confirmPassword: string;
 }

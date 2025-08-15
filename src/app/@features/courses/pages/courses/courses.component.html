@@ -35,23 +35,23 @@
       <div content class="h-[25vh]">
         @if (isloadingRecentCourses()) {
           <app-loader />
-        } @else {
-          <ng-container *ngIf="recentCourses$ | async as recentCourses">
-            @if (recentCourses.length > 0) {
-              @for (courses of recentCourses; track $index) {
-                <app-course-card
-                  [courseTemplate]="courses"
-                  (useTemplateEvent)="createResult($event)"
-                />
-              }
-            } @else {
-              <app-empty-state
-                iconSrc="images/general/empty-doc.svg"
-                description="You have no recent templates"
+        }
+
+        <ng-container *ngIf="recentCourses$ | async as recentCourses">
+          @if (recentCourses.length > 0) {
+            @for (courses of recentCourses; track $index) {
+              <app-course-card
+                [courseTemplate]="courses"
+                (useTemplateEvent)="createResult($event)"
               />
             }
-          </ng-container>
-        }
+          } @else {
+            <app-empty-state
+              iconSrc="images/general/empty-doc.svg"
+              description="You have no recent templates"
+            />
+          }
+        </ng-container>
       </div>
     </app-card>
   </div>
@@ -66,27 +66,27 @@
   <mat-divider></mat-divider>
 
   <!-- COURSE TEMPLATE CARDS -->
-  <div>
+  <div class="min-h-24">
     @if (isloadingCourses()) {
       <app-loader />
-    } @else {
-      <ng-container *ngIf="courses$ | async as courses">
-        @if (courses.length > 0) {
-          <div class="grid lg:grid-cols-3 sm:grid-cols-2 gap-4 mt-4">
-            @for (course of courses; track $index) {
-              <app-course-card
-                [courseTemplate]="course"
-                (useTemplateEvent)="createResult($event)"
-              />
-            }
-          </div>
-        } @else {
-          <app-empty-state
-            iconSrc="images/general/empty-doc.svg"
-            description="You have no recent templates"
-          />
-        }
-      </ng-container>
     }
+
+    <ng-container *ngIf="courses$ | async as courses">
+      @if (courses.length > 0) {
+        <div class="grid lg:grid-cols-3 sm:grid-cols-2 gap-4 mt-4">
+          @for (course of courses; track $index) {
+            <app-course-card
+              [courseTemplate]="course"
+              (useTemplateEvent)="createResult($event)"
+            />
+          }
+        </div>
+      } @else {
+        <app-empty-state
+          iconSrc="images/general/empty-doc.svg"
+          description="You have no recent templates"
+        />
+      }
+    </ng-container>
   </div>
 </div>

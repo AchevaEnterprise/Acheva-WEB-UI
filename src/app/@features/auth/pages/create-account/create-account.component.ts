@@ -228,8 +228,8 @@ export class CreateAccountComponent implements OnInit, OnDestroy {
       email,
       password,
       confirmPassword: confirm_password,
-      faculty: faculty._id,
-      department: department._id,
+      faculty: faculty.name,
+      department: department.name,
       title,
       role,
       school: school.name,
@@ -241,12 +241,22 @@ export class CreateAccountComponent implements OnInit, OnDestroy {
         .pipe(finalize(() => this.isLoading.set(false)))
         .subscribe({
           next: (res) => {
-            if (res.status) this.router.navigate(['/auth']);
-            this.notificationService.showNotification(
-              'success',
-              'Account Created',
-              'Your account was created successfully'
-            );
+            if (res.status) {
+              this.notificationService.showNotification(
+                'success',
+                'Account Created',
+                'Your account was created successfully'
+              );
+              this.router.navigate(['/auth/confirm-email'], {
+                queryParams: { accountId: res.data._id as string },
+              });
+            } else {
+              this.notificationService.showNotification(
+                'error',
+                'Account Creation Failed',
+                res.message
+              );
+            }
           },
         })
     );
