@@ -31,6 +31,7 @@
             placeholder="Select your school"
             formControlName="school"
             (selectionChange)="getFaculties($event)"
+            [compareWith]="compareSchoolFn"
           >
             @for (school of schoolsOptions(); track $index) {
               <mat-option [value]="school">{{ school.name }}</mat-option>
@@ -47,6 +48,7 @@
             placeholder="Select your faculty"
             formControlName="faculty"
             (selectionChange)="getDepartments($event)"
+            [compareWith]="compareFacultyFn"
           >
             @for (faculty of facultiesOptions(); track $index) {
               <mat-option [value]="faculty">{{ faculty.name }}</mat-option>
@@ -62,6 +64,7 @@
           <mat-select
             placeholder="Select your department"
             formControlName="department"
+            [compareWith]="compareDepartmentFn"
           >
             @for (department of departmentsOptions(); track $index) {
               <mat-option [value]="department">{{

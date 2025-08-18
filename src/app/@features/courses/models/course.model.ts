@@ -1,3 +1,5 @@
+import { LevelsEnum } from '../../../@core/models/school.model';
+
 export interface ICourse {
   _id?: string;
   session?: string;
@@ -28,6 +30,7 @@ export interface ICreateCourse {
 export interface ICourseQuery {
   courseCode: string;
   courseTitle: string;
+  level: LevelsEnum;
 }
 
 export interface ICourseTemplate {

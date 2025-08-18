@@ -12,49 +12,33 @@
     <app-search-input placeholder="Search Courses..." />
   </header>
 
-  <div class="grid lg:grid-cols-[30%_1fr] md:grid-cols-2 sm:grid-cols-1 gap-4">
-    <app-card (click)="createCourse()">
-      <div
-        content
-        class="border-[1px] border-dashed rounded-[8px] grid place-content-center place-items-center h-[28vh] mx-4 mb-4 cursor-pointer"
-      >
-        <app-svg
-          svgWidth="5rem"
-          svgHeight="5rem"
-          src="icons/general/file-icon.svg"
-        ></app-svg>
-        <p class="text-neutral-500 acva-para-2 mt-4">Create a new course</p>
-      </div>
-    </app-card>
+  <app-card
+    [label]="'Recently used courses'"
+    [showDivider]="true"
+    [dividerClass]="'!mt-4'"
+  >
+    <div content class="h-[25vh]">
+      @if (isloadingRecentCourses()) {
+        <app-loader />
+      }
 
-    <app-card
-      [label]="'Recently used courses'"
-      [showDivider]="true"
-      [dividerClass]="'!mt-4'"
-    >
-      <div content class="h-[25vh]">
-        @if (isloadingRecentCourses()) {
-          <app-loader />
-        }
-
-        <ng-container *ngIf="recentCourses$ | async as recentCourses">
-          @if (recentCourses.length > 0) {
-            @for (courses of recentCourses; track $index) {
-              <app-course-card
-                [courseTemplate]="courses"
-                (useTemplateEvent)="createResult($event)"
-              />
-            }
-          } @else {
-            <app-empty-state
-              iconSrc="images/general/empty-doc.svg"
-              description="You have no recent templates"
+      <ng-container *ngIf="recentCourses$ | async as recentCourses">
+        @if (recentCourses.length > 0) {
+          @for (course of recentCourses; track $index) {
+            <app-course-card
+              [course]="course"
+              (useTemplateEvent)="createResult($event)"
             />
           }
-        </ng-container>
-      </div>
-    </app-card>
-  </div>
+        } @else {
+          <app-empty-state
+            iconSrc="images/general/empty-doc.svg"
+            description="You have no recent templates"
+          />
+        }
+      </ng-container>
+    </div>
+  </app-card>
 
   <mat-divider class="!mt-8"></mat-divider>
 
@@ -76,7 +60,7 @@
         <div class="grid lg:grid-cols-3 sm:grid-cols-2 gap-4 mt-4">
           @for (course of courses; track $index) {
             <app-course-card
-              [courseTemplate]="course"
+              [course]="course"
               (useTemplateEvent)="createResult($event)"
             />
           }

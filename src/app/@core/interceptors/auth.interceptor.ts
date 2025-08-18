@@ -100,16 +100,24 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         notification.showNotification(
           'warning',
           'Unauthorized',
-          'You are unauthorized'
+          error.error.message || 'You are unauthorized'
         );
-        authService.logOut();
       }
 
       if (error.status === HttpStatusCode.NotFound) {
         notification.showNotification(
           'warning',
           'Resource Not Found',
-          'The resource you are trying to access does not exist'
+          error.error.message ||
+            'The resource you are trying to access does not exist'
+        );
+      }
+
+      if (error.status === HttpStatusCode.InternalServerError) {
+        notification.showNotification(
+          'warning',
+          'Internal Server Error',
+          'An error occured while processing your request. Please try again later.'
         );
       }
 

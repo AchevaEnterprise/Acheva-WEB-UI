@@ -1,0 +1,40 @@
+<div class="rounded-[8px] bg-[#D9D9D94D] p-4">
+  <h3 class="acva-heading-5 fw-500 mb-8">Course Preview</h3>
+
+  <div class="mb-4">
+    <p class="acva-para-1 text-neutral-500">Semester</p>
+    <p class="acva-para-2">{{ preview()?.semester ?? '-' | titlecase }}</p>
+  </div>
+  <div class="mb-4">
+    <p class="acva-para-1 text-neutral-500">Level</p>
+    <p class="acva-para-2">{{ preview()?.level ?? '-' }}</p>
+  </div>
+  <div class="mb-4">
+    <p class="acva-para-1 text-neutral-500">Course Title</p>
+    <p class="acva-para-2">{{ preview()?.courseTitle ?? '-' | titlecase }}</p>
+  </div>
+  <div class="mb-4">
+    <p class="acva-para-1 text-neutral-500">Course Code</p>
+    <p class="acva-para-2">{{ preview()?.courseCode ?? '-' }}</p>
+  </div>
+  <div class="mb-4">
+    <p class="acva-para-1 text-neutral-500">School</p>
+    <p class="acva-para-2">{{ preview()?.school?.name ?? '-' | titlecase }}</p>
+  </div>
+  <div class="mb-4">
+    <p class="acva-para-1 text-neutral-500">Faculty</p>
+    <p class="acva-para-2">
+      {{ preview()?.faculty?.name ?? '-' | titlecase }}
+    </p>
+  </div>
+  <div class="mb-4">
+    <p class="acva-para-1 text-neutral-500">Department</p>
+    <p class="acva-para-2">
+      {{ preview()?.department?.name ?? '-' | titlecase }}
+    </p>
+  </div>
+  <div class="mb-4">
+    <p class="acva-para-1 text-neutral-500">Course Load</p>
+    <p class="acva-para-2">{{ preview()?.courseLoad ?? '-' }}</p>
+  </div>
+</div>

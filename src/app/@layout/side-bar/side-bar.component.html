@@ -32,8 +32,8 @@
     >
       @for (menu of appMenu(); track $index) {
         @if (menu.isActive) {
-          <!-- Include the directive *appRoleAccess="menu.accessRole" to restrict view -->
           <li
+            *appRoleAccess="menu.accessRole"
             class="w-full mb-[0.625rem] hover:bg-[#D4E9FF] hover:text-[#000] rounded-[1rem] cursor-pointer"
           >
             <a
@@ -81,11 +81,11 @@
       }
 
       <!-- Switch Account Button -->
-      <li>
+      <li class="w-full">
         <mat-divider></mat-divider>
         <button
           [matMenuTriggerFor]="menu"
-          class="flex items-center justify-between gap-4 border-[1px] border-[#D2D1D1] p-3 rounded-2xl mt-4 cursor-pointer"
+          class="flex items-center justify-between gap-4 border-[1px] border-[#D2D1D1] p-3 rounded-2xl mt-4 cursor-pointer w-full"
         >
           <div class="flex items-center gap-2">
             <img
@@ -96,7 +96,23 @@
             />
 
             @if (expanded()) {
-              Course Advisor
+              @switch (activeAccount()?.role) {
+                @case (RoleEnum.COURSE_ADVISOR) {
+                  Course Advisor
+                }
+                @case (RoleEnum.COURSE_COORDINATOR) {
+                  Course Co-ordinator
+                }
+                @case (RoleEnum.DEAN) {
+                  Dean
+                }
+                @case (RoleEnum.HOD) {
+                  HOD
+                }
+                @case (RoleEnum.LECTURER) {
+                  Lecturer
+                }
+              }
             }
           </div>
 
@@ -111,7 +127,23 @@
         <mat-menu #menu="matMenu">
           @for (account of accounts(); track $index) {
             <button mat-menu-item (click)="switchAccount(account.id)">
-              {{ account.role }}
+              @switch (account.role) {
+                @case (RoleEnum.COURSE_ADVISOR) {
+                  Course Advisor
+                }
+                @case (RoleEnum.COURSE_COORDINATOR) {
+                  Course Co-ordinator
+                }
+                @case (RoleEnum.DEAN) {
+                  Dean
+                }
+                @case (RoleEnum.HOD) {
+                  HOD
+                }
+                @case (RoleEnum.LECTURER) {
+                  Lecturer
+                }
+              }
             </button>
           }
         </mat-menu>

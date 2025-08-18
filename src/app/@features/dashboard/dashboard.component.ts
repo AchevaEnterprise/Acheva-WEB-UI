@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, model, signal } from '@angular/core';
+import { Component, inject, model, signal } from '@angular/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatFormFieldModule, MatPrefix } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -7,6 +7,8 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
 import { COURSES } from '../../@core/constant/course-mock';
+import { RoleAccessDirective } from '../../@core/directives/role-access.directive';
+import { IAnalytics } from '../../@core/models/school.model';
 import { GreetingPipe } from '../../@core/pipes/greeting.pipe';
 import { CardComponent } from '../../@shared/components/card/card.component';
 import { EmptyStateComponent } from '../../@shared/components/empty-state/empty-state.component';
@@ -18,15 +20,13 @@ import {
 } from '../../@shared/components/segment-switcher/segment-switcher.component';
 import { SvgComponent } from '../../@shared/components/svg/svg.component';
 import { RoleEnum } from '../auth/model/auth.model';
+import { AuthenticationService } from '../auth/service/auth.service';
 import { ICourse } from '../courses/models/course.model';
 import {
   ActivityComponent,
   IActivity,
 } from './components/activity/activity.component';
-import {
-  AnalyticsCardComponent,
-  IAnalytics,
-} from './components/analytics-card/analytics-card.component';
+import { AnalyticsCardComponent } from './components/analytics-card/analytics-card.component';
 import { ChartComponent } from './components/chart/chart.component';
 
 @Component({
@@ -51,11 +51,13 @@ import { ChartComponent } from './components/chart/chart.component';
     GreetingPipe,
     SearchInputComponent,
     PaginatorComponent,
+    RoleAccessDirective,
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
 })
 export class DashboardComponent {
+  private readonly authService = inject(AuthenticationService);
   analtyics = signal<IAnalytics[]>([
     {
       label: 'Drafts',
@@ -137,7 +139,7 @@ export class DashboardComponent {
   segments = signal<ISegmentSwitcher[]>([
     {
       label: 'Drafts',
-      value: 'drafts',
+      value: 'draft',
       accessRole: [RoleEnum.LECTURER, RoleEnum.COURSE_COORDINATOR],
     },
     {
@@ -222,6 +224,8 @@ export class DashboardComponent {
     },
   ]);
 
+  activeAccount = this.authService.activeAccount;
+
   switchSegment(switchValue: ISegmentSwitcher['value']) {
     this.activeSegment.update(
       () =>
@@ -231,7 +235,7 @@ export class DashboardComponent {
     );
 
     switch (switchValue) {
-      case 'drafts': {
+      case 'draft': {
         this.segmentCardLabel.set('Access your recent drafts from here');
         this.segmentCardIconSrc.set('icons/general/draft-icon.svg');
         break;

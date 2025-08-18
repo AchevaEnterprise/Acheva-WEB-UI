@@ -1,5 +1,5 @@
 import { SelectionModel } from '@angular/cdk/collections';
-import { Component, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import {
   FormControl,
   FormGroup,
@@ -8,10 +8,12 @@ import {
 } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatTableModule } from '@angular/material/table';
+import { finalize } from 'rxjs';
 import { STUDENT_GRADES } from '../../../../@core/constant/student-grade-mock';
 import { SearchSelectComponent } from '../../../../@shared/components/forms/search-select/search-select.component';
 import { PaginatorComponent } from '../../../../@shared/components/paginator/paginator.component';
 import { IStudentGrade } from '../../../courses/models/student-grade.model';
+import { StudentService } from '../../../students/services/student.service';
 
 @Component({
   selector: 'app-reference-table-result-upload',
@@ -28,6 +30,7 @@ import { IStudentGrade } from '../../../courses/models/student-grade.model';
   exportAs: 'referenceTableResultUploadRef',
 })
 export class ReferenceTableResultUploadComponent {
+  private readonly studentService = inject(StudentService);
   displayedColumns: string[] = [
     'select',
     'regNo',
@@ -41,6 +44,9 @@ export class ReferenceTableResultUploadComponent {
   ];
   dataSource = signal<Partial<IStudentGrade>[]>(STUDENT_GRADES);
   selection = new SelectionModel<Partial<IStudentGrade>>(true, []);
+
+  students = signal<any[]>([]);
+  searchingStudents = signal<boolean>(false);
 
   form = new FormGroup({
     regNo: new FormControl(''),
@@ -69,5 +75,19 @@ export class ReferenceTableResultUploadComponent {
       return `${this.isAllSelected() ? 'deselect' : 'select'} all`;
     }
     return `${this.selection.isSelected(row) ? 'deselect' : 'select'} row ${row.name + 1}`;
+  }
+
+  searchStudent(value: string) {
+    this.searchingStudents.set(true);
+    this.studentService
+      .getstudentByRegNo(value)
+      .pipe(finalize(() => this.searchingStudents.set(false)))
+      .subscribe({
+        next: (resp) => {
+          if (resp.status) {
+            this.students.set(resp.data);
+          }
+        },
+      });
   }
 }

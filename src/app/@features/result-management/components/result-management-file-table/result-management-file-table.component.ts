@@ -1,12 +1,11 @@
 import { SelectionModel } from '@angular/cdk/collections';
 import { DatePipe } from '@angular/common';
-import { Component, effect, inject, input, signal } from '@angular/core';
+import { Component, effect, input, output, signal } from '@angular/core';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
-import { Router } from '@angular/router';
 import { COURSES } from '../../../../@core/constant/course-mock';
 import { PaginatorComponent } from '../../../../@shared/components/paginator/paginator.component';
 import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
@@ -28,9 +27,8 @@ import { ICourse } from '../../../courses/models/course.model';
   styleUrl: './result-management-file-table.component.scss',
 })
 export class ResultManagementFileTableComponent {
-  private readonly router = inject(Router);
-
   expand = input<boolean>(false);
+  viewResultEvent = output<ICourse>();
 
   displayedColumns: string[] = [
     'select',
@@ -61,8 +59,8 @@ export class ResultManagementFileTableComponent {
     });
   }
 
-  viewResultDetails(course: ICourse) {
-    this.router.navigate(['my-result/upload-result']);
+  viewResult(course: ICourse) {
+    this.viewResultEvent.emit(course);
   }
 
   /** Whether the number of selected elements matches the total number of rows. */

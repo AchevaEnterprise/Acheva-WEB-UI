@@ -2,6 +2,8 @@ import { NgClass } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { ActivatedRoute, Router } from '@angular/router';
+import { RoleAccessDirective } from '../../../../@core/directives/role-access.directive';
 import { CardComponent } from '../../../../@shared/components/card/card.component';
 import { ConfirmationComponent } from '../../../../@shared/components/confirmation/confirmation.component';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
@@ -10,6 +12,7 @@ import {
   SegmentSwitcherComponent,
 } from '../../../../@shared/components/segment-switcher/segment-switcher.component';
 import { RoleEnum } from '../../../auth/model/auth.model';
+import { ICourse } from '../../../courses/models/course.model';
 import { CommentComponent } from '../../components/comment/comment.component';
 import { ResultManagementFileTableComponent } from '../../components/result-management-file-table/result-management-file-table.component';
 import { ResultManagementFolderTableComponent } from '../../components/result-management-folder-table/result-management-folder-table.component';
@@ -27,17 +30,20 @@ import { ResultStatusTrackingComponent } from '../../components/result-status-tr
     CardComponent,
     ResultManagementFolderTableComponent,
     ResultManagementFileTableComponent,
+    RoleAccessDirective,
   ],
   templateUrl: './result-management.component.html',
   styleUrl: './result-management.component.scss',
 })
 export class ResultManagementComponent {
   private readonly dialog = inject(MatDialog);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   segments = signal<ISegmentSwitcher[]>([
     {
       label: 'Drafts',
-      value: 'drafts',
+      value: 'draft',
       accessRole: [RoleEnum.LECTURER, RoleEnum.COURSE_COORDINATOR],
     },
     {
@@ -93,6 +99,8 @@ export class ResultManagementComponent {
 
   expandView = signal<boolean>(false);
 
+  RoleEnum = RoleEnum;
+
   toggleView() {
     this.expandView.update((prev) => !prev);
   }
@@ -106,7 +114,7 @@ export class ResultManagementComponent {
     );
 
     switch (switchValue) {
-      case 'drafts': {
+      case 'draft': {
         this.segmentCardLabel.set('Access your recent drafts from here');
         this.segmentCardIconSrc.set('icons/general/draft-icon.svg');
         break;
@@ -168,5 +176,12 @@ export class ResultManagementComponent {
           }
         },
       });
+  }
+
+  viewResult(course: ICourse) {
+    this.router.navigate(['verify-result'], {
+      relativeTo: this.route,
+      queryParams: { courseId: course._id },
+    });
   }
 }

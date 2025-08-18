@@ -5,8 +5,10 @@ import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { MENU } from '../../@core/constant/menu';
 import { ImageFallbackDirective } from '../../@core/directives/image-fallback.directive';
 import { IMenu } from '../../@core/models/menu.model';
+import { RoleEnum } from '../../@features/auth/model/auth.model';
 import { AuthenticationService } from '../../@features/auth/service/auth.service';
 import { SvgComponent } from '../../@shared/components/svg/svg.component';
+import { RoleAccessDirective } from '../../@core/directives/role-access.directive';
 
 @Component({
   selector: 'app-side-bar',
@@ -16,7 +18,7 @@ import { SvgComponent } from '../../@shared/components/svg/svg.component';
     SvgComponent,
     MatDividerModule,
     ImageFallbackDirective,
-    // RoleAccessDirective,
+    RoleAccessDirective,
     MatMenuModule,
   ],
   templateUrl: './side-bar.component.html',
@@ -30,6 +32,9 @@ export class SideBarComponent {
 
   appMenu = signal<IMenu[]>(MENU);
   accounts = this.authService.accounts;
+  activeAccount = this.authService.activeAccount;
+
+  RoleEnum = RoleEnum;
 
   expanded = signal<boolean>(window.innerWidth > 768);
   onToggleSideNav = output<{ expanded: boolean }>();

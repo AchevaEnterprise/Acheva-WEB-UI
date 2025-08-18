@@ -1,15 +1,19 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute, Router } from '@angular/router';
+import { finalize } from 'rxjs';
+import { EmptyStateComponent } from '../../../../@shared/components/empty-state/empty-state.component';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
 import { SearchInputComponent } from '../../../../@shared/components/forms/search-input/search-input.component';
+import { LoaderComponent } from '../../../../@shared/components/loader/loader.component';
 import {
   ISegmentSwitcher,
   SegmentSwitcherComponent,
 } from '../../../../@shared/components/segment-switcher/segment-switcher.component';
 import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
 import { RoleEnum } from '../../../auth/model/auth.model';
+import { ResultsService } from '../../../result-management/services/results.service';
 import { MyResultGridCardComponent } from '../../components/my-result-grid-card/my-result-grid-card.component';
 import { MyResultListCardComponent } from '../../components/my-result-list-card/my-result-list-card.component';
 
@@ -24,13 +28,19 @@ import { MyResultListCardComponent } from '../../components/my-result-list-card/
     MyResultGridCardComponent,
     MyResultListCardComponent,
     SegmentSwitcherComponent,
+    LoaderComponent,
+    EmptyStateComponent,
   ],
   templateUrl: './my-results.component.html',
   styleUrl: './my-results.component.scss',
 })
-export class MyResultsComponent {
+export class MyResultsComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private readonly resultService = inject(ResultsService);
+
+  isloadingResults = signal(false);
+  results = signal<any[]>([]);
 
   view = signal<'list' | 'grid'>('list');
   viewLabel = signal<string>('Grid View');
@@ -39,7 +49,7 @@ export class MyResultsComponent {
   segments = signal<ISegmentSwitcher[]>([
     {
       label: 'Drafts',
-      value: 'drafts',
+      value: 'draft',
       accessRole: [RoleEnum.LECTURER, RoleEnum.COURSE_COORDINATOR],
     },
     {
@@ -91,6 +101,26 @@ export class MyResultsComponent {
   ]);
   activeSegment = signal<ISegmentSwitcher>(this.segments()[0]);
 
+  ngOnInit(): void {
+    this.getResults();
+  }
+
+  getResults() {
+    this.isloadingResults.set(true);
+    this.resultService
+      .getResults({
+        status: this.activeSegment().value.toUpperCase(),
+      })
+      .pipe(finalize(() => this.isloadingResults.set(false)))
+      .subscribe({
+        next: (resp) => {
+          if (resp.status) {
+            this.results.set(resp.data);
+          }
+        },
+      });
+  }
+
   toggleView() {
     this.view.set(this.view() === 'list' ? 'grid' : 'list');
 
@@ -112,7 +142,7 @@ export class MyResultsComponent {
     );
 
     switch (switchValue) {
-      case 'drafts': {
+      case 'draft': {
         break;
       }
       case 'pending': {

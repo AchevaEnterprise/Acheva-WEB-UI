@@ -1,5 +1,5 @@
 import { Component, input, output } from '@angular/core';
-import { ICourseTemplate } from '../../models/course.model';
+import { ICourse, ICourseTemplate } from '../../models/course.model';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
 import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
 
@@ -10,10 +10,10 @@ import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
   styleUrl: './course-card.component.scss',
 })
 export class CourseCardComponent {
-  courseTemplate = input<Partial<ICourseTemplate>>();
+  course = input<Partial<ICourse>>();
   useTemplateEvent = output<Partial<ICourseTemplate>>();
 
   createResult() {
-    this.useTemplateEvent.emit(this.courseTemplate()!);
+    this.useTemplateEvent.emit(this.course()!);
   }
 }

@@ -25,7 +25,13 @@
     <ng-container matColumnDef="regNo">
       <th mat-header-cell *matHeaderCellDef>REG NO</th>
       <td mat-cell *matCellDef="let element">
-        <app-search-select placeholder="Reg No" formControlName="regNo" />
+        <app-search-select
+          placeholder="Reg No"
+          formControlName="regNo"
+          [loading]="searchingStudents()"
+          (searchEvent)="searchStudent($event)"
+          [options]="students()"
+        />
       </td>
     </ng-container>
 

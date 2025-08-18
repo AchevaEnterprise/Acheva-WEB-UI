@@ -1,1 +1,55 @@
-<p>user-settings works!</p>
+<!-- HOD SETTINGS VIEW -->
+<div class="grid place-items-center gap-4" *appRoleAccess="[RoleEnum.HOD]">
+  <div class="bg-gradient-to-b from-[#2793FF] to-[#77BBFF] h-6 w-full"></div>
+
+  <img
+    [appImageFallback]="'icons/general/profile-pic-placeholder.svg'"
+    src=""
+    alt=""
+    width="500"
+    height="500"
+    class="w-[10rem] h-[10rem] object-cover aspect-square rounded-full"
+  />
+  <p>{{ activeAccount()?.firstname }} {{ activeAccount()?.lastname }}</p>
+  <p>HOD</p>
+
+  <div class="bg-gray-200 p-4 w-full">
+    <div class="flex justify-center">
+      <app-search-input placeholder="Find Settings..." />
+    </div>
+
+    <div class="grid lg:grid-cols-2 md:grid-cols-2 sm:grid-cols-1 gap-4">
+      <div
+        class="flex gap-4 bg-white p-4 items-center h-[8rem] cursor-pointer"
+        routerLink="hod/lecturer-management"
+      >
+        <app-svg
+          svgWidth="2rem"
+          src="icons/general/lecturer-management-icon.svg"
+        ></app-svg>
+        <div>
+          <h4 class="acva-heading-6 fw-500">Lecturer Management</h4>
+          <p class="acva-para-1">
+            This allows you control over all the lecturers in your department
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="flex gap-4 bg-white p-4 items-center h-[8rem] cursor-pointer"
+        routerLink="hod/course-management"
+      >
+        <app-svg
+          svgWidth="2rem"
+          src="icons/general/course-management-icon.svg"
+        ></app-svg>
+        <div>
+          <h4 class="acva-heading-6 fw-500">Course Management</h4>
+          <p class="acva-para-1">
+            This allows you control over all courses in your department
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,3 +1,5 @@
+import { RoleEnum } from '../../@features/auth/model/auth.model';
+
 export interface ISchool {
   _id: string;
   name: string;
@@ -29,4 +31,12 @@ export enum SemesterEnum {
   FIRST = '1ST SEMESTER',
   SECOND = '2ND SEMESTER',
   THIRD = '3RD SEMESTER',
+}
+
+export interface IAnalytics {
+  label: string;
+  count: number;
+  iconSrc: string;
+  infoLabel: string;
+  accessRole: RoleEnum[];
 }

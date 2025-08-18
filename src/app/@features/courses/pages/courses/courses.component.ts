@@ -52,7 +52,7 @@ export class CoursesComponent {
 
   isloadingCourses = signal(true);
   courses$: Observable<ICourse[]> = this.courseService.getCourses().pipe(
-    map((resp) => resp.data),
+    map((resp) => resp.data.courses),
     finalize(() => this.isloadingCourses.set(false))
   );
 
@@ -63,10 +63,10 @@ export class CoursesComponent {
     });
   }
 
-  createResult(courseTemplate: Partial<ICourseTemplate>) {
+  createResult(course: Partial<ICourse>) {
     this.router.navigate(['details'], {
       relativeTo: this.route,
-      queryParams: { templateId: courseTemplate.id },
+      queryParams: { courseId: course._id },
     });
   }
 }

@@ -3,44 +3,54 @@
 
   <div class="mb-4">
     <p class="acva-para-1 text-neutral-500">Session</p>
-    <p class="acva-para-2">{{ template()?.session }}</p>
+    <p class="acva-para-2">{{ template()?.session ?? '-' }}</p>
   </div>
   <div class="mb-4">
     <p class="acva-para-1 text-neutral-500">Semester</p>
-    <p class="acva-para-2">{{ template()?.semester | titlecase }}</p>
+    <p class="acva-para-2">{{ template()?.semester ?? '-' | titlecase }}</p>
   </div>
   <div class="mb-4">
     <p class="acva-para-1 text-neutral-500">Level</p>
-    <p class="acva-para-2">{{ template()?.level }}</p>
+    <p class="acva-para-2">{{ template()?.level ?? '-' }}</p>
   </div>
   <div class="mb-4">
     <p class="acva-para-1 text-neutral-500">Course Title</p>
-    <p class="acva-para-2">{{ template()?.courseTitle | titlecase }}</p>
+    <p class="acva-para-2">{{ template()?.courseTitle ?? '-' | titlecase }}</p>
   </div>
   <div class="mb-4">
     <p class="acva-para-1 text-neutral-500">Course Code</p>
-    <p class="acva-para-2">{{ template()?.courseCode }}</p>
+    <p class="acva-para-2">{{ template()?.courseCode ?? '-' }}</p>
   </div>
   <div class="mb-4">
     <p class="acva-para-1 text-neutral-500">Course Coordinator</p>
-    <p class="acva-para-2">{{ template()?.courseCordinator | titlecase }}</p>
+    <p class="acva-para-2">
+      {{ template()?.courseCordinator ?? '-' | titlecase }}
+    </p>
+  </div>
+  <div class="mb-4">
+    <p class="acva-para-1 text-neutral-500">School</p>
+    <p class="acva-para-2">{{ template()?.school?.name ?? '-' | titlecase }}</p>
   </div>
   <div class="mb-4">
     <p class="acva-para-1 text-neutral-500">Faculty</p>
-    <p class="acva-para-2">{{ template()?.faculty.name | titlecase }}</p>
+    <p class="acva-para-2">
+      {{ template()?.faculty?.name ?? '-' | titlecase }}
+    </p>
   </div>
   <div class="mb-4">
     <p class="acva-para-1 text-neutral-500">Department</p>
-    <p class="acva-para-2">{{ template()?.department.name | titlecase }}</p>
+    <p class="acva-para-2">
+      {{ template()?.department?.name ?? '-' | titlecase }}
+    </p>
   </div>
   <div class="mb-4">
     <p class="acva-para-1 text-neutral-500">Course Load</p>
-    <p class="acva-para-2">{{ template()?.courseLoad }}</p>
+    <p class="acva-para-2">{{ template()?.courseLoad ?? '-' }}</p>
   </div>
-  <div class="mb-4">
+  <!-- <div class="mb-4">
     <p class="acva-para-1 text-neutral-500">Date Created</p>
     <p class="acva-para-2">
       {{ template()?.createdAt | date: 'MMM d, YYYY h:mm a' }}
     </p>
-  </div>
+  </div> -->
 </div>

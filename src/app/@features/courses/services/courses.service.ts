@@ -16,12 +16,15 @@ export class CoursesService {
     let params = new HttpParams();
     params = params.append('courseCode', query?.courseCode || '');
     params = params.append('courseTitle', query?.courseTitle || '');
+    params = params.append('level', query?.level || '');
 
     return this.http.get<IAPIResponse<any>>(`${this.coursesUrl}`, { params });
   }
 
-  getCourse(courseId: string): Observable<IAPIResponse<any>> {
-    return this.http.get<IAPIResponse<any>>(`${this.coursesUrl}/${courseId}`);
+  getCourse(courseId: string): Observable<IAPIResponse<ICourse>> {
+    return this.http.get<IAPIResponse<ICourse>>(
+      `${this.coursesUrl}/${courseId}`
+    );
   }
 
   getRecentCourses(): Observable<IAPIResponse<ICourse[]>> {
