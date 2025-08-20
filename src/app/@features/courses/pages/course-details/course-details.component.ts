@@ -282,7 +282,9 @@ export class CourseDetailsComponent implements OnInit, OnDestroy {
                 'Result Created',
                 'Your result has been created successfully'
               );
-              this.router.navigate(['/my-result/upload-result']);
+              this.router.navigate(['/my-result/upload-result'], {
+                queryParams: { resultId: resp.data._id as string },
+              });
             }
           },
         })

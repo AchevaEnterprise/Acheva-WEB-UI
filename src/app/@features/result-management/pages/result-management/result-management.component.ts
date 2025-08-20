@@ -1,5 +1,5 @@
 import { NgClass } from '@angular/common';
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -17,6 +17,8 @@ import { CommentComponent } from '../../components/comment/comment.component';
 import { ResultManagementFileTableComponent } from '../../components/result-management-file-table/result-management-file-table.component';
 import { ResultManagementFolderTableComponent } from '../../components/result-management-folder-table/result-management-folder-table.component';
 import { ResultStatusTrackingComponent } from '../../components/result-status-tracking/result-status-tracking.component';
+import { IResult } from '../../models/results.model';
+import { ResultsService } from '../../services/results.service';
 
 @Component({
   selector: 'app-result-management',
@@ -35,20 +37,23 @@ import { ResultStatusTrackingComponent } from '../../components/result-status-tr
   templateUrl: './result-management.component.html',
   styleUrl: './result-management.component.scss',
 })
-export class ResultManagementComponent {
+export class ResultManagementComponent implements OnInit {
   private readonly dialog = inject(MatDialog);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private readonly resultService = inject(ResultsService);
+
+  results = signal<IResult[]>([]);
 
   segments = signal<ISegmentSwitcher[]>([
     {
       label: 'Drafts',
-      value: 'draft',
+      value: 'DRAFT',
       accessRole: [RoleEnum.LECTURER, RoleEnum.COURSE_COORDINATOR],
     },
     {
       label: 'Pending',
-      value: 'pending',
+      value: 'PENDING',
       accessRole: [
         RoleEnum.HOD,
         RoleEnum.COURSE_COORDINATOR,
@@ -57,7 +62,7 @@ export class ResultManagementComponent {
     },
     {
       label: 'Unverified',
-      value: 'unverified',
+      value: 'UNVERIFIED',
       accessRole: [
         RoleEnum.DEAN,
         RoleEnum.HOD,
@@ -67,7 +72,7 @@ export class ResultManagementComponent {
     },
     {
       label: 'Verified',
-      value: 'verified',
+      value: 'VERIFIED',
       accessRole: [
         RoleEnum.DEAN,
         RoleEnum.HOD,
@@ -78,7 +83,7 @@ export class ResultManagementComponent {
     },
     {
       label: 'Published',
-      value: 'published',
+      value: 'PUBLISHED',
       accessRole: [
         RoleEnum.DEAN,
         RoleEnum.HOD,
@@ -89,7 +94,7 @@ export class ResultManagementComponent {
     },
     {
       label: 'Imported',
-      value: 'imported',
+      value: 'IMPORTED',
       accessRole: [RoleEnum.DEAN, RoleEnum.HOD, RoleEnum.COURSE_ADVISOR],
     },
   ]);
@@ -100,6 +105,24 @@ export class ResultManagementComponent {
   expandView = signal<boolean>(false);
 
   RoleEnum = RoleEnum;
+
+  ngOnInit(): void {
+    this.getResults();
+  }
+
+  getResults() {
+    this.resultService
+      .getResults({
+        status: this.activeSegment().value,
+      })
+      .subscribe({
+        next: (resp) => {
+          if (resp.status) {
+            this.results.set(resp.data.result);
+          }
+        },
+      });
+  }
 
   toggleView() {
     this.expandView.update((prev) => !prev);
@@ -114,32 +137,34 @@ export class ResultManagementComponent {
     );
 
     switch (switchValue) {
-      case 'draft': {
+      case 'DRAFT': {
         this.segmentCardLabel.set('Access your recent drafts from here');
         this.segmentCardIconSrc.set('icons/general/draft-icon.svg');
         break;
       }
-      case 'pending': {
+      case 'PENDING': {
         this.segmentCardLabel.set('Access your pending results from here');
         this.segmentCardIconSrc.set('icons/general/pending-icon.svg');
         break;
       }
-      case 'unverified': {
+      case 'UNVERIFIED': {
         this.segmentCardLabel.set('Access your unverified results from here');
         this.segmentCardIconSrc.set('icons/general/unverified-icon.svg');
         break;
       }
-      case 'verified': {
+      case 'VERIFIED': {
         this.segmentCardLabel.set('Access your verified results from here');
         this.segmentCardIconSrc.set('icons/general/verified-icon.svg');
         break;
       }
-      case 'published': {
+      case 'PUBLISHED': {
         this.segmentCardLabel.set('Access your published results from here');
         this.segmentCardIconSrc.set('icons/general/published-icon.svg');
         break;
       }
     }
+
+    this.getResults();
   }
 
   sendToCC() {
@@ -181,7 +206,7 @@ export class ResultManagementComponent {
   viewResult(course: ICourse) {
     this.router.navigate(['verify-result'], {
       relativeTo: this.route,
-      queryParams: { courseId: course._id },
+      queryParams: { resultId: course._id },
     });
   }
 }

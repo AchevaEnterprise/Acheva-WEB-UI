@@ -17,19 +17,21 @@
     [showDivider]="true"
     [dividerClass]="'!mt-4'"
   >
-    <div content class="h-[25vh]">
+    <div content class="p-4">
       @if (isloadingRecentCourses()) {
         <app-loader />
       }
 
       <ng-container *ngIf="recentCourses$ | async as recentCourses">
         @if (recentCourses.length > 0) {
-          @for (course of recentCourses; track $index) {
-            <app-course-card
-              [course]="course"
-              (useTemplateEvent)="createResult($event)"
-            />
-          }
+          <div class="flex gap-4 overflow-x-auto">
+            @for (course of recentCourses; track $index) {
+              <app-course-card
+                [course]="course"
+                (useTemplateEvent)="createResult($event)"
+              />
+            }
+          </div>
         } @else {
           <app-empty-state
             iconSrc="images/general/empty-doc.svg"

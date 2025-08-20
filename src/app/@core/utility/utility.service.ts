@@ -42,4 +42,38 @@ export class UtilityService {
 
     return sessions.reverse();
   }
+
+  convertExcelToJson(
+    file: File
+  ): Promise<{ columns: string[]; records: any[] }> {
+    return new Promise((resolve, reject) => {
+      const reader: FileReader = new FileReader();
+      reader.onload = (e: ProgressEvent<FileReader>) => {
+        const data: string =
+          e.target && typeof e.target.result === 'string'
+            ? (e.target.result as string)
+            : '';
+        const workbook: XLSX.WorkBook = XLSX.read(data, {
+          type: 'binary',
+        });
+
+        // Read first sheet
+        const sheetName: string = workbook.SheetNames[0];
+        const worksheet: XLSX.WorkSheet = workbook.Sheets[sheetName];
+
+        // Convert to JSON
+        const jsonData: any[] = XLSX.utils.sheet_to_json(worksheet, {
+          raw: true,
+        });
+
+        if (jsonData.length > 0) {
+          const columns = Object.keys(jsonData[0]);
+          const records = jsonData;
+          resolve({ columns, records });
+        }
+      };
+      reader.onerror = (error) => reject(error);
+      reader.readAsBinaryString(file);
+    });
+  }
 }

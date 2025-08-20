@@ -51,7 +51,7 @@ export class AuthenticationService {
   public get isAuthenticated(): boolean {
     const token = this.getToken;
 
-    if (token) return this.jwtHelper.isTokenExpired(token);
+    if (token && !this.jwtHelper.isTokenExpired(token)) return true;
     return false;
   }
 

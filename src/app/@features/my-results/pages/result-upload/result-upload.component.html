@@ -1,6 +1,6 @@
 <!-- ANALTYICS -->
 <div
-  class="grid grid-cols-[60%_1fr] gap-4 p-4 border-[1px] border-neutral-300 rounded-[8px]"
+  class="grid lg:grid-cols-[60%_1fr] md:grid-cols-2 sm:grid-cols-1 gap-4 p-4 border-[1px] border-neutral-300 rounded-[8px]"
 >
   <!-- FORM -->
   <div [formGroup]="courseForm">
@@ -127,29 +127,6 @@
     <app-search-input placeholder="Search students" />
 
     <div class="flex flex-wrap justify-end gap-3 items-center">
-      <app-button
-        label="Resend"
-        class="btn-md"
-        [matMenuTriggerFor]="resendMenu"
-      />
-      <mat-menu #resendMenu="matMenu">
-        <button mat-menu-item>Resend to CC</button>
-        <button mat-menu-item>Resend to Dean</button>
-      </mat-menu>
-
-      <app-button
-        label="Approve"
-        icon="icons/general/approve-btn-icon.svg"
-        class="btn-md"
-        (clickEvent)="approve()"
-      />
-      <app-button
-        label="Reject"
-        type="outline"
-        icon="icons/general/reject-btn-icon.svg"
-        class="btn-md btn-error"
-        (clickEvent)="reject()"
-      />
       <app-button
         label="Save Changes"
         icon="icons/general/save-btn-icon.svg"

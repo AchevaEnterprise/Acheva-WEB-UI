@@ -138,13 +138,13 @@ export class DashboardComponent {
 
   segments = signal<ISegmentSwitcher[]>([
     {
-      label: 'Drafts',
-      value: 'draft',
+      label: 'Draft',
+      value: 'DRAFT',
       accessRole: [RoleEnum.LECTURER, RoleEnum.COURSE_COORDINATOR],
     },
     {
       label: 'Pending',
-      value: 'pending',
+      value: 'PENDING',
       accessRole: [
         RoleEnum.HOD,
         RoleEnum.COURSE_COORDINATOR,
@@ -153,7 +153,7 @@ export class DashboardComponent {
     },
     {
       label: 'Unverified',
-      value: 'unverified',
+      value: 'VERIFIED',
       accessRole: [
         RoleEnum.DEAN,
         RoleEnum.HOD,
@@ -163,7 +163,7 @@ export class DashboardComponent {
     },
     {
       label: 'Verified',
-      value: 'verified',
+      value: 'VERIFIED',
       accessRole: [
         RoleEnum.DEAN,
         RoleEnum.HOD,
@@ -174,7 +174,7 @@ export class DashboardComponent {
     },
     {
       label: 'Published',
-      value: 'published',
+      value: 'PUBLISHED',
       accessRole: [
         RoleEnum.DEAN,
         RoleEnum.HOD,
@@ -185,7 +185,7 @@ export class DashboardComponent {
     },
     {
       label: 'Imported',
-      value: 'imported',
+      value: 'IMPORTED',
       accessRole: [RoleEnum.DEAN, RoleEnum.HOD, RoleEnum.COURSE_ADVISOR],
     },
   ]);
@@ -235,27 +235,27 @@ export class DashboardComponent {
     );
 
     switch (switchValue) {
-      case 'draft': {
+      case 'DRAFT': {
         this.segmentCardLabel.set('Access your recent drafts from here');
         this.segmentCardIconSrc.set('icons/general/draft-icon.svg');
         break;
       }
-      case 'pending': {
+      case 'PENDING': {
         this.segmentCardLabel.set('Access your pending results from here');
         this.segmentCardIconSrc.set('icons/general/pending-icon.svg');
         break;
       }
-      case 'unverified': {
+      case 'UNVERIFIED': {
         this.segmentCardLabel.set('Access your unverified results from here');
         this.segmentCardIconSrc.set('icons/general/unverified-icon.svg');
         break;
       }
-      case 'verified': {
+      case 'VERIFIED': {
         this.segmentCardLabel.set('Access your verified results from here');
         this.segmentCardIconSrc.set('icons/general/verified-icon.svg');
         break;
       }
-      case 'published': {
+      case 'PUBLISHED': {
         this.segmentCardLabel.set('Access your published results from here');
         this.segmentCardIconSrc.set('icons/general/published-icon.svg');
         break;

@@ -11,18 +11,20 @@
       />
 
       <div class="flex gap-2">
-        <!-- <app-button
+        <app-button
+          *appRoleAccess="[RoleEnum.LECTURER]"
           label="Send to CC"
           class="btn-md"
           matTooltip="Send to Course Cordinator"
           (clickEvent)="sendToCC()"
         />
         <app-button
+          *appRoleAccess="[RoleEnum.COURSE_COORDINATOR]"
           label="Send to HOD"
           class="btn-md"
           matTooltip="Send to Head of Department"
           (clickEvent)="sendToHOD()"
-        /> -->
+        />
         <app-button
           [label]="expandView() ? 'Collapse' : 'Expand'"
           type="outline"

@@ -7,12 +7,12 @@ import { RoleEnum } from '../../../@features/auth/model/auth.model';
 export interface ISegmentSwitcher {
   label: string;
   value:
-    | 'draft'
-    | 'pending'
-    | 'unverified'
-    | 'verified'
-    | 'published'
-    | 'imported'
+    | 'DRAFT'
+    | 'PENDING'
+    | 'UNVERIFIED'
+    | 'VERIFIED'
+    | 'PUBLISHED'
+    | 'IMPORTED'
     | 'regular'
     | 'unregistered'
     | 'reference'

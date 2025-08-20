@@ -49,12 +49,12 @@ export class MyResultsComponent implements OnInit {
   segments = signal<ISegmentSwitcher[]>([
     {
       label: 'Drafts',
-      value: 'draft',
+      value: 'DRAFT',
       accessRole: [RoleEnum.LECTURER, RoleEnum.COURSE_COORDINATOR],
     },
     {
       label: 'Pending',
-      value: 'pending',
+      value: 'PENDING',
       accessRole: [
         RoleEnum.HOD,
         RoleEnum.COURSE_COORDINATOR,
@@ -63,7 +63,7 @@ export class MyResultsComponent implements OnInit {
     },
     {
       label: 'Unverified',
-      value: 'unverified',
+      value: 'UNVERIFIED',
       accessRole: [
         RoleEnum.DEAN,
         RoleEnum.HOD,
@@ -73,7 +73,7 @@ export class MyResultsComponent implements OnInit {
     },
     {
       label: 'Verified',
-      value: 'verified',
+      value: 'VERIFIED',
       accessRole: [
         RoleEnum.DEAN,
         RoleEnum.HOD,
@@ -84,7 +84,7 @@ export class MyResultsComponent implements OnInit {
     },
     {
       label: 'Published',
-      value: 'published',
+      value: 'PUBLISHED',
       accessRole: [
         RoleEnum.DEAN,
         RoleEnum.HOD,
@@ -95,7 +95,7 @@ export class MyResultsComponent implements OnInit {
     },
     {
       label: 'Imported',
-      value: 'imported',
+      value: 'IMPORTED',
       accessRole: [RoleEnum.DEAN, RoleEnum.HOD, RoleEnum.COURSE_ADVISOR],
     },
   ]);
@@ -109,13 +109,13 @@ export class MyResultsComponent implements OnInit {
     this.isloadingResults.set(true);
     this.resultService
       .getResults({
-        status: this.activeSegment().value.toUpperCase(),
+        status: this.activeSegment().value,
       })
       .pipe(finalize(() => this.isloadingResults.set(false)))
       .subscribe({
         next: (resp) => {
           if (resp.status) {
-            this.results.set(resp.data);
+            this.results.set(resp.data.result);
           }
         },
       });
@@ -141,23 +141,7 @@ export class MyResultsComponent implements OnInit {
         )!
     );
 
-    switch (switchValue) {
-      case 'draft': {
-        break;
-      }
-      case 'pending': {
-        break;
-      }
-      case 'unverified': {
-        break;
-      }
-      case 'verified': {
-        break;
-      }
-      case 'published': {
-        break;
-      }
-    }
+    this.getResults();
   }
 
   uploadResults() {

@@ -128,6 +128,16 @@
 
     <div class="flex flex-wrap justify-end gap-3 items-center">
       <app-button
+        label="Resend"
+        class="btn-md"
+        [matMenuTriggerFor]="resendMenu"
+      />
+      <mat-menu #resendMenu="matMenu">
+        <button mat-menu-item>Resend to CC</button>
+        <button mat-menu-item>Resend to Dean</button>
+      </mat-menu>
+
+      <app-button
         label="Approve"
         icon="icons/general/approve-btn-icon.svg"
         class="btn-md"
