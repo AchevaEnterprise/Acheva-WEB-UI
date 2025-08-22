@@ -3,7 +3,7 @@ import { Component, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatTableModule } from '@angular/material/table';
-import { STUDENT_GRADES } from '../../../../@core/constant/student-grade-mock';
+import { EmptyStateComponent } from '../../../../@shared/components/empty-state/empty-state.component';
 import { PaginatorComponent } from '../../../../@shared/components/paginator/paginator.component';
 import { StatusBadgeComponent } from '../../../../@shared/components/status-badge/status-badge.component';
 import { IStudentGrade } from '../../../courses/models/student-grade.model';
@@ -16,6 +16,7 @@ import { IStudentGrade } from '../../../courses/models/student-grade.model';
     FormsModule,
     MatCheckboxModule,
     StatusBadgeComponent,
+    EmptyStateComponent,
   ],
   templateUrl: './regular-table-result-upload.component.html',
   styleUrl: './regular-table-result-upload.component.scss',
@@ -35,7 +36,7 @@ export class RegularTableResultUploadComponent {
     'finalGrade',
     'status',
   ];
-  dataSource = signal<Partial<IStudentGrade>[]>(STUDENT_GRADES);
+  dataSource = signal<Partial<IStudentGrade>[]>([]);
   selection = new SelectionModel<Partial<IStudentGrade>>(true, []);
 
   /** Whether the number of selected elements matches the total number of rows. */

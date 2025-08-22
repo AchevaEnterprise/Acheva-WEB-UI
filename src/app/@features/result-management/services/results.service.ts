@@ -102,4 +102,17 @@ export class ResultsService {
       { body: { entryIds: resultEntryIds } }
     );
   }
+
+  uploadResultFile(
+    resultId: string,
+    file: File
+  ): Observable<IAPIResponse<any>> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    return this.http.post<IAPIResponse<any>>(
+      `${this.resultsUrl}/entries/import/${resultId}`,
+      formData
+    );
+  }
 }

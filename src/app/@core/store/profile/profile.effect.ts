@@ -24,9 +24,9 @@ export class ProfileEffects {
       mergeMap(() =>
         this.authService.getProfile().pipe(
           map((resp: any) => {
-            if (resp.success) {
-              return saveProfile({ profile: resp.data as IAuthProfile });
-            } else return saveProfileError({ error: resp.message as string });
+            if (resp.success)
+              return saveProfile({ profile: resp.data.data as IAuthProfile });
+            else return saveProfileError({ error: resp.message as string });
           }),
           catchError((error) =>
             of(saveProfileError({ error: error.message as string }))

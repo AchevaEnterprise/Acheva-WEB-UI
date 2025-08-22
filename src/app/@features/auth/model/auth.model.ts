@@ -30,6 +30,7 @@ export interface IAuthProfile {
   firstname: string;
   lastname: string;
   email: string;
+  school: string;
   faculty: string;
   department: string;
   role: RoleEnum;
@@ -43,6 +44,7 @@ export interface IAccount {
   id: string;
   firstname: string;
   lastname: string;
+  school: string;
   email: string;
   role: RoleEnum;
 }

@@ -7,10 +7,11 @@ import {
 } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectChange, MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { finalize, Subscription } from 'rxjs';
+import { filter, finalize, Subscription } from 'rxjs';
 import {
   IDepartment,
   IFaculty,
@@ -32,6 +33,8 @@ import {
 import { NotificationService } from '../../../../@core/utility/notification.service';
 import { UtilityService } from '../../../../@core/utility/utility.service';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
+import { SearchSelectComponent } from '../../../../@shared/components/forms/search-select/search-select.component';
+import { AuthenticationService } from '../../../auth/service/auth.service';
 import {
   ICreateResult,
   ResultStatusEnum,
@@ -49,6 +52,8 @@ import { CoursesService } from '../../services/courses.service';
     MatSelectModule,
     ReactiveFormsModule,
     ButtonComponent,
+    MatProgressSpinnerModule,
+    SearchSelectComponent,
   ],
   templateUrl: './course-details.component.html',
   styleUrl: './course-details.component.scss',
@@ -57,12 +62,19 @@ export class CourseDetailsComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly courseService = inject(CoursesService);
+  private readonly authService = inject(AuthenticationService);
   private readonly resultService = inject(ResultsService);
   private readonly notificationService = inject(NotificationService);
   private readonly utilsService = inject(UtilityService);
   private readonly store = inject(Store<AppState>);
 
   private readonly courseId = this.route.snapshot.queryParamMap.get('courseId');
+  readonly createNew = this.route.snapshot.queryParamMap.get('new');
+
+  private readonly school = this.authService.activeAccount()?.school || '';
+
+  isLoadingFaculties = signal<boolean>(false);
+  isLoadingDepartments = signal<boolean>(false);
 
   isLoading = signal<boolean>(false);
   sessionOptions = signal<string[]>(this.utilsService.generateSchoolSessions());
@@ -101,7 +113,10 @@ export class CourseDetailsComponent implements OnInit, OnDestroy {
       { value: '', disabled: true },
       Validators.required
     ),
-    school: new FormControl<ISchool | null>(null, Validators.required),
+    school: new FormControl<ISchool | null>(
+      { value: null, disabled: true },
+      Validators.required
+    ),
     faculty: new FormControl<IFaculty | null>(null, Validators.required),
     department: new FormControl<IDepartment | null>(null, Validators.required),
     level: new FormControl<string>(
@@ -118,7 +133,19 @@ export class CourseDetailsComponent implements OnInit, OnDestroy {
   private readonly sub: Subscription = new Subscription();
 
   ngOnInit(): void {
-    this.getCourse();
+    if (this.createNew === 'true') {
+      this.selectedSchool.set(this.school);
+      this.getSchools();
+      this.enableDiabledFieldsOnCreate();
+    } else this.getCourse();
+  }
+
+  enableDiabledFieldsOnCreate() {
+    this.form.get('semester')?.enable();
+    this.form.get('level')?.enable();
+    this.form.get('courseTitle')?.enable();
+    this.form.get('courseCode')?.enable();
+    this.form.get('courseCordinator')?.enable();
   }
 
   compareSchoolFn(o1: any, o2: any) {
@@ -187,6 +214,7 @@ export class CourseDetailsComponent implements OnInit, OnDestroy {
   }
 
   getFaculties(event: MatSelectChange | string) {
+    this.isLoadingFaculties.set(true);
     let schoolId: string = '';
 
     if (typeof event === 'string') schoolId = event;
@@ -195,26 +223,35 @@ export class CourseDetailsComponent implements OnInit, OnDestroy {
     this.store.dispatch(loadFaculties({ schoolId }));
 
     this.sub.add(
-      this.store.select(facultiesSelector).subscribe({
-        next: (faculties) => {
-          this.facultiesOptions.set(faculties);
+      this.store
+        .select(facultiesSelector)
+        .pipe(
+          filter(
+            (faculties) => Array.isArray(faculties) && faculties.length > 0
+          )
+        )
+        .subscribe({
+          next: (faculties) => {
+            this.isLoadingFaculties.set(false);
+            this.facultiesOptions.set(faculties);
 
-          if (typeof event === 'string') {
-            this.facultiesOptions()?.forEach((facility) => {
-              if (facility.name === this.selectedFaculty()) {
-                this.form.get('faculty')?.setValue(facility);
-              }
-            });
+            if (typeof event === 'string') {
+              this.facultiesOptions()?.forEach((facility) => {
+                if (facility.name === this.selectedFaculty()) {
+                  this.form.get('faculty')?.setValue(facility);
+                }
+              });
 
-            const facility = this.form.get('faculty')?.value as IFaculty;
-            if (facility) this.getDepartments(facility._id);
-          }
-        },
-      })
+              const facility = this.form.get('faculty')?.value as IFaculty;
+              if (facility) this.getDepartments(facility._id);
+            }
+          },
+        })
     );
   }
 
   getDepartments(event: MatSelectChange | string) {
+    this.isLoadingDepartments.set(true);
     let facultyId: string = '';
 
     if (typeof event === 'string') facultyId = event;
@@ -223,19 +260,28 @@ export class CourseDetailsComponent implements OnInit, OnDestroy {
     this.store.dispatch(loadDepartments({ facultyId }));
 
     this.sub.add(
-      this.store.select(departmentsSelector).subscribe({
-        next: (departments) => {
-          this.departmentsOptions.set(departments);
+      this.store
+        .select(departmentsSelector)
+        .pipe(
+          filter(
+            (departments) =>
+              Array.isArray(departments) && departments.length > 0
+          )
+        )
+        .subscribe({
+          next: (departments) => {
+            this.isLoadingDepartments.set(false);
+            this.departmentsOptions.set(departments);
 
-          if (typeof event === 'string') {
-            this.departmentsOptions()?.forEach((department) => {
-              if (department.name === this.selectedDepartment()) {
-                this.form.get('department')?.setValue(department);
-              }
-            });
-          }
-        },
-      })
+            if (typeof event === 'string') {
+              this.departmentsOptions()?.forEach((department) => {
+                if (department.name === this.selectedDepartment()) {
+                  this.form.get('department')?.setValue(department);
+                }
+              });
+            }
+          },
+        })
     );
   }
 

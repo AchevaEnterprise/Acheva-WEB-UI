@@ -56,6 +56,13 @@ export class CoursesComponent {
     finalize(() => this.isloadingCourses.set(false))
   );
 
+  createNewResult() {
+    this.router.navigate(['details'], {
+      relativeTo: this.route,
+      queryParams: { new: true },
+    });
+  }
+
   createResult(course: Partial<ICourse>) {
     this.router.navigate(['details'], {
       relativeTo: this.route,

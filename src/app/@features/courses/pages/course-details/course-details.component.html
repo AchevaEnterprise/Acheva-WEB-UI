@@ -41,7 +41,12 @@
       </div>
 
       <div class="input-style-1 acheva-input w-full">
-        <p class="acva-para-2 fw-400 label-text">Faculty</p>
+        <p class="acva-para-2 fw-400 label-text flex items-center gap-2">
+          Faculty
+          @if (isLoadingFaculties()) {
+            <mat-spinner diameter="14"></mat-spinner>
+          }
+        </p>
 
         <mat-form-field [style.width.%]="100" appearance="outline">
           <mat-select
@@ -58,7 +63,12 @@
       </div>
 
       <div class="input-style-1 acheva-input w-full">
-        <p class="acva-para-2 fw-400 label-text">Department</p>
+        <p class="acva-para-2 fw-400 label-text flex items-center gap-2">
+          Department
+          @if (isLoadingDepartments()) {
+            <mat-spinner diameter="14"></mat-spinner>
+          }
+        </p>
 
         <mat-form-field [style.width.%]="100" appearance="outline">
           <mat-select
@@ -101,19 +111,20 @@
         </mat-form-field>
       </div>
 
+      <div class="input-style-1 acheva-input w-full mb-4">
+        <p class="acva-para-2 fw-400 label-text">Course Code</p>
+
+        <app-search-select
+          placeholder="Search course code..."
+          formControlName="courseCode"
+        />
+      </div>
+
       <div class="input-style-1 acheva-input w-full">
         <p class="acva-para-2 fw-400 label-text">Course Title</p>
 
         <mat-form-field [style.width.%]="100" appearance="outline">
           <input matInput type="text" formControlName="courseTitle" />
-        </mat-form-field>
-      </div>
-
-      <div class="input-style-1 acheva-input w-full">
-        <p class="acva-para-2 fw-400 label-text">Course Code</p>
-
-        <mat-form-field [style.width.%]="100" appearance="outline">
-          <input matInput type="text" formControlName="courseCode" />
         </mat-form-field>
       </div>
 

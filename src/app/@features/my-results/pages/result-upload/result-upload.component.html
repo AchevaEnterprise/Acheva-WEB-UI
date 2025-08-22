@@ -88,27 +88,27 @@
 
   <app-card label="Course Analtyics" [showDivider]="true" dividerClass="!mt-4">
     <p rightHeaderContent class="acva-para-1 text-neutral-500">
-      Average Grade <span class="text-neutral-800">86.9%</span>
+      Average Grade <span class="text-neutral-800">0.0%</span>
     </p>
 
     <div content>
-      <app-analytics-chart />
+      <app-analytics-chart [data]="analyticsChartData()" />
 
       <div class="leading-[1.3rem] acva-caption text text-neutral-500 p-4">
         <p class="flex items-center gap-4 w-full">
           <span class="w-[20%]">Total Students</span>
           <mat-divider class="w-full"></mat-divider>
-          <span>800</span>
+          <span>{{ totalStudent() || 0 }}</span>
         </p>
         <p class="flex items-center gap-4 w-full">
           <span class="w-[20%]">Total Pass</span>
           <mat-divider class="w-full"></mat-divider>
-          <span>376</span>
+          <span>{{ totalStudentPass() || 0 }}</span>
         </p>
         <p class="flex items-center gap-4 w-full">
           <span class="w-[20%]">Total Fail</span>
           <mat-divider class="w-full"></mat-divider>
-          <span>422</span>
+          <span>{{ totalStudentFail() || 0 }}</span>
         </p>
       </div>
     </div>
@@ -137,6 +137,7 @@
         label="Upload Results"
         type="outline"
         class="btn-md"
+        [loading]="uploadingResult()"
         (clickEvent)="uploadResult()"
       />
       <app-button
@@ -148,27 +149,31 @@
     </div>
   </div>
 
-  <app-segment-switcher
-    [activeSegment]="activeSegment()"
-    [segments]="segments()"
-    (switchEvent)="switchSegment($event)"
-  />
+  <div class="flex items-center justify-between mt-4">
+    <app-segment-switcher
+      [activeSegment]="activeSegment()"
+      [segments]="segments()"
+      (switchEvent)="switchSegment($event)"
+    />
+
+    <a
+      href="template/results-template.xlsx"
+      class="underline text-blue-500"
+      download="Result Template"
+      >Download Result Template</a
+    >
+  </div>
 
   <div class="mt-4">
-    <!-- <app-empty-state
-          iconSrc="images/general/empty-doc.svg"
-          description="Your drafts is empty, create a course and input results to fill this page"
-        /> -->
-
     @switch (activeSegment().value) {
       @case ('regular') {
         <app-regular-table-result-upload #regularTableResultUploadRef />
       }
       @case ('reference') {
-        <app-reference-table-result-upload />
+        <app-reference-table-result-upload #referenceTableResultUploadRef />
       }
       @case ('unregistered') {
-        <app-reference-table-result-upload />
+        <app-reference-table-result-upload #referenceTableResultUploadRef />
       }
     }
   </div>
