@@ -56,4 +56,14 @@ export class CoursesService {
       { lecturer: lecturerId }
     );
   }
+
+  unassignCourseFromLecturer(
+    courseId: string,
+    lecturerId: string
+  ): Observable<IAPIResponse<any>> {
+    return this.http.patch<IAPIResponse<any>>(
+      `${this.coursesUrl}/${courseId}/unassign`,
+      { lecturer: lecturerId }
+    );
+  }
 }

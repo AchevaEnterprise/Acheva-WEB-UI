@@ -6,7 +6,7 @@ import { ToastComponent } from '../../@shared/components/toast/toast.component';
 @Injectable({
   providedIn: 'root',
 })
-export class NotificationService {
+export class ToastService {
   private readonly snackBar = inject(MatSnackBar);
 
   showNotification(

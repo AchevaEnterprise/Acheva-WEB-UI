@@ -30,6 +30,7 @@
             placeholder="Select your school"
             formControlName="school"
             (selectionChange)="getFaculties($event)"
+            [compareWith]="compareSchoolFn"
           >
             @for (school of schoolsOptions(); track $index) {
               <mat-option [value]="school">{{ school.name }}</mat-option>

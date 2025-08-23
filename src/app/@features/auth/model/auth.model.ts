@@ -45,6 +45,8 @@ export interface IAccount {
   firstname: string;
   lastname: string;
   school: string;
+  faculty: string;
+  department: string;
   email: string;
   role: RoleEnum;
 }

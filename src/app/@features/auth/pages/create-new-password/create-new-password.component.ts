@@ -10,7 +10,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { Router } from '@angular/router';
 import { debounceTime, finalize, Subscription } from 'rxjs';
-import { NotificationService } from '../../../../@core/utility/notification.service';
+import { ToastService } from '../../../../@core/utility/toast.service';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
 import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
 import { PasswordValidityComponent } from '../../component/password-validity/password-validity.component';
@@ -35,7 +35,7 @@ import { AuthenticationService } from '../../service/auth.service';
 })
 export class CreateNewPasswordComponent implements OnInit, OnDestroy {
   private readonly authService = inject(AuthenticationService);
-  private readonly notificationService = inject(NotificationService);
+  private readonly toast = inject(ToastService);
   private readonly router = inject(Router);
 
   showPassword = signal<boolean>(false);
@@ -100,7 +100,7 @@ export class CreateNewPasswordComponent implements OnInit, OnDestroy {
         .subscribe({
           next: (resp) => {
             if (resp.status) {
-              this.notificationService.showNotification(
+              this.toast.showNotification(
                 'success',
                 'Password Reset',
                 'Your password reset is successful'

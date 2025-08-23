@@ -71,7 +71,7 @@ export class AnalyticsChartComponent {
       series: [
         {
           type: 'bar',
-          name: 'Year 1990',
+          name: 'Results',
           data: dataSeries,
         },
       ],

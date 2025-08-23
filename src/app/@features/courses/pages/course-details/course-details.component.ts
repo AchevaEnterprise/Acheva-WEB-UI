@@ -7,11 +7,10 @@ import {
 } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectChange, MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { filter, finalize, Subscription } from 'rxjs';
+import { finalize, Subscription } from 'rxjs';
 import {
   IDepartment,
   IFaculty,
@@ -30,11 +29,9 @@ import {
   facultiesSelector,
   schoolsSelector,
 } from '../../../../@core/store/school/school.selector';
-import { NotificationService } from '../../../../@core/utility/notification.service';
+import { ToastService } from '../../../../@core/utility/toast.service';
 import { UtilityService } from '../../../../@core/utility/utility.service';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
-import { SearchSelectComponent } from '../../../../@shared/components/forms/search-select/search-select.component';
-import { AuthenticationService } from '../../../auth/service/auth.service';
 import {
   ICreateResult,
   ResultStatusEnum,
@@ -52,8 +49,6 @@ import { CoursesService } from '../../services/courses.service';
     MatSelectModule,
     ReactiveFormsModule,
     ButtonComponent,
-    MatProgressSpinnerModule,
-    SearchSelectComponent,
   ],
   templateUrl: './course-details.component.html',
   styleUrl: './course-details.component.scss',
@@ -62,19 +57,12 @@ export class CourseDetailsComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly courseService = inject(CoursesService);
-  private readonly authService = inject(AuthenticationService);
   private readonly resultService = inject(ResultsService);
-  private readonly notificationService = inject(NotificationService);
+  private readonly toast = inject(ToastService);
   private readonly utilsService = inject(UtilityService);
   private readonly store = inject(Store<AppState>);
 
   private readonly courseId = this.route.snapshot.queryParamMap.get('courseId');
-  readonly createNew = this.route.snapshot.queryParamMap.get('new');
-
-  private readonly school = this.authService.activeAccount()?.school || '';
-
-  isLoadingFaculties = signal<boolean>(false);
-  isLoadingDepartments = signal<boolean>(false);
 
   isLoading = signal<boolean>(false);
   sessionOptions = signal<string[]>(this.utilsService.generateSchoolSessions());
@@ -133,19 +121,7 @@ export class CourseDetailsComponent implements OnInit, OnDestroy {
   private readonly sub: Subscription = new Subscription();
 
   ngOnInit(): void {
-    if (this.createNew === 'true') {
-      this.selectedSchool.set(this.school);
-      this.getSchools();
-      this.enableDiabledFieldsOnCreate();
-    } else this.getCourse();
-  }
-
-  enableDiabledFieldsOnCreate() {
-    this.form.get('semester')?.enable();
-    this.form.get('level')?.enable();
-    this.form.get('courseTitle')?.enable();
-    this.form.get('courseCode')?.enable();
-    this.form.get('courseCordinator')?.enable();
+    this.getCourse();
   }
 
   compareSchoolFn(o1: any, o2: any) {
@@ -181,11 +157,14 @@ export class CourseDetailsComponent implements OnInit, OnDestroy {
             courseCordinator,
             level,
             semester,
+            school: school as unknown as ISchool,
+            faculty: faculty as unknown as IFaculty,
+            department: department as unknown as IDepartment,
           });
 
-          this.selectedSchool.set(school);
-          this.selectedFaculty.set(faculty);
-          this.selectedDepartment.set(department);
+          // this.selectedSchool.set(school);
+          // this.selectedFaculty.set(faculty);
+          // this.selectedDepartment.set(department);
           this.getSchools();
         }
       },
@@ -200,12 +179,6 @@ export class CourseDetailsComponent implements OnInit, OnDestroy {
         next: (schools) => {
           this.schoolsOptions.set(schools);
 
-          this.schoolsOptions()?.forEach((school) => {
-            if (school.name === this.selectedSchool()) {
-              this.form.get('school')?.setValue(school);
-            }
-          });
-
           const school = this.form.get('school')?.value as ISchool;
           if (school) this.getFaculties(school._id);
         },
@@ -214,7 +187,6 @@ export class CourseDetailsComponent implements OnInit, OnDestroy {
   }
 
   getFaculties(event: MatSelectChange | string) {
-    this.isLoadingFaculties.set(true);
     let schoolId: string = '';
 
     if (typeof event === 'string') schoolId = event;
@@ -223,35 +195,20 @@ export class CourseDetailsComponent implements OnInit, OnDestroy {
     this.store.dispatch(loadFaculties({ schoolId }));
 
     this.sub.add(
-      this.store
-        .select(facultiesSelector)
-        .pipe(
-          filter(
-            (faculties) => Array.isArray(faculties) && faculties.length > 0
-          )
-        )
-        .subscribe({
-          next: (faculties) => {
-            this.isLoadingFaculties.set(false);
-            this.facultiesOptions.set(faculties);
+      this.store.select(facultiesSelector).subscribe({
+        next: (faculties) => {
+          this.facultiesOptions.set(faculties);
 
-            if (typeof event === 'string') {
-              this.facultiesOptions()?.forEach((facility) => {
-                if (facility.name === this.selectedFaculty()) {
-                  this.form.get('faculty')?.setValue(facility);
-                }
-              });
-
-              const facility = this.form.get('faculty')?.value as IFaculty;
-              if (facility) this.getDepartments(facility._id);
-            }
-          },
-        })
+          if (typeof event === 'string') {
+            const facility = this.form.get('faculty')?.value as IFaculty;
+            if (facility) this.getDepartments(facility._id);
+          }
+        },
+      })
     );
   }
 
   getDepartments(event: MatSelectChange | string) {
-    this.isLoadingDepartments.set(true);
     let facultyId: string = '';
 
     if (typeof event === 'string') facultyId = event;
@@ -260,28 +217,11 @@ export class CourseDetailsComponent implements OnInit, OnDestroy {
     this.store.dispatch(loadDepartments({ facultyId }));
 
     this.sub.add(
-      this.store
-        .select(departmentsSelector)
-        .pipe(
-          filter(
-            (departments) =>
-              Array.isArray(departments) && departments.length > 0
-          )
-        )
-        .subscribe({
-          next: (departments) => {
-            this.isLoadingDepartments.set(false);
-            this.departmentsOptions.set(departments);
-
-            if (typeof event === 'string') {
-              this.departmentsOptions()?.forEach((department) => {
-                if (department.name === this.selectedDepartment()) {
-                  this.form.get('department')?.setValue(department);
-                }
-              });
-            }
-          },
-        })
+      this.store.select(departmentsSelector).subscribe({
+        next: (departments) => {
+          this.departmentsOptions.set(departments);
+        },
+      })
     );
   }
 
@@ -311,8 +251,8 @@ export class CourseDetailsComponent implements OnInit, OnDestroy {
       session: session || '',
       level: level || '',
       semester: semester || '',
-      school: (school as ISchool).name,
-      department: (department as IDepartment).name,
+      school: (school as ISchool)._id,
+      department: (department as IDepartment)._id,
       status: ResultStatusEnum.PENDING,
     };
 
@@ -323,7 +263,7 @@ export class CourseDetailsComponent implements OnInit, OnDestroy {
         .subscribe({
           next: (resp) => {
             if (resp.status) {
-              this.notificationService.showNotification(
+              this.toast.showNotification(
                 'success',
                 'Result Created',
                 'Your result has been created successfully'

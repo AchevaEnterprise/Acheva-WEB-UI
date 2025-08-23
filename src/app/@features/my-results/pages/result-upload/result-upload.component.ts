@@ -8,9 +8,10 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { finalize } from 'rxjs';
-import { NotificationService } from '../../../../@core/utility/notification.service';
+import { IDepartment } from '../../../../@core/models/school.model';
+import { ToastService } from '../../../../@core/utility/toast.service';
 import { CardComponent } from '../../../../@shared/components/card/card.component';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
 import { SearchInputComponent } from '../../../../@shared/components/forms/search-input/search-input.component';
@@ -20,8 +21,9 @@ import {
 } from '../../../../@shared/components/segment-switcher/segment-switcher.component';
 import { UploadResultDialogComponent } from '../../../../@shared/components/upload-result-dialog/upload-result-dialog.component';
 import { RoleEnum } from '../../../auth/model/auth.model';
-import { AnalyticsChartComponent } from '../../../courses/components/analytics-chart/analytics-chart.component';
 import { ResultsService } from '../../../result-management/services/results.service';
+import { StudentService } from '../../../students/services/student.service';
+import { AnalyticsChartComponent } from '../../components/analytics-chart/analytics-chart.component';
 import { ReferenceTableResultUploadComponent } from '../../components/reference-table-result-upload/reference-table-result-upload.component';
 import { RegularTableResultUploadComponent } from '../../components/regular-table-result-upload/regular-table-result-upload.component';
 
@@ -51,9 +53,10 @@ import { RegularTableResultUploadComponent } from '../../components/regular-tabl
 export class ResultUploadComponent implements OnInit {
   // private readonly utilityService = inject(UtilityService);
   private readonly resultsService = inject(ResultsService);
-  private readonly notificationService = inject(NotificationService);
+  private readonly studentService = inject(StudentService);
+  private readonly toast = inject(ToastService);
   private readonly dialog = inject(MatDialog);
-  // private readonly router = inject(Router);
+  private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 
   private readonly resultId = this.route.snapshot.queryParamMap.get('resultId');
@@ -122,16 +125,30 @@ export class ResultUploadComponent implements OnInit {
     if (this.resultId) this.getResult();
   }
 
+  getStudentsInDepartmentAndLevel(departmentId: string, level: string) {
+    this.studentService
+      .getStudentsInDepartmentAndLevel(departmentId, level)
+      .subscribe({
+        next: (resp) => {
+          if (resp.status) {
+            console.warn('Students: ', resp.data);
+          }
+        },
+      });
+  }
+
   getResult() {
     this.resultsService.getResult(this.resultId!).subscribe({
       next: (resp) => {
         if (resp.status) {
-          const { analytics, course, session, level } = resp.data as {
-            course: { courseTitle: string };
-            session: string;
-            level: string;
-            analytics: Record<string, number>;
-          };
+          const { analytics, course, session, level, department } =
+            resp.data as {
+              course: { courseTitle: string };
+              session: string;
+              level: string;
+              analytics: Record<string, number>;
+              department: IDepartment;
+            };
 
           this.courseForm.patchValue({
             course: course.courseTitle,
@@ -152,6 +169,8 @@ export class ResultUploadComponent implements OnInit {
           this.totalStudent.set(analytics['total']);
           this.totalStudentPass.set(analytics['totalPass']);
           this.totalStudentFail.set(analytics['totalFail']);
+
+          this.getStudentsInDepartmentAndLevel(department._id, level);
         }
       },
     });
@@ -173,19 +192,17 @@ export class ResultUploadComponent implements OnInit {
         )!
     );
 
-    console.warn('Updated: active', this.activeSegment());
-
     switch (switchValue) {
       case 'regular': {
-        this.courseForm.get('category')?.setValue('regular');
+        this.courseForm.get('category')?.patchValue('regular');
         break;
       }
       case 'reference': {
-        this.courseForm.get('category')?.setValue('reference');
+        this.courseForm.get('category')?.patchValue('reference');
         break;
       }
       case 'unregistered': {
-        this.courseForm.get('category')?.setValue('unregistered');
+        this.courseForm.get('category')?.patchValue('unregistered');
         break;
       }
     }
@@ -198,13 +215,8 @@ export class ResultUploadComponent implements OnInit {
       })
       .afterClosed()
       .subscribe({
-        next: async (file: File | null) => {
-          if (file) {
-            console.warn('Uploaded File: ', file);
-            // const resultEntry =  await this.utilityService.convertExcelToJson(file);
-            // console.warn('Converted Result Entry: ', resultEntry);
-            this.confirmResultUpload(file);
-          }
+        next: (file: File | null) => {
+          if (file) this.confirmResultUpload(file);
         },
       });
   }
@@ -221,31 +233,71 @@ export class ResultUploadComponent implements OnInit {
       )
       .subscribe({
         next: (resp) => {
-          if (resp.status) {
-            this.notificationService.showNotification(
-              'success',
-              'Result file uploaded',
-              'Your result file has been uploaded successfully'
-            );
-          } else {
-            this.notificationService.showNotification(
+          if (!resp.status) {
+            this.toast.showNotification(
               'error',
               'Result file uploaded failed',
               resp.message || 'Failed to upload result file'
             );
+            return;
           }
+
+          this.toast.showNotification(
+            'success',
+            'Result file uploaded',
+            'Your result file has been uploaded successfully'
+          );
+
+          this.getResult();
         },
       });
   }
 
   saveChanges() {
-    console.warn(
-      'Table Data: ',
-      this.regularTableResultUploadRef()?.dataSource()
-    );
+    switch (this.activeSegment().value) {
+      case 'regular': {
+        console.warn(
+          'Regular Table Data: ',
+          this.regularTableResultUploadRef()?.dataSource()
+        );
+        break;
+      }
+      case 'reference': {
+        console.warn(
+          'Reference Table Data: ',
+          this.referenceTableResultUploadRef()?.dataSource()
+        );
+        break;
+      }
+      case 'unregistered': {
+        console.warn(
+          'Unregistered Table Data: ',
+          this.referenceTableResultUploadRef()?.dataSource()
+        );
+        break;
+      }
+    }
 
-    // this.resultsService.createResult();
-    // this.router.navigate(['my-results']);
+    this.resultsService.sendResult(this.resultId!, 'dcd').subscribe({
+      next: (resp) => {
+        if (!resp.status) {
+          this.toast.showNotification(
+            'error',
+            'Result Sent Failed',
+            resp.message || 'Failed to send result to the student'
+          );
+          return;
+        }
+
+        this.toast.showNotification(
+          'success',
+          'Result Sent Successfully',
+          'Result has been sent successfully'
+        );
+
+        this.router.navigate(['my-results']);
+      },
+    });
   }
 
   reject() {}

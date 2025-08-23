@@ -80,7 +80,7 @@
               (selectionChange)="getFaculties($event)"
             >
               @for (school of schoolsOptions(); track $index) {
-                <mat-option [value]="school">{{ school.name }}</mat-option>
+                <mat-option [value]="school._id">{{ school.name }}</mat-option>
               }
             </mat-select>
           </mat-form-field>
@@ -104,7 +104,9 @@
               (selectionChange)="getDepartments($event)"
             >
               @for (faculty of facultiesOptions(); track $index) {
-                <mat-option [value]="faculty">{{ faculty.name }}</mat-option>
+                <mat-option [value]="faculty._id">{{
+                  faculty.name
+                }}</mat-option>
               }
             </mat-select>
           </mat-form-field>
@@ -127,7 +129,7 @@
               formControlName="department"
             >
               @for (department of departmentsOptions(); track $index) {
-                <mat-option [value]="department">{{
+                <mat-option [value]="department._id">{{
                   department.name
                 }}</mat-option>
               }

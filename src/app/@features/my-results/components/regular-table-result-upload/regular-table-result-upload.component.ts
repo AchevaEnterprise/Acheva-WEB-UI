@@ -1,5 +1,5 @@
 import { SelectionModel } from '@angular/cdk/collections';
-import { Component, output, signal } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatTableModule } from '@angular/material/table';
@@ -23,6 +23,7 @@ import { IStudentGrade } from '../../../courses/models/student-grade.model';
   exportAs: 'regularTableResultUploadRef',
 })
 export class RegularTableResultUploadComponent {
+  students = input<any>();
   tableUpdateEvent = output<Partial<IStudentGrade>[]>();
 
   displayedColumns: string[] = [
@@ -36,7 +37,9 @@ export class RegularTableResultUploadComponent {
     'finalGrade',
     'status',
   ];
-  dataSource = signal<Partial<IStudentGrade>[]>([]);
+  dataSource = computed<Partial<IStudentGrade>[]>(() => {
+    return this.students() as Partial<IStudentGrade>[];
+  });
   selection = new SelectionModel<Partial<IStudentGrade>>(true, []);
 
   /** Whether the number of selected elements matches the total number of rows. */

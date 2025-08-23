@@ -6,7 +6,7 @@ import {
 import { inject } from '@angular/core';
 import { catchError, Subject, switchMap, take, throwError } from 'rxjs';
 import { AuthenticationService } from '../../@features/auth/service/auth.service';
-import { NotificationService } from '../utility/notification.service';
+import { ToastService } from '../utility/toast.service';
 
 const endpoints = [
   '/auth/lecturers/register',
@@ -25,7 +25,7 @@ let refreshSubject = new Subject<string>();
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthenticationService);
-  const notification = inject(NotificationService);
+  const toast = inject(ToastService);
 
   const isExcludedEndpoint = endpoints.some((endpoint) =>
     req.url.includes(endpoint)
@@ -45,7 +45,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
         if (!refreshToken) {
           authService.logOut();
-          notification.showNotification(
+          toast.showNotification(
             'warning',
             'Session Expired',
             'Please sign in again.'
@@ -86,7 +86,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
           }),
           catchError((refreshError) => {
             authService.logOut();
-            notification.showNotification(
+            toast.showNotification(
               'warning',
               'Session Expired',
               'Please sign in again.'
@@ -97,7 +97,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       }
 
       if (error.status === HttpStatusCode.Forbidden) {
-        notification.showNotification(
+        toast.showNotification(
           'warning',
           'Unauthorized',
           error.error.message || 'You are unauthorized'
@@ -105,7 +105,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       }
 
       if (error.status === HttpStatusCode.NotFound) {
-        notification.showNotification(
+        toast.showNotification(
           'warning',
           'Resource Not Found',
           error.error.message ||
@@ -114,7 +114,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       }
 
       if (error.status === HttpStatusCode.InternalServerError) {
-        notification.showNotification(
+        toast.showNotification(
           'warning',
           'Internal Server Error',
           'An error occured while processing your request. Please try again later.'

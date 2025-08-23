@@ -46,6 +46,16 @@ export class ResultsService {
     });
   }
 
+  sendResult(
+    resultId: string,
+    recepientId: string
+  ): Observable<IAPIResponse<any>> {
+    return this.http.patch<IAPIResponse<any>>(
+      `${this.resultsUrl}/${resultId}/send/${recepientId}`,
+      {}
+    );
+  }
+
   createResult(result: ICreateResult): Observable<IAPIResponse<any>> {
     return this.http.post<IAPIResponse<any>>(`${this.resultsUrl}`, result);
   }

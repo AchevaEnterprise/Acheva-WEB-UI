@@ -29,8 +29,9 @@ import {
   facultiesSelector,
   schoolsSelector,
 } from '../../../../../../@core/store/school/school.selector';
-import { NotificationService } from '../../../../../../@core/utility/notification.service';
+import { ToastService } from '../../../../../../@core/utility/toast.service';
 import { ButtonComponent } from '../../../../../../@shared/components/forms/button/button.component';
+import { AuthenticationService } from '../../../../../auth/service/auth.service';
 import { ICreateCourse } from '../../../../../courses/models/course.model';
 import { CoursesService } from '../../../../../courses/services/courses.service';
 import { CoursePreviewComponent } from '../../../../components/course-preview/course-preview.component';
@@ -51,9 +52,13 @@ import { CoursePreviewComponent } from '../../../../components/course-preview/co
 export class CreateCourseComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly authService = inject(AuthenticationService);
   private readonly courseService = inject(CoursesService);
-  private readonly notificationService = inject(NotificationService);
+  private readonly toast = inject(ToastService);
   private readonly store = inject(Store<AppState>);
+
+  private readonly userSchoolId =
+    this.authService.activeAccount()?.school || '';
 
   isLoading = signal<boolean>(false);
   levelOptions = signal<{ label: string; value: string }[]>([
@@ -77,7 +82,10 @@ export class CreateCourseComponent {
     semester: new FormControl<string>('', Validators.required),
     courseTitle: new FormControl<string>('', Validators.required),
     courseCode: new FormControl<string>('', Validators.required),
-    school: new FormControl<ISchool | null>(null, Validators.required),
+    school: new FormControl<ISchool | string>(
+      { value: this.userSchoolId, disabled: true },
+      Validators.required
+    ),
     faculty: new FormControl<IFaculty | null>(null, Validators.required),
     department: new FormControl<IDepartment | null>(null, Validators.required),
     level: new FormControl<string>('', Validators.required),
@@ -90,6 +98,10 @@ export class CreateCourseComponent {
     this.getSchools();
   }
 
+  compareSchoolFn(o1: any, o2: any) {
+    return o1 && o2 ? o1._id === o2 : o1 === o2;
+  }
+
   getSchools() {
     this.store.dispatch(loadSchools());
 
@@ -97,14 +109,21 @@ export class CreateCourseComponent {
       this.store.select(schoolsSelector).subscribe({
         next: (schools) => {
           this.schoolsOptions.set(schools);
+
+          const schoolId = this.form.get('school')?.value as string;
+          if (schoolId) this.getFaculties(schoolId);
         },
       })
     );
   }
 
-  getFaculties(event: MatSelectChange) {
-    const { _id } = event.value as ISchool;
-    this.store.dispatch(loadFaculties({ schoolId: _id }));
+  getFaculties(event: MatSelectChange | string) {
+    let schoolId: string = '';
+
+    if (typeof event === 'string') schoolId = event;
+    else schoolId = (event.value as ISchool)._id;
+
+    this.store.dispatch(loadFaculties({ schoolId }));
 
     this.sub.add(
       this.store.select(facultiesSelector).subscribe({
@@ -116,8 +135,8 @@ export class CreateCourseComponent {
   }
 
   getDepartments(event: MatSelectChange) {
-    const { _id } = event.value as IFaculty;
-    this.store.dispatch(loadDepartments({ facultyId: _id }));
+    const facultyId = (event.value as ISchool)._id;
+    this.store.dispatch(loadDepartments({ facultyId }));
 
     this.sub.add(
       this.store.select(departmentsSelector).subscribe({
@@ -161,8 +180,8 @@ export class CreateCourseComponent {
       courseTitle: courseTitle || '',
       courseCode: courseCode || '',
       courseLoad: courseLoad || 0,
-      faculty: faculty!.name || '',
-      department: department!.name || '',
+      faculty: (faculty as IFaculty)._id || '',
+      department: (department as IDepartment)._id || '',
       level: level || '',
     };
 
@@ -173,7 +192,7 @@ export class CreateCourseComponent {
         .subscribe({
           next: (resp) => {
             if (resp.status) {
-              this.notificationService.showNotification(
+              this.toast.showNotification(
                 'success',
                 'Course Created',
                 'Your course has been created successfully'

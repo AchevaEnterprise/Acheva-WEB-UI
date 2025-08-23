@@ -4,7 +4,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { ActivatedRoute, Router } from '@angular/router';
 import { finalize, Subscription } from 'rxjs';
-import { NotificationService } from '../../../../@core/utility/notification.service';
+import { ToastService } from '../../../../@core/utility/toast.service';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
 import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
 import { SvgBackgroudComponent } from '../../component/svg-backgroud/svg-backgroud.component';
@@ -25,7 +25,7 @@ import { AuthenticationService } from '../../service/auth.service';
 })
 export class ConfirmEmailComponent implements OnDestroy {
   private readonly authService = inject(AuthenticationService);
-  private readonly notificationService = inject(NotificationService);
+  private readonly toast = inject(ToastService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 
@@ -52,14 +52,14 @@ export class ConfirmEmailComponent implements OnDestroy {
         .subscribe({
           next: (res) => {
             if (res.status) {
-              this.notificationService.showNotification(
+              this.toast.showNotification(
                 'success',
                 'Confirmation Code Verified',
                 'Your account was verified successfully, you can now login'
               );
               this.router.navigate(['/auth/login']);
             } else {
-              this.notificationService.showNotification(
+              this.toast.showNotification(
                 'error',
                 'Code Verification Failed',
                 res.message

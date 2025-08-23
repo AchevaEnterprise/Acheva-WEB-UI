@@ -3,7 +3,7 @@
     <h3 class="acva-heading-5 fw-500">Lecturer Management</h3>
 
     <div class="flex flex-wrap gap-3">
-      <app-search-input placeholder="Search lecturers" />
+      <app-search-input placeholder="Search lecturer" />
 
       <div class="input-style-1 acheva-input">
         <mat-form-field [style.width.%]="100" appearance="outline">
@@ -27,7 +27,14 @@
       <ng-container matColumnDef="name">
         <th mat-header-cell *matHeaderCellDef>NAME</th>
         <td mat-cell *matCellDef="let element">
-          {{ element.name }}
+          {{ element.firstname }} {{ element.lastname }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="email">
+        <th mat-header-cell *matHeaderCellDef>EMAIL</th>
+        <td mat-cell *matCellDef="let element">
+          {{ element.email }}
         </td>
       </ng-container>
 
@@ -48,7 +55,12 @@
       <ng-container matColumnDef="action">
         <th mat-header-cell *matHeaderCellDef>ACTION</th>
         <td mat-cell *matCellDef="let element">
-          <app-button label="Assign" type="outline" />
+          <app-button
+            label="Assign"
+            type="outline"
+            class="btn-sm"
+            (clickEvent)="confirmAssignAsCourseAdvisor(element)"
+          />
         </td>
       </ng-container>
 

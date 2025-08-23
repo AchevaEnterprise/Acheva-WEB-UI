@@ -15,7 +15,9 @@ import { SvgComponent } from '../svg/svg.component';
 })
 export class ConfirmationComponent {
   private readonly dialogRef = inject(MatDialogRef<ConfirmationComponent>);
-  public readonly data = inject<{ message: string }>(MAT_DIALOG_DATA);
+  public readonly data = inject<{ message: string; subTitle: string }>(
+    MAT_DIALOG_DATA
+  );
 
   cancel() {
     this.dialogRef.close(false);

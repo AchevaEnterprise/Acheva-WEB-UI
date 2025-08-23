@@ -80,7 +80,7 @@ export class ReferenceTableResultUploadComponent {
   searchStudent(value: string) {
     this.searchingStudents.set(true);
     this.studentService
-      .getstudentByRegNo(value)
+      .getStudentByRegNo(value)
       .pipe(finalize(() => this.searchingStudents.set(false)))
       .subscribe({
         next: (resp) => {

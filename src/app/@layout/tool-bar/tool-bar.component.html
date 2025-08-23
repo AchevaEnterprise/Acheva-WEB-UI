@@ -4,7 +4,11 @@
   <h3 class="acva-heading-6 fw-500">{{ pageTitle() }}</h3>
 
   <div class="flex items-center gap-4">
-    <button class="cursor-pointer" [matBadge]="badgeCount()">
+    <button
+      class="cursor-pointer"
+      [matBadge]="badgeCount()"
+      (click)="openNotification()"
+    >
       <app-svg
         svgWidth="1.5rem"
         svgHeight="1.5rem"

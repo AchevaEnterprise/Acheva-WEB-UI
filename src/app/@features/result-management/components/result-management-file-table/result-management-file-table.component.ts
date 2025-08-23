@@ -1,15 +1,26 @@
 import { SelectionModel } from '@angular/cdk/collections';
 import { DatePipe } from '@angular/common';
-import { Component, effect, input, output, signal } from '@angular/core';
+import {
+  Component,
+  effect,
+  inject,
+  input,
+  OnInit,
+  output,
+  signal,
+} from '@angular/core';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
-import { COURSES } from '../../../../@core/constant/course-mock';
+import { finalize } from 'rxjs';
+import { EmptyStateComponent } from '../../../../@shared/components/empty-state/empty-state.component';
+import { LoaderComponent } from '../../../../@shared/components/loader/loader.component';
 import { PaginatorComponent } from '../../../../@shared/components/paginator/paginator.component';
 import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
 import { ICourse } from '../../../courses/models/course.model';
+import { ResultsService } from '../../services/results.service';
 
 @Component({
   selector: 'app-result-management-file-table',
@@ -22,12 +33,19 @@ import { ICourse } from '../../../courses/models/course.model';
     MatSelectModule,
     MatFormFieldModule,
     MatMenuModule,
+    EmptyStateComponent,
+    LoaderComponent,
   ],
   templateUrl: './result-management-file-table.component.html',
   styleUrl: './result-management-file-table.component.scss',
 })
-export class ResultManagementFileTableComponent {
+export class ResultManagementFileTableComponent implements OnInit {
+  private readonly resultService = inject(ResultsService);
+
+  isloadingResults = signal(false);
+
   expand = input<boolean>(false);
+  status = input<string>();
   viewResultEvent = output<ICourse>();
 
   displayedColumns: string[] = [
@@ -38,7 +56,7 @@ export class ResultManagementFileTableComponent {
     'department',
     'faculty',
   ];
-  dataSource = signal<ICourse[]>(COURSES);
+  dataSource = signal<ICourse[]>([]);
   selection = new SelectionModel<ICourse>(true, []);
 
   constructor() {
@@ -56,7 +74,29 @@ export class ResultManagementFileTableComponent {
             !['lecturer', 'createdAt', 'updatedAt', 'actions'].includes(col)
         );
       }
+
+      if (this.status()) this.getResults();
     });
+  }
+
+  ngOnInit(): void {
+    this.getResults();
+  }
+
+  getResults() {
+    this.isloadingResults.set(true);
+    this.resultService
+      .getResults({
+        status: this.status()!,
+      })
+      .pipe(finalize(() => this.isloadingResults.set(false)))
+      .subscribe({
+        next: (resp) => {
+          if (resp.status) {
+            this.dataSource.set(resp.data.result);
+          }
+        },
+      });
   }
 
   viewResult(course: ICourse) {

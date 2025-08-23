@@ -34,7 +34,7 @@ import {
   facultiesSelector,
   schoolsSelector,
 } from '../../../../@core/store/school/school.selector';
-import { NotificationService } from '../../../../@core/utility/notification.service';
+import { ToastService } from '../../../../@core/utility/toast.service';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
 import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
 import { AuthBannerComponent } from '../../component/auth-banner/auth-banner.component';
@@ -64,7 +64,7 @@ import { AuthenticationService } from '../../service/auth.service';
 })
 export class CreateAccountComponent implements OnInit, OnDestroy {
   private readonly authService = inject(AuthenticationService);
-  private readonly notificationService = inject(NotificationService);
+  private readonly toast = inject(ToastService);
   private readonly router = inject(Router);
   private readonly store = inject(Store<AppState>);
 
@@ -78,14 +78,14 @@ export class CreateAccountComponent implements OnInit, OnDestroy {
       label: 'HOD',
       value: RoleEnum.HOD,
     },
-    {
-      label: 'Course Advisor',
-      value: RoleEnum.COURSE_ADVISOR,
-    },
-    {
-      label: 'Course Coordinator',
-      value: RoleEnum.COURSE_COORDINATOR,
-    },
+    // {
+    //   label: 'Course Advisor',
+    //   value: RoleEnum.COURSE_ADVISOR,
+    // },
+    // {
+    //   label: 'Course Coordinator',
+    //   value: RoleEnum.COURSE_COORDINATOR,
+    // },
     {
       label: 'Lecturer',
       value: RoleEnum.LECTURER,
@@ -160,8 +160,8 @@ export class CreateAccountComponent implements OnInit, OnDestroy {
   }
 
   getFaculties(event: MatSelectChange) {
-    const { _id } = event.value as ISchool;
-    this.store.dispatch(loadFaculties({ schoolId: _id }));
+    const schoolId = event.value as string;
+    this.store.dispatch(loadFaculties({ schoolId }));
 
     this.sub.add(
       this.store.select(facultiesSelector).subscribe({
@@ -173,8 +173,8 @@ export class CreateAccountComponent implements OnInit, OnDestroy {
   }
 
   getDepartments(event: MatSelectChange) {
-    const { _id } = event.value as IFaculty;
-    this.store.dispatch(loadDepartments({ facultyId: _id }));
+    const facultyId = event.value as string;
+    this.store.dispatch(loadDepartments({ facultyId }));
 
     this.sub.add(
       this.store.select(departmentsSelector).subscribe({
@@ -199,9 +199,9 @@ export class CreateAccountComponent implements OnInit, OnDestroy {
     } = this.form.value as {
       fullname: string;
       email: string;
-      school: ISchool;
-      faculty: IFaculty;
-      department: IDepartment;
+      school: string;
+      faculty: string;
+      department: string;
       title: string;
       role: RoleEnum;
       password: string;
@@ -209,7 +209,7 @@ export class CreateAccountComponent implements OnInit, OnDestroy {
     };
 
     if (password !== confirm_password) {
-      this.notificationService.showNotification(
+      this.toast.showNotification(
         'warning',
         'Password Mismatch',
         'Passwords do not match',
@@ -228,11 +228,11 @@ export class CreateAccountComponent implements OnInit, OnDestroy {
       email,
       password,
       confirmPassword: confirm_password,
-      faculty: faculty.name,
-      department: department.name,
+      faculty: faculty,
+      department: department,
       title,
       role,
-      school: school.name,
+      school: school,
     } satisfies ISignUp;
 
     this.sub.add(
@@ -242,7 +242,7 @@ export class CreateAccountComponent implements OnInit, OnDestroy {
         .subscribe({
           next: (res) => {
             if (res.status) {
-              this.notificationService.showNotification(
+              this.toast.showNotification(
                 'success',
                 'Account Created',
                 'Your account was created successfully'
@@ -251,7 +251,7 @@ export class CreateAccountComponent implements OnInit, OnDestroy {
                 queryParams: { accountId: res.data._id as string },
               });
             } else {
-              this.notificationService.showNotification(
+              this.toast.showNotification(
                 'error',
                 'Account Creation Failed',
                 res.message

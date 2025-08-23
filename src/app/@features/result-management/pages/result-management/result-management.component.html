@@ -47,14 +47,12 @@
         [iconSrc]="segmentCardIconSrc()"
       >
         <ng-container content>
-          <!-- Lecturer -->
           <app-result-management-file-table
-            *appRoleAccess="[RoleEnum.HOD]"
+            [status]="activeSegment().value"
             [expand]="expandView()"
             (viewResultEvent)="viewResult($event)"
           />
 
-          <!-- Course Cordinator,  -->
           <!-- <app-result-management-folder-table [expand]="expandView()" /> -->
         </ng-container>
       </app-card>

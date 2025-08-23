@@ -12,6 +12,7 @@ import {
   SegmentSwitcherComponent,
 } from '../../../../@shared/components/segment-switcher/segment-switcher.component';
 import { RoleEnum } from '../../../auth/model/auth.model';
+import { AuthenticationService } from '../../../auth/service/auth.service';
 import { ICourse } from '../../../courses/models/course.model';
 import { CommentComponent } from '../../components/comment/comment.component';
 import { ResultManagementFileTableComponent } from '../../components/result-management-file-table/result-management-file-table.component';
@@ -42,8 +43,10 @@ export class ResultManagementComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly resultService = inject(ResultsService);
+  private readonly authService = inject(AuthenticationService);
 
   results = signal<IResult[]>([]);
+  currentRole = signal<RoleEnum>(this.authService.activeAccount()!.role);
 
   segments = signal<ISegmentSwitcher[]>([
     {
@@ -98,7 +101,11 @@ export class ResultManagementComponent implements OnInit {
       accessRole: [RoleEnum.DEAN, RoleEnum.HOD, RoleEnum.COURSE_ADVISOR],
     },
   ]);
-  activeSegment = signal<ISegmentSwitcher>(this.segments()[0]);
+  activeSegment = signal<ISegmentSwitcher>(
+    this.currentRole() === RoleEnum.HOD
+      ? this.segments()[1]
+      : this.segments()[0]
+  );
   segmentCardLabel = signal<string>('Access your recent drafts from here');
   segmentCardIconSrc = signal<string>('icons/general/draft-icon.svg');
 
