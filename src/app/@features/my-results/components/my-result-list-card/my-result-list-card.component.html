@@ -1,18 +1,20 @@
 <!-- class="grid [grid-template-columns:repeat(auto-fit,_minmax(0,_1fr))] gap-4 items-center" -->
 <div class="flex flex-wrap gap-4 items-center w-full justify-between my-4">
   <div>
-    <h5 class="acva-para-2 fw-500">Introduction to Computer Science</h5>
-    <p class="acva-para-1 fw-400 text-neutral-500">CSC 101</p>
+    <h5 class="acva-para-2 fw-500">{{ result()?.course?.courseTitle }}</h5>
+    <p class="acva-para-1 fw-400 text-neutral-500">
+      {{ result()?.course?.courseCode }}
+    </p>
   </div>
 
-  <p class="acva-para-1 fw-400">3 Units</p>
-  <p class="acva-para-1 fw-400">1st Semester</p>
-  <p class="acva-para-1 fw-400">2024/2025</p>
-  <p class="acva-para-1 fw-400">67 Students</p>
+  <p class="acva-para-1 fw-400">{{ result()?.course?.courseLoad }} Unit(s)</p>
+  <p class="acva-para-1 fw-400">{{ result()?.semester }}</p>
+  <p class="acva-para-1 fw-400">{{ result()?.session }}</p>
+  <p class="acva-para-1 fw-400">0 Students</p>
 
   <div class="progress-container w-[20%]">
-    <p class="acva-caption text-neutral-500 text-right">40% Done</p>
-    <mat-progress-bar mode="determinate" value="40"></mat-progress-bar>
+    <p class="acva-caption text-neutral-500 text-right">0% Done</p>
+    <mat-progress-bar mode="determinate" value="0"></mat-progress-bar>
   </div>
 
   <button [matMenuTriggerFor]="menu" class="cursor-pointer">

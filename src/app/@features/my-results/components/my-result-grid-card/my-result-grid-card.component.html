@@ -3,12 +3,15 @@
     <header class="flex justify-between gap-8">
       <div>
         <h4 class="acva-clamp-2 acva-heading-6 fw-500">
-          Introduction to Computer Science
+          {{ result()?.course?.courseTitle }}
         </h4>
-        <p class="text-neutral-500">CSC 100 - 3 Unit(s)</p>
+        <p class="text-neutral-500">
+          {{ result()?.course?.courseCode }} -
+          {{ result()?.course?.courseLoad }} Unit(s)
+        </p>
       </div>
 
-      <p class="acva-para-2 text-neutral-500 fw-500">Draft</p>
+      <!-- <p class="acva-para-2 text-neutral-500 fw-500">Draft</p> -->
     </header>
 
     <div class="mt-4 grid gap-[8px]">
@@ -18,7 +21,7 @@
           svgHeight="1rem"
           src="icons/general/calendar-icon.svg"
         ></app-svg>
-        1st Semester - 2024/2025
+        {{ result()?.semester }} - {{ result()?.session }}
       </p>
 
       <p class="text-neutral-400 text-sm flex items-center gap-2">
@@ -27,12 +30,12 @@
           svgHeight="1rem"
           src="icons/general/role-icon.svg"
         ></app-svg
-        >67 Students
+        >0 Students
       </p>
 
       <div class="progress-container w-full">
-        <mat-progress-bar mode="determinate" value="56"></mat-progress-bar>
-        <p class="acva-caption text-neutral-500">56% Done</p>
+        <mat-progress-bar mode="determinate" value="0"></mat-progress-bar>
+        <p class="acva-caption text-neutral-500">0% Done</p>
       </div>
     </div>
   </div>

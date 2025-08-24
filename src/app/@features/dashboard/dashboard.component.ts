@@ -6,7 +6,6 @@ import { MatInputModule } from '@angular/material/input';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
-import { COURSES } from '../../@core/constant/course-mock';
 import { RoleAccessDirective } from '../../@core/directives/role-access.directive';
 import { IAnalytics } from '../../@core/models/school.model';
 import { GreetingPipe } from '../../@core/pipes/greeting.pipe';
@@ -134,7 +133,7 @@ export class DashboardComponent {
     'sentDate',
     'actions',
   ];
-  dataSource = signal<ICourse[]>(COURSES);
+  dataSource = signal<ICourse[]>([]);
 
   segments = signal<ISegmentSwitcher[]>([
     {

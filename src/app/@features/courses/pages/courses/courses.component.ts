@@ -3,7 +3,6 @@ import { Component, inject, signal } from '@angular/core';
 import { MatDivider } from '@angular/material/divider';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize, map, Observable } from 'rxjs';
-import { COURSE_TEMPLATE } from '../../../../@core/constant/course-template-mock';
 import { CardComponent } from '../../../../@shared/components/card/card.component';
 import { EmptyStateComponent } from '../../../../@shared/components/empty-state/empty-state.component';
 import { SearchInputComponent } from '../../../../@shared/components/forms/search-input/search-input.component';
@@ -38,7 +37,7 @@ export class CoursesComponent {
   private readonly authService = inject(AuthenticationService);
   private readonly courseService = inject(CoursesService);
 
-  courseTemplates = signal<Partial<ICourseTemplate>[]>(COURSE_TEMPLATE);
+  courseTemplates = signal<Partial<ICourseTemplate>[]>([]);
   RoleEnum = RoleEnum;
   activeAccount = this.authService.activeAccount;
 

@@ -103,7 +103,7 @@ export class LecturerManagementComponent implements OnInit {
   }
 
   assignAsCourseAdvisor(row: ILecturer) {
-    this.lecturerService.assignAsCourseAdvisor(row._id).subscribe({
+    this.lecturerService.assignAsCourseAdvisor(row._id, '').subscribe({
       next: (resp) => {
         if (resp.status) {
           this.getLecturers();
@@ -113,7 +113,7 @@ export class LecturerManagementComponent implements OnInit {
   }
 
   revokeRoleAsCourseAdvisor(row: ILecturer) {
-    this.lecturerService.revokeRoleAsCourseAdvisor(row._id).subscribe({
+    this.lecturerService.unassignAsCourseAdvisor(row._id, '').subscribe({
       next: (resp) => {
         if (resp.status) {
           this.getLecturers();

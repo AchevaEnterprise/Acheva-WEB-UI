@@ -31,15 +31,27 @@ export class LecturersService {
     );
   }
 
-  assignAsCourseAdvisor(lecturerId: string): Observable<IAPIResponse<any>> {
-    return this.http.post<IAPIResponse<any>>(`${this.lecturerUrl}/assign`, {
-      lecturerId,
-    });
+  assignAsCourseAdvisor(
+    lecturerId: string,
+    level: string
+  ): Observable<IAPIResponse<any>> {
+    return this.http.patch<IAPIResponse<any>>(
+      `${this.lecturerUrl}/assign-course-advisor/${lecturerId}`,
+      {
+        level,
+      }
+    );
   }
 
-  revokeRoleAsCourseAdvisor(lecturerId: string): Observable<IAPIResponse<any>> {
-    return this.http.post<IAPIResponse<any>>(`${this.lecturerUrl}/revoke`, {
-      lecturerId,
-    });
+  unassignAsCourseAdvisor(
+    lecturerId: string,
+    level: string
+  ): Observable<IAPIResponse<any>> {
+    return this.http.patch<IAPIResponse<any>>(
+      `${this.lecturerUrl}/unassign-course-advisor`,
+      {
+        level,
+      }
+    );
   }
 }

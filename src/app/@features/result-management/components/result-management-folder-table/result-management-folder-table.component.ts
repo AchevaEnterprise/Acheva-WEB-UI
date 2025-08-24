@@ -9,7 +9,6 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
 import { Router } from '@angular/router';
-import { COURSES } from '../../../../@core/constant/course-mock';
 import { PaginatorComponent } from '../../../../@shared/components/paginator/paginator.component';
 import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
 import { ICourse } from '../../../courses/models/course.model';
@@ -40,7 +39,7 @@ export class ResultManagementFolderTableComponent {
 
   folderDisplayedColumns: string[] = ['courseCode', 'courseTitle', 'semester'];
   columnsToDisplayWithExpand: string[] = [...this.folderDisplayedColumns];
-  folderDataSource = signal<ICourse[]>(COURSES);
+  folderDataSource = signal<ICourse[]>([]);
 
   fileDisplayedColumns: string[] = [
     'courseCode',
@@ -49,7 +48,7 @@ export class ResultManagementFolderTableComponent {
     'department',
     'faculty',
   ];
-  fileDataSource = signal<ICourse[]>(COURSES);
+  fileDataSource = signal<ICourse[]>([]);
   selection = new SelectionModel<ICourse>(true, []);
 
   constructor() {

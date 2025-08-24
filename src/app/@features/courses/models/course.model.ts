@@ -1,4 +1,9 @@
-import { LevelsEnum } from '../../../@core/models/school.model';
+import {
+  IDepartment,
+  IFaculty,
+  ISchool,
+  LevelsEnum,
+} from '../../../@core/models/school.model';
 
 export interface ICourse {
   _id?: string;
@@ -6,9 +11,9 @@ export interface ICourse {
   semester: string;
   courseTitle: string;
   courseCode: string;
-  faculty: string;
-  department: string;
-  school: string;
+  faculty: IFaculty;
+  department: IDepartment;
+  school: ISchool;
   level: string;
   courseCordinator?: string;
   courseLoad: number;
@@ -42,7 +47,7 @@ export interface ICourseTemplate {
   semester: string;
   session: string;
   level: string;
-  faculty: string;
-  department: string;
+  faculty: IFaculty;
+  department: IDepartment;
   date_created: Date;
 }

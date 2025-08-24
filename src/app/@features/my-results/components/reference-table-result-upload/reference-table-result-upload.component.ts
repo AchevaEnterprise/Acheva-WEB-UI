@@ -9,7 +9,6 @@ import {
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatTableModule } from '@angular/material/table';
 import { finalize } from 'rxjs';
-import { STUDENT_GRADES } from '../../../../@core/constant/student-grade-mock';
 import { SearchSelectComponent } from '../../../../@shared/components/forms/search-select/search-select.component';
 import { PaginatorComponent } from '../../../../@shared/components/paginator/paginator.component';
 import { IStudentGrade } from '../../../courses/models/student-grade.model';
@@ -42,7 +41,7 @@ export class ReferenceTableResultUploadComponent {
     'finalGrade',
     'status',
   ];
-  dataSource = signal<Partial<IStudentGrade>[]>(STUDENT_GRADES);
+  dataSource = signal<Partial<IStudentGrade>[]>([]);
   selection = new SelectionModel<Partial<IStudentGrade>>(true, []);
 
   students = signal<any[]>([]);

@@ -38,7 +38,8 @@ export class RegularTableResultUploadComponent {
     'status',
   ];
   dataSource = computed<Partial<IStudentGrade>[]>(() => {
-    return this.students() as Partial<IStudentGrade>[];
+    const students = this.students() as Partial<IStudentGrade>[];
+    return students ?? [];
   });
   selection = new SelectionModel<Partial<IStudentGrade>>(true, []);
 
