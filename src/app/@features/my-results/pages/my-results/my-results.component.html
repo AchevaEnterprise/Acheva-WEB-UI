@@ -9,7 +9,7 @@
       <h3 class="acva-heading-5 fw-500">My Results</h3>
     </div>
 
-    <app-button label="View Courses" class="btn-md" />
+    <app-button label="View Courses" class="btn-md" routerLink="/courses" />
   </header>
 
   <!-- SEARCH FILTERS -->
@@ -64,33 +64,30 @@
 
     @if (isloadingResults()) {
       <app-loader />
-    }
-
-    @if (view() === 'grid') {
-      @if (results.length > 0) {
-        <div class="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          @for (result of results(); track $index) {
-            <app-my-result-grid-card
-              [result]="result"
-              (viewEvent)="uploadResults()"
-            />
-          }
-        </div>
-      } @else {
-        <app-empty-state
-          iconSrc="images/general/empty-doc.svg"
-          description="You have no results"
-        />
-      }
     } @else {
-      @if (results.length > 0) {
-        @for (result of results(); track $index) {
-          <div>
-            <app-my-result-list-card
-              [result]="result"
-              (viewEvent)="uploadResults()"
-            />
+      @if (results().length > 0) {
+        <!-- GRID VIEW -->
+        @if (view() === 'grid') {
+          <div class="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            @for (result of results(); track $index) {
+              <app-my-result-grid-card
+                [result]="result"
+                (viewEvent)="viewResult($event)"
+              />
+            }
           </div>
+        }
+
+        <!-- LIST VIEW -->
+        @if (view() === 'list') {
+          @for (result of results(); track $index) {
+            <div>
+              <app-my-result-list-card
+                [result]="result"
+                (viewEvent)="viewResult($event)"
+              />
+            </div>
+          }
         }
       } @else {
         <app-empty-state

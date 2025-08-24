@@ -1,7 +1,7 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { EmptyStateComponent } from '../../../../@shared/components/empty-state/empty-state.component';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
@@ -13,6 +13,7 @@ import {
 } from '../../../../@shared/components/segment-switcher/segment-switcher.component';
 import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
 import { RoleEnum } from '../../../auth/model/auth.model';
+import { IResult } from '../../../result-management/models/results.model';
 import { ResultsService } from '../../../result-management/services/results.service';
 import { MyResultGridCardComponent } from '../../components/my-result-grid-card/my-result-grid-card.component';
 import { MyResultListCardComponent } from '../../components/my-result-list-card/my-result-list-card.component';
@@ -30,6 +31,7 @@ import { MyResultListCardComponent } from '../../components/my-result-list-card/
     SegmentSwitcherComponent,
     LoaderComponent,
     EmptyStateComponent,
+    RouterLink,
   ],
   templateUrl: './my-results.component.html',
   styleUrl: './my-results.component.scss',
@@ -144,7 +146,10 @@ export class MyResultsComponent implements OnInit {
     this.getResults();
   }
 
-  uploadResults() {
-    this.router.navigate(['/upload-result'], { relativeTo: this.route });
+  viewResult(result: IResult) {
+    this.router.navigate(['upload-result'], {
+      queryParams: { resultId: result._id },
+      relativeTo: this.route,
+    });
   }
 }

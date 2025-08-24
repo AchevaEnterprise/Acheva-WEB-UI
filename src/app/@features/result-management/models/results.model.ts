@@ -1,3 +1,6 @@
+import { IDepartment, ISchool } from '../../../@core/models/school.model';
+import { ICourse } from '../../courses/models/course.model';
+
 export enum ResultStatusEnum {
   DRAFT = 'DRAFT',
   PENDING = 'PENDING',
@@ -6,18 +9,19 @@ export enum ResultStatusEnum {
 }
 
 export interface IResult {
+  _id?: string;
   session: string;
   level: string;
   semester: string;
-  department: string;
-  school: string;
+  department: IDepartment;
+  school: ISchool;
   status: ResultStatusEnum;
   uploadedBy: string;
   isApproved: boolean;
   comments: any[];
   createdAt: Date;
   updatedAt: Date;
-  course: any;
+  course: ICourse;
 }
 
 export interface ICreateResult {
