@@ -1,7 +1,7 @@
 import { Component, inject, OnDestroy, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { finalize, Subscription } from 'rxjs';
-import { NotificationService } from '../../../../@core/utility/notification.service';
+import { ToastService } from '../../../../@core/utility/toast.service';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
 import { SvgBackgroudComponent } from '../../component/svg-backgroud/svg-backgroud.component';
 import { AuthenticationService } from '../../service/auth.service';
@@ -14,11 +14,13 @@ import { AuthenticationService } from '../../service/auth.service';
 })
 export class VerifyEmailComponent implements OnDestroy {
   private readonly authService = inject(AuthenticationService);
-  private readonly notificationService = inject(NotificationService);
+  private readonly toast = inject(ToastService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 
-  email = this.route.snapshot.queryParamMap.get('email');
+  email = signal(this.route.snapshot.queryParamMap.get('email'));
+  accountId = signal(this.route.snapshot.queryParamMap.get('accountId'));
+
   isLoading = signal(false);
   private readonly sub: Subscription = new Subscription();
 
@@ -30,12 +32,12 @@ export class VerifyEmailComponent implements OnDestroy {
     this.isLoading.set(true);
     this.sub.add(
       this.authService
-        .resendEmailVerification(this.email!)
+        .resendEmailVerification(this.email()!)
         .pipe(finalize(() => this.isLoading.set(false)))
         .subscribe({
           next: (res) => {
             if (res.status) {
-              this.notificationService.showNotification(
+              this.toast.showNotification(
                 'success',
                 'Verification Email Sent',
                 'An email verification has been sent'
@@ -47,7 +49,11 @@ export class VerifyEmailComponent implements OnDestroy {
   }
 
   continue() {
-    this.router.navigate(['/auth/confirm-email']);
+    this.router.navigate(['/auth/confirm-email'], {
+      queryParams: {
+        accountId: this.accountId() as string,
+      },
+    });
   }
 
   ngOnDestroy(): void {

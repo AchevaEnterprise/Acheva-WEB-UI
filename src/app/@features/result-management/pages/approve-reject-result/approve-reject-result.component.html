@@ -1,0 +1,183 @@
+<!-- ANALTYICS -->
+<div
+  class="grid grid-cols-[60%_1fr] gap-4 p-4 border-[1px] border-neutral-300 rounded-[8px]"
+>
+  <!-- FORM -->
+  <div [formGroup]="courseForm">
+    <div class="input-style-1 acheva-input w-full">
+      <p class="acva-para-2 fw-400 label-text">Courses</p>
+
+      <mat-form-field [style.width.%]="100" appearance="outline">
+        <input matInput type="text" placeholder="" formControlName="course" />
+      </mat-form-field>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div class="input-style-1 acheva-input w-full">
+        <p class="acva-para-2 fw-400 label-text">Session</p>
+
+        <mat-form-field [style.width.%]="100" appearance="outline">
+          <input
+            matInput
+            type="text"
+            placeholder=""
+            formControlName="session"
+          />
+        </mat-form-field>
+      </div>
+
+      <div class="input-style-1 acheva-input w-full">
+        <p class="acva-para-2 fw-400 label-text">Level</p>
+
+        <mat-form-field [style.width.%]="100" appearance="outline">
+          <input matInput type="text" placeholder="" formControlName="level" />
+        </mat-form-field>
+      </div>
+    </div>
+
+    <header class="mt-4 mb-3">
+      <h4 class="acva-heading-6 fw-500">Student Category</h4>
+      <p class="acva-para-1 text-neutral-500">
+        Select which type of students this course will be available for.
+      </p>
+    </header>
+
+    <!-- STUDENT CATEGORY -->
+    <mat-radio-group
+      formControlName="category"
+      aria-label="Select Student Category"
+      class="grid gap-2 lg:grid-cols-3 md:grid-cols-2 lg:grid-cols-1"
+    >
+      <div
+        class="flex flew-wrap items-start border-[1px] border-neutral-300 p-2 rounded-[8px]"
+      >
+        <mat-radio-button value="regular"></mat-radio-button>
+        <div>
+          <h4 class="fw-400 acva-para-1">Regular Students</h4>
+          <p class="acva-caption text-neutral-500">
+            Students taking the course for the first time
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="flex items-start border-[1px] border-neutral-300 p-4 rounded-[8px]"
+      >
+        <mat-radio-button value="reference"></mat-radio-button>
+        <div>
+          <h4 class="fw-400 acva-para-1">Reference Students</h4>
+          <p class="acva-caption text-neutral-500">
+            Students retaking the course
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="flex items-start border-[1px] border-neutral-300 p-4 rounded-[8px]"
+      >
+        <mat-radio-button value="unregistered"></mat-radio-button>
+        <div>
+          <h4 class="fw-400 acva-para-1">Unregistered Students</h4>
+          <p class="acva-caption text-neutral-500">
+            Students retaking the course
+          </p>
+        </div>
+      </div>
+    </mat-radio-group>
+  </div>
+
+  <app-card label="Course Analtyics" [showDivider]="true" dividerClass="!mt-4">
+    <p rightHeaderContent class="acva-para-1 text-neutral-500">
+      Average Grade <span class="text-neutral-800">0.0%</span>
+    </p>
+
+    <div content>
+      <app-analytics-chart [data]="analyticsChartData()" />
+
+      <div class="leading-[1.3rem] acva-caption text text-neutral-500 p-4">
+        <p class="flex items-center gap-4 w-full">
+          <span class="w-[20%]">Total Students</span>
+          <mat-divider class="w-full"></mat-divider>
+          <span>{{ totalStudent() || 0 }}</span>
+        </p>
+        <p class="flex items-center gap-4 w-full">
+          <span class="w-[20%]">Total Pass</span>
+          <mat-divider class="w-full"></mat-divider>
+          <span>{{ totalStudentPass() || 0 }}</span>
+        </p>
+        <p class="flex items-center gap-4 w-full">
+          <span class="w-[20%]">Total Fail</span>
+          <mat-divider class="w-full"></mat-divider>
+          <span>{{ totalStudentFail() || 0 }}</span>
+        </p>
+      </div>
+    </div>
+  </app-card>
+</div>
+
+<mat-divider class="!my-4"></mat-divider>
+
+<!-- STUDENT GRADE TABLE -->
+<div>
+  <header class="mt-4 mb-3">
+    <h4 class="acva-heading-6 fw-500">Student Grade</h4>
+  </header>
+
+  <div class="flex gap-3 items-center justify-between">
+    <app-search-input placeholder="Search students" />
+
+    <div class="flex flex-wrap justify-end gap-3 items-center">
+      <app-button
+        label="Resend"
+        class="btn-md"
+        [matMenuTriggerFor]="resendMenu"
+      />
+      <mat-menu #resendMenu="matMenu">
+        <button mat-menu-item>Resend to CC</button>
+        <button mat-menu-item>Resend to Dean</button>
+      </mat-menu>
+
+      <app-button
+        label="Approve"
+        icon="icons/general/approve-btn-icon.svg"
+        class="btn-md"
+        (clickEvent)="approve()"
+      />
+      <app-button
+        label="Reject"
+        type="outline"
+        icon="icons/general/reject-btn-icon.svg"
+        class="btn-md btn-error"
+        (clickEvent)="reject()"
+      />
+    </div>
+  </div>
+
+  <app-segment-switcher
+    [activeSegment]="activeSegment()"
+    [segments]="segments()"
+    (switchEvent)="switchSegment($event)"
+  />
+
+  <div class="mt-4">
+    <!-- <app-empty-state
+          iconSrc="images/general/empty-doc.svg"
+          description="Your drafts is empty, create a course and input results to fill this page"
+        /> -->
+
+    @switch (activeSegment().value) {
+      @case ('regular') {
+        <app-regular-table-result-upload
+          [students]="students()"
+          #regularTableResultUploadRef
+        />
+      }
+      @case ('reference') {
+        <app-reference-table-result-upload />
+      }
+      @case ('unregistered') {
+        <app-reference-table-result-upload />
+      }
+    }
+  </div>
+</div>

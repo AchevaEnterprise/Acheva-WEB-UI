@@ -28,9 +28,8 @@ export class ToastComponent {
   snackBarRef = inject(MatSnackBarRef);
   progress = signal<number>(0);
 
-  public readonly data: IAppNotification = inject(
-    MAT_SNACK_BAR_DATA
-  ) as IAppNotification;
+  public readonly data: IAppNotification =
+    inject<IAppNotification>(MAT_SNACK_BAR_DATA);
 
   ngOnInit() {
     const duration = 5000;

@@ -11,4 +11,14 @@ export const routes: Routes = [
         (m) => m.ResultManagementComponent
       ),
   },
+  {
+    path: 'verify-result',
+    data: {
+      title: 'Result Management',
+    },
+    loadComponent: () =>
+      import(
+        './pages/approve-reject-result/approve-reject-result.component'
+      ).then((m) => m.ApproveRejectResultComponent),
+  },
 ];

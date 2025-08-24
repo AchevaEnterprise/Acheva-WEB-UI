@@ -1,1 +1,112 @@
-<p>history works!</p>
+<div id="container">
+  <h3 class="acva-heading-5 fw-500">History</h3>
+  <p class="text-gray-400 text-sm">
+    This allows you access to all the results sent to you alongside details
+    peculiar to each.
+  </p>
+
+  <div class="mt-8">
+    <!-- SEARCH FILTERS -->
+    <div class="flex flex-wrap justify-between gap-3">
+      <div class="flex flex-wrap gap-3">
+        <app-search-input placeholder="Search course or coordinators" />
+
+        <div class="input-style-1 acheva-input">
+          <mat-form-field [style.width.%]="100" appearance="outline">
+            <span matPrefix>
+              <app-svg
+                svgWidth="1.3rem"
+                svgHeight="1.3rem"
+                src="icons/general/filter-icon.svg"
+              ></app-svg>
+            </span>
+
+            <mat-select placeholder="Filter">
+              <mat-option [value]="'Science'">Science</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <div [formGroup]="dateFilters" class="flex gap-3 items-baseline">
+        <div class="input-style-1 acheva-input">
+          <mat-form-field [style.width.%]="100" appearance="outline">
+            <input
+              matInput
+              [matDatepicker]="startPicker"
+              [min]="today"
+              formControlName="startDate"
+            />
+            <mat-datepicker-toggle
+              matIconSuffix
+              [for]="startPicker"
+            ></mat-datepicker-toggle>
+            <mat-datepicker #startPicker></mat-datepicker>
+          </mat-form-field>
+        </div>
+        to
+        <div class="input-style-1 acheva-input">
+          <mat-form-field [style.width.%]="100" appearance="outline">
+            <input
+              matInput
+              [matDatepicker]="endPicker"
+              [min]="today"
+              formControlName="endDate"
+            />
+            <mat-datepicker-toggle
+              matIconSuffix
+              [for]="endPicker"
+            ></mat-datepicker-toggle>
+            <mat-datepicker #endPicker></mat-datepicker>
+          </mat-form-field>
+        </div>
+
+        <app-button
+          label="Apply Filter"
+          class="btn-md"
+          (clickEvent)="applyDateFilters()"
+        />
+      </div>
+    </div>
+
+    <!-- <app-empty-state
+          iconSrc="images/general/empty-doc.svg"
+          description="Your drafts is empty, create a course and input results to fill this page"
+        /> -->
+
+    <div class="w-full overflow-auto">
+      <table mat-table [dataSource]="dataSource()">
+        <ng-container matColumnDef="courseCode">
+          <th mat-header-cell *matHeaderCellDef>COURSE CODE</th>
+          <td mat-cell *matCellDef="let element">
+            {{ element.courseCode }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="courseTitle">
+          <th mat-header-cell *matHeaderCellDef>COURSE TITLE</th>
+          <td mat-cell *matCellDef="let element">
+            {{ element.courseTitle }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>STATUS</th>
+          <td mat-cell *matCellDef="let element">
+            <app-status-badge type="pass" [status]="element.status || 'Pass'" />
+          </td>
+        </ng-container>
+
+        <tr
+          mat-header-row
+          *matHeaderRowDef="displayedColumns; sticky: true"
+        ></tr>
+        <tr
+          mat-row
+          *matRowDef="let row; columns: displayedColumns"
+          (click)="previewHistory(row)"
+        ></tr>
+      </table>
+    </div>
+  </div>
+</div>

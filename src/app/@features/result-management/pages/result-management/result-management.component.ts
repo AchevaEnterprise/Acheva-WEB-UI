@@ -1,72 +1,62 @@
-import { SelectionModel } from '@angular/cdk/collections';
-import { DatePipe, NgClass } from '@angular/common';
-import { Component, inject, signal } from '@angular/core';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatMenuModule } from '@angular/material/menu';
-import { MatSelectModule } from '@angular/material/select';
-import { MatTableModule } from '@angular/material/table';
+import { NgClass } from '@angular/common';
+import { Component, inject, OnInit, signal } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { COURSES } from '../../../../@core/constant/course-mock';
+import { ActivatedRoute, Router } from '@angular/router';
+import { RoleAccessDirective } from '../../../../@core/directives/role-access.directive';
 import { CardComponent } from '../../../../@shared/components/card/card.component';
+import { ConfirmationComponent } from '../../../../@shared/components/confirmation/confirmation.component';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
-import { PaginatorComponent } from '../../../../@shared/components/paginator/paginator.component';
 import {
   ISegmentSwitcher,
   SegmentSwitcherComponent,
 } from '../../../../@shared/components/segment-switcher/segment-switcher.component';
-import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
 import { RoleEnum } from '../../../auth/model/auth.model';
+import { AuthenticationService } from '../../../auth/service/auth.service';
 import { ICourse } from '../../../courses/models/course.model';
 import { CommentComponent } from '../../components/comment/comment.component';
+import { ResultManagementFileTableComponent } from '../../components/result-management-file-table/result-management-file-table.component';
+import { ResultManagementFolderTableComponent } from '../../components/result-management-folder-table/result-management-folder-table.component';
 import { ResultStatusTrackingComponent } from '../../components/result-status-tracking/result-status-tracking.component';
-import { Router } from '@angular/router';
+import { IResult } from '../../models/results.model';
+import { ResultsService } from '../../services/results.service';
 
 @Component({
   selector: 'app-result-management',
   imports: [
     NgClass,
-    SvgComponent,
-    MatTableModule,
     SegmentSwitcherComponent,
-    DatePipe,
-    MatSelectModule,
-    MatFormFieldModule,
-    CardComponent,
-    MatMenuModule,
     ButtonComponent,
     ResultStatusTrackingComponent,
-    MatCheckboxModule,
-    PaginatorComponent,
     CommentComponent,
     MatTooltipModule,
+    CardComponent,
+    ResultManagementFolderTableComponent,
+    ResultManagementFileTableComponent,
+    RoleAccessDirective,
   ],
   templateUrl: './result-management.component.html',
   styleUrl: './result-management.component.scss',
 })
-export class ResultManagementComponent {
+export class ResultManagementComponent implements OnInit {
+  private readonly dialog = inject(MatDialog);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+  private readonly resultService = inject(ResultsService);
+  private readonly authService = inject(AuthenticationService);
 
-  displayedColumns: string[] = [
-    'select',
-    'courseCode',
-    'courseTitle',
-    'session',
-    'department',
-    'faculty',
-  ];
-  dataSource = signal<ICourse[]>(COURSES);
-  selection = new SelectionModel<ICourse>(true, []);
+  results = signal<IResult[]>([]);
+  currentRole = signal<RoleEnum>(this.authService.activeAccount()!.role);
 
   segments = signal<ISegmentSwitcher[]>([
     {
       label: 'Drafts',
-      value: 'drafts',
+      value: 'DRAFT',
       accessRole: [RoleEnum.LECTURER, RoleEnum.COURSE_COORDINATOR],
     },
     {
       label: 'Pending',
-      value: 'pending',
+      value: 'PENDING',
       accessRole: [
         RoleEnum.HOD,
         RoleEnum.COURSE_COORDINATOR,
@@ -75,7 +65,7 @@ export class ResultManagementComponent {
     },
     {
       label: 'Unverified',
-      value: 'unverified',
+      value: 'UNVERIFIED',
       accessRole: [
         RoleEnum.DEAN,
         RoleEnum.HOD,
@@ -85,7 +75,7 @@ export class ResultManagementComponent {
     },
     {
       label: 'Verified',
-      value: 'verified',
+      value: 'VERIFIED',
       accessRole: [
         RoleEnum.DEAN,
         RoleEnum.HOD,
@@ -96,7 +86,7 @@ export class ResultManagementComponent {
     },
     {
       label: 'Published',
-      value: 'published',
+      value: 'PUBLISHED',
       accessRole: [
         RoleEnum.DEAN,
         RoleEnum.HOD,
@@ -107,51 +97,42 @@ export class ResultManagementComponent {
     },
     {
       label: 'Imported',
-      value: 'imported',
+      value: 'IMPORTED',
       accessRole: [RoleEnum.DEAN, RoleEnum.HOD, RoleEnum.COURSE_ADVISOR],
     },
   ]);
-  activeSegment = signal<ISegmentSwitcher>(this.segments()[0]);
+  activeSegment = signal<ISegmentSwitcher>(
+    this.currentRole() === RoleEnum.HOD
+      ? this.segments()[1]
+      : this.segments()[0]
+  );
   segmentCardLabel = signal<string>('Access your recent drafts from here');
   segmentCardIconSrc = signal<string>('icons/general/draft-icon.svg');
 
   expandView = signal<boolean>(false);
 
+  RoleEnum = RoleEnum;
+
+  ngOnInit(): void {
+    this.getResults();
+  }
+
+  getResults() {
+    this.resultService
+      .getResults({
+        status: this.activeSegment().value,
+      })
+      .subscribe({
+        next: (resp) => {
+          if (resp.status) {
+            this.results.set(resp.data.result);
+          }
+        },
+      });
+  }
+
   toggleView() {
     this.expandView.update((prev) => !prev);
-
-    if (this.expandView()) {
-      this.displayedColumns.push('uploadedDate', 'sentDate', 'actions');
-    } else {
-      this.displayedColumns = this.displayedColumns.filter(
-        (col) => !['uploadedDate', 'sentDate', 'actions'].includes(col)
-      );
-    }
-  }
-
-  /** Whether the number of selected elements matches the total number of rows. */
-  isAllSelected() {
-    const numSelected = this.selection.selected.length;
-    const numRows = this.dataSource().length;
-    return numSelected === numRows;
-  }
-
-  /** Selects all rows if they are not all selected; otherwise clear selection. */
-  toggleAllRows() {
-    if (this.isAllSelected()) {
-      this.selection.clear();
-      return;
-    }
-
-    this.selection.select(...this.dataSource());
-  }
-
-  /** The label for the checkbox on the passed row */
-  checkboxLabel(row?: ICourse): string {
-    if (!row) {
-      return `${this.isAllSelected() ? 'deselect' : 'select'} all`;
-    }
-    return `${this.selection.isSelected(row) ? 'deselect' : 'select'} row ${row.courseCode + 1}`;
   }
 
   switchSegment(switchValue: ISegmentSwitcher['value']) {
@@ -163,35 +144,76 @@ export class ResultManagementComponent {
     );
 
     switch (switchValue) {
-      case 'drafts': {
+      case 'DRAFT': {
         this.segmentCardLabel.set('Access your recent drafts from here');
         this.segmentCardIconSrc.set('icons/general/draft-icon.svg');
         break;
       }
-      case 'pending': {
+      case 'PENDING': {
         this.segmentCardLabel.set('Access your pending results from here');
         this.segmentCardIconSrc.set('icons/general/pending-icon.svg');
         break;
       }
-      case 'unverified': {
+      case 'UNVERIFIED': {
         this.segmentCardLabel.set('Access your unverified results from here');
         this.segmentCardIconSrc.set('icons/general/unverified-icon.svg');
         break;
       }
-      case 'verified': {
+      case 'VERIFIED': {
         this.segmentCardLabel.set('Access your verified results from here');
         this.segmentCardIconSrc.set('icons/general/verified-icon.svg');
         break;
       }
-      case 'published': {
+      case 'PUBLISHED': {
         this.segmentCardLabel.set('Access your published results from here');
         this.segmentCardIconSrc.set('icons/general/published-icon.svg');
         break;
       }
     }
+
+    this.getResults();
   }
 
-  viewResultDetails(course: ICourse) {
-    this.router.navigate(['courses/result-upload']);
+  sendToCC() {
+    this.dialog
+      .open(ConfirmationComponent, {
+        width: '600px',
+        data: {
+          message: `You're about to send this result to the Course Coordinator. This action is irreversible, Are you sure you want to continue?`,
+        },
+      })
+      .afterClosed()
+      .subscribe({
+        next: (file: File | null) => {
+          if (file) {
+            console.warn('Uploaded File: ', file);
+          }
+        },
+      });
+  }
+
+  sendToHOD() {
+    this.dialog
+      .open(ConfirmationComponent, {
+        width: '600px',
+        data: {
+          message: `You're about to send this result to the Head of Department. This action is irreversible, Are you sure you want to continue?`,
+        },
+      })
+      .afterClosed()
+      .subscribe({
+        next: (file: File | null) => {
+          if (file) {
+            console.warn('Uploaded File: ', file);
+          }
+        },
+      });
+  }
+
+  viewResult(course: ICourse) {
+    this.router.navigate(['verify-result'], {
+      relativeTo: this.route,
+      queryParams: { resultId: course._id },
+    });
   }
 }

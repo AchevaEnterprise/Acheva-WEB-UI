@@ -1,24 +1,28 @@
 import { NgClass } from '@angular/common';
 import { Component, input, output } from '@angular/core';
+import { RoleAccessDirective } from '../../../@core/directives/role-access.directive';
+import { LevelsEnum } from '../../../@core/models/school.model';
 import { RoleEnum } from '../../../@features/auth/model/auth.model';
 
 export interface ISegmentSwitcher {
   label: string;
   value:
-    | 'drafts'
-    | 'pending'
-    | 'unverified'
-    | 'verified'
-    | 'published'
-    | 'imported'
+    | 'DRAFT'
+    | 'PENDING'
+    | 'UNVERIFIED'
+    | 'VERIFIED'
+    | 'PUBLISHED'
+    | 'IMPORTED'
     | 'regular'
-    | 'reference';
-  accessRole: RoleEnum[];
+    | 'unregistered'
+    | 'reference'
+    | LevelsEnum;
+  accessRole?: RoleEnum[];
 }
 
 @Component({
   selector: 'app-segment-switcher',
-  imports: [NgClass],
+  imports: [NgClass, RoleAccessDirective],
   templateUrl: './segment-switcher.component.html',
   styleUrl: './segment-switcher.component.scss',
 })

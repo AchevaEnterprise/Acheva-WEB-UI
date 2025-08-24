@@ -62,14 +62,42 @@
       description="View course details by selecting a course with the session and level you want to work on"
     /> -->
 
+    @if (isloadingResults()) {
+      <app-loader />
+    }
+
     @if (view() === 'grid') {
-      <div class="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <app-my-result-grid-card (viewEvent)="uploadResults()" />
-      </div>
+      @if (results.length > 0) {
+        <div class="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          @for (result of results(); track $index) {
+            <app-my-result-grid-card
+              [result]="result"
+              (viewEvent)="uploadResults()"
+            />
+          }
+        </div>
+      } @else {
+        <app-empty-state
+          iconSrc="images/general/empty-doc.svg"
+          description="You have no results"
+        />
+      }
     } @else {
-      <div>
-        <app-my-result-list-card (viewEvent)="uploadResults()" />
-      </div>
+      @if (results.length > 0) {
+        @for (result of results(); track $index) {
+          <div>
+            <app-my-result-list-card
+              [result]="result"
+              (viewEvent)="uploadResults()"
+            />
+          </div>
+        }
+      } @else {
+        <app-empty-state
+          iconSrc="images/general/empty-doc.svg"
+          description="You have no results"
+        />
+      }
     }
   </div>
 </div>

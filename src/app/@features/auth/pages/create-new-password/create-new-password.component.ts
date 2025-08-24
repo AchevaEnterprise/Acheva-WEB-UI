@@ -8,9 +8,9 @@ import {
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Router } from '@angular/router';
 import { debounceTime, finalize, Subscription } from 'rxjs';
-import { NotificationService } from '../../../../@core/utility/notification.service';
+import { ToastService } from '../../../../@core/utility/toast.service';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
 import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
 import { PasswordValidityComponent } from '../../component/password-validity/password-validity.component';
@@ -35,11 +35,8 @@ import { AuthenticationService } from '../../service/auth.service';
 })
 export class CreateNewPasswordComponent implements OnInit, OnDestroy {
   private readonly authService = inject(AuthenticationService);
-  private readonly notificationService = inject(NotificationService);
+  private readonly toast = inject(ToastService);
   private readonly router = inject(Router);
-  private readonly route = inject(ActivatedRoute);
-
-  token = this.route.snapshot.queryParamMap.get('token');
 
   showPassword = signal<boolean>(false);
   showConfirmPassword = signal<boolean>(false);
@@ -91,7 +88,7 @@ export class CreateNewPasswordComponent implements OnInit, OnDestroy {
 
     this.isLoading.set(true);
     const payload: IResetPassword = {
-      token: this.token!,
+      // token: this.token!,
       password,
       confirmPassword: confirm_password,
     };
@@ -103,7 +100,7 @@ export class CreateNewPasswordComponent implements OnInit, OnDestroy {
         .subscribe({
           next: (resp) => {
             if (resp.status) {
-              this.notificationService.showNotification(
+              this.toast.showNotification(
                 'success',
                 'Password Reset',
                 'Your password reset is successful'

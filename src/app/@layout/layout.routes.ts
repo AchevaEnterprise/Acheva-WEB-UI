@@ -75,10 +75,40 @@ export const routes: Routes = [
         data: {
           title: 'User Settings',
         },
-        loadComponent: () =>
-          import('../@features/user-settings/user-settings.component').then(
-            (m) => m.UserSettingsComponent
+        loadChildren: () =>
+          import('../@features/user-settings/user-settings.routes').then(
+            (m) => m.routes
           ),
+      },
+      {
+        path: 'history',
+        data: {
+          title: 'History',
+        },
+        loadComponent: () =>
+          import('../@features/history/pages/history/history.component').then(
+            (m) => m.HistoryComponent
+          ),
+      },
+      {
+        path: 'students',
+        data: {
+          title: 'Students',
+        },
+        loadComponent: () =>
+          import(
+            '../@features/students/pages/students/students.component'
+          ).then((m) => m.StudentsComponent),
+      },
+      {
+        path: 'dues-management',
+        data: {
+          title: 'Dues Management',
+        },
+        loadComponent: () =>
+          import(
+            '../@features/dues-management/pages/dues-management/dues-management.component'
+          ).then((m) => m.DuesManagementComponent),
       },
     ],
   },

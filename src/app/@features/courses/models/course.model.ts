@@ -1,15 +1,40 @@
+import { LevelsEnum } from '../../../@core/models/school.model';
+
 export interface ICourse {
+  _id?: string;
+  session?: string;
+  semester: string;
+  courseTitle: string;
+  courseCode: string;
+  faculty: string;
+  department: string;
+  school: string;
+  level: string;
+  courseCordinator?: string;
+  courseLoad: number;
+  lecturer: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ICreateCourse {
+  semester: string;
+  courseTitle: string;
+  courseLoad: number;
+  courseCode: string;
+  faculty: string;
+  department: string;
+  level: string;
+}
+
+export interface ICourseQuery {
   courseCode: string;
   courseTitle: string;
-  session: string;
-  department: string;
-  faculty: string;
-  uploadedDate: Date;
-  sentDate: Date;
-  modifiedDate: Date;
+  level: LevelsEnum;
 }
 
 export interface ICourseTemplate {
+  id: string;
   course_title: string;
   course_code: string;
   course_cordinator: string;

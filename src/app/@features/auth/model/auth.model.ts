@@ -20,7 +20,8 @@ export interface ISignUp {
   confirmPassword: string;
   faculty: string;
   department: string;
-  title: string | string[];
+  school: string;
+  title?: string | string[];
   role: RoleEnum;
 }
 
@@ -29,6 +30,7 @@ export interface IAuthProfile {
   firstname: string;
   lastname: string;
   email: string;
+  school: string;
   faculty: string;
   department: string;
   role: RoleEnum;
@@ -42,12 +44,15 @@ export interface IAccount {
   id: string;
   firstname: string;
   lastname: string;
+  school: string;
+  faculty: string;
+  department: string;
   email: string;
   role: RoleEnum;
 }
 
 export interface IResetPassword {
-  token: string;
+  // token: string;
   password: string;
   confirmPassword: string;
 }

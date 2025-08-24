@@ -4,7 +4,11 @@
   <h3 class="acva-heading-6 fw-500">{{ pageTitle() }}</h3>
 
   <div class="flex items-center gap-4">
-    <button class="cursor-pointer" [matBadge]="badgeCount()">
+    <button
+      class="cursor-pointer"
+      [matBadge]="badgeCount()"
+      (click)="openNotification()"
+    >
       <app-svg
         svgWidth="1.5rem"
         svgHeight="1.5rem"
@@ -24,8 +28,27 @@
       />
 
       <p>
-        Engr. Daniel Chika <br />
-        <span class="text-neutral-300 text-sm">Course Cordinator</span>
+        {{ activeAccount()?.firstname }} {{ activeAccount()?.lastname }}
+        <br />
+        <span class="text-neutral-300 text-sm">
+          @switch (activeAccount()?.role) {
+            @case (RoleEnum.COURSE_ADVISOR) {
+              Course Advisor
+            }
+            @case (RoleEnum.COURSE_COORDINATOR) {
+              Course Co-ordinator
+            }
+            @case (RoleEnum.DEAN) {
+              Dean
+            }
+            @case (RoleEnum.HOD) {
+              HOD
+            }
+            @case (RoleEnum.LECTURER) {
+              Lecturer
+            }
+          }
+        </span>
       </p>
     </div>
     <mat-menu #menu="matMenu">

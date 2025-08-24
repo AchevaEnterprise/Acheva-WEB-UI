@@ -1,4 +1,4 @@
-import { Component, output } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
@@ -10,6 +10,7 @@ import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
   styleUrl: './my-result-grid-card.component.scss',
 })
 export class MyResultGridCardComponent {
+  result = input<any>();
   viewEvent = output();
 
   viewResult() {

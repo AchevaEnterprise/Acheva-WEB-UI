@@ -5,8 +5,11 @@ import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs';
 import { ImageFallbackDirective } from '../../@core/directives/image-fallback.directive';
 import { UtilityService } from '../../@core/utility/utility.service';
-import { SvgComponent } from '../../@shared/components/svg/svg.component';
+import { RoleEnum } from '../../@features/auth/model/auth.model';
 import { AuthenticationService } from '../../@features/auth/service/auth.service';
+import { SvgComponent } from '../../@shared/components/svg/svg.component';
+import { MatDialog } from '@angular/material/dialog';
+import { NotificationsComponent } from '../../@features/notifications/notifications.component';
 
 @Component({
   selector: 'app-tool-bar',
@@ -22,14 +25,18 @@ import { AuthenticationService } from '../../@features/auth/service/auth.service
 export class ToolBarComponent {
   private readonly authService = inject(AuthenticationService);
   private readonly utillityService = inject(UtilityService);
+  private readonly dialog = inject(MatDialog);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
   switchAccountEvent = output<string>();
+  activeAccount = this.authService.activeAccount;
   accounts = this.authService.accounts;
 
+  RoleEnum = RoleEnum;
+
   pageTitle = signal<string>('');
-  badgeCount = signal<string>(this.utillityService.formatCount(10));
+  badgeCount = signal<string>(this.utillityService.formatCount(0));
 
   constructor() {
     this.router.events
@@ -48,5 +55,13 @@ export class ToolBarComponent {
 
   switchAccount(accountId: string) {
     this.switchAccountEvent.emit(accountId);
+  }
+
+  openNotification() {
+    this.dialog.open(NotificationsComponent, {
+      width: '30%',
+      height: '98%',
+      position: { right: '10px' },
+    });
   }
 }

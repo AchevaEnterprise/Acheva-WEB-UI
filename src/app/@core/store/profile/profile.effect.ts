@@ -6,6 +6,7 @@ import { IAuthProfile } from '../../../@features/auth/model/auth.model';
 import { AuthenticationService } from '../../../@features/auth/service/auth.service';
 import {
   loadProfile,
+  loadProfileLinkedAccounts,
   saveProfile,
   saveProfileError,
   saveProfileErrorLinkedAccounts,
@@ -24,7 +25,7 @@ export class ProfileEffects {
         this.authService.getProfile().pipe(
           map((resp: any) => {
             if (resp.success)
-              return saveProfile({ profile: resp.data as IAuthProfile });
+              return saveProfile({ profile: resp.data.data as IAuthProfile });
             else return saveProfileError({ error: resp.message as string });
           }),
           catchError((error) =>
@@ -37,7 +38,7 @@ export class ProfileEffects {
 
   getLinkedAccounts$ = createEffect(() => {
     return this.actions$.pipe(
-      ofType(loadProfile),
+      ofType(loadProfileLinkedAccounts),
       mergeMap(() =>
         this.authService.getLinkedAccounts().pipe(
           map((resp) => {

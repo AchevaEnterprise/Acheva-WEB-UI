@@ -2,5 +2,5 @@ export const environment = {
   production: false,
   staging: true,
   development: false,
-  BASE_URL: '',
+  BASE_URL: 'https://acheva-nestjs-production.up.railway.app',
 };

@@ -1,0 +1,24 @@
+<h2 mat-dialog-title>Assign Course Coordinator</h2>
+
+<mat-dialog-content [formGroup]="form">
+  <p class="acva-caption mb-8">
+    Select a lecturer to assign as the Course Coordinator for
+    {{ data.courseCode }} ({{ data.courseTitle }}).
+  </p>
+
+  <div class="input-style-1 acheva-input w-full">
+    <p class="acva-para-2 fw-400 label-text">Name of Lecturer</p>
+
+    <app-search-select
+      placeholder="Select a lecturer"
+      formControlName="lecturer"
+      [options]="lecturers()"
+      (searchEvent)="searchLecturer($event)"
+    />
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions class="gap-4">
+  <app-button label="Cancel" type="outline" (clickEvent)="cancel()" />
+  <app-button label="Assign" (clickEvent)="assign()" />
+</mat-dialog-actions>

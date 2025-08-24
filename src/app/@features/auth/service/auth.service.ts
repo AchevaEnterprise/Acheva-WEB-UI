@@ -28,6 +28,7 @@ export class AuthenticationService {
   private readonly jwtHelper: JwtHelperService = new JwtHelperService();
 
   private readonly authUrl = `${environment.BASE_URL}/auth`;
+  private readonly baseUrl = `${environment.BASE_URL}`;
 
   accounts = signal<IAccount[]>([]);
   activeAccount = signal<IAccount | null>(null);
@@ -51,7 +52,7 @@ export class AuthenticationService {
   public get isAuthenticated(): boolean {
     const token = this.getToken;
 
-    if (token) return this.jwtHelper.isTokenExpired(token);
+    if (token && !this.jwtHelper.isTokenExpired(token)) return true;
     return false;
   }
 
@@ -69,6 +70,10 @@ export class AuthenticationService {
 
           // Sets the signal state for the active account
           this.activeAccount.set(resp.data);
+          localStorage.setItem(
+            STORAGE_KEYS.ACTIVE_ACCOUNT,
+            JSON.stringify(this.activeAccount())
+          );
 
           this.store.dispatch(
             saveProfile({
@@ -87,7 +92,28 @@ export class AuthenticationService {
   }
 
   public getProfile() {
-    return of(null);
+    const userId = this.activeAccount()?.id;
+    if (!userId) {
+      return of({
+        status: false,
+        message: 'User ID not found',
+        data: null,
+      } as IAPIResponse<any>);
+    }
+
+    return this.http
+      .get<IAPIResponse<any>>(`${this.baseUrl}/lecturers/${userId}`)
+      .pipe(
+        tap((resp) => {
+          if (resp.status) {
+            this.activeAccount.set(resp.data.data as IAccount);
+            localStorage.setItem(
+              STORAGE_KEYS.ACTIVE_ACCOUNT,
+              JSON.stringify(this.activeAccount())
+            );
+          }
+        })
+      );
   }
 
   loadInitialSession() {
@@ -123,8 +149,8 @@ export class AuthenticationService {
       );
   }
 
-  forgotPassword(email: string): Observable<IAPIResponse<{ message: string }>> {
-    return this.http.post<IAPIResponse<{ message: string }>>(
+  forgotPassword(email: string): Observable<IAPIResponse<any>> {
+    return this.http.post<IAPIResponse<any>>(
       `${this.authUrl}/forgot-password`,
       { email },
       { params: { accountType: 'LECTURER' } }
@@ -139,9 +165,12 @@ export class AuthenticationService {
     );
   }
 
-  confirmCode(token: string): Observable<IAPIResponse<{ token: string }>> {
+  confirmCode(
+    accountId: string,
+    token: string
+  ): Observable<IAPIResponse<{ token: string }>> {
     return this.http.patch<IAPIResponse<{ token: string }>>(
-      `${this.authUrl}/verify-email`,
+      `${this.authUrl}/verify-email/${accountId}`,
       { token }
     );
   }

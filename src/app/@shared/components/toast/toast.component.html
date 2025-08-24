@@ -10,6 +10,14 @@
       ></app-svg>
     }
 
+    @if (data.type === 'error') {
+      <app-svg
+        svgWidth="2rem"
+        svgHeight="2rem"
+        src="icons/general/failure-icon.svg"
+      ></app-svg>
+    }
+
     <div matSnackBarLabel class="flex-1">
       <h3 class="acva-heading-6 text-black">{{ data.title }}</h3>
       <p class="acva-para-1 text-neutral-500">{{ data.message }}</p>

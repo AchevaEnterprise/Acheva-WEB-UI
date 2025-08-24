@@ -1,13 +1,23 @@
 <ul class="list-style-none">
   @for (timeline of timelines(); track $index) {
     <li class="mb-8 flex gap-3 items-center">
-      <span>
-        <app-svg
-          svgWidth="1.3rem"
-          svgHeight="1.3rem"
-          src="icons/menu/courses-inactive.svg"
-        ></app-svg>
-      </span>
+      @if (timeline.active) {
+        <span>
+          <app-svg
+            svgWidth="2rem"
+            svgHeight="2rem"
+            [src]="timeline.activeIcon"
+          ></app-svg>
+        </span>
+      } @else {
+        <span>
+          <app-svg
+            svgWidth="2rem"
+            svgHeight="2rem"
+            [src]="timeline.inactiveIcon"
+          ></app-svg>
+        </span>
+      }
 
       <div>
         <p class="acva-para-2">{{ timeline.status }}</p>

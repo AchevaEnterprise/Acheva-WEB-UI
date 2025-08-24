@@ -3,11 +3,10 @@
 >
   <div>
     <h4 class="acva-clamp-2 acva-heading-6 fw-500">
-      {{ courseTemplate()?.course_title }}
+      {{ course()?.courseTitle }}
     </h4>
     <p class="text-neutral-500">
-      {{ courseTemplate()?.course_code }} -
-      {{ courseTemplate()?.course_unit }} Unit(s)
+      {{ course()?.courseCode }} - {{ course()?.courseLoad }} Unit(s)
     </p>
 
     <div class="my-4 grid gap-[8px]">
@@ -17,7 +16,7 @@
           svgHeight="1rem"
           src="icons/general/calendar-icon.svg"
         ></app-svg>
-        {{ courseTemplate()?.semester }} - {{ courseTemplate()?.session }}
+        {{ course()?.semester }}
       </p>
 
       <p class="text-neutral-400 text-sm flex items-center gap-2">
@@ -26,7 +25,7 @@
           svgHeight="1rem"
           src="icons/general/role-icon.svg"
         ></app-svg
-        >{{ courseTemplate()?.level }}
+        >{{ course()?.level }}
       </p>
 
       <p class="text-neutral-400 text-sm flex items-center gap-2">
@@ -35,7 +34,7 @@
           svgHeight="1rem"
           src="icons/general/building-icon.svg"
         ></app-svg
-        >{{ courseTemplate()?.department }}
+        >{{ course()?.department }}
       </p>
     </div>
   </div>

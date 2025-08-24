@@ -1,5 +1,7 @@
 <div>
-  <h1 class="acva-heading-4 fw-500">{{ '' | greeting }}, Daniel👋</h1>
+  <h1 class="acva-heading-4 fw-500">
+    {{ '' | greeting }}, {{ activeAccount()?.firstname }}👋
+  </h1>
   <p class="acva-para-1 text-neutral-500">
     Create and initiate result approval process
   </p>
@@ -8,7 +10,7 @@
 <!-- ANALYTICS -->
 <div class="grid grid-cols-[repeat(auto-fit,_minmax(0,_1fr))] gap-4 mt-4">
   @for (data of analtyics(); track $index) {
-    <app-analytics-card [analtyics]="data" />
+    <app-analytics-card [analtyics]="data" *appRoleAccess="data.accessRole" />
   }
 </div>
 
@@ -47,7 +49,7 @@
 
       <div content class="p-4">
         <div class="flex flex-wrap justify-between items-end">
-          <div class="flex gap-4">
+          <div class="flex flex-wrap gap-4">
             <div class="input-style-1 acheva-input">
               <p class="acva-para-2 fw-400 label-text">Faculty</p>
 
@@ -179,7 +181,7 @@
 </div>
 
 <!-- ACADEMIC CALENDAR -->
-<div class="mt-8 grid grid-cols-2 gap-4">
+<div class="mt-8 grid lg:grid-cols-2 md:grid-cols-1 sm:grid-cols-1 gap-4">
   <app-card
     label="Academic Calendar"
     iconSrc="icons/general/calendar-icon.svg"

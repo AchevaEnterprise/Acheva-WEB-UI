@@ -28,10 +28,10 @@ export class LayoutComponent implements OnInit {
     // When authenticated load user profile and linked accounts
     this.store.dispatch(loadProfile());
     this.authService.loadInitialSession();
-    this.setLinkedAccounts();
+    // this.loadLinkedAccounts();
   }
 
-  setLinkedAccounts() {
+  loadLinkedAccounts() {
     this.store.dispatch(loadProfileLinkedAccounts());
 
     this.store.select(linkedAccountsSelector).subscribe({

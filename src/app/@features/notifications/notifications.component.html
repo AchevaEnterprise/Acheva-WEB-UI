@@ -1,1 +1,18 @@
-<p>notifications works!</p>
+<div class="p-4">
+  <h1 class="acva-heading-5 fw-500">Notification</h1>
+
+  @if (loading()) {
+    <app-loader />
+  } @else {
+    @if (notifications().length > 0) {
+      @for (notification of notifications(); track $index) {
+        <p>{{ notification }}</p>
+      }
+    } @else {
+      <app-empty-state
+        iconSrc="images/general/empty-doc.svg"
+        description="You have no notifications"
+      />
+    }
+  }
+</div>
