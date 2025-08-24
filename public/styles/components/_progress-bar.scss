@@ -7,3 +7,11 @@
     )
   );
 }
+
+.progress-error {
+  @include mat.progress-bar-overrides(
+    (
+      active-indicator-color: #f87777,
+    )
+  );
+}
