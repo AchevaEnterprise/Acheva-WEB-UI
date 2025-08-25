@@ -27,7 +27,7 @@ export class LayoutComponent implements OnInit {
   ngOnInit(): void {
     // When authenticated load user profile and linked accounts
     this.store.dispatch(loadProfile());
-    this.authService.loadInitialSession();
+    // this.authService.loadInitialSession();
     // this.loadLinkedAccounts();
   }
 

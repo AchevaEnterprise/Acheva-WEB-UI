@@ -106,7 +106,7 @@ export class AuthenticationService {
       .pipe(
         tap((resp) => {
           if (resp.status) {
-            this.activeAccount.set(resp.data.data as IAccount);
+            this.activeAccount.set(resp.data as IAccount);
             localStorage.setItem(
               STORAGE_KEYS.ACTIVE_ACCOUNT,
               JSON.stringify(this.activeAccount())
