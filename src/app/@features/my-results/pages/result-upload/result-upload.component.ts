@@ -72,7 +72,7 @@ export class ResultUploadComponent implements OnInit {
   segments = signal<ISegmentSwitcher[]>([
     {
       label: 'Regular',
-      value: 'regular',
+      value: 'REGULAR',
       accessRole: [
         RoleEnum.DEAN,
         RoleEnum.HOD,
@@ -83,7 +83,7 @@ export class ResultUploadComponent implements OnInit {
     },
     {
       label: 'Reference',
-      value: 'reference',
+      value: 'REFERENCE',
       accessRole: [
         RoleEnum.DEAN,
         RoleEnum.HOD,
@@ -94,7 +94,7 @@ export class ResultUploadComponent implements OnInit {
     },
     {
       label: 'Unregistered',
-      value: 'unregistered',
+      value: 'UNREGISTERED',
       accessRole: [
         RoleEnum.DEAN,
         RoleEnum.HOD,
@@ -122,7 +122,10 @@ export class ResultUploadComponent implements OnInit {
 
   ngOnInit(): void {
     this.categoryListener();
-    if (this.resultId) this.getResult();
+    if (this.resultId) {
+      this.getResult();
+      this.getResultEntries();
+    }
   }
 
   getStudentsInDepartmentAndLevel(departmentId: string, level: string) {
@@ -176,6 +179,22 @@ export class ResultUploadComponent implements OnInit {
     });
   }
 
+  getResultEntries() {
+    this.resultsService
+      .getResultEntries(this.resultId!, {
+        category: this.activeSegment().value,
+        fullName: '', // or provide a value if needed
+        limit: '50', // or any appropriate number
+      })
+      .subscribe({
+        next: (resp) => {
+          if (resp.status) {
+            console.warn('Result Entries: ', resp.data.result);
+          }
+        },
+      });
+  }
+
   categoryListener() {
     this.courseForm.get('category')?.valueChanges.subscribe({
       next: (value) => {
@@ -193,15 +212,15 @@ export class ResultUploadComponent implements OnInit {
     );
 
     switch (switchValue) {
-      case 'regular': {
+      case 'REGULAR': {
         this.courseForm.get('category')?.patchValue('regular');
         break;
       }
-      case 'reference': {
+      case 'REFERENCE': {
         this.courseForm.get('category')?.patchValue('reference');
         break;
       }
-      case 'unregistered': {
+      case 'UNREGISTERED': {
         this.courseForm.get('category')?.patchValue('unregistered');
         break;
       }
@@ -255,21 +274,21 @@ export class ResultUploadComponent implements OnInit {
 
   saveChanges() {
     switch (this.activeSegment().value) {
-      case 'regular': {
+      case 'REGULAR': {
         console.warn(
           'Regular Table Data: ',
           this.regularTableResultUploadRef()?.dataSource()
         );
         break;
       }
-      case 'reference': {
+      case 'REFERENCE': {
         console.warn(
           'Reference Table Data: ',
           this.referenceTableResultUploadRef()?.dataSource()
         );
         break;
       }
-      case 'unregistered': {
+      case 'UNREGISTERED': {
         console.warn(
           'Unregistered Table Data: ',
           this.referenceTableResultUploadRef()?.dataSource()

@@ -41,9 +41,12 @@ export class ResultsService {
     params = params.append('fullName', query?.fullName || '');
     params = params.append('limit', query?.limit || '');
 
-    return this.http.get<IAPIResponse<any>>(`${this.resultsUrl}/${resultId}`, {
-      params,
-    });
+    return this.http.get<IAPIResponse<any>>(
+      `${this.resultsUrl}/${resultId}/entries`,
+      {
+        params,
+      }
+    );
   }
 
   sendResult(
