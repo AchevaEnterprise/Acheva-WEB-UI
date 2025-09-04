@@ -1,0 +1,19 @@
+<h2 mat-dialog-title>Unassign Course Advisor</h2>
+
+<mat-dialog-content>
+  <p class="acva-caption mb-8">
+    You're about to revoke this lecturer's Course Advisor role.
+  </p>
+  <div class="grid place-content-center gap-4 text-center">
+    <app-svg [src]="'images/general/confirmation.svg'" />
+    <p>
+      This action will remove their access to student advisory tools and
+      responsibilities. <strong>Do you wish to proceed?</strong>?
+    </p>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions class="gap-4">
+  <app-button label="Cancel" type="outline" (clickEvent)="cancel()" />
+  <app-button label="Unassign" (clickEvent)="unAssign()" />
+</mat-dialog-actions>

@@ -5,25 +5,23 @@ import {
   MatDialogRef,
 } from '@angular/material/dialog';
 import { ToastService } from '../../../@core/utility/toast.service';
-import { CoursesService } from '../../../@features/courses/services/courses.service';
-import { AssignCourseCoordinatorComponent } from '../assign-course-coordinator/assign-course-coordinator.component';
+import { LecturersService } from '../../../@features/user-settings/service/lecturer.service';
 import { ButtonComponent } from '../forms/button/button.component';
 import { SvgComponent } from '../svg/svg.component';
 
 @Component({
-  selector: 'app-unassign-course-cordinator',
+  selector: 'app-unassign-course-advisor',
   imports: [MatDialogModule, ButtonComponent, SvgComponent],
-  templateUrl: './unassign-course-cordinator.component.html',
-  styleUrl: './unassign-course-cordinator.component.scss',
+  templateUrl: './unassign-course-advisor.component.html',
+  styleUrl: './unassign-course-advisor.component.scss',
 })
-export class UnassignCourseCordinatorComponent {
-  private readonly courseService = inject(CoursesService);
+export class UnassignCourseAdvisorComponent {
+  private readonly lecturerService = inject(LecturersService);
   private readonly toast = inject(ToastService);
   private readonly dialogRef = inject(
-    MatDialogRef<AssignCourseCoordinatorComponent>
+    MatDialogRef<UnassignCourseAdvisorComponent>
   );
   readonly data = inject<{
-    courseId: string;
     lecturerId: string;
   }>(MAT_DIALOG_DATA);
 
@@ -33,16 +31,15 @@ export class UnassignCourseCordinatorComponent {
 
   unAssign() {
     const lecturerId = this.data.lecturerId;
-    const courseId = this.data.courseId;
-    this.courseService
-      .unassignCourseFromLecturer(courseId, lecturerId)
+    this.lecturerService
+      .assignOrUnassignCourseAdvisor(lecturerId, 'NONE')
       .subscribe({
-        next: (res) => {
-          if (!res.status) {
+        next: (resp) => {
+          if (!resp.status) {
             this.toast.showNotification(
               'error',
-              'Error Assigning Course',
-              'Failed to assign course to lecturer.'
+              'Error Unassigning Role',
+              'Failed to unassign role from lecturer.'
             );
             return;
           }
@@ -52,7 +49,7 @@ export class UnassignCourseCordinatorComponent {
             'Role Unassigned',
             'The role has been successfully unassigned from the lecturer.'
           );
-          this.dialogRef.close(res);
+          this.dialogRef.close(resp);
         },
       });
   }

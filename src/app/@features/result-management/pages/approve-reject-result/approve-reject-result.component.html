@@ -166,16 +166,16 @@
         /> -->
 
     @switch (activeSegment().value) {
-      @case ('regular') {
+      @case ('REGULAR') {
         <app-regular-table-result-upload
           [students]="students()"
           #regularTableResultUploadRef
         />
       }
-      @case ('reference') {
+      @case ('REFERENCE') {
         <app-reference-table-result-upload />
       }
-      @case ('unregistered') {
+      @case ('UNREGISTERED') {
         <app-reference-table-result-upload />
       }
     }

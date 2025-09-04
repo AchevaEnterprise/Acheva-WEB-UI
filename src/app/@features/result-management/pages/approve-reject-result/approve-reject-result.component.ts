@@ -66,7 +66,7 @@ export class ApproveRejectResultComponent implements OnInit {
   segments = signal<ISegmentSwitcher[]>([
     {
       label: 'Regular',
-      value: 'regular',
+      value: 'REGULAR',
       accessRole: [
         RoleEnum.DEAN,
         RoleEnum.HOD,
@@ -77,7 +77,7 @@ export class ApproveRejectResultComponent implements OnInit {
     },
     {
       label: 'Reference',
-      value: 'reference',
+      value: 'REFERENCE',
       accessRole: [
         RoleEnum.DEAN,
         RoleEnum.HOD,
@@ -88,7 +88,7 @@ export class ApproveRejectResultComponent implements OnInit {
     },
     {
       label: 'Unregistered',
-      value: 'unregistered',
+      value: 'UNREGISTERED',
       accessRole: [
         RoleEnum.DEAN,
         RoleEnum.HOD,
@@ -187,10 +187,10 @@ export class ApproveRejectResultComponent implements OnInit {
     );
 
     switch (switchValue) {
-      case 'regular': {
+      case 'REGULAR': {
         break;
       }
-      case 'reference': {
+      case 'REFERENCE': {
         break;
       }
     }

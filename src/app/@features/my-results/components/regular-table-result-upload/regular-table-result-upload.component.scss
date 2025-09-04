@@ -1,9 +1,11 @@
-.mat-column-name {
+.mat-column-fullName {
   width: 30%;
 }
 
 .mat-column-test,
 .mat-column-lab,
-.mat-column-exam {
+.mat-column-exam,
+.mat-column-total,
+.mat-column-grade, {
   width: 10%;
 }

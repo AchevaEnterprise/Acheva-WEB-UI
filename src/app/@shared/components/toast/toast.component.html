@@ -1,5 +1,11 @@
 <div class="bg-white">
-  <mat-progress-bar mode="determinate" [value]="progress()"></mat-progress-bar>
+  <div [class.progress-error]="data.type === 'error'">
+    <mat-progress-bar
+      color="secondary"
+      mode="determinate"
+      [value]="progress()"
+    ></mat-progress-bar>
+  </div>
 
   <div class="flex px-3">
     @if (data.type === 'success') {
