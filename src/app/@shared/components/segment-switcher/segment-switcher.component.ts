@@ -13,9 +13,9 @@ export interface ISegmentSwitcher {
     | 'VERIFIED'
     | 'PUBLISHED'
     | 'IMPORTED'
-    | 'regular'
-    | 'unregistered'
-    | 'reference'
+    | 'REGULAR'
+    | 'UNREGISTERED'
+    | 'REFERENCE'
     | LevelsEnum;
   accessRole?: RoleEnum[];
 }

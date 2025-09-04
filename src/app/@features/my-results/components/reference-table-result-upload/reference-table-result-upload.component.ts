@@ -1,6 +1,14 @@
-import { SelectionModel } from '@angular/cdk/collections';
-import { Component, inject, signal } from '@angular/core';
 import {
+  Component,
+  computed,
+  inject,
+  input,
+  output,
+  signal,
+} from '@angular/core';
+import {
+  FormArray,
+  FormBuilder,
   FormControl,
   FormGroup,
   FormsModule,
@@ -30,51 +38,38 @@ import { StudentService } from '../../../students/services/student.service';
 })
 export class ReferenceTableResultUploadComponent {
   private readonly studentService = inject(StudentService);
+  private readonly fb = inject(FormBuilder);
+
+  students = input<any>();
+  tableUpdateEvent = output<Partial<IStudentGrade>[]>();
+
+  form!: FormGroup;
+  searchingStudents = signal(false);
+  studentList = signal<{ label: string; value: string }[]>([]);
+
   displayedColumns: string[] = [
-    'select',
-    'regNo',
-    'name',
+    'registrationNumber',
+    'fullName',
     'test',
     'lab',
     'exam',
     'total',
-    'finalGrade',
+    'grade',
     'status',
   ];
-  dataSource = signal<Partial<IStudentGrade>[]>([]);
-  selection = new SelectionModel<Partial<IStudentGrade>>(true, []);
 
-  students = signal<any[]>([]);
-  searchingStudents = signal<boolean>(false);
+  dataSource = computed<Partial<IStudentGrade>[]>(() => {
+    const students = this.students() as Partial<IStudentGrade>[];
 
-  form = new FormGroup({
-    regNo: new FormControl(''),
+    if (students) {
+      this.form = this.fb.group({
+        rows: this.fb.array(students.map((student) => this.createRow(student))),
+      });
+      return students;
+    }
+
+    return [];
   });
-
-  /** Whether the number of selected elements matches the total number of rows. */
-  isAllSelected() {
-    const numSelected = this.selection.selected.length;
-    const numRows = this.dataSource().length;
-    return numSelected === numRows;
-  }
-
-  /** Selects all rows if they are not all selected; otherwise clear selection. */
-  toggleAllRows() {
-    if (this.isAllSelected()) {
-      this.selection.clear();
-      return;
-    }
-
-    this.selection.select(...this.dataSource());
-  }
-
-  /** The label for the checkbox on the passed row */
-  checkboxLabel(row?: IStudentGrade): string {
-    if (!row) {
-      return `${this.isAllSelected() ? 'deselect' : 'select'} all`;
-    }
-    return `${this.selection.isSelected(row) ? 'deselect' : 'select'} row ${row.name + 1}`;
-  }
 
   searchStudent(value: string) {
     this.searchingStudents.set(true);
@@ -84,9 +79,35 @@ export class ReferenceTableResultUploadComponent {
       .subscribe({
         next: (resp) => {
           if (resp.status) {
-            this.students.set(resp.data);
+            this.studentList.set(
+              resp.data?.map((student: any) => ({
+                label: student.fullName as string,
+                value: student.registrationNumber as string,
+              }))
+            );
           }
         },
       });
+  }
+
+  get rows() {
+    return this.form.get('rows') as FormArray;
+  }
+
+  createRow(student: Partial<IStudentGrade>): FormGroup {
+    return this.fb.group({
+      registrationNumber: new FormControl(student.registrationNumber),
+      fullName: new FormControl(student.fullName),
+      test: new FormControl(student.test),
+      lab: new FormControl(student.lab),
+      exam: new FormControl(student.exam),
+      grade: new FormControl(student.grade),
+      status: new FormControl(student.status),
+    });
+  }
+
+  saveRow(index: number) {
+    const row = this.rows.at(index).value as Partial<IStudentGrade>;
+    console.warn('Saving row data:', row);
   }
 }

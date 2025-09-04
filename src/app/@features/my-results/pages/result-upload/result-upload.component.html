@@ -166,13 +166,16 @@
 
   <div class="mt-4">
     @switch (activeSegment().value) {
-      @case ('regular') {
-        <app-regular-table-result-upload #regularTableResultUploadRef />
+      @case ('REGULAR') {
+        <app-regular-table-result-upload
+          #regularTableResultUploadRef
+          [students]="regularStudents()"
+        />
       }
-      @case ('reference') {
+      @case ('REFERENCE') {
         <app-reference-table-result-upload #referenceTableResultUploadRef />
       }
-      @case ('unregistered') {
+      @case ('UNREGISTERED') {
         <app-reference-table-result-upload #referenceTableResultUploadRef />
       }
     }

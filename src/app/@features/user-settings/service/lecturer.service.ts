@@ -3,6 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { IAPIResponse } from '../../../@core/models/api-response.model';
+import { LevelsEnum } from '../../../@core/models/school.model';
 
 @Injectable({
   providedIn: 'root',
@@ -31,24 +32,12 @@ export class LecturersService {
     );
   }
 
-  assignAsCourseAdvisor(
+  assignOrUnassignCourseAdvisor(
     lecturerId: string,
-    level: string
+    level: LevelsEnum | 'NONE'
   ): Observable<IAPIResponse<any>> {
     return this.http.patch<IAPIResponse<any>>(
       `${this.lecturerUrl}/assign-course-advisor/${lecturerId}`,
-      {
-        level,
-      }
-    );
-  }
-
-  unassignAsCourseAdvisor(
-    lecturerId: string,
-    level: string
-  ): Observable<IAPIResponse<any>> {
-    return this.http.patch<IAPIResponse<any>>(
-      `${this.lecturerUrl}/unassign-course-advisor`,
       {
         level,
       }

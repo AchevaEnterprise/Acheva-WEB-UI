@@ -21,6 +21,7 @@ import {
 } from '../../../../@shared/components/segment-switcher/segment-switcher.component';
 import { UploadResultDialogComponent } from '../../../../@shared/components/upload-result-dialog/upload-result-dialog.component';
 import { RoleEnum } from '../../../auth/model/auth.model';
+import { IStudentGrade } from '../../../courses/models/student-grade.model';
 import { ResultsService } from '../../../result-management/services/results.service';
 import { StudentService } from '../../../students/services/student.service';
 import { AnalyticsChartComponent } from '../../components/analytics-chart/analytics-chart.component';
@@ -72,7 +73,7 @@ export class ResultUploadComponent implements OnInit {
   segments = signal<ISegmentSwitcher[]>([
     {
       label: 'Regular',
-      value: 'regular',
+      value: 'REGULAR',
       accessRole: [
         RoleEnum.DEAN,
         RoleEnum.HOD,
@@ -83,7 +84,7 @@ export class ResultUploadComponent implements OnInit {
     },
     {
       label: 'Reference',
-      value: 'reference',
+      value: 'REFERENCE',
       accessRole: [
         RoleEnum.DEAN,
         RoleEnum.HOD,
@@ -94,7 +95,7 @@ export class ResultUploadComponent implements OnInit {
     },
     {
       label: 'Unregistered',
-      value: 'unregistered',
+      value: 'UNREGISTERED',
       accessRole: [
         RoleEnum.DEAN,
         RoleEnum.HOD,
@@ -120,9 +121,16 @@ export class ResultUploadComponent implements OnInit {
 
   uploadingResult = signal<boolean>(false);
 
+  regularStudents = signal<Partial<IStudentGrade>[]>([]);
+  // referenceStudents = signal<IStudent[]>([]);
+  // unregisteredStudents = signal<IStudent[]>([]);
+
   ngOnInit(): void {
     this.categoryListener();
-    if (this.resultId) this.getResult();
+    if (this.resultId) {
+      this.getResult();
+      this.getResultEntries();
+    }
   }
 
   getStudentsInDepartmentAndLevel(departmentId: string, level: string) {
@@ -176,6 +184,45 @@ export class ResultUploadComponent implements OnInit {
     });
   }
 
+  getResultEntries() {
+    this.resultsService
+      .getResultEntries(this.resultId!, {
+        category: this.activeSegment().value,
+        fullName: '', // or provide a value if needed
+        limit: '50', // or any appropriate number
+      })
+      .subscribe({
+        next: (resp) => {
+          if (resp.status) {
+            const { analytics, total, totalPass, totalFail, result } =
+              resp.data as {
+                analytics: Record<string, number>;
+                total: number;
+                totalPass: number;
+                totalFail: number;
+                result: Partial<IStudentGrade>[];
+              };
+
+            const analyticsData = [
+              analytics['A'],
+              analytics['B'],
+              analytics['C'],
+              analytics['D'],
+              analytics['E'],
+              analytics['F'],
+            ];
+
+            this.analyticsChartData.set(analyticsData);
+            this.totalStudent.set(total);
+            this.totalStudentPass.set(totalPass);
+            this.totalStudentFail.set(totalFail);
+
+            this.regularStudents.set(result);
+          }
+        },
+      });
+  }
+
   categoryListener() {
     this.courseForm.get('category')?.valueChanges.subscribe({
       next: (value) => {
@@ -193,15 +240,15 @@ export class ResultUploadComponent implements OnInit {
     );
 
     switch (switchValue) {
-      case 'regular': {
+      case 'REGULAR': {
         this.courseForm.get('category')?.patchValue('regular');
         break;
       }
-      case 'reference': {
+      case 'REFERENCE': {
         this.courseForm.get('category')?.patchValue('reference');
         break;
       }
-      case 'unregistered': {
+      case 'UNREGISTERED': {
         this.courseForm.get('category')?.patchValue('unregistered');
         break;
       }
@@ -249,27 +296,36 @@ export class ResultUploadComponent implements OnInit {
           );
 
           this.getResult();
+          this.getResultEntries();
         },
       });
   }
 
+  // saveResultEntry() {
+  //   this.resultsService.createResultEntry(this.resultEntry).subscribe({
+  //     next: (resp) => {
+  //       console.log('Entry Saved: ', resp);
+  //     },
+  //   });
+  // }
+
   saveChanges() {
     switch (this.activeSegment().value) {
-      case 'regular': {
+      case 'REGULAR': {
         console.warn(
           'Regular Table Data: ',
           this.regularTableResultUploadRef()?.dataSource()
         );
         break;
       }
-      case 'reference': {
+      case 'REFERENCE': {
         console.warn(
           'Reference Table Data: ',
           this.referenceTableResultUploadRef()?.dataSource()
         );
         break;
       }
-      case 'unregistered': {
+      case 'UNREGISTERED': {
         console.warn(
           'Unregistered Table Data: ',
           this.referenceTableResultUploadRef()?.dataSource()
