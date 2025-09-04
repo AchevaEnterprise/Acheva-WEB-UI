@@ -250,13 +250,14 @@ export class CreateAccountComponent implements OnInit, OnDestroy {
               this.router.navigate(['/auth/confirm-email'], {
                 queryParams: { accountId: res.data._id as string },
               });
-            } else {
-              this.toast.showNotification(
-                'error',
-                'Account Creation Failed',
-                res.message
-              );
             }
+          },
+          error: (err) => {
+            this.toast.showNotification(
+              'error',
+              'Account Creation Failed',
+              err?.error?.message || 'Something went wrong'
+            );
           },
         })
     );
