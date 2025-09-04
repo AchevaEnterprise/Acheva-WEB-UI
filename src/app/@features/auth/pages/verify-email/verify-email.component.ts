@@ -52,6 +52,7 @@ export class VerifyEmailComponent implements OnDestroy {
     this.router.navigate(['/auth/confirm-email'], {
       queryParams: {
         accountId: this.accountId() as string,
+        email: this.email() as string,
       },
     });
   }

@@ -31,6 +31,7 @@ export class ConfirmEmailComponent implements OnDestroy {
 
   isLoading = signal(false);
   accountId = signal(this.route.snapshot.queryParamMap.get('accountId'));
+  email = signal(this.route.snapshot.queryParamMap.get('email'));
   readonly codeCtrl: FormControl = new FormControl('', [
     Validators.required,
     Validators.minLength(6),
@@ -65,6 +66,40 @@ export class ConfirmEmailComponent implements OnDestroy {
                 res.message
               );
             }
+          },
+        })
+    );
+  }
+
+  resendVerificationEmail() {
+    this.isLoading.set(true);
+    this.sub.add(
+      this.authService
+        .forgotPassword(this.email()!)
+        .pipe(finalize(() => this.isLoading.set(false)))
+        .subscribe({
+          next: (res) => {
+            if (res.status) {
+              this.toast.showNotification(
+                'success',
+                'Verification Email Sent',
+                'A new verification email has been sent to your email address'
+              );
+            } else {
+              this.toast.showNotification(
+                'error',
+                'Resend Failed',
+                res.message ||
+                  'Unable to send verification email. Please try again.'
+              );
+            }
+          },
+          error: () => {
+            this.toast.showNotification(
+              'error',
+              'Network Error',
+              'Something went wrong. Please check your connection and try again.'
+            );
           },
         })
     );

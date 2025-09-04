@@ -68,7 +68,12 @@
 
     <p class="acva-para-1 place-self-center">
       Haven't received code?
-      <a class="text-blue-400 cursor-pointer hover:text-blue-300">Resend</a>
+      <a
+        class="text-blue-400 cursor-pointer hover:text-blue-300"
+        (click)="resendVerificationEmail()"
+      >
+        Resend
+      </a>
     </p>
   </div>
 </app-svg-backgroud>
