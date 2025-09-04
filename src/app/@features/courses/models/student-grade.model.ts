@@ -1,10 +1,11 @@
 export interface IStudentGrade {
-  regNo: string;
-  name: string;
+  _id?: string;
+  registrationNumber: string;
+  fullName: string;
   test: string;
   lab: string;
   exam: string;
   total: string;
-  finalGrade: string;
+  grade: string;
   status: string;
 }

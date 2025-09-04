@@ -1,6 +1,11 @@
-import { SelectionModel } from '@angular/cdk/collections';
-import { Component, computed, input, output } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { Component, computed, inject, input, output } from '@angular/core';
+import {
+  FormArray,
+  FormBuilder,
+  FormControl,
+  FormGroup,
+  ReactiveFormsModule,
+} from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatTableModule } from '@angular/material/table';
 import { EmptyStateComponent } from '../../../../@shared/components/empty-state/empty-state.component';
@@ -13,7 +18,7 @@ import { IStudentGrade } from '../../../courses/models/student-grade.model';
   imports: [
     PaginatorComponent,
     MatTableModule,
-    FormsModule,
+    ReactiveFormsModule,
     MatCheckboxModule,
     StatusBadgeComponent,
     EmptyStateComponent,
@@ -23,48 +28,54 @@ import { IStudentGrade } from '../../../courses/models/student-grade.model';
   exportAs: 'regularTableResultUploadRef',
 })
 export class RegularTableResultUploadComponent {
+  private readonly fb = inject(FormBuilder);
+
   students = input<any>();
   tableUpdateEvent = output<Partial<IStudentGrade>[]>();
 
+  form!: FormGroup;
+
   displayedColumns: string[] = [
-    'select',
-    'regNo',
-    'name',
+    'registrationNumber',
+    'fullName',
     'test',
     'lab',
     'exam',
     'total',
-    'finalGrade',
+    'grade',
     'status',
   ];
   dataSource = computed<Partial<IStudentGrade>[]>(() => {
     const students = this.students() as Partial<IStudentGrade>[];
-    return students ?? [];
+
+    if (students) {
+      this.form = this.fb.group({
+        rows: this.fb.array(students.map((student) => this.createRow(student))),
+      });
+      return students;
+    }
+
+    return [];
   });
-  selection = new SelectionModel<Partial<IStudentGrade>>(true, []);
 
-  /** Whether the number of selected elements matches the total number of rows. */
-  isAllSelected() {
-    const numSelected = this.selection.selected.length;
-    const numRows = this.dataSource().length;
-    return numSelected === numRows;
+  get rows() {
+    return this.form.get('rows') as FormArray;
   }
 
-  /** Selects all rows if they are not all selected; otherwise clear selection. */
-  toggleAllRows() {
-    if (this.isAllSelected()) {
-      this.selection.clear();
-      return;
-    }
-
-    this.selection.select(...this.dataSource());
+  createRow(student: Partial<IStudentGrade>): FormGroup {
+    return this.fb.group({
+      registrationNumber: new FormControl(student.registrationNumber),
+      fullName: new FormControl(student.fullName),
+      test: new FormControl(student.test),
+      lab: new FormControl(student.lab),
+      exam: new FormControl(student.exam),
+      grade: new FormControl(student.grade),
+      status: new FormControl(student.status),
+    });
   }
 
-  /** The label for the checkbox on the passed row */
-  checkboxLabel(row?: IStudentGrade): string {
-    if (!row) {
-      return `${this.isAllSelected() ? 'deselect' : 'select'} all`;
-    }
-    return `${this.selection.isSelected(row) ? 'deselect' : 'select'} row ${row.name + 1}`;
+  saveRow(index: number) {
+    const row = this.rows.at(index).value as Partial<IStudentGrade>;
+    console.warn('Saving row data:', row);
   }
 }

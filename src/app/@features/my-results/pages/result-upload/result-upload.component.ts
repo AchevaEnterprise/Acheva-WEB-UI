@@ -21,6 +21,7 @@ import {
 } from '../../../../@shared/components/segment-switcher/segment-switcher.component';
 import { UploadResultDialogComponent } from '../../../../@shared/components/upload-result-dialog/upload-result-dialog.component';
 import { RoleEnum } from '../../../auth/model/auth.model';
+import { IStudentGrade } from '../../../courses/models/student-grade.model';
 import { ResultsService } from '../../../result-management/services/results.service';
 import { StudentService } from '../../../students/services/student.service';
 import { AnalyticsChartComponent } from '../../components/analytics-chart/analytics-chart.component';
@@ -120,6 +121,10 @@ export class ResultUploadComponent implements OnInit {
 
   uploadingResult = signal<boolean>(false);
 
+  regularStudents = signal<Partial<IStudentGrade>[]>([]);
+  // referenceStudents = signal<IStudent[]>([]);
+  // unregisteredStudents = signal<IStudent[]>([]);
+
   ngOnInit(): void {
     this.categoryListener();
     if (this.resultId) {
@@ -189,7 +194,30 @@ export class ResultUploadComponent implements OnInit {
       .subscribe({
         next: (resp) => {
           if (resp.status) {
-            console.warn('Result Entries: ', resp.data.result);
+            const { analytics, total, totalPass, totalFail, result } =
+              resp.data as {
+                analytics: Record<string, number>;
+                total: number;
+                totalPass: number;
+                totalFail: number;
+                result: Partial<IStudentGrade>[];
+              };
+
+            const analyticsData = [
+              analytics['A'],
+              analytics['B'],
+              analytics['C'],
+              analytics['D'],
+              analytics['E'],
+              analytics['F'],
+            ];
+
+            this.analyticsChartData.set(analyticsData);
+            this.totalStudent.set(total);
+            this.totalStudentPass.set(totalPass);
+            this.totalStudentFail.set(totalFail);
+
+            this.regularStudents.set(result);
           }
         },
       });
@@ -268,9 +296,18 @@ export class ResultUploadComponent implements OnInit {
           );
 
           this.getResult();
+          this.getResultEntries();
         },
       });
   }
+
+  // saveResultEntry() {
+  //   this.resultsService.createResultEntry(this.resultEntry).subscribe({
+  //     next: (resp) => {
+  //       console.log('Entry Saved: ', resp);
+  //     },
+  //   });
+  // }
 
   saveChanges() {
     switch (this.activeSegment().value) {

@@ -167,7 +167,10 @@
   <div class="mt-4">
     @switch (activeSegment().value) {
       @case ('REGULAR') {
-        <app-regular-table-result-upload #regularTableResultUploadRef />
+        <app-regular-table-result-upload
+          #regularTableResultUploadRef
+          [students]="regularStudents()"
+        />
       }
       @case ('REFERENCE') {
         <app-reference-table-result-upload #referenceTableResultUploadRef />
