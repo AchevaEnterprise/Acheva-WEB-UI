@@ -61,6 +61,7 @@ export class CreateCourseComponent {
     this.authService.activeAccount()?.school || '';
 
   isLoading = signal<boolean>(false);
+
   levelOptions = signal<{ label: string; value: string }[]>([
     { label: '100 Level', value: LevelsEnum.YEAR_ONE },
     { label: '200 Level', value: LevelsEnum.YEAR_TWO },
@@ -69,17 +70,22 @@ export class CreateCourseComponent {
     { label: '500 Level', value: LevelsEnum.YEAR_FIVE },
     { label: '600 Level', value: LevelsEnum.YEAR_SIX },
   ]);
+
   semesterOptions = signal<{ label: string; value: string }[]>([
     { label: '1st Semester', value: SemesterEnum.FIRST },
     { label: '2nd Semester', value: SemesterEnum.SECOND },
     { label: '3rd Semester', value: SemesterEnum.THIRD },
   ]);
+
   schoolsOptions = signal<ISchool[]>([]);
   facultiesOptions = signal<IFaculty[]>([]);
   departmentsOptions = signal<IDepartment[]>([]);
 
   form = new FormGroup({
-    semester: new FormControl<string>('', Validators.required),
+    semester: new FormControl<string>(
+      this.semesterOptions()[0].value, // 👈 auto-select first semester
+      Validators.required
+    ),
     courseTitle: new FormControl<string>('', Validators.required),
     courseCode: new FormControl<string>('', Validators.required),
     school: new FormControl<ISchool | string>(
@@ -88,7 +94,10 @@ export class CreateCourseComponent {
     ),
     faculty: new FormControl<IFaculty | null>(null, Validators.required),
     department: new FormControl<IDepartment | null>(null, Validators.required),
-    level: new FormControl<string>('', Validators.required),
+    level: new FormControl<string>(
+      this.levelOptions()[0].value, // 👈 auto-select first level
+      Validators.required
+    ),
     courseLoad: new FormControl<number>(1, Validators.required),
   });
 
@@ -135,7 +144,7 @@ export class CreateCourseComponent {
   }
 
   getDepartments(event: MatSelectChange) {
-    const facultyId = (event.value as ISchool)._id;
+    const facultyId = (event.value as IFaculty)._id;
     this.store.dispatch(loadDepartments({ facultyId }));
 
     this.sub.add(
@@ -204,6 +213,9 @@ export class CreateCourseComponent {
           },
         })
     );
+  }
+  cancel() {
+    this.router.navigate(['../course-management/'], { relativeTo: this.route });
   }
 
   ngOnDestroy(): void {
