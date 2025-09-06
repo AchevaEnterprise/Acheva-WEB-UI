@@ -8,23 +8,23 @@
 
   <div class="grid lg:grid-cols-[1fr_40%] md:grid-cols-2 sm:grid-cols-1 gap-8">
     <form [formGroup]="form">
+      <!-- Semester -->
       <div class="input-style-1 acheva-input w-full">
         <p class="acva-para-2 fw-400 label-text">Semester</p>
-
         <mat-form-field [style.width.%]="100" appearance="outline">
-          <mat-select placeholder="Select level" formControlName="semester">
+          <mat-select placeholder="Select Semester" formControlName="semester">
             @for (semester of semesterOptions(); track $index) {
-              <mat-option [value]="semester.value">{{
-                semester.label
-              }}</mat-option>
+              <mat-option [value]="semester.value">
+                {{ semester.label }}
+              </mat-option>
             }
           </mat-select>
         </mat-form-field>
       </div>
 
+      <!-- School -->
       <div class="input-style-1 acheva-input w-full">
         <p class="acva-para-2 fw-400 label-text">School</p>
-
         <mat-form-field [style.width.%]="100" appearance="outline">
           <mat-select
             placeholder="Select your school"
@@ -39,9 +39,9 @@
         </mat-form-field>
       </div>
 
+      <!-- Faculty -->
       <div class="input-style-1 acheva-input w-full">
         <p class="acva-para-2 fw-400 label-text">Faculty</p>
-
         <mat-form-field [style.width.%]="100" appearance="outline">
           <mat-select
             placeholder="Select your faculty"
@@ -55,9 +55,9 @@
         </mat-form-field>
       </div>
 
+      <!-- Department -->
       <div class="input-style-1 acheva-input w-full">
         <p class="acva-para-2 fw-400 label-text">Department</p>
-
         <mat-form-field [style.width.%]="100" appearance="outline">
           <mat-select
             placeholder="Select your department"
@@ -72,9 +72,9 @@
         </mat-form-field>
       </div>
 
+      <!-- Level -->
       <div class="input-style-1 acheva-input w-full">
         <p class="acva-para-2 fw-400 label-text">Level</p>
-
         <mat-form-field [style.width.%]="100" appearance="outline">
           <mat-select placeholder="Select level" formControlName="level">
             @for (level of levelOptions(); track $index) {
@@ -84,26 +84,26 @@
         </mat-form-field>
       </div>
 
+      <!-- Course Code -->
       <div class="input-style-1 acheva-input w-full">
         <p class="acva-para-2 fw-400 label-text">Course Code</p>
-
         <mat-form-field [style.width.%]="100" appearance="outline">
           <input matInput type="text" formControlName="courseCode" />
         </mat-form-field>
       </div>
 
+      <!-- Course Title -->
       <div class="input-style-1 acheva-input w-full">
         <p class="acva-para-2 fw-400 label-text">Course Title</p>
-
         <mat-form-field [style.width.%]="100" appearance="outline">
           <input matInput type="text" formControlName="courseTitle" />
         </mat-form-field>
       </div>
 
+      <!-- Course Load -->
       <div class="flex items-center gap-3">
         <div class="input-style-1 acheva-input">
-          <p class="acva-para-2 fw-400 label-text">Course Unit</p>
-
+          <p class="acva-para-2 fw-400 label-text">Course Load</p>
           <mat-form-field [style.width.%]="100" appearance="outline">
             <input matInput type="text" formControlName="courseLoad" readonly />
           </mat-form-field>
@@ -123,11 +123,13 @@
       </div>
     </form>
 
+    <!-- Preview -->
     <app-course-preview [preview]="form.getRawValue()" />
   </div>
 
+  <!-- Buttons -->
   <div class="flex gap-3 justify-end">
-    <app-button type="clear" label="Cancel" />
+    <app-button type="clear" label="Cancel" (clickEvent)="cancel()" />
     <app-button
       label="Create"
       [loading]="isLoading()"
