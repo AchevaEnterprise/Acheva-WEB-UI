@@ -44,32 +44,16 @@ export class CourseManagementComponent implements OnInit {
   private readonly dialog = inject(MatDialog);
   private readonly courseService = inject(CoursesService);
 
+  // Segment options (100L, 200L, etc.)
   segments = signal<ISegmentSwitcher[]>([
-    {
-      label: '100L',
-      value: LevelsEnum.YEAR_ONE,
-    },
-    {
-      label: '200L',
-      value: LevelsEnum.YEAR_TWO,
-    },
-    {
-      label: '300L',
-      value: LevelsEnum.YEAR_THREE,
-    },
-    {
-      label: '400L',
-      value: LevelsEnum.YEAR_FOUR,
-    },
-    {
-      label: '500L',
-      value: LevelsEnum.YEAR_FIVE,
-    },
-    {
-      label: '600L',
-      value: LevelsEnum.YEAR_SIX,
-    },
+    { label: '100L', value: LevelsEnum.YEAR_ONE },
+    { label: '200L', value: LevelsEnum.YEAR_TWO },
+    { label: '300L', value: LevelsEnum.YEAR_THREE },
+    { label: '400L', value: LevelsEnum.YEAR_FOUR },
+    { label: '500L', value: LevelsEnum.YEAR_FIVE },
+    { label: '600L', value: LevelsEnum.YEAR_SIX },
   ]);
+
   activeSegment = signal<ISegmentSwitcher>(this.segments()[0]);
 
   displayedColumns: string[] = [
@@ -81,20 +65,22 @@ export class CourseManagementComponent implements OnInit {
     'assignedDate',
     'action',
   ];
-  dataSource = signal<any[]>([]);
 
+  dataSource = signal<any[]>([]);
+  loading = signal<boolean>(false);
+
+  // filter object sent to API
   filter: ICourseQuery = {
     courseCode: '',
     courseTitle: '',
     level: this.activeSegment().value as LevelsEnum,
   };
 
-  loading = signal<boolean>(false);
-
   ngOnInit(): void {
     this.getCourses();
   }
 
+  // Fetch courses
   getCourses() {
     this.loading.set(true);
     this.courseService
@@ -102,11 +88,19 @@ export class CourseManagementComponent implements OnInit {
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: (resp) => {
-          this.dataSource.set(resp.data.courses);
+          if (resp?.data?.courses) {
+            this.dataSource.set(
+              resp.data.courses.filter(
+                (course: any) =>
+                  course.level === this.activeSegment().label.replace('L', '')
+              )
+            );
+          }
         },
       });
   }
 
+  // Switch segment (100L → 200L etc.)
   switchSegment(switchValue: ISegmentSwitcher['value']) {
     this.activeSegment.update(
       () =>
@@ -115,16 +109,17 @@ export class CourseManagementComponent implements OnInit {
         )!
     );
 
+    // update filter.level and refetch
     this.filter.level = this.activeSegment().value as LevelsEnum;
-    console.warn('Updated: active', this.filter);
-
     this.getCourses();
   }
 
+  // Navigate to create-course page
   createCourse() {
     this.router.navigate(['../create-course'], { relativeTo: this.route });
   }
 
+  // Assign coordinator
   assignCourseCoordinator(course: any) {
     this.dialog
       .open(AssignCourseCoordinatorComponent, {
@@ -138,13 +133,12 @@ export class CourseManagementComponent implements OnInit {
       .afterClosed()
       .subscribe({
         next: (resp) => {
-          if (resp) {
-            this.getCourses();
-          }
+          if (resp) this.getCourses();
         },
       });
   }
 
+  // Unassign coordinator
   unassignCourseCoordinator(course: any) {
     this.dialog
       .open(UnassignCourseCordinatorComponent, {
@@ -157,9 +151,7 @@ export class CourseManagementComponent implements OnInit {
       .afterClosed()
       .subscribe({
         next: (resp) => {
-          if (resp) {
-            this.getCourses();
-          }
+          if (resp) this.getCourses();
         },
       });
   }
