@@ -45,22 +45,18 @@ export class AssignCourseCoordinatorComponent implements OnInit {
   lecturers = signal<{ label: string; value: string }[]>([]);
   userDepartmentId = this.authService.activeAccount()?.department;
 
-  searchLecturer(search: string) {
-    // TODO: Implement search functionality for getting lecturers
-    // return this.lecturerService.getdepartmentHOD(search);
-  }
-
   ngOnInit(): void {
     this.getLecturers();
   }
 
+  /** Fetch all lecturers in department */
   getLecturers() {
     this.lecturerService
       .getLecturersInDepartment(this.userDepartmentId!)
       .subscribe({
         next: (resp) => {
           if (resp.status) {
-            const lecturers = (resp.data.data as ILecturer[])?.map(
+            const lecturers = (resp.data as ILecturer[])?.map(
               (lecturer: ILecturer) => ({
                 label: `${lecturer.firstname} ${lecturer.lastname}`,
                 value: lecturer._id,
@@ -69,6 +65,37 @@ export class AssignCourseCoordinatorComponent implements OnInit {
             this.lecturers.set(lecturers);
           }
         },
+        error: (err) => {},
+      });
+  }
+
+  /** Search lecturers by name */
+  searchLecturer(search: string) {
+    if (!search || search.trim() === '') {
+      this.getLecturers();
+      return;
+    }
+
+    this.lecturerService
+      .getLecturersInDepartment(this.userDepartmentId!)
+      .subscribe({
+        next: (resp) => {
+          if (resp.status) {
+            const allLecturers = (resp.data as ILecturer[])?.map(
+              (lecturer: ILecturer) => ({
+                label: `${lecturer.firstname} ${lecturer.lastname}`,
+                value: lecturer._id,
+              })
+            );
+
+            const filtered = allLecturers.filter((lec) =>
+              lec.label.toLowerCase().includes(search.toLowerCase())
+            );
+
+            this.lecturers.set(filtered);
+          }
+        },
+        error: (err) => {},
       });
   }
 
@@ -79,7 +106,17 @@ export class AssignCourseCoordinatorComponent implements OnInit {
   assign() {
     const lecturerId = this.form.get('lecturer')?.value;
     const courseId = this.data.courseId;
-    this.courseService.assignCourseToLecturer(courseId, lecturerId!).subscribe({
+
+    if (!lecturerId) {
+      this.toast.showNotification(
+        'error',
+        'No Lecturer Selected',
+        'Please select a lecturer before assigning.'
+      );
+      return;
+    }
+
+    this.courseService.assignCourseToLecturer(courseId, lecturerId).subscribe({
       next: (res) => {
         if (!res.status) {
           this.toast.showNotification(
@@ -97,6 +134,7 @@ export class AssignCourseCoordinatorComponent implements OnInit {
         );
         this.dialogRef.close(res);
       },
+      error: (err) => {},
     });
   }
 }
