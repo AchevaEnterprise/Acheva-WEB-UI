@@ -53,7 +53,7 @@ export class CoursesService {
   ): Observable<IAPIResponse<any>> {
     return this.http.patch<IAPIResponse<any>>(
       `${this.coursesUrl}/${courseId}/assign`,
-      { lecturer: lecturerId }
+      { lecturer: lecturerId, action: 'ASSIGN' }
     );
   }
 
@@ -62,8 +62,8 @@ export class CoursesService {
     lecturerId: string
   ): Observable<IAPIResponse<any>> {
     return this.http.patch<IAPIResponse<any>>(
-      `${this.coursesUrl}/${courseId}/unassign`,
-      { lecturer: lecturerId }
+      `${this.coursesUrl}/${courseId}/assign`,
+      { lecturer: lecturerId, action: 'UNASSIGN' }
     );
   }
 }
