@@ -58,7 +58,7 @@ export class AssignCourseCoordinatorComponent implements OnInit {
           if (resp.status) {
             const lecturers = (resp.data as ILecturer[])?.map(
               (lecturer: ILecturer) => ({
-                label: `${lecturer.firstname} ${lecturer.lastname}`,
+                label: `${lecturer.firstname} ${lecturer.lastname} - ${lecturer.email}`,
                 value: lecturer._id,
               })
             );
@@ -83,7 +83,7 @@ export class AssignCourseCoordinatorComponent implements OnInit {
           if (resp.status) {
             const allLecturers = (resp.data as ILecturer[])?.map(
               (lecturer: ILecturer) => ({
-                label: `${lecturer.firstname} ${lecturer.lastname}`,
+                label: `${lecturer.firstname} ${lecturer.lastname} - ${lecturer.email}`,
                 value: lecturer._id,
               })
             );

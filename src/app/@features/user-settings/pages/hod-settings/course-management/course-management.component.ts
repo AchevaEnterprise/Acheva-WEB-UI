@@ -62,7 +62,7 @@ export class CourseManagementComponent implements OnInit {
     'courseLoad',
     'updatedBy',
     'courseCoordinator',
-    'assignedDate',
+    'updatedAt',
     'action',
   ];
 
@@ -81,6 +81,7 @@ export class CourseManagementComponent implements OnInit {
   }
 
   // Fetch courses
+
   getCourses() {
     this.loading.set(true);
     this.courseService
@@ -90,10 +91,21 @@ export class CourseManagementComponent implements OnInit {
         next: (resp) => {
           if (resp?.data?.courses) {
             this.dataSource.set(
-              resp.data.courses.filter(
-                (course: any) =>
-                  course.level === this.activeSegment().label.replace('L', '')
-              )
+              resp.data.courses
+                .filter(
+                  (course: any) =>
+                    course.level === this.activeSegment().label.replace('L', '')
+                )
+                .map((course: any) => ({
+                  ...course,
+
+                  courseCoordinator: course.assignedTo
+                    ? `${course.assignedTo.firstname} ${course.assignedTo.lastname}`
+                    : null,
+                  updatedByName: course.updatedBy
+                    ? `${course.updatedBy.firstname} ${course.updatedBy.lastname}`
+                    : null,
+                }))
             );
           }
         },
@@ -116,9 +128,11 @@ export class CourseManagementComponent implements OnInit {
 
   // Navigate to create-course page
   createCourse() {
-    this.router.navigate(['../create-course'], { relativeTo: this.route });
+    this.router.navigate(['../create-course'], {
+      relativeTo: this.route,
+      queryParams: { level: this.activeSegment().value }, // 👈 pass level
+    });
   }
-
   // Assign coordinator
   assignCourseCoordinator(course: any) {
     this.dialog
@@ -145,7 +159,7 @@ export class CourseManagementComponent implements OnInit {
         width: '40%',
         data: {
           courseId: course._id as string,
-          lecturerId: course.assignedTo as string,
+          lecturerId: course.assignedTo?._id as string,
         },
       })
       .afterClosed()

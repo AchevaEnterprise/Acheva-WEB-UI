@@ -71,7 +71,7 @@
             <ng-container matColumnDef="updatedBy">
               <th mat-header-cell *matHeaderCellDef>UPDATED BY</th>
               <td mat-cell *matCellDef="let element">
-                {{ (element.updatedBy | date: 'MMM d, YYYY h:mm a') || '-' }}
+                {{ element.updatedByName || '-' }}
               </td>
             </ng-container>
 
@@ -79,13 +79,13 @@
               <th mat-header-cell *matHeaderCellDef>COURSE COORDINATOR</th>
               <td mat-cell *matCellDef="let element">
                 {{ element.courseCoordinator || '-' }}
-              </td>
-            </ng-container>
+              </td> </ng-container
+            >>
 
-            <ng-container matColumnDef="assignedDate">
+            <ng-container matColumnDef="updatedAt">
               <th mat-header-cell *matHeaderCellDef>ASSIGNED DATE</th>
               <td mat-cell *matCellDef="let element">
-                {{ (element.assignedDate | date: 'MMM d, YYYY h:mm a') || '-' }}
+                {{ (element.updatedAt | date: 'MMM d, YYYY h:mm a') || '-' }}
               </td>
             </ng-container>
 

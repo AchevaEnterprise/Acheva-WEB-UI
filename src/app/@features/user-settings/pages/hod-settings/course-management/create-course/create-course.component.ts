@@ -83,7 +83,7 @@ export class CreateCourseComponent {
 
   form = new FormGroup({
     semester: new FormControl<string>(
-      this.semesterOptions()[0].value, // 👈 auto-select first semester
+      this.semesterOptions()[0].value,
       Validators.required
     ),
     courseTitle: new FormControl<string>('', Validators.required),
@@ -95,7 +95,7 @@ export class CreateCourseComponent {
     faculty: new FormControl<IFaculty | null>(null, Validators.required),
     department: new FormControl<IDepartment | null>(null, Validators.required),
     level: new FormControl<string>(
-      this.levelOptions()[0].value, // 👈 auto-select first level
+      this.levelOptions()[0].value,
       Validators.required
     ),
     courseLoad: new FormControl<number>(1, Validators.required),
@@ -105,6 +105,16 @@ export class CreateCourseComponent {
 
   ngOnInit(): void {
     this.getSchools();
+
+    this.route.queryParams.subscribe((params) => {
+      const selectedLevel = params['level'] as string | undefined;
+
+      if (selectedLevel) {
+        this.form.get('level')?.setValue(selectedLevel);
+      } else {
+        this.form.get('level')?.setValue(this.levelOptions()[0].value);
+      }
+    });
   }
 
   compareSchoolFn(o1: any, o2: any) {
