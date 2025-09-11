@@ -60,7 +60,6 @@ export class CourseManagementComponent implements OnInit {
     'courseTitle',
     'courseCode',
     'courseLoad',
-    'updatedBy',
     'courseCoordinator',
     'assignedAt',
     'action',
@@ -81,7 +80,6 @@ export class CourseManagementComponent implements OnInit {
   }
 
   // Fetch courses
-
   getCourses() {
     this.loading.set(true);
     this.courseService
@@ -98,12 +96,8 @@ export class CourseManagementComponent implements OnInit {
                 )
                 .map((course: any) => ({
                   ...course,
-
                   courseCoordinator: course.assignedTo
                     ? `${course.assignedTo.firstname} ${course.assignedTo.lastname}`
-                    : null,
-                  updatedByName: course.updatedBy
-                    ? `${course.updatedBy.firstname} ${course.updatedBy.lastname}`
                     : null,
                 }))
             );
@@ -133,6 +127,7 @@ export class CourseManagementComponent implements OnInit {
       queryParams: { level: this.activeSegment().value }, // 👈 pass level
     });
   }
+
   // Assign coordinator
   assignCourseCoordinator(course: any) {
     this.dialog
