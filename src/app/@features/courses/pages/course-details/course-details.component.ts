@@ -11,6 +11,8 @@ import { MatSelectChange, MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { finalize, Subscription } from 'rxjs';
+import { Location } from '@angular/common'; // ✅ added
+
 import {
   IDepartment,
   IFaculty,
@@ -61,6 +63,7 @@ export class CourseDetailsComponent implements OnInit, OnDestroy {
   private readonly toast = inject(ToastService);
   private readonly utilsService = inject(UtilityService);
   private readonly store = inject(Store<AppState>);
+  private readonly location = inject(Location); // ✅ added
 
   private readonly courseId = this.route.snapshot.queryParamMap.get('courseId');
 
@@ -162,9 +165,6 @@ export class CourseDetailsComponent implements OnInit, OnDestroy {
             department: department as unknown as IDepartment,
           });
 
-          // this.selectedSchool.set(school);
-          // this.selectedFaculty.set(faculty);
-          // this.selectedDepartment.set(department);
           this.getSchools();
         }
       },
@@ -275,6 +275,11 @@ export class CourseDetailsComponent implements OnInit, OnDestroy {
           },
         })
     );
+  }
+
+  // ✅ Cancel method
+  cancel() {
+    this.location.back();
   }
 
   ngOnDestroy(): void {

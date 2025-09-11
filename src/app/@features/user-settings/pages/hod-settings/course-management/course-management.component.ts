@@ -62,7 +62,7 @@ export class CourseManagementComponent implements OnInit {
     'courseLoad',
     'updatedBy',
     'courseCoordinator',
-    'updatedAt',
+    'assignedAt',
     'action',
   ];
 
