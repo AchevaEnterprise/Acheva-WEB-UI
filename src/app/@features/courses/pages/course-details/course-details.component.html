@@ -164,7 +164,7 @@
   </div>
 
   <div class="flex gap-3 justify-end">
-    <app-button type="clear" label="Cancel" />
+    <app-button type="clear" label="Cancel" (clickEvent)="cancel()" />
     <app-button
       label="Create Result"
       [loading]="isLoading()"
