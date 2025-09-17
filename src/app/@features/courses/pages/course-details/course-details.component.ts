@@ -124,7 +124,9 @@ export class CourseDetailsComponent implements OnInit, OnDestroy {
   private readonly sub: Subscription = new Subscription();
 
   ngOnInit(): void {
-    this.getCourse();
+    if (this.courseId) {
+      this.getCourse();
+    }
   }
 
   compareSchoolFn(o1: any, o2: any) {
@@ -146,13 +148,17 @@ export class CourseDetailsComponent implements OnInit, OnDestroy {
           const {
             courseTitle,
             courseCode,
-            courseCordinator,
+            assignedTo,
             school,
             faculty,
             department,
             level,
             semester,
           } = res.data;
+
+          const courseCordinator = assignedTo
+            ? `${assignedTo?.firstname} ${assignedTo?.lastname}`
+            : 'Not Assigned';
 
           this.form.patchValue({
             courseTitle,
