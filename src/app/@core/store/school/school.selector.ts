@@ -2,24 +2,24 @@ import { createSelector } from '@ngrx/store';
 import { AppState } from '../app.state';
 import { SchoolState } from './school.reducer';
 
-export const selectProfile = (state: AppState) => state.school;
+export const selectSchool = (state: AppState) => state.school;
 
 export const schoolLoadingSelector = createSelector(
-  selectProfile,
+  selectSchool,
   (state: SchoolState) => state.isLoading
 );
 
 export const schoolsSelector = createSelector(
-  selectProfile,
+  selectSchool,
   (state: SchoolState) => state.schools
 );
 
 export const facultiesSelector = createSelector(
-  selectProfile,
+  selectSchool,
   (state: SchoolState) => state.faculties
 );
 
 export const departmentsSelector = createSelector(
-  selectProfile,
+  selectSchool,
   (state: SchoolState) => state.departments
 );
