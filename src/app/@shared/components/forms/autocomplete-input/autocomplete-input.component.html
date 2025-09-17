@@ -5,22 +5,13 @@
     <input
       matInput
       type="text"
+      [placeholder]="placeholder"
       [(ngModel)]="inputValue"
       (input)="onInputChange($event)"
       (blur)="onInputBlur()"
       (focus)="onInputFocus()"
-      [placeholder]="placeholder"
       autocomplete="off"
     />
-
-    <!-- <mat-icon
-      matSuffix
-      *ngIf="inputValue"
-      (click)="clearInput()"
-      class="clear-icon"
-    >
-      close
-    </mat-icon> -->
 
     <mat-hint *ngIf="hint">{{ hint }}</mat-hint>
   </mat-form-field>

@@ -1,5 +1,12 @@
+import {
+  Component,
+  EventEmitter,
+  forwardRef,
+  Input,
+  Output,
+} from '@angular/core';
+import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -17,8 +24,15 @@ import { MatInputModule } from '@angular/material/input';
   ],
   templateUrl: './autocomplete-input.component.html',
   styleUrl: './autocomplete-input.component.scss',
+  providers: [
+    {
+      provide: NG_VALUE_ACCESSOR,
+      useExisting: forwardRef(() => AutocompleteInputComponent),
+      multi: true,
+    },
+  ],
 })
-export class AutocompleteInputComponent {
+export class AutocompleteInputComponent implements ControlValueAccessor {
   @Input() items: any[] = [];
   @Input() displayProperty: string = '';
   @Input() placeholder: string = 'Type to search...';
@@ -33,16 +47,36 @@ export class AutocompleteInputComponent {
   filteredItems: any[] = [];
   showSuggestions: boolean = false;
 
-  ngOnInit() {
+  // ControlValueAccessor handlers
+  private onChange: (value: string) => void = () => {};
+  private onTouched: () => void = () => {};
+
+  writeValue(value: unknown): void {
+    this.inputValue = typeof value === 'string' ? value : '';
+  }
+
+  registerOnChange(fn: (value: string) => void): void {
+    this.onChange = fn;
+  }
+
+  registerOnTouched(fn: () => void): void {
+    this.onTouched = fn;
+  }
+
+  setDisabledState?(isDisabled: boolean): void {
+    // Optional: Implement disabled state logic if needed
+  }
+
+  ngOnInit(): void {
     this.filteredItems = [];
   }
 
-  onInputChange(event: Event) {
+  onInputChange(event: Event): void {
     const target = event.target as HTMLInputElement;
-    const value = target.value;
+    const value: string = target.value;
     this.inputValue = value;
 
-    // Always emit the text change
+    this.onChange(value);
     this.textChanged.emit(value);
 
     if (value.length >= this.minChars) {
@@ -54,7 +88,7 @@ export class AutocompleteInputComponent {
     }
   }
 
-  private filterItems(searchTerm: string) {
+  private filterItems(searchTerm: string): void {
     const term = searchTerm.toLowerCase();
     this.filteredItems = this.items.filter((item) => {
       const displayText = this.getDisplayText(item).toLowerCase();
@@ -62,26 +96,22 @@ export class AutocompleteInputComponent {
     });
   }
 
-  selectItem(item: any) {
-    this.inputValue = this.getDisplayText(item);
+  selectItem(item: unknown): void {
+    const displayText = this.getDisplayText(item);
+    this.inputValue = displayText;
+    this.onChange(displayText);
     this.showSuggestions = false;
     this.itemSelected.emit(item);
   }
 
-  onBlur() {
-    // Delay hiding suggestions to allow click events to fire
+  onInputBlur(): void {
+    this.onTouched();
     setTimeout(() => {
       this.showSuggestions = false;
     }, 150);
   }
 
-  onInputBlur() {
-    // Handle blur - emit final text value if needed
-    this.onBlur();
-    // You could add additional logic here if needed
-  }
-
-  onInputFocus() {
+  onInputFocus(): void {
     if (
       this.inputValue.length >= this.minChars &&
       this.filteredItems.length > 0
@@ -90,19 +120,28 @@ export class AutocompleteInputComponent {
     }
   }
 
-  clearInput() {
+  clearInput(): void {
     this.inputValue = '';
     this.filteredItems = [];
     this.showSuggestions = false;
+    this.onChange('');
     this.textChanged.emit('');
   }
 
-  getDisplayText(item: any): string {
+  getDisplayText(item: unknown): string {
     if (!item) return '';
-    return this.displayProperty ? item[this.displayProperty] : item.toString();
+    if (this.displayProperty && typeof item === 'object' && item !== null) {
+      const prop = (item as Record<string, unknown>)[this.displayProperty];
+      return typeof prop === 'string' ? prop : JSON.stringify(prop ?? '');
+    }
+    return item.toString();
   }
 
-  trackByFn(index: number, item: any) {
-    return this.displayProperty ? item[this.displayProperty] : item;
+  trackByFn(index: number, item: unknown): unknown {
+    if (!item) return index;
+    if (this.displayProperty && typeof item === 'object' && item !== null) {
+      return (item as Record<string, unknown>)[this.displayProperty] ?? index;
+    }
+    return item;
   }
 }

@@ -109,13 +109,13 @@
         <div class="input-style-1 acheva-input">
           <p class="acva-para-2 fw-400 label-text">Course Code</p>
           <app-autocomplete-input
+            [formControl]="courseCodeControl"
             [items]="courseCodes"
-            placeholder="Input Course Codes..."
             [minChars]="2"
+            placeholder="Input Course Codes..."
             (itemSelected)="onCodeSelected($event)"
             (textChanged)="onCourseCodeChanged($event)"
-          >
-          </app-autocomplete-input>
+          ></app-autocomplete-input>
         </div>
       </div>
 

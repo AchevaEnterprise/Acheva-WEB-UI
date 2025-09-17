@@ -248,6 +248,10 @@ export class CourseDetailsComponent implements OnInit, OnDestroy {
     this.disableFieldsAfterCourseLoad(level, semester, courseCode);
   }
 
+  get courseCodeControl(): FormControl<string> {
+    return this.form.get('courseCode') as FormControl<string>;
+  }
+
   private disableFieldsAfterCourseLoad(
     level: string,
     semester: string,
