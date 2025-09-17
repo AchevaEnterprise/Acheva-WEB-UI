@@ -37,8 +37,9 @@ export class AutocompleteInputComponent {
     this.filteredItems = [];
   }
 
-  onInputChange(event: any) {
-    const value = event.target.value;
+  onInputChange(event: Event) {
+    const target = event.target as HTMLInputElement;
+    const value = target.value;
     this.inputValue = value;
 
     // Always emit the text change

@@ -215,7 +215,7 @@ export class CourseDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
-  private populateFormFromCourseData(courseData: any): void {
+  private populateFormFromCourseData(courseData: ICourse): void {
     const {
       courseTitle,
       courseCode,
@@ -480,9 +480,4 @@ export class CourseDetailsComponent implements OnInit, OnDestroy {
     o1 && o2 ? o1._id === o2._id : o1 === o2;
   compareDepartmentFn = (o1: any, o2: any) =>
     o1 && o2 ? o1._id === o2._id : o1 === o2;
-
-  // Legacy method for autocomplete display
-  displayFn(course: ICourse): string {
-    return course ? `${course.courseCode} - ${course.courseTitle}` : '';
-  }
 }
