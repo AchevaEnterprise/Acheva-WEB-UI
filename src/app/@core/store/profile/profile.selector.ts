@@ -11,7 +11,7 @@ export const profileLoadingSelector = createSelector(
 
 export const profileSelector = createSelector(
   selectProfile,
-  (state: ProfileState) => state.profile
+  (state: ProfileState) => state.info
 );
 
 export const linkedAccountsSelector = createSelector(
