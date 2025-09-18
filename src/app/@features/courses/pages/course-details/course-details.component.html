@@ -113,6 +113,8 @@
             [items]="courseCodes"
             [minChars]="2"
             placeholder="Input Course Codes..."
+            [customError]="invalidCourseCodeError"
+            [showCustomError]="showCourseCodeError"
             (itemSelected)="onCodeSelected($event)"
             (textChanged)="onCourseCodeChanged($event)"
           ></app-autocomplete-input>

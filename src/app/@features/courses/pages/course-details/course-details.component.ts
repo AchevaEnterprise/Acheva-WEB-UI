@@ -120,6 +120,9 @@ export class CourseDetailsComponent implements OnInit, OnDestroy {
   facultiesOptions = signal<IFaculty[]>([]);
   departmentsOptions = signal<IDepartment[]>([]);
 
+  invalidCourseCodeError: string | null = null;
+  showCourseCodeError = true;
+
   // Form configuration
   form = new FormGroup({
     session: new FormControl<string>('', Validators.required),
@@ -362,8 +365,12 @@ export class CourseDetailsComponent implements OnInit, OnDestroy {
 
     if (matched) {
       this.updateFormWithMatchedCourse(matched);
+      this.invalidCourseCodeError = null;
+      this.showCourseCodeError = false;
     } else {
       this.clearAutoFillFields();
+      this.invalidCourseCodeError = 'The entered course code is not valid.';
+      this.showCourseCodeError = true;
     }
   }
 

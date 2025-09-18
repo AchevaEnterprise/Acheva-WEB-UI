@@ -40,6 +40,8 @@ export class AutocompleteInputComponent implements ControlValueAccessor {
   @Input() appearance: 'fill' | 'outline' = 'fill';
   @Input() hint: string = '';
   @Input() minChars: number = 1;
+  @Input() customError: string | null = null;
+  @Input() showCustomError: boolean = false;
   @Output() itemSelected = new EventEmitter<any>();
   @Output() textChanged = new EventEmitter<string>();
 
@@ -53,6 +55,10 @@ export class AutocompleteInputComponent implements ControlValueAccessor {
 
   writeValue(value: unknown): void {
     this.inputValue = typeof value === 'string' ? value : '';
+  }
+
+  get shouldShowCustomError(): boolean {
+    return this.showCustomError && !!this.customError;
   }
 
   registerOnChange(fn: (value: string) => void): void {

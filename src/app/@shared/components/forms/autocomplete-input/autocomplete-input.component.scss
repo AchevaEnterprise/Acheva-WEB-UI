@@ -50,3 +50,9 @@
 .suggestion-item:last-child {
   border-bottom: none;
 }
+
+.custom-error-message {
+  color: red; /* typical error color */
+  font-size: 12px; /* similar to mat-error */
+  margin-top: 4px; /* spacing below input */
+}
