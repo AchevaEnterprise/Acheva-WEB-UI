@@ -1,4 +1,5 @@
 <div id="container">
+  <!-- Header Section -->
   <header class="mb-8">
     <h3 class="acva-heading-3 fw-500">Course Details</h3>
     <p class="acva-para-1 text-neutral-500">
@@ -6,11 +7,13 @@
     </p>
   </header>
 
+  <!-- Main Grid Layout -->
   <div class="grid lg:grid-cols-[1fr_40%] md:grid-cols-2 sm:grid-cols-1 gap-8">
+    <!-- Form Section -->
     <form [formGroup]="form">
+      <!-- Session Selection -->
       <div class="input-style-1 acheva-input w-full">
         <p class="acva-para-2 fw-400 label-text">Session</p>
-
         <mat-form-field [style.width.%]="100" appearance="outline">
           <mat-select
             placeholder="Select your session"
@@ -23,9 +26,9 @@
         </mat-form-field>
       </div>
 
+      <!-- School Selection -->
       <div class="input-style-1 acheva-input w-full">
         <p class="acva-para-2 fw-400 label-text">School</p>
-
         <mat-form-field [style.width.%]="100" appearance="outline">
           <mat-select
             placeholder="Select your school"
@@ -40,14 +43,9 @@
         </mat-form-field>
       </div>
 
+      <!-- Faculty Selection -->
       <div class="input-style-1 acheva-input w-full">
-        <p class="acva-para-2 fw-400 label-text flex items-center gap-2">
-          Faculty
-          <!-- @if (isLoadingFaculties()) {
-            <mat-spinner diameter="14"></mat-spinner>
-          } -->
-        </p>
-
+        <p class="acva-para-2 fw-400 label-text">Faculty</p>
         <mat-form-field [style.width.%]="100" appearance="outline">
           <mat-select
             placeholder="Select your faculty"
@@ -62,14 +60,9 @@
         </mat-form-field>
       </div>
 
+      <!-- Department Selection -->
       <div class="input-style-1 acheva-input w-full">
-        <p class="acva-para-2 fw-400 label-text flex items-center gap-2">
-          Department
-          <!-- @if (isLoadingDepartments()) {
-            <mat-spinner diameter="14"></mat-spinner>
-          } -->
-        </p>
-
+        <p class="acva-para-2 fw-400 label-text">Department</p>
         <mat-form-field [style.width.%]="100" appearance="outline">
           <mat-select
             placeholder="Select your department"
@@ -85,9 +78,9 @@
         </mat-form-field>
       </div>
 
+      <!-- Level Selection -->
       <div class="input-style-1 acheva-input w-full">
         <p class="acva-para-2 fw-400 label-text">Level</p>
-
         <mat-form-field [style.width.%]="100" appearance="outline">
           <mat-select placeholder="Select level" formControlName="level">
             @for (level of levelOptions(); track $index) {
@@ -97,11 +90,11 @@
         </mat-form-field>
       </div>
 
+      <!-- Semester Selection -->
       <div class="input-style-1 acheva-input w-full">
         <p class="acva-para-2 fw-400 label-text">Semester</p>
-
         <mat-form-field [style.width.%]="100" appearance="outline">
-          <mat-select placeholder="Select level" formControlName="semester">
+          <mat-select placeholder="Select Semester" formControlName="semester">
             @for (semester of semesterOptions(); track $index) {
               <mat-option [value]="semester.value">{{
                 semester.label
@@ -111,41 +104,52 @@
         </mat-form-field>
       </div>
 
+      <!-- Course Code Input with Autocomplete -->
       <div class="flex items-center gap-3">
         <div class="input-style-1 acheva-input">
           <p class="acva-para-2 fw-400 label-text">Course Code</p>
-
-          <mat-form-field [style.width.%]="100" appearance="outline">
-            <input matInput type="text" formControlName="courseCode" />
-          </mat-form-field>
+          <app-autocomplete-input
+            [formControl]="courseCodeControl"
+            [items]="courseCodes"
+            [minChars]="2"
+            placeholder="Input Course Codes..."
+            [customError]="invalidCourseCodeError"
+            [showCustomError]="showCourseCodeError"
+            (itemSelected)="onCodeSelected($event)"
+            (textChanged)="onCourseCodeChanged($event)"
+          ></app-autocomplete-input>
         </div>
       </div>
 
+      <!-- Course Title (Auto-filled) -->
       <div class="input-style-1 acheva-input w-full">
         <p class="acva-para-2 fw-400 label-text">Course Title</p>
-
         <mat-form-field [style.width.%]="100" appearance="outline">
-          <input matInput type="text" formControlName="courseTitle" />
+          <input matInput type="text" formControlName="courseTitle" readonly />
         </mat-form-field>
       </div>
 
+      <!-- Course Coordinator (Auto-filled) -->
       <div class="input-style-1 acheva-input w-full">
         <p class="acva-para-2 fw-400 label-text">Course Coordinator</p>
-
         <mat-form-field [style.width.%]="100" appearance="outline">
-          <input matInput type="text" formControlName="courseCordinator" />
+          <input
+            matInput
+            type="text"
+            formControlName="courseCordinator"
+            readonly
+          />
         </mat-form-field>
       </div>
 
+      <!-- Course Unit with Controls -->
       <div class="flex items-center gap-3">
         <div class="input-style-1 acheva-input">
           <p class="acva-para-2 fw-400 label-text">Course Unit</p>
-
           <mat-form-field [style.width.%]="100" appearance="outline">
             <input matInput type="text" formControlName="courseLoad" readonly />
           </mat-form-field>
         </div>
-
         <app-button
           type="outline"
           label="-"
@@ -160,15 +164,19 @@
       </div>
     </form>
 
+    <!-- Course Preview Section -->
     <app-course-preview [courseTemplate]="form.getRawValue()" />
   </div>
 
+  <!-- Action Buttons -->
   <div class="flex gap-3 justify-end">
     <app-button type="clear" label="Cancel" (clickEvent)="cancel()" />
     <app-button
       label="Create Result"
       [loading]="isLoading()"
+      [disabled]="form.invalid || isLoading()"
       (clickEvent)="submit()"
+      [style.cursor]="form.invalid || isLoading() ? 'not-allowed' : 'pointer'"
     />
   </div>
 </div>

@@ -3,6 +3,7 @@ import {
   IAccount,
   IAuthProfile,
 } from '../../../@features/auth/model/auth.model';
+import { ISchool } from '../../models/school.model';
 
 // PROFILE
 export const loadProfile = createAction('[Profile] Get user profile');
@@ -13,6 +14,17 @@ export const saveProfile = createAction(
 export const saveProfileError = createAction(
   '[Profile] Save user profile failed',
   props<{ error: string }>()
+);
+
+// New to add user's school name
+export const loadLecturerSchool = createAction(
+  '[School] Load Lecturer School',
+  props<{ schoolId: string }>()
+);
+
+export const saveLecturerSchool = createAction(
+  '[School] Save Lecturer School Success',
+  props<{ school: ISchool }>()
 );
 
 // LINKED ACCOUNTS

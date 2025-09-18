@@ -6,21 +6,27 @@ import {
 import {
   loadProfile,
   loadProfileLinkedAccounts,
+  saveLecturerSchool,
   saveProfile,
   saveProfileError,
   saveProfileErrorLinkedAccounts,
   saveProfileLinkedAccounts,
 } from './profile.action';
+import { ISchool } from '../../models/school.model';
 
 export interface ProfileState {
-  profile: Omit<IAuthProfile, 'accessToken' | 'refreshToken'> | null;
+  info:
+    | (Omit<IAuthProfile, 'accessToken' | 'refreshToken'> & {
+        schoolInfo?: ISchool;
+      })
+    | null;
   accounts: IAccount[];
   error: string | null;
   isLoading: boolean;
 }
 
 export const initialState: ProfileState = {
-  profile: null,
+  info: null,
   accounts: [],
   error: null,
   isLoading: false,
@@ -36,13 +42,22 @@ export const profileReducer = createReducer(
   })),
   on(saveProfile, (state, { profile }) => ({
     ...state,
-    profile,
+    info: profile,
     isLoading: false,
   })),
   on(saveProfileError, (state, { error }) => ({
     ...state,
     isLoading: false,
     error,
+  })),
+
+  // Make school name present in profile
+  on(saveLecturerSchool, (state, { school }) => ({
+    ...state,
+    info: {
+      ...(state.info as Omit<IAuthProfile, 'accessToken' | 'refreshToken'>),
+      schoolInfo: school,
+    },
   })),
 
   // LINKED ACCOUNTS

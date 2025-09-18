@@ -24,10 +24,29 @@ export class LayoutComponent implements OnInit {
   expanded = signal<boolean>(true);
   screenWidth = signal<number>(window.innerWidth);
 
+  constructor() {
+    this.authService.loadInitialSession();
+
+    // this.store.select(state => state.profile).pipe(take(1)).subscribe(profileState => {
+    //   if (!profileState) {
+    //     const account = this.authService.activeAccount();
+    //     if (account) {
+    //       // Dispatch saveProfile with the activeAccount data but omit tokens
+    //       const { accessToken, refreshToken, ...profileWithoutTokens } = account;
+    //       this.store.dispatch(
+    //         saveProfile({ profile: profileWithoutTokens })
+    //       );
+    //     } else {
+    //       // If no local session, fetch from API
+    //       this.store.dispatch(loadProfile());
+    //     }
+    //   }
+    // });
+  }
+
   ngOnInit(): void {
     // When authenticated load user profile and linked accounts
     this.store.dispatch(loadProfile());
-    this.authService.loadInitialSession();
     // this.loadLinkedAccounts();
   }
 
