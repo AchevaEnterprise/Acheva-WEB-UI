@@ -165,18 +165,18 @@ export class ResultUploadComponent implements OnInit {
           });
 
           const analyticsData = [
-            analytics['A'],
-            analytics['B'],
-            analytics['C'],
-            analytics['D'],
-            analytics['E'],
-            analytics['F'],
+            analytics['A'] || 0,
+            analytics['B'] || 0,
+            analytics['C'] || 0,
+            analytics['D'] || 0,
+            analytics['E'] || 0,
+            analytics['F'] || 0,
           ];
 
           this.analyticsChartData.set(analyticsData);
-          this.totalStudent.set(analytics['total']);
-          this.totalStudentPass.set(analytics['totalPass']);
-          this.totalStudentFail.set(analytics['totalFail']);
+          this.totalStudent.set(analytics['total'] || 0);
+          this.totalStudentPass.set(analytics['totalPass'] || 0);
+          this.totalStudentFail.set(analytics['totalFail'] || 0);
 
           this.getStudentsInDepartmentAndLevel(department._id, level);
         }
@@ -204,18 +204,18 @@ export class ResultUploadComponent implements OnInit {
               };
 
             const analyticsData = [
-              analytics['A'],
-              analytics['B'],
-              analytics['C'],
-              analytics['D'],
-              analytics['E'],
-              analytics['F'],
+              analytics['A'] || 0,
+              analytics['B'] || 0,
+              analytics['C'] || 0,
+              analytics['D'] || 0,
+              analytics['E'] || 0,
+              analytics['F'] || 0,
             ];
 
             this.analyticsChartData.set(analyticsData);
-            this.totalStudent.set(total);
-            this.totalStudentPass.set(totalPass);
-            this.totalStudentFail.set(totalFail);
+            this.totalStudent.set(total || 0);
+            this.totalStudentPass.set(totalPass || 0);
+            this.totalStudentFail.set(totalFail || 0);
 
             this.regularStudents.set(result);
           }
@@ -232,12 +232,13 @@ export class ResultUploadComponent implements OnInit {
   }
 
   switchSegment(switchValue: ISegmentSwitcher['value']) {
-    this.activeSegment.update(
-      () =>
-        this.segments().find(
-          (segment: ISegmentSwitcher) => segment.value === switchValue
-        )!
+    const targetSegment = this.segments().find(
+      (segment: ISegmentSwitcher) => segment.value === switchValue
     );
+
+    if (targetSegment) {
+      this.activeSegment.set(targetSegment);
+    }
 
     switch (switchValue) {
       case 'REGULAR': {
@@ -252,6 +253,11 @@ export class ResultUploadComponent implements OnInit {
         this.courseForm.get('category')?.patchValue('unregistered');
         break;
       }
+    }
+
+    // Refresh data when switching segments
+    if (this.resultId) {
+      this.getResultEntries();
     }
   }
 
@@ -283,7 +289,7 @@ export class ResultUploadComponent implements OnInit {
           if (!resp.status) {
             this.toast.showNotification(
               'error',
-              'Result file uploaded failed',
+              'Result file upload failed',
               resp.message || 'Failed to upload result file'
             );
             return;
@@ -298,6 +304,14 @@ export class ResultUploadComponent implements OnInit {
           this.getResult();
           this.getResultEntries();
         },
+        error: (error) => {
+          this.toast.showNotification(
+            'error',
+            'Upload Error',
+            'An error occurred while uploading the file'
+          );
+          console.error('Upload error:', error);
+        },
       });
   }
 
@@ -310,28 +324,34 @@ export class ResultUploadComponent implements OnInit {
   // }
 
   saveChanges() {
+    let tableData: any = null;
+
     switch (this.activeSegment().value) {
       case 'REGULAR': {
-        console.warn(
-          'Regular Table Data: ',
-          this.regularTableResultUploadRef()?.dataSource()
-        );
+        tableData = this.regularTableResultUploadRef()?.dataSource();
+        console.warn('Regular Table Data: ', tableData);
         break;
       }
       case 'REFERENCE': {
-        console.warn(
-          'Reference Table Data: ',
-          this.referenceTableResultUploadRef()?.dataSource()
-        );
+        tableData = this.referenceTableResultUploadRef()?.dataSource();
+        console.warn('Reference Table Data: ', tableData);
         break;
       }
       case 'UNREGISTERED': {
-        console.warn(
-          'Unregistered Table Data: ',
-          this.referenceTableResultUploadRef()?.dataSource()
-        );
+        tableData = this.referenceTableResultUploadRef()?.dataSource();
+        console.warn('Unregistered Table Data: ', tableData);
         break;
       }
+    }
+
+    // Validate that we have data to save
+    if (!tableData || (Array.isArray(tableData) && tableData.length === 0)) {
+      this.toast.showNotification(
+        'warning',
+        'No Data',
+        'No data available to save'
+      );
+      return;
     }
 
     this.resultsService.sendResult(this.resultId!, 'dcd').subscribe({
@@ -339,7 +359,7 @@ export class ResultUploadComponent implements OnInit {
         if (!resp.status) {
           this.toast.showNotification(
             'error',
-            'Result Sent Failed',
+            'Result Send Failed',
             resp.message || 'Failed to send result to the student'
           );
           return;
@@ -351,12 +371,24 @@ export class ResultUploadComponent implements OnInit {
           'Result has been sent successfully'
         );
 
-        this.router.navigate(['my-results']);
+        this.router.navigate(['/my-results']);
+      },
+      error: (error) => {
+        this.toast.showNotification(
+          'error',
+          'Send Error',
+          'An error occurred while sending the result'
+        );
+        console.error('Send result error:', error);
       },
     });
   }
 
-  reject() {}
+  reject() {
+    // TODO: Implement reject functionality
+  }
 
-  approve() {}
+  approve() {
+    // TODO: Implement approve functionality
+  }
 }
