@@ -29,11 +29,11 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { PageEvent } from '@angular/material/paginator';
 import { finalize, Subject, takeUntil } from 'rxjs';
-import { SearchSelectComponent } from '../../../../@shared/components/forms/search-select/search-select.component';
 import { PaginatorComponent } from '../../../../@shared/components/paginator/paginator.component';
 import { IPaginator } from '../../../../@core/models/paginator.model';
 import { IStudentGrade } from '../../../courses/models/student-grade.model';
 import { StudentService } from '../../../students/services/student.service';
+import { EmptyStateComponent } from '../../../../@shared/components/empty-state/empty-state.component';
 
 @Component({
   selector: 'app-reference-table-result-upload',
@@ -47,7 +47,7 @@ import { StudentService } from '../../../students/services/student.service';
     FormsModule,
     ReactiveFormsModule,
     MatCheckboxModule,
-    SearchSelectComponent,
+    EmptyStateComponent,
   ],
   templateUrl: './reference-table-result-upload.component.html',
   styleUrl: './reference-table-result-upload.component.scss',

@@ -33,7 +33,6 @@ import { ResultsService } from '../../../result-management/services/results.serv
 import { StudentService } from '../../../students/services/student.service';
 import { AnalyticsChartComponent } from '../../components/analytics-chart/analytics-chart.component';
 import { ReferenceTableResultUploadComponent } from '../../components/reference-table-result-upload/reference-table-result-upload.component';
-import { RegularTableResultUploadComponent } from '../../components/regular-table-result-upload/regular-table-result-upload.component';
 
 type SegmentValue = 'REGULAR' | 'REFERENCE' | 'UNREGISTERED';
 
@@ -54,7 +53,6 @@ type SegmentValue = 'REGULAR' | 'REFERENCE' | 'UNREGISTERED';
     MatRadioModule,
     SearchInputComponent,
     MatDialogModule,
-    RegularTableResultUploadComponent,
     ReferenceTableResultUploadComponent,
   ],
   templateUrl: './result-upload.component.html',

@@ -166,12 +166,13 @@
 
   <div class="mt-4">
     @switch (activeSegment().value) {
-      <!-- @case ('REGULAR') {
-        <app-regular-table-result-upload
+      @case ('REGULAR') {
+        <app-reference-table-result-upload
           #regularTableResultUploadRef
-          [students]="regularStudents()"
+          [students]="students()['REGULAR']"
+          (selectedRows)="onSelectedRowsChange($event)"
         />
-      } -->
+      }
       @case ('REFERENCE') {
         <app-reference-table-result-upload
           #referenceTableResultUploadRef
