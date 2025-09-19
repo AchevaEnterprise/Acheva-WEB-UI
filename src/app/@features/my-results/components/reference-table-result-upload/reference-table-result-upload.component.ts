@@ -17,12 +17,19 @@ import {
   FormsModule,
   ReactiveFormsModule,
   Validators,
+  AbstractControl,
 } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatTableModule } from '@angular/material/table';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { PageEvent } from '@angular/material/paginator';
 import { finalize, Subject, takeUntil } from 'rxjs';
 import { SearchSelectComponent } from '../../../../@shared/components/forms/search-select/search-select.component';
 import { PaginatorComponent } from '../../../../@shared/components/paginator/paginator.component';
+import { IPaginator } from '../../../../@core/models/paginator.model';
 import { IStudentGrade } from '../../../courses/models/student-grade.model';
 import { StudentService } from '../../../students/services/student.service';
 
@@ -31,6 +38,10 @@ import { StudentService } from '../../../students/services/student.service';
   imports: [
     PaginatorComponent,
     MatTableModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatIconModule,
+    MatButtonModule,
     FormsModule,
     ReactiveFormsModule,
     MatCheckboxModule,
@@ -41,18 +52,34 @@ import { StudentService } from '../../../students/services/student.service';
   exportAs: 'referenceTableResultUploadRef',
 })
 export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
+  // Injected services
   private readonly studentService = inject(StudentService);
   private readonly fb = inject(FormBuilder);
   private readonly destroy$ = new Subject<void>();
 
+  // Input/Output properties
   students = input<Partial<IStudentGrade>[]>([]);
   tableUpdateEvent = output<Partial<IStudentGrade>[]>();
+  paginationEvent = output<PageEvent>();
+  selectedRows = output<Partial<IStudentGrade>[]>();
 
+  // Row selection signal
+  selectedIndices = signal<Set<number>>(new Set<number>());
+
+  // Form and signals
   form: FormGroup;
   searchingStudents = signal(false);
   studentList = signal<{ label: string; value: string }[]>([]);
 
-  displayedColumns: string[] = [
+  // Pagination signals
+  currentPage = signal(0);
+  pageSize = signal(10);
+  totalStudents = signal(0);
+
+  // Configuration
+  readonly pageSizeOptions = [5, 10, 25, 50, 100];
+  readonly displayedColumns = [
+    'select',
     'registrationNumber',
     'fullName',
     'test',
@@ -64,25 +91,22 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
   ];
 
   constructor() {
-    // Initialize form with empty FormArray
     this.form = this.fb.group({
       rows: this.fb.array([]),
     });
 
-    // Effect to watch for changes in students input and update form accordingly
+    // Watch for changes in students input
     effect(() => {
       const students = this.students();
+
       if (students && students.length > 0) {
+        this.totalStudents.set(students.length);
         this.updateFormWithStudents(students);
-      } else {
-        // Clear form if no students
-        this.clearForm();
       }
     });
   }
 
   ngOnInit(): void {
-    // Subscribe to form changes to emit updates
     this.form.valueChanges.pipe(takeUntil(this.destroy$)).subscribe((value) => {
       this.tableUpdateEvent.emit(value.rows as Partial<IStudentGrade>[]);
     });
@@ -93,32 +117,137 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  // Computed property for data source
+  // Computed properties
+  paginationData = computed<IPaginator>(() => ({
+    page: this.currentPage(),
+    pageSize: this.pageSize(),
+    total: this.totalStudents(),
+  }));
+
   dataSource = computed<Partial<IStudentGrade>[]>(() => {
-    return this.students() || [];
+    const allStudents = this.students() || [];
+    const startIndex = this.currentPage() * this.pageSize();
+    const endIndex = startIndex + this.pageSize();
+    return allStudents.slice(startIndex, endIndex);
   });
 
+  paginatedRows = computed<AbstractControl[]>(() => {
+    const startIndex = this.currentPage() * this.pageSize();
+    const endIndex = startIndex + this.pageSize();
+    return this.rows.controls.slice(startIndex, endIndex);
+  });
+
+  get rows(): FormArray {
+    return this.form.get('rows') as FormArray;
+  }
+
   private updateFormWithStudents(students: Partial<IStudentGrade>[]): void {
-    const rowsArray = this.rows;
+    this.rows.clear();
+    students.forEach((student) => this.rows.push(this.createRow(student)));
+  }
 
-    // Clear existing rows
-    while (rowsArray.length !== 0) {
-      rowsArray.removeAt(0);
-    }
-
-    // Add new rows for each student
-    students.forEach((student) => {
-      rowsArray.push(this.createRow(student));
+  // Form management
+  createRow(student: Partial<IStudentGrade>): FormGroup {
+    const row = this.fb.group({
+      registrationNumber: [
+        student.registrationNumber || '',
+        Validators.required,
+      ],
+      fullName: [student.fullName || '', Validators.required],
+      test: [student.test ?? 0, [Validators.min(0), Validators.max(30)]],
+      lab: [student.lab ?? 0, [Validators.min(0), Validators.max(30)]],
+      exam: [student.exam ?? 0, [Validators.min(0), Validators.max(70)]],
+      total: [{ value: 0, disabled: true }],
+      grade: [student.grade || ''],
+      status: [student.status || 'PENDING'],
     });
+
+    ['test', 'lab', 'exam'].forEach((field) => {
+      row
+        .get(field)
+        ?.valueChanges.pipe(takeUntil(this.destroy$))
+        .subscribe(() => this.calculateTotalAndGrade(row));
+    });
+
+    this.calculateTotalAndGrade(row);
+    return row;
   }
 
-  private clearForm(): void {
-    const rowsArray = this.rows;
-    while (rowsArray.length !== 0) {
-      rowsArray.removeAt(0);
+  private calculateTotalAndGrade(row: FormGroup): void {
+    const test = Number(row.get('test')?.value) || 0;
+    const lab = Number(row.get('lab')?.value) || 0;
+    const exam = Number(row.get('exam')?.value) || 0;
+    const total = test + lab + exam;
+
+    row.get('total')?.setValue(total, { emitEvent: false });
+
+    const { grade, status } = this.getGradeAndStatus(total);
+    row.get('grade')?.setValue(grade, { emitEvent: false });
+    row.get('status')?.setValue(status, { emitEvent: false });
+  }
+
+  private getGradeAndStatus(total: number): { grade: string; status: string } {
+    if (total >= 70) return { grade: 'A', status: 'PASS' };
+    if (total >= 60) return { grade: 'B', status: 'PASS' };
+    if (total >= 50) return { grade: 'C', status: 'PASS' };
+    if (total >= 45) return { grade: 'D', status: 'PASS' };
+    if (total >= 40) return { grade: 'E', status: 'PASS' };
+    return { grade: 'F', status: 'FAIL' };
+  }
+
+  // For row selection
+  toggleRowSelection(index: number): void {
+    const actualIndex = this.currentPage() * this.pageSize() + index;
+    const updated = new Set(this.selectedIndices());
+    if (updated.has(actualIndex)) {
+      updated.delete(actualIndex);
+    } else {
+      updated.add(actualIndex);
     }
+
+    this.emitSelectedRows();
   }
 
+  toggleSelectAll(checked: boolean): void {
+    const startIndex = this.currentPage() * this.pageSize();
+    const endIndex = startIndex + this.pageSize();
+    const updated = new Set(this.selectedIndices());
+
+    for (let i = startIndex; i < endIndex; i++) {
+      if (checked) {
+        updated.add(i);
+      } else {
+        updated.delete(i);
+      }
+    }
+
+    this.selectedIndices.set(updated);
+    this.emitSelectedRows();
+  }
+
+  isRowSelected(index: number): boolean {
+    const actualIndex = this.currentPage() * this.pageSize() + index;
+    return this.selectedIndices().has(actualIndex);
+  }
+
+  isAllSelected(): boolean {
+    const startIndex = this.currentPage() * this.pageSize();
+    const endIndex = startIndex + this.pageSize();
+    for (let i = startIndex; i < endIndex; i++) {
+      if (!this.selectedIndices().has(i)) return false;
+    }
+    return true;
+  }
+
+  emitSelectedRows(): void {
+    const selected = Array.from(this.selectedIndices())
+      .map((i) => this.rows.at(i)?.value as Partial<IStudentGrade>)
+      .filter((v): v is Partial<IStudentGrade> => !!v);
+
+    this.selectedRows.emit(selected);
+  }
+
+  // Student management
   searchStudent(query: string): void {
     if (!query || query.trim().length < 2) {
       this.studentList.set([]);
@@ -153,118 +282,27 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
       });
   }
 
-  get rows(): FormArray {
-    return this.form.get('rows') as FormArray;
-  }
+  addStudent(registrationNumber: string | Event): void {
+    const regNumber =
+      typeof registrationNumber === 'string' ? registrationNumber : '';
+    if (!regNumber) return;
 
-  createRow(student: Partial<IStudentGrade>): FormGroup {
-    const row = this.fb.group({
-      registrationNumber: new FormControl(student.registrationNumber || '', [
-        Validators.required,
-      ]),
-      fullName: new FormControl(student.fullName || '', [Validators.required]),
-      test: new FormControl(student.test || 0, [
-        Validators.min(0),
-        Validators.max(30),
-      ]),
-      lab: new FormControl(student.lab || 0, [
-        Validators.min(0),
-        Validators.max(30),
-      ]),
-      exam: new FormControl(student.exam || 0, [
-        Validators.min(0),
-        Validators.max(70),
-      ]),
-      total: new FormControl({ value: 0, disabled: true }), // Auto-calculated
-      grade: new FormControl(student.grade || ''),
-      status: new FormControl(student.status || 'PENDING'),
-    });
-
-    // Subscribe to changes in test, lab, exam to auto-calculate total and grade
-    row
-      .get('test')
-      ?.valueChanges.pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.calculateTotalAndGrade(row);
-      });
-
-    row
-      .get('lab')
-      ?.valueChanges.pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.calculateTotalAndGrade(row);
-      });
-
-    row
-      .get('exam')
-      ?.valueChanges.pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.calculateTotalAndGrade(row);
-      });
-
-    // Initial calculation
-    this.calculateTotalAndGrade(row);
-
-    return row;
-  }
-
-  private calculateTotalAndGrade(row: FormGroup): void {
-    const test = Number(row.get('test')?.value) || 0;
-    const lab = Number(row.get('lab')?.value) || 0;
-    const exam = Number(row.get('exam')?.value) || 0;
-
-    const total = test + lab + exam;
-    row.get('total')?.setValue(total, { emitEvent: false });
-
-    // Calculate grade based on total
-    let grade = 'F';
-    let status = 'FAIL';
-
-    if (total >= 70) {
-      grade = 'A';
-      status = 'PASS';
-    } else if (total >= 60) {
-      grade = 'B';
-      status = 'PASS';
-    } else if (total >= 50) {
-      grade = 'C';
-      status = 'PASS';
-    } else if (total >= 45) {
-      grade = 'D';
-      status = 'PASS';
-    } else if (total >= 40) {
-      grade = 'E';
-      status = 'PASS';
-    } else {
-      grade = 'F';
-      status = 'FAIL';
-    }
-
-    row.get('grade')?.setValue(grade, { emitEvent: false });
-    row.get('status')?.setValue(status, { emitEvent: false });
-  }
-
-  addStudent(registrationNumber: string): void {
     // Check if student already exists
-    const existingStudent = this.rows.controls.find(
-      (control) =>
-        control.get('registrationNumber')?.value === registrationNumber
+    const exists = this.rows.controls.some(
+      (control) => control.get('registrationNumber')?.value === regNumber
     );
-
-    if (existingStudent) {
+    if (exists) {
       console.warn('Student already exists in the table');
       return;
     }
 
-    // Find student from the search results
     const studentData = this.studentList().find(
-      (student) => student.value === registrationNumber
+      (student) => student.value === regNumber
     );
-
     if (studentData) {
       const newStudent: Partial<IStudentGrade> = {
         registrationNumber: studentData.value,
-        fullName: studentData.label.split(' (')[0], // Extract name without reg number
+        fullName: studentData.label.split(' (')[0],
         test: '0',
         lab: '0',
         exam: '0',
@@ -273,56 +311,96 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
       };
 
       this.rows.push(this.createRow(newStudent));
+      this.totalStudents.set(this.rows.length);
+
+      // Navigate to page with new student
+      const newStudentIndex = this.rows.length - 1;
+      const targetPage = Math.floor(newStudentIndex / this.pageSize());
+      this.currentPage.set(targetPage);
     }
   }
 
   removeStudent(index: number): void {
-    if (index >= 0 && index < this.rows.length) {
-      this.rows.removeAt(index);
+    const actualIndex = this.currentPage() * this.pageSize() + index;
+    if (actualIndex >= 0 && actualIndex < this.rows.length) {
+      this.rows.removeAt(actualIndex);
+      this.totalStudents.set(this.rows.length);
+
+      // Adjust current page if needed
+      const maxPage = Math.max(0, this.getTotalPages() - 1);
+      if (this.currentPage() > maxPage) {
+        this.currentPage.set(maxPage);
+      }
     }
   }
 
-  saveRow(index: number): void {
-    const row = this.rows.at(index);
-    if (row.valid) {
-      const rowData = row.value as Partial<IStudentGrade>;
-      console.warn('Saving row data:', rowData);
-
-      // Emit the updated data
-      this.tableUpdateEvent.emit(this.form.value.rows);
-    } else {
-      console.warn('Row is invalid:', row.errors);
-    }
+  // Pagination methods
+  onPageChange(event: PageEvent): void {
+    this.currentPage.set(event.pageIndex);
+    this.pageSize.set(event.pageSize);
+    this.paginationEvent.emit(event);
   }
 
-  saveAllRows(): void {
-    if (this.form.valid) {
-      const allData = this.form.value.rows as Partial<IStudentGrade>[];
-      console.warn('Saving all rows:', allData);
-      this.tableUpdateEvent.emit(allData);
-    } else {
-      console.warn('Form is invalid');
-    }
+  getTotalPages(): number {
+    return Math.ceil(this.totalStudents() / this.pageSize());
   }
 
-  // Public method to get current data source for parent component
+  // Helper methods for template
+  getFormControl(index: number, controlName: string): FormControl {
+    const control = this.paginatedRows()[index]?.get(
+      controlName
+    ) as FormControl;
+    return control instanceof FormControl ? control : new FormControl('');
+  }
+
+  getControlValue(index: number, controlName: string): any {
+    return this.paginatedRows()[index]?.get(controlName)?.value ?? '';
+  }
+
+  hasControlError(
+    index: number,
+    controlName: string,
+    errorType: string
+  ): boolean {
+    return (
+      this.paginatedRows()[index]?.get(controlName)?.errors?.[errorType] ??
+      false
+    );
+  }
+
+  getGradeClass(grade: string): string {
+    const gradeClasses: Record<string, string> = {
+      A: 'bg-green-100 text-green-800',
+      B: 'bg-blue-100 text-blue-800',
+      C: 'bg-yellow-100 text-yellow-800',
+      D: 'bg-orange-100 text-orange-800',
+      E: 'bg-orange-200 text-orange-900',
+      F: 'bg-red-100 text-red-800',
+    };
+    return gradeClasses[grade] || 'bg-gray-100 text-gray-800';
+  }
+
+  getStatusClass(status: string): string {
+    const statusClasses: Record<string, string> = {
+      PASS: 'bg-green-100 text-green-800',
+      FAIL: 'bg-red-100 text-red-800',
+      PENDING: 'bg-gray-100 text-gray-800',
+    };
+    return statusClasses[status] || 'bg-gray-100 text-gray-800';
+  }
+
+  // Public API methods
   getCurrentDataSource(): Partial<IStudentGrade>[] {
     return this.form.value.rows || [];
   }
 
-  // Method to validate all rows
   validateAllRows(): boolean {
     return this.form.valid;
   }
 
-  // Method to get form errors
-  getFormErrors(): any {
-    const errors: any = {};
-    this.rows.controls.forEach((row, index) => {
-      if (row.invalid) {
-        errors[index] = row.errors;
-      }
-    });
-    return errors;
+  saveAllRows(): void {
+    if (this.form.valid) {
+      this.tableUpdateEvent.emit(this.form.value.rows);
+    }
   }
 }

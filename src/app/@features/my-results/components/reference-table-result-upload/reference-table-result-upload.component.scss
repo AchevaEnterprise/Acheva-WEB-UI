@@ -1,9 +1,5 @@
-.mat-column-name {
-  width: 20%;
-}
-
-.mat-column-test,
-.mat-column-lab,
-.mat-column-exam {
-  width: 10%;
+.no-wrap {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis; /* optional: adds "..." if text is too long */
 }
