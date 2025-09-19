@@ -5,7 +5,7 @@
   <!-- FORM -->
   <div [formGroup]="courseForm">
     <div class="input-style-1 acheva-input w-full">
-      <p class="acva-para-2 fw-400 label-text">Courses</p>
+      <p class="acva-para-2 fw-400 label-text">Course</p>
 
       <mat-form-field [style.width.%]="100" appearance="outline">
         <input matInput type="text" placeholder="" formControlName="course" />
@@ -173,10 +173,18 @@
         />
       } -->
       @case ('REFERENCE') {
-        <app-reference-table-result-upload #referenceTableResultUploadRef />
+        <app-reference-table-result-upload
+          #referenceTableResultUploadRef
+          [students]="students()['REFERENCE']"
+          (selectedRows)="onSelectedRowsChange($event)"
+        />
       }
       @case ('UNREGISTERED') {
-        <app-reference-table-result-upload #referenceTableResultUploadRef />
+        <app-reference-table-result-upload
+          #unregisteredTableResultUploadRef
+          [students]="students()['UNREGISTERED']"
+          (selectedRows)="onSelectedRowsChange($event)"
+        />
       }
     }
   </div>

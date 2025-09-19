@@ -8,6 +8,8 @@ import {
   OnInit,
   OnDestroy,
   effect,
+  ChangeDetectorRef,
+  untracked,
 } from '@angular/core';
 import {
   FormArray,
@@ -55,6 +57,7 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
   // Injected services
   private readonly studentService = inject(StudentService);
   private readonly fb = inject(FormBuilder);
+  private readonly cdr = inject(ChangeDetectorRef);
   private readonly destroy$ = new Subject<void>();
 
   // Input/Output properties
@@ -76,6 +79,9 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
   pageSize = signal(10);
   totalStudents = signal(0);
 
+  // Signal to track FormArray changes - this is the key fix
+  private formArrayVersion = signal(0);
+
   // Configuration
   readonly pageSizeOptions = [5, 10, 25, 50, 100];
   readonly displayedColumns = [
@@ -95,14 +101,21 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
       rows: this.fb.array([]),
     });
 
-    // Watch for changes in students input
+    // Fixed effect with proper change detection
     effect(() => {
       const students = this.students();
 
-      if (students && students.length > 0) {
-        this.totalStudents.set(students.length);
-        this.updateFormWithStudents(students);
-      }
+      // Use untracked to prevent infinite loops
+      untracked(() => {
+        if (students && students.length >= 0) {
+          // Allow empty arrays
+          this.totalStudents.set(students.length);
+          this.updateFormWithStudents(students);
+          // Reset pagination and selection when data changes
+          this.currentPage.set(0);
+          this.selectedIndices.set(new Set<number>());
+        }
+      });
     });
   }
 
@@ -117,33 +130,61 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  // Computed properties
+  // Fixed computed properties that react to FormArray changes
   paginationData = computed<IPaginator>(() => ({
     page: this.currentPage(),
     pageSize: this.pageSize(),
     total: this.totalStudents(),
   }));
 
-  dataSource = computed<Partial<IStudentGrade>[]>(() => {
-    const allStudents = this.students() || [];
+  dataSource = computed(() => {
+    // Include formArrayVersion to make this reactive to FormArray changes
+    this.formArrayVersion();
+
     const startIndex = this.currentPage() * this.pageSize();
     const endIndex = startIndex + this.pageSize();
-    return allStudents.slice(startIndex, endIndex);
+    const controls = this.rows.controls;
+
+    return controls.slice(startIndex, endIndex).map((control) => {
+      const value = control.value as Partial<IStudentGrade>;
+      return value;
+    });
   });
 
   paginatedRows = computed<AbstractControl[]>(() => {
+    // Include formArrayVersion to make this reactive to FormArray changes
+    this.formArrayVersion();
+
     const startIndex = this.currentPage() * this.pageSize();
     const endIndex = startIndex + this.pageSize();
-    return this.rows.controls.slice(startIndex, endIndex);
+    const controls = this.rows.controls.slice(startIndex, endIndex);
+
+    return controls;
   });
 
   get rows(): FormArray {
-    return this.form.get('rows') as FormArray;
+    const formArray = this.form.get('rows') as FormArray;
+    return formArray;
   }
 
   private updateFormWithStudents(students: Partial<IStudentGrade>[]): void {
-    this.rows.clear();
-    students.forEach((student) => this.rows.push(this.createRow(student)));
+    // Clear the FormArray completely
+    while (this.rows.length !== 0) {
+      this.rows.removeAt(0);
+    }
+
+    // Add new students
+    students.forEach((student, index) => {
+      this.rows.push(this.createRow(student));
+    });
+
+    // Increment version to trigger computed updates - this is crucial
+    this.formArrayVersion.update((v) => v + 1);
+
+    // Force change detection
+    this.form.markAsDirty();
+    this.form.updateValueAndValidity();
+    this.cdr.detectChanges();
   }
 
   // Form management
@@ -195,7 +236,7 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
     return { grade: 'F', status: 'FAIL' };
   }
 
-  // For row selection
+  // For row selection - updated to use formArrayVersion
   toggleRowSelection(index: number): void {
     const actualIndex = this.currentPage() * this.pageSize() + index;
     const updated = new Set(this.selectedIndices());
@@ -204,13 +245,13 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
     } else {
       updated.add(actualIndex);
     }
-
+    this.selectedIndices.set(updated);
     this.emitSelectedRows();
   }
 
   toggleSelectAll(checked: boolean): void {
     const startIndex = this.currentPage() * this.pageSize();
-    const endIndex = startIndex + this.pageSize();
+    const endIndex = Math.min(startIndex + this.pageSize(), this.rows.length);
     const updated = new Set(this.selectedIndices());
 
     for (let i = startIndex; i < endIndex; i++) {
@@ -232,7 +273,10 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
 
   isAllSelected(): boolean {
     const startIndex = this.currentPage() * this.pageSize();
-    const endIndex = startIndex + this.pageSize();
+    const endIndex = Math.min(startIndex + this.pageSize(), this.rows.length);
+
+    if (endIndex <= startIndex) return false;
+
     for (let i = startIndex; i < endIndex; i++) {
       if (!this.selectedIndices().has(i)) return false;
     }
@@ -247,7 +291,121 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
     this.selectedRows.emit(selected);
   }
 
-  // Student management
+  // Student management - updated to trigger version increment
+  addStudent(registrationNumber: string | Event): void {
+    const regNumber =
+      typeof registrationNumber === 'string' ? registrationNumber : '';
+    if (!regNumber) return;
+
+    // Check if student already exists
+    const exists = this.rows.controls.some(
+      (control) => control.get('registrationNumber')?.value === regNumber
+    );
+    if (exists) {
+      return;
+    }
+
+    const studentData = this.studentList().find(
+      (student) => student.value === regNumber
+    );
+    if (studentData) {
+      const newStudent: Partial<IStudentGrade> = {
+        registrationNumber: studentData.value,
+        fullName: studentData.label.split(' (')[0],
+        test: '0',
+        lab: '0',
+        exam: '0',
+        grade: 'F',
+        status: 'PENDING',
+      };
+
+      this.rows.push(this.createRow(newStudent));
+      this.totalStudents.set(this.rows.length);
+
+      // Increment version to trigger computed updates
+      this.formArrayVersion.update((v) => v + 1);
+
+      // Navigate to page with new student
+      const newStudentIndex = this.rows.length - 1;
+      const targetPage = Math.floor(newStudentIndex / this.pageSize());
+      this.currentPage.set(targetPage);
+
+      this.cdr.detectChanges();
+    }
+  }
+
+  removeStudent(index: number): void {
+    const actualIndex = this.currentPage() * this.pageSize() + index;
+    if (actualIndex >= 0 && actualIndex < this.rows.length) {
+      this.rows.removeAt(actualIndex);
+      this.totalStudents.set(this.rows.length);
+
+      // Increment version to trigger computed updates
+      this.formArrayVersion.update((v) => v + 1);
+
+      // Adjust current page if needed
+      const maxPage = Math.max(0, this.getTotalPages() - 1);
+      if (this.currentPage() > maxPage) {
+        this.currentPage.set(maxPage);
+      }
+
+      this.cdr.detectChanges();
+    }
+  }
+
+  // Pagination methods
+  onPageChange(event: PageEvent): void {
+    this.currentPage.set(event.pageIndex);
+    this.pageSize.set(event.pageSize);
+    this.paginationEvent.emit(event);
+  }
+
+  getTotalPages(): number {
+    return Math.ceil(this.totalStudents() / this.pageSize());
+  }
+
+  // Helper methods for template - improved error handling
+  getFormControl(index: number, controlName: string): FormControl {
+    const paginatedRows = this.paginatedRows();
+
+    if (index < 0 || index >= paginatedRows.length) {
+      return new FormControl('');
+    }
+
+    const control = paginatedRows[index]?.get(controlName) as FormControl;
+
+    if (!control) {
+      return new FormControl('');
+    }
+
+    return control;
+  }
+
+  getControlValue(index: number, controlName: string): any {
+    const paginatedRows = this.paginatedRows();
+
+    if (index < 0 || index >= paginatedRows.length) {
+      return '';
+    }
+
+    return paginatedRows[index]?.get(controlName)?.value ?? '';
+  }
+
+  hasControlError(
+    index: number,
+    controlName: string,
+    errorType: string
+  ): boolean {
+    const paginatedRows = this.paginatedRows();
+
+    if (index < 0 || index >= paginatedRows.length) {
+      return false;
+    }
+
+    return paginatedRows[index]?.get(controlName)?.errors?.[errorType] ?? false;
+  }
+
+  // Student search functionality
   searchStudent(query: string): void {
     if (!query || query.trim().length < 2) {
       this.studentList.set([]);
@@ -282,92 +440,7 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
       });
   }
 
-  addStudent(registrationNumber: string | Event): void {
-    const regNumber =
-      typeof registrationNumber === 'string' ? registrationNumber : '';
-    if (!regNumber) return;
-
-    // Check if student already exists
-    const exists = this.rows.controls.some(
-      (control) => control.get('registrationNumber')?.value === regNumber
-    );
-    if (exists) {
-      console.warn('Student already exists in the table');
-      return;
-    }
-
-    const studentData = this.studentList().find(
-      (student) => student.value === regNumber
-    );
-    if (studentData) {
-      const newStudent: Partial<IStudentGrade> = {
-        registrationNumber: studentData.value,
-        fullName: studentData.label.split(' (')[0],
-        test: '0',
-        lab: '0',
-        exam: '0',
-        grade: 'F',
-        status: 'PENDING',
-      };
-
-      this.rows.push(this.createRow(newStudent));
-      this.totalStudents.set(this.rows.length);
-
-      // Navigate to page with new student
-      const newStudentIndex = this.rows.length - 1;
-      const targetPage = Math.floor(newStudentIndex / this.pageSize());
-      this.currentPage.set(targetPage);
-    }
-  }
-
-  removeStudent(index: number): void {
-    const actualIndex = this.currentPage() * this.pageSize() + index;
-    if (actualIndex >= 0 && actualIndex < this.rows.length) {
-      this.rows.removeAt(actualIndex);
-      this.totalStudents.set(this.rows.length);
-
-      // Adjust current page if needed
-      const maxPage = Math.max(0, this.getTotalPages() - 1);
-      if (this.currentPage() > maxPage) {
-        this.currentPage.set(maxPage);
-      }
-    }
-  }
-
-  // Pagination methods
-  onPageChange(event: PageEvent): void {
-    this.currentPage.set(event.pageIndex);
-    this.pageSize.set(event.pageSize);
-    this.paginationEvent.emit(event);
-  }
-
-  getTotalPages(): number {
-    return Math.ceil(this.totalStudents() / this.pageSize());
-  }
-
-  // Helper methods for template
-  getFormControl(index: number, controlName: string): FormControl {
-    const control = this.paginatedRows()[index]?.get(
-      controlName
-    ) as FormControl;
-    return control instanceof FormControl ? control : new FormControl('');
-  }
-
-  getControlValue(index: number, controlName: string): any {
-    return this.paginatedRows()[index]?.get(controlName)?.value ?? '';
-  }
-
-  hasControlError(
-    index: number,
-    controlName: string,
-    errorType: string
-  ): boolean {
-    return (
-      this.paginatedRows()[index]?.get(controlName)?.errors?.[errorType] ??
-      false
-    );
-  }
-
+  // Styling methods
   getGradeClass(grade: string): string {
     const gradeClasses: Record<string, string> = {
       A: 'bg-green-100 text-green-800',

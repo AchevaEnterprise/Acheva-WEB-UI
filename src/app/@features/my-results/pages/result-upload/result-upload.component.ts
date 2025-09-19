@@ -1,4 +1,11 @@
-import { Component, inject, OnInit, signal, viewChild } from '@angular/core';
+import {
+  Component,
+  inject,
+  OnInit,
+  signal,
+  viewChild,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
@@ -28,6 +35,8 @@ import { AnalyticsChartComponent } from '../../components/analytics-chart/analyt
 import { ReferenceTableResultUploadComponent } from '../../components/reference-table-result-upload/reference-table-result-upload.component';
 import { RegularTableResultUploadComponent } from '../../components/regular-table-result-upload/regular-table-result-upload.component';
 
+type SegmentValue = 'REGULAR' | 'REFERENCE' | 'UNREGISTERED';
+
 @Component({
   selector: 'app-result-upload',
   imports: [
@@ -52,22 +61,25 @@ import { RegularTableResultUploadComponent } from '../../components/regular-tabl
   styleUrl: './result-upload.component.scss',
 })
 export class ResultUploadComponent implements OnInit {
-  // private readonly utilityService = inject(UtilityService);
   private readonly resultsService = inject(ResultsService);
   private readonly studentService = inject(StudentService);
   private readonly toast = inject(ToastService);
   private readonly dialog = inject(MatDialog);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   private readonly resultId = this.route.snapshot.queryParamMap.get('resultId');
 
-  regularTableResultUploadRef = viewChild<RegularTableResultUploadComponent>(
-    'regularTableResultUploadRef'
-  );
+  // Separate view child references for each segment
   referenceTableResultUploadRef =
     viewChild<ReferenceTableResultUploadComponent>(
       'referenceTableResultUploadRef'
+    );
+
+  unregisteredTableResultUploadRef =
+    viewChild<ReferenceTableResultUploadComponent>(
+      'unregisteredTableResultUploadRef'
     );
 
   segments = signal<ISegmentSwitcher[]>([
@@ -105,7 +117,18 @@ export class ResultUploadComponent implements OnInit {
       ],
     },
   ]);
-  activeSegment = signal<ISegmentSwitcher>(this.segments()[0]);
+
+  activeSegment = signal<ISegmentSwitcher>({
+    label: 'Regular',
+    value: 'REGULAR',
+    accessRole: [
+      RoleEnum.DEAN,
+      RoleEnum.HOD,
+      RoleEnum.COURSE_ADVISOR,
+      RoleEnum.COURSE_COORDINATOR,
+      RoleEnum.LECTURER,
+    ],
+  });
 
   analyticsChartData = signal<number[]>([]);
   totalStudent = signal<number | null>(null);
@@ -120,10 +143,19 @@ export class ResultUploadComponent implements OnInit {
   });
 
   uploadingResult = signal<boolean>(false);
+  selectedStudents = signal<Partial<IStudentGrade>[]>([]);
 
-  regularStudents = signal<Partial<IStudentGrade>[]>([]);
-  // referenceStudents = signal<IStudent[]>([]);
-  // unregisteredStudents = signal<IStudent[]>([]);
+  // Updated students signal with proper initialization
+  students = signal<Record<SegmentValue, Partial<IStudentGrade>[]>>({
+    REGULAR: [],
+    REFERENCE: [],
+    UNREGISTERED: [],
+  });
+
+  // Track loading state for data fetching
+  loadingData = signal<boolean>(false);
+
+  constructor() {}
 
   ngOnInit(): void {
     this.categoryListener();
@@ -139,58 +171,78 @@ export class ResultUploadComponent implements OnInit {
       .subscribe({
         next: (resp) => {
           if (resp.status) {
-            console.warn('Students: ', resp.data);
+            console.warn('Students in department and level:', resp.data);
           }
+        },
+        error: (error) => {
+          console.error(
+            'Error fetching students by department and level:',
+            error
+          );
         },
       });
   }
 
   getResult() {
-    this.resultsService.getResult(this.resultId!).subscribe({
-      next: (resp) => {
-        if (resp.status) {
-          const { analytics, course, session, level, department } =
-            resp.data as {
-              course: { courseTitle: string };
-              session: string;
-              level: string;
-              analytics: Record<string, number>;
-              department: IDepartment;
-            };
+    this.loadingData.set(true);
 
-          this.courseForm.patchValue({
-            course: course.courseTitle,
-            session: session,
-            level: level,
-          });
+    this.resultsService
+      .getResult(this.resultId!)
+      .pipe(finalize(() => this.loadingData.set(false)))
+      .subscribe({
+        next: (resp) => {
+          if (resp.status) {
+            const { analytics, course, session, level, department } =
+              resp.data as {
+                course: { courseTitle: string };
+                session: string;
+                level: string;
+                analytics: Record<string, number>;
+                department: IDepartment;
+              };
 
-          const analyticsData = [
-            analytics['A'] || 0,
-            analytics['B'] || 0,
-            analytics['C'] || 0,
-            analytics['D'] || 0,
-            analytics['E'] || 0,
-            analytics['F'] || 0,
-          ];
+            this.courseForm.patchValue({
+              course: course.courseTitle,
+              session: session,
+              level: level,
+            });
 
-          this.analyticsChartData.set(analyticsData);
-          this.totalStudent.set(analytics['total'] || 0);
-          this.totalStudentPass.set(analytics['totalPass'] || 0);
-          this.totalStudentFail.set(analytics['totalFail'] || 0);
+            const analyticsData = [
+              analytics['A'] || 0,
+              analytics['B'] || 0,
+              analytics['C'] || 0,
+              analytics['D'] || 0,
+              analytics['E'] || 0,
+              analytics['F'] || 0,
+            ];
 
-          this.getStudentsInDepartmentAndLevel(department._id, level);
-        }
-      },
-    });
+            this.analyticsChartData.set(analyticsData);
+            this.totalStudent.set(analytics['total'] || 0);
+            this.totalStudentPass.set(analytics['totalPass'] || 0);
+            this.totalStudentFail.set(analytics['totalFail'] || 0);
+
+            this.getStudentsInDepartmentAndLevel(department._id, level);
+          }
+        },
+        error: (error) => {
+          console.error('Error fetching result:', error);
+          this.toast.showNotification(
+            'error',
+            'Data Load Error',
+            'Failed to load result data'
+          );
+        },
+      });
   }
 
   getResultEntries() {
+    this.loadingData.set(true);
+
     this.resultsService
       .getResultEntries(this.resultId!, {
         category: this.activeSegment().value,
-        fullName: '', // or provide a value if needed
-        limit: '50', // or any appropriate number
       })
+      .pipe(finalize(() => this.loadingData.set(false)))
       .subscribe({
         next: (resp) => {
           if (resp.status) {
@@ -202,7 +254,6 @@ export class ResultUploadComponent implements OnInit {
                 totalFail: number;
                 result: Partial<IStudentGrade>[];
               };
-
             const analyticsData = [
               analytics['A'] || 0,
               analytics['B'] || 0,
@@ -217,8 +268,27 @@ export class ResultUploadComponent implements OnInit {
             this.totalStudentPass.set(totalPass || 0);
             this.totalStudentFail.set(totalFail || 0);
 
-            this.regularStudents.set(result);
+            // Update the students signal with the current segment data
+            const currentStudents = this.students();
+            const segmentKey = this.activeSegment().value as SegmentValue;
+
+            // Always update the data, even if it's the same reference
+            this.students.set({
+              ...currentStudents,
+              [segmentKey]: result || [],
+            });
+
+            // Force change detection to ensure UI updates
+            this.cdr.detectChanges();
           }
+        },
+        error: (error) => {
+          console.error('Error fetching result entries:', error);
+          this.toast.showNotification(
+            'error',
+            'Data Load Error',
+            'Failed to load student result entries'
+          );
         },
       });
   }
@@ -226,39 +296,70 @@ export class ResultUploadComponent implements OnInit {
   categoryListener() {
     this.courseForm.get('category')?.valueChanges.subscribe({
       next: (value) => {
-        this.switchSegment(value as ISegmentSwitcher['value']);
+        // Map form control values to SegmentValue
+        const mappedValue = this.mapFormValueToSegment(value!);
+        if (mappedValue) {
+          this.performSwitch(mappedValue);
+        }
       },
     });
   }
 
-  switchSegment(switchValue: ISegmentSwitcher['value']) {
+  private mapFormValueToSegment(formValue: string): SegmentValue | null {
+    const mapping: Record<string, SegmentValue> = {
+      regular: 'REGULAR',
+      reference: 'REFERENCE',
+      unregistered: 'UNREGISTERED',
+    };
+    return mapping[formValue] || null;
+  }
+
+  switchSegment(incoming: ISegmentSwitcher | string): void {
+    let switchValue: SegmentValue;
+
+    if (typeof incoming === 'string') {
+      switchValue = incoming as SegmentValue;
+    } else {
+      switchValue = incoming.value as SegmentValue;
+    }
+    this.performSwitch(switchValue);
+  }
+
+  performSwitch(switchValue: SegmentValue) {
     const targetSegment = this.segments().find(
-      (segment: ISegmentSwitcher) => segment.value === switchValue
+      (segment) => segment.value === switchValue
     );
 
     if (targetSegment) {
       this.activeSegment.set(targetSegment);
     }
 
-    switch (switchValue) {
-      case 'REGULAR': {
-        this.courseForm.get('category')?.patchValue('regular');
-        break;
-      }
-      case 'REFERENCE': {
-        this.courseForm.get('category')?.patchValue('reference');
-        break;
-      }
-      case 'UNREGISTERED': {
-        this.courseForm.get('category')?.patchValue('unregistered');
-        break;
-      }
+    // Update form control to match the segment (without emitting to prevent loops)
+    const formValue = this.mapSegmentToFormValue(switchValue);
+    if (formValue) {
+      this.courseForm
+        .get('category')
+        ?.patchValue(formValue, { emitEvent: false });
     }
 
-    // Refresh data when switching segments
+    // Always refresh data when switching segments
     if (this.resultId) {
       this.getResultEntries();
     }
+  }
+
+  private mapSegmentToFormValue(segment: SegmentValue): string {
+    const mapping: Record<SegmentValue, string> = {
+      REGULAR: 'regular',
+      REFERENCE: 'reference',
+      UNREGISTERED: 'unregistered',
+    };
+    return mapping[segment];
+  }
+
+  // Handle selected rows from child components
+  onSelectedRowsChange(selectedRows: Partial<IStudentGrade>[]) {
+    this.selectedStudents.set(selectedRows);
   }
 
   uploadResult() {
@@ -301,6 +402,7 @@ export class ResultUploadComponent implements OnInit {
             'Your result file has been uploaded successfully'
           );
 
+          // Refresh all data after successful upload
           this.getResult();
           this.getResultEntries();
         },
@@ -315,37 +417,29 @@ export class ResultUploadComponent implements OnInit {
       });
   }
 
-  // saveResultEntry() {
-  //   this.resultsService.createResultEntry(this.resultEntry).subscribe({
-  //     next: (resp) => {
-  //       console.log('Entry Saved: ', resp);
-  //     },
-  //   });
-  // }
-
   saveChanges() {
-    let tableData: any = null;
+    let tableData: Partial<IStudentGrade>[] = [];
 
-    switch (this.activeSegment().value) {
-      case 'REGULAR': {
-        tableData = this.regularTableResultUploadRef()?.dataSource();
-        console.warn('Regular Table Data: ', tableData);
-        break;
-      }
-      case 'REFERENCE': {
-        tableData = this.referenceTableResultUploadRef()?.dataSource();
-        console.warn('Reference Table Data: ', tableData);
-        break;
-      }
-      case 'UNREGISTERED': {
-        tableData = this.referenceTableResultUploadRef()?.dataSource();
-        console.warn('Unregistered Table Data: ', tableData);
-        break;
-      }
+    // Safely get the current segment value
+    const currentSegmentValue = this.activeSegment().value;
+
+    // Type guard to ensure we have a valid SegmentValue
+    if (!this.isValidSegmentValue(currentSegmentValue)) {
+      console.error('Invalid segment value:', currentSegmentValue);
+      this.toast.showNotification(
+        'error',
+        'Invalid State',
+        'Invalid segment state detected. Please refresh the page.'
+      );
+      return;
     }
 
-    // Validate that we have data to save
-    if (!tableData || (Array.isArray(tableData) && tableData.length === 0)) {
+    const currentSegment = currentSegmentValue as SegmentValue;
+
+    // Get the current segment's data from the students signal
+    const currentSegmentData = this.students()[currentSegment];
+
+    if (!currentSegmentData || currentSegmentData.length === 0) {
       this.toast.showNotification(
         'warning',
         'No Data',
@@ -354,6 +448,38 @@ export class ResultUploadComponent implements OnInit {
       return;
     }
 
+    // Get data from appropriate component reference
+    switch (currentSegment) {
+      case 'REGULAR': {
+        // TODO: Implement when regular table component is ready
+        tableData = currentSegmentData;
+        break;
+      }
+      case 'REFERENCE': {
+        const componentData =
+          this.referenceTableResultUploadRef()?.getCurrentDataSource();
+        tableData = componentData || currentSegmentData;
+        break;
+      }
+      case 'UNREGISTERED': {
+        const componentData =
+          this.unregisteredTableResultUploadRef()?.getCurrentDataSource();
+        tableData = componentData || currentSegmentData;
+        break;
+      }
+    }
+
+    // Validate data before saving
+    if (!this.validateTableData(tableData)) {
+      this.toast.showNotification(
+        'error',
+        'Validation Error',
+        'Please ensure all required fields are filled and valid'
+      );
+      return;
+    }
+
+    // TODO: Replace 'dcd' with actual data or remove this call if not needed
     this.resultsService.sendResult(this.resultId!, 'dcd').subscribe({
       next: (resp) => {
         if (!resp.status) {
@@ -384,11 +510,74 @@ export class ResultUploadComponent implements OnInit {
     });
   }
 
+  private isValidSegmentValue(value: any): value is SegmentValue {
+    return ['REGULAR', 'REFERENCE', 'UNREGISTERED'].includes(value);
+  }
+
+  private validateTableData(data: Partial<IStudentGrade>[]): boolean {
+    if (!data || data.length === 0) {
+      console.warn('Validation failed: No data provided');
+      return false;
+    }
+
+    const isValid = data.every((student, index) => {
+      const hasRequiredFields = !!(
+        student.registrationNumber &&
+        student.fullName &&
+        student.test !== undefined &&
+        student.lab !== undefined &&
+        student.exam !== undefined &&
+        student.grade &&
+        student.status
+      );
+
+      if (!hasRequiredFields) {
+        console.warn(
+          `Validation failed for student at index ${index}:`,
+          student
+        );
+      }
+
+      return hasRequiredFields;
+    });
+
+    return isValid;
+  }
+
   reject() {
     // TODO: Implement reject functionality
+    console.warn('Rejecting result for segment:', this.activeSegment().value);
   }
 
   approve() {
     // TODO: Implement approve functionality
+    console.warn('Approving result for segment:', this.activeSegment().value);
+  }
+
+  // Helper method to get current segment data
+  getCurrentSegmentData(): Partial<IStudentGrade>[] {
+    const currentSegmentValue = this.activeSegment().value;
+
+    if (!this.isValidSegmentValue(currentSegmentValue)) {
+      console.warn(
+        'Invalid segment value in getCurrentSegmentData:',
+        currentSegmentValue
+      );
+      return [];
+    }
+
+    const currentSegment = currentSegmentValue as SegmentValue;
+    return this.students()[currentSegment] || [];
+  }
+
+  // Helper method to check if data is loading
+  isLoadingData(): boolean {
+    return this.loadingData();
+  }
+
+  // Helper method to check if current segment has data
+  hasDataForCurrentSegment(): boolean {
+    const currentSegmentData = this.getCurrentSegmentData();
+    return currentSegmentData.length > 0;
   }
 }

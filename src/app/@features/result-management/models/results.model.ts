@@ -54,7 +54,7 @@ export interface IUpdateResultEntry extends ICreateResultEntry {
 }
 
 export interface IResultEntriesQuery {
-  category: string;
-  fullName: string;
-  limit: string;
+  category?: string;
+  fullName?: string;
+  limit?: string;
 }
