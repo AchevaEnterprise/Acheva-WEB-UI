@@ -59,6 +59,9 @@ type SegmentValue = 'REGULAR' | 'REFERENCE' | 'UNREGISTERED';
   styleUrl: './result-upload.component.scss',
 })
 export class ResultUploadComponent implements OnInit {
+  // ========================================
+  // DEPENDENCY INJECTION
+  // ========================================
   private readonly resultsService = inject(ResultsService);
   private readonly studentService = inject(StudentService);
   private readonly toast = inject(ToastService);
@@ -67,6 +70,9 @@ export class ResultUploadComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly cdr = inject(ChangeDetectorRef);
 
+  // ========================================
+  // COMPONENT PROPERTIES
+  // ========================================
   private readonly resultId = this.route.snapshot.queryParamMap.get('resultId');
 
   // Separate view child references for each segment
@@ -80,6 +86,9 @@ export class ResultUploadComponent implements OnInit {
       'unregisteredTableResultUploadRef'
     );
 
+  // ========================================
+  // SIGNALS AND REACTIVE STATE
+  // ========================================
   segments = signal<ISegmentSwitcher[]>([
     {
       label: 'Regular',
@@ -133,13 +142,6 @@ export class ResultUploadComponent implements OnInit {
   totalStudentPass = signal<number | null>(null);
   totalStudentFail = signal<number | null>(null);
 
-  courseForm = new FormGroup({
-    course: new FormControl({ value: '', disabled: true }),
-    session: new FormControl({ value: '', disabled: true }),
-    level: new FormControl({ value: '', disabled: true }),
-    category: new FormControl('regular'),
-  });
-
   uploadingResult = signal<boolean>(false);
   selectedStudents = signal<Partial<IStudentGrade>[]>([]);
 
@@ -153,8 +155,21 @@ export class ResultUploadComponent implements OnInit {
   // Track loading state for data fetching
   loadingData = signal<boolean>(false);
 
+  // ========================================
+  // FORMS
+  // ========================================
+  courseForm = new FormGroup({
+    course: new FormControl({ value: '', disabled: true }),
+    session: new FormControl({ value: '', disabled: true }),
+    level: new FormControl({ value: '', disabled: true }),
+    category: new FormControl('regular'),
+  });
+
   constructor() {}
 
+  // ========================================
+  // LIFECYCLE HOOKS
+  // ========================================
   ngOnInit(): void {
     this.categoryListener();
     if (this.resultId) {
@@ -163,6 +178,9 @@ export class ResultUploadComponent implements OnInit {
     }
   }
 
+  // ========================================
+  // DATA FETCHING METHODS
+  // ========================================
   getStudentsInDepartmentAndLevel(departmentId: string, level: string) {
     this.studentService
       .getStudentsInDepartmentAndLevel(departmentId, level)
@@ -291,6 +309,9 @@ export class ResultUploadComponent implements OnInit {
       });
   }
 
+  // ========================================
+  // SEGMENT SWITCHING METHODS
+  // ========================================
   categoryListener() {
     this.courseForm.get('category')?.valueChanges.subscribe({
       next: (value) => {
@@ -355,11 +376,9 @@ export class ResultUploadComponent implements OnInit {
     return mapping[segment];
   }
 
-  // Handle selected rows from child components
-  onSelectedRowsChange(selectedRows: Partial<IStudentGrade>[]) {
-    this.selectedStudents.set(selectedRows);
-  }
-
+  // ========================================
+  // FILE UPLOAD METHODS
+  // ========================================
   uploadResult() {
     this.dialog
       .open(UploadResultDialogComponent, {
@@ -368,12 +387,12 @@ export class ResultUploadComponent implements OnInit {
       .afterClosed()
       .subscribe({
         next: (file: File | null) => {
-          if (file) this.confirmResultUpload(file);
+          if (file) this.submitUpload(file);
         },
       });
   }
 
-  confirmResultUpload(resultFile: File) {
+  submitUpload(resultFile: File) {
     this.uploadingResult.set(true);
 
     this.resultsService
@@ -415,6 +434,33 @@ export class ResultUploadComponent implements OnInit {
       });
   }
 
+  // ========================================
+  // TABLE DATA MANAGEMENT
+  // ========================================
+  // Handle selected rows from child components
+  onSelectedRowsChange(selectedRows: Partial<IStudentGrade>[]) {
+    this.selectedStudents.set(selectedRows);
+  }
+
+  // Helper method to get current segment data
+  getCurrentSegmentData(): Partial<IStudentGrade>[] {
+    const currentSegmentValue = this.activeSegment().value;
+
+    if (!this.isValidSegmentValue(currentSegmentValue)) {
+      console.warn(
+        'Invalid segment value in getCurrentSegmentData:',
+        currentSegmentValue
+      );
+      return [];
+    }
+
+    const currentSegment = currentSegmentValue as SegmentValue;
+    return this.students()[currentSegment] || [];
+  }
+
+  // ========================================
+  // ACTION METHODS
+  // ========================================
   saveChanges() {
     let tableData: Partial<IStudentGrade>[] = [];
 
@@ -508,6 +554,19 @@ export class ResultUploadComponent implements OnInit {
     });
   }
 
+  reject() {
+    // TODO: Implement reject functionality
+    console.warn('Rejecting result for segment:', this.activeSegment().value);
+  }
+
+  approve() {
+    // TODO: Implement approve functionality
+    console.warn('Approving result for segment:', this.activeSegment().value);
+  }
+
+  // ========================================
+  // UTILITY AND HELPER METHODS
+  // ========================================
   private isValidSegmentValue(value: any): value is SegmentValue {
     return ['REGULAR', 'REFERENCE', 'UNREGISTERED'].includes(value);
   }
@@ -540,32 +599,6 @@ export class ResultUploadComponent implements OnInit {
     });
 
     return isValid;
-  }
-
-  reject() {
-    // TODO: Implement reject functionality
-    console.warn('Rejecting result for segment:', this.activeSegment().value);
-  }
-
-  approve() {
-    // TODO: Implement approve functionality
-    console.warn('Approving result for segment:', this.activeSegment().value);
-  }
-
-  // Helper method to get current segment data
-  getCurrentSegmentData(): Partial<IStudentGrade>[] {
-    const currentSegmentValue = this.activeSegment().value;
-
-    if (!this.isValidSegmentValue(currentSegmentValue)) {
-      console.warn(
-        'Invalid segment value in getCurrentSegmentData:',
-        currentSegmentValue
-      );
-      return [];
-    }
-
-    const currentSegment = currentSegmentValue as SegmentValue;
-    return this.students()[currentSegment] || [];
   }
 
   // Helper method to check if data is loading
