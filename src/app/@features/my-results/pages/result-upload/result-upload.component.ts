@@ -33,6 +33,7 @@ import { ResultsService } from '../../../result-management/services/results.serv
 import { StudentService } from '../../../students/services/student.service';
 import { AnalyticsChartComponent } from '../../components/analytics-chart/analytics-chart.component';
 import { ReferenceTableResultUploadComponent } from '../../components/reference-table-result-upload/reference-table-result-upload.component';
+import { DeleteConfirmationDialogComponent } from '../../components/app-delete-confirmation-dialog/app-delete-confirmation-dialog.component';
 
 type SegmentValue = 'REGULAR' | 'REFERENCE' | 'UNREGISTERED';
 
@@ -69,6 +70,11 @@ export class ResultUploadComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly cdr = inject(ChangeDetectorRef);
+
+  deletingEntries = signal<boolean>(false);
+  selectedStudentsWithIds = signal<Partial<IStudentGrade & { _id: string }>[]>(
+    []
+  );
 
   // ========================================
   // COMPONENT PROPERTIES
@@ -434,14 +440,6 @@ export class ResultUploadComponent implements OnInit {
       });
   }
 
-  // ========================================
-  // TABLE DATA MANAGEMENT
-  // ========================================
-  // Handle selected rows from child components
-  onSelectedRowsChange(selectedRows: Partial<IStudentGrade>[]) {
-    this.selectedStudents.set(selectedRows);
-  }
-
   // Helper method to get current segment data
   getCurrentSegmentData(): Partial<IStudentGrade>[] {
     const currentSegmentValue = this.activeSegment().value;
@@ -562,6 +560,171 @@ export class ResultUploadComponent implements OnInit {
   approve() {
     // TODO: Implement approve functionality
     console.warn('Approving result for segment:', this.activeSegment().value);
+  }
+
+  // ========================================
+  // DELETE FUNCTIONALITY
+  // ========================================
+
+  deleteFile() {
+    const selectedStudents = this.selectedStudentsWithIds();
+
+    if (selectedStudents.length === 0) {
+      this.toast.showNotification(
+        'warning',
+        'No Selection',
+        'Please select at least one student entry to delete'
+      );
+      return;
+    }
+
+    // Extract entry IDs from selected students
+    const entryIds = selectedStudents
+      .filter((student) => student._id) // Only include students with IDs
+      .map((student) => student._id!);
+
+    if (entryIds.length === 0) {
+      this.toast.showNotification(
+        'error',
+        'Invalid Selection',
+        'Selected entries do not have valid IDs for deletion'
+      );
+      return;
+    }
+
+    // Prepare dialog data
+    const dialogData = {
+      title:
+        entryIds.length === 1 ? 'Delete Result Entry' : `Delete Result Entries`,
+      message:
+        entryIds.length === 1
+          ? "Are you sure you want to delete this result entry? This action cannot be undone and will permanently remove the student's grade data."
+          : `Are you sure you want to delete the selected result entries? This action cannot be undone and will permanently remove the students' grade data.`,
+      confirmText: entryIds.length === 1 ? 'Delete Entry' : `Delete Entries`,
+      cancelText: 'Cancel',
+      isDangerous: true,
+      count: entryIds.length,
+    };
+
+    // Show confirmation dialog
+    const dialogRef = this.dialog.open(DeleteConfirmationDialogComponent, {
+      width: '700px',
+      disableClose: true,
+      data: dialogData,
+    });
+
+    dialogRef.afterClosed().subscribe((confirmed: boolean) => {
+      if (!confirmed) {
+        return;
+      }
+
+      this.deletingEntries.set(true);
+
+      // Call appropriate service method based on selection count
+      const deleteOperation =
+        entryIds.length === 1
+          ? this.resultsService.deleteResultEntry(entryIds[0])
+          : this.resultsService.deleteBulkResultEntries(entryIds);
+
+      deleteOperation
+        .pipe(
+          finalize(() => {
+            this.deletingEntries.set(false);
+          })
+        )
+        .subscribe({
+          next: (resp) => {
+            if (!resp.status) {
+              this.toast.showNotification(
+                'error',
+                'Delete Failed',
+                resp.message || 'Failed to delete result entries'
+              );
+              return;
+            }
+
+            const successMessage =
+              entryIds.length === 1
+                ? 'Result entry deleted successfully'
+                : `${entryIds.length} result entries deleted successfully`;
+
+            this.toast.showNotification(
+              'success',
+              'Delete Successful',
+              successMessage
+            );
+
+            // Clear selections
+            this.clearSelections();
+
+            // Refresh data
+            this.refreshCurrentSegmentData();
+          },
+          error: (error) => {
+            console.error('Delete error:', error);
+            this.toast.showNotification(
+              'error',
+              'Delete Error',
+              'An error occurred while deleting the entries'
+            );
+          },
+        });
+    });
+  }
+
+  // ========================================
+  // HELPER METHODS FOR DELETE FUNCTIONALITY
+  // ========================================
+
+  private clearSelections(): void {
+    // Clear selections in the current active table component
+    const currentSegment = this.activeSegment().value as SegmentValue;
+
+    switch (currentSegment) {
+      case 'REFERENCE':
+        this.referenceTableResultUploadRef()?.clearSelections();
+        break;
+      case 'UNREGISTERED':
+        this.unregisteredTableResultUploadRef()?.clearSelections();
+        break;
+      // Add case for REGULAR when implemented
+    }
+
+    // Clear parent selections
+    this.selectedStudentsWithIds.set([]);
+  }
+
+  private refreshCurrentSegmentData(): void {
+    // Refresh the current segment data after successful deletion
+    if (this.resultId) {
+      this.getResultEntries();
+    }
+  }
+
+  // ========================================
+  // UPDATED TABLE DATA MANAGEMENT
+  // ========================================
+
+  // Update the existing method to handle entries with IDs
+  onSelectedRowsChange(
+    selectedRows: Partial<IStudentGrade & { _id: string }>[]
+  ) {
+    this.selectedStudentsWithIds.set(selectedRows);
+    // Keep the old signal for backward compatibility if needed
+    this.selectedStudents.set(selectedRows);
+  }
+
+  // Helper method to check if delete button should be enabled
+  canDeleteEntries(): boolean {
+    return this.selectedStudentsWithIds().length > 0 && !this.deletingEntries();
+  }
+
+  // Helper method to get delete button text
+  getDeleteButtonText(): string {
+    const selectedCount = this.selectedStudentsWithIds().length;
+    if (selectedCount === 0) return 'Delete File';
+    if (selectedCount === 1) return 'Delete Entry';
+    return `Delete ${selectedCount} Entries`;
   }
 
   // ========================================

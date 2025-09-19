@@ -145,6 +145,10 @@
         type="clear"
         icon="icons/general/trash-icon.svg"
         class="btn-md"
+        [disabled]="!canDeleteEntries()"
+        [loading]="deletingEntries()"
+        (clickEvent)="deleteFile()"
+        [class.opacity-50]="!canDeleteEntries()"
       />
     </div>
   </div>

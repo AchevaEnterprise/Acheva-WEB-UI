@@ -10,6 +10,7 @@ import {
   effect,
   ChangeDetectorRef,
   untracked,
+  Signal,
 } from '@angular/core';
 import {
   FormArray,
@@ -61,10 +62,12 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
   private readonly destroy$ = new Subject<void>();
 
   // Input/Output properties
-  students = input<Partial<IStudentGrade>[]>([]);
-  tableUpdateEvent = output<Partial<IStudentGrade>[]>();
+
   paginationEvent = output<PageEvent>();
-  selectedRows = output<Partial<IStudentGrade>[]>();
+
+  students = input<Partial<IStudentGrade & { _id: string }>[]>([]);
+  tableUpdateEvent = output<Partial<IStudentGrade & { _id: string }>[]>();
+  selectedRows = output<Partial<IStudentGrade & { _id: string }>[]>();
 
   // Row selection signal
   selectedIndices = signal<Set<number>>(new Set<number>());
@@ -151,7 +154,7 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
     });
   });
 
-  paginatedRows = computed<AbstractControl[]>(() => {
+  paginatedRows: Signal<AbstractControl[]> = computed(() => {
     // Include formArrayVersion to make this reactive to FormArray changes
     this.formArrayVersion();
 
@@ -167,7 +170,9 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
     return formArray;
   }
 
-  private updateFormWithStudents(students: Partial<IStudentGrade>[]): void {
+  private updateFormWithStudents(
+    students: Partial<IStudentGrade & { _id: string }>[]
+  ): void {
     // Clear the FormArray completely
     while (this.rows.length !== 0) {
       this.rows.removeAt(0);
@@ -188,8 +193,9 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
   }
 
   // Form management
-  createRow(student: Partial<IStudentGrade>): FormGroup {
+  createRow(student: Partial<IStudentGrade & { _id: string }>): FormGroup {
     const row = this.fb.group({
+      _id: [student._id || ''], // Add ID field to track entries
       registrationNumber: [
         student.registrationNumber || '',
         Validators.required,
@@ -285,10 +291,19 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
 
   emitSelectedRows(): void {
     const selected = Array.from(this.selectedIndices())
-      .map((i) => this.rows.at(i)?.value as Partial<IStudentGrade>)
-      .filter((v): v is Partial<IStudentGrade> => !!v);
+      .map(
+        (i) =>
+          this.rows.at(i)?.value as Partial<IStudentGrade & { _id: string }>
+      )
+      .filter((v): v is Partial<IStudentGrade & { _id: string }> => !!v)
+      .filter((student) => student._id); // Only emit students with IDs (existing entries)
 
     this.selectedRows.emit(selected);
+  }
+
+  clearSelections(): void {
+    this.selectedIndices.set(new Set<number>());
+    this.selectedRows.emit([]);
   }
 
   // Student management - updated to trigger version increment
@@ -309,7 +324,8 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
       (student) => student.value === regNumber
     );
     if (studentData) {
-      const newStudent: Partial<IStudentGrade> = {
+      const newStudent: Partial<IStudentGrade & { _id: string }> = {
+        // Note: _id is undefined for new students - they get IDs after being saved
         registrationNumber: studentData.value,
         fullName: studentData.label.split(' (')[0],
         test: '0',
@@ -463,8 +479,46 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
   }
 
   // Public API methods
-  getCurrentDataSource(): Partial<IStudentGrade>[] {
+  getCurrentDataSource(): Partial<IStudentGrade & { _id: string }>[] {
     return this.form.value.rows || [];
+  }
+
+  getSelectedStudentsWithIds(): Partial<IStudentGrade & { _id: string }>[] {
+    return Array.from(this.selectedIndices())
+      .map(
+        (i) =>
+          this.rows.at(i)?.value as Partial<IStudentGrade & { _id: string }>
+      )
+      .filter(
+        (v): v is Partial<IStudentGrade & { _id: string }> => !!v && !!v._id
+      );
+  }
+
+  hasSelectableDeletableRows(): boolean {
+    const selectedWithIds = this.getSelectedStudentsWithIds();
+    return selectedWithIds.length > 0;
+  }
+
+  getDeletableSelectionCount(): number {
+    return this.getSelectedStudentsWithIds().length;
+  }
+
+  canRowBeDeleted(index: number): boolean {
+    const paginatedRows = this.paginatedRows();
+    if (index < 0 || index >= paginatedRows.length) {
+      return false;
+    }
+    const id = (paginatedRows[index]?.get('_id') as FormControl<string | null>)
+      ?.value;
+    return !!id;
+  }
+
+  getRowId(index: number): string | undefined {
+    const paginatedRows = this.paginatedRows();
+    if (index < 0 || index >= paginatedRows.length) {
+      return undefined;
+    }
+    return (paginatedRows[index]?.get('_id') as FormControl)?.value;
   }
 
   validateAllRows(): boolean {
