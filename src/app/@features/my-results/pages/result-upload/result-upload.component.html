@@ -5,7 +5,7 @@
   <!-- FORM -->
   <div [formGroup]="courseForm">
     <div class="input-style-1 acheva-input w-full">
-      <p class="acva-para-2 fw-400 label-text">Courses</p>
+      <p class="acva-para-2 fw-400 label-text">Course</p>
 
       <mat-form-field [style.width.%]="100" appearance="outline">
         <input matInput type="text" placeholder="" formControlName="course" />
@@ -49,7 +49,7 @@
       class="grid gap-2 lg:grid-cols-3 md:grid-cols-2 lg:grid-cols-1"
     >
       <div
-        class="flex flew-wrap items-start border-[1px] border-neutral-300 p-2 rounded-[8px]"
+        class="flex items-start border-[1px] border-neutral-300 p-4 rounded-[8px]"
       >
         <mat-radio-button value="regular"></mat-radio-button>
         <div>
@@ -79,7 +79,7 @@
         <div>
           <h4 class="fw-400 acva-para-1">Unregistered Students</h4>
           <p class="acva-caption text-neutral-500">
-            Students retaking the course
+            Students not officially registered for the course
           </p>
         </div>
       </div>
@@ -145,6 +145,10 @@
         type="clear"
         icon="icons/general/trash-icon.svg"
         class="btn-md"
+        [disabled]="!canDeleteEntries()"
+        [loading]="deletingEntries()"
+        (clickEvent)="deleteFile()"
+        [class.opacity-50]="!canDeleteEntries()"
       />
     </div>
   </div>
@@ -167,16 +171,25 @@
   <div class="mt-4">
     @switch (activeSegment().value) {
       @case ('REGULAR') {
-        <app-regular-table-result-upload
+        <app-reference-table-result-upload
           #regularTableResultUploadRef
-          [students]="regularStudents()"
+          [students]="students()['REGULAR']"
+          (selectedRows)="onSelectedRowsChange($event)"
         />
       }
       @case ('REFERENCE') {
-        <app-reference-table-result-upload #referenceTableResultUploadRef />
+        <app-reference-table-result-upload
+          #referenceTableResultUploadRef
+          [students]="students()['REFERENCE']"
+          (selectedRows)="onSelectedRowsChange($event)"
+        />
       }
       @case ('UNREGISTERED') {
-        <app-reference-table-result-upload #referenceTableResultUploadRef />
+        <app-reference-table-result-upload
+          #unregisteredTableResultUploadRef
+          [students]="students()['UNREGISTERED']"
+          (selectedRows)="onSelectedRowsChange($event)"
+        />
       }
     }
   </div>

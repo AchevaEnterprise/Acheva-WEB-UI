@@ -36,16 +36,17 @@ export class ResultsService {
     resultId: string,
     query?: IResultEntriesQuery
   ): Observable<IAPIResponse<any>> {
-    // let params = new HttpParams();
-    // params = params.append('category', query?.category || '');
-    // params = params.append('fullName', query?.fullName || '');
-    // params = params.append('limit', query?.limit || '');
+    let params = new HttpParams();
+    params = params.append('category', query?.category || '');
+
+    if (query?.fullName) params.append('fullName', query?.fullName || '');
+    if (query?.limit) params.append('limit', query?.limit || '');
 
     return this.http.get<IAPIResponse<any>>(
-      `${this.resultsUrl}/${resultId}/entries`
-      // {
-      //   params,
-      // }
+      `${this.resultsUrl}/${resultId}/entries`,
+      {
+        params,
+      }
     );
   }
 

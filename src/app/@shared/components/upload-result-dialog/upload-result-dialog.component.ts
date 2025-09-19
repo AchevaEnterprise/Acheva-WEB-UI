@@ -29,7 +29,7 @@ export class UploadResultDialogComponent {
     this.dialogRef.close();
   }
 
-  confrim() {
+  confirm() {
     this.dialogRef.close(this.file());
   }
 }
