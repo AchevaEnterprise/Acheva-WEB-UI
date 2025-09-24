@@ -1,0 +1,34 @@
+.mat-mdc-row,
+.mat-mdc-header-row {
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.mdc-data-table__cell,
+.mdc-data-table__header-cell {
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.custom-toggle.mat-slide-toggle {
+  position: relative;
+}
+
+.custom-toggle .mat-slide-toggle-bar {
+  position: relative;
+}
+
+.custom-toggle .toggle-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 10px;
+  font-weight: bold;
+  color: white;
+  pointer-events: none; // Let clicks go through
+}
+
+.custom-toggle:not(.mat-checked) .toggle-text {
+  display: none;
+}

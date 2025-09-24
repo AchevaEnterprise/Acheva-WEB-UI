@@ -45,8 +45,8 @@
         <mat-form-field [style.width.%]="100" appearance="outline">
           <mat-select
             placeholder="Select your faculty"
+            [compareWith]="compareFacultyFn"
             formControlName="faculty"
-            (selectionChange)="getDepartments($event)"
           >
             @for (faculty of facultiesOptions(); track $index) {
               <mat-option [value]="faculty">{{ faculty.name }}</mat-option>
@@ -62,6 +62,7 @@
           <mat-select
             placeholder="Select your department"
             formControlName="department"
+            [compareWith]="compareDepartmentFn"
           >
             @for (department of departmentsOptions(); track $index) {
               <mat-option [value]="department">{{
@@ -84,19 +85,33 @@
         </mat-form-field>
       </div>
 
-      <!-- Course Code -->
-      <div class="input-style-1 acheva-input w-full">
-        <p class="acva-para-2 fw-400 label-text">Course Code</p>
-        <mat-form-field [style.width.%]="100" appearance="outline">
-          <input matInput type="text" formControlName="courseCode" />
-        </mat-form-field>
+      <!-- Course Code with Autocomplete - FIXED -->
+      <div class="flex items-center gap-3">
+        <div class="input-style-1 acheva-input">
+          <p class="acva-para-2 fw-400 label-text">Course Code</p>
+          <app-autocomplete-input
+            [formControl]="courseCodeControl"
+            [items]="courseCodes"
+            [minChars]="2"
+            placeholder="Input Course Codes..."
+            [customError]="invalidCourseCodeError"
+            [showCustomError]="showCourseCodeError"
+            (itemSelected)="onCodeSelected($event)"
+            (textChanged)="onCourseCodeChanged($event)"
+          ></app-autocomplete-input>
+        </div>
       </div>
 
-      <!-- Course Title -->
+      <!-- Course Title - Auto-filled -->
       <div class="input-style-1 acheva-input w-full">
         <p class="acva-para-2 fw-400 label-text">Course Title</p>
         <mat-form-field [style.width.%]="100" appearance="outline">
-          <input matInput type="text" formControlName="courseTitle" />
+          <input
+            matInput
+            type="text"
+            formControlName="courseTitle"
+            placeholder="Course title will be auto-filled"
+          />
         </mat-form-field>
       </div>
 
