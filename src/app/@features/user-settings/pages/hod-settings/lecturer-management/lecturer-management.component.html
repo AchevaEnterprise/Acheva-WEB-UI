@@ -26,9 +26,9 @@
   @if (loading()) {
     <app-loader />
   } @else {
-    @if (dataSource().length > 0) {
+    @if (paginatedLecturers().length > 0) {
       <div class="w-full overflow-auto">
-        <table mat-table [dataSource]="dataSource()">
+        <table mat-table [dataSource]="paginatedLecturers()">
           <ng-container matColumnDef="name">
             <th mat-header-cell *matHeaderCellDef>NAME</th>
             <td mat-cell *matCellDef="let element">
@@ -81,7 +81,9 @@
           <ng-container matColumnDef="assign">
             <th mat-header-cell *matHeaderCellDef>ASSIGN</th>
             <td mat-cell *matCellDef="let element">
-              <mat-slide-toggle></mat-slide-toggle>
+              <mat-slide-toggle class="custom-toggle">
+                <span class="toggle-text">Active</span>
+              </mat-slide-toggle>
             </td>
           </ng-container>
 

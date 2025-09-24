@@ -10,7 +10,15 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectChange, MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { Subscription, finalize } from 'rxjs';
+import {
+  Subject,
+  Subscription,
+  debounceTime,
+  distinctUntilChanged,
+  finalize,
+  map,
+  takeUntil,
+} from 'rxjs';
 import {
   IDepartment,
   IFaculty,
@@ -32,15 +40,20 @@ import {
 import { ToastService } from '../../../../../../@core/utility/toast.service';
 import { ButtonComponent } from '../../../../../../@shared/components/forms/button/button.component';
 import { AuthenticationService } from '../../../../../auth/service/auth.service';
-import { ICreateCourse } from '../../../../../courses/models/course.model';
+import {
+  ICourse,
+  ICreateCourse,
+} from '../../../../../courses/models/course.model';
 import { CoursesService } from '../../../../../courses/services/courses.service';
 import { CoursePreviewComponent } from '../../../../components/course-preview/course-preview.component';
+import { AutocompleteInputComponent } from '../../../../../../@shared/components/forms/autocomplete-input/autocomplete-input.component';
 
 @Component({
   selector: 'app-create-course',
   imports: [
     CoursePreviewComponent,
     ReactiveFormsModule,
+    AutocompleteInputComponent,
     MatSelectModule,
     MatFormFieldModule,
     MatInputModule,
@@ -50,6 +63,9 @@ import { CoursePreviewComponent } from '../../../../components/course-preview/co
   styleUrl: './create-course.component.scss',
 })
 export class CreateCourseComponent {
+  // ========================================
+  // DEPENDENCY INJECTION
+  // ========================================
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly authService = inject(AuthenticationService);
@@ -57,10 +73,28 @@ export class CreateCourseComponent {
   private readonly toast = inject(ToastService);
   private readonly store = inject(Store<AppState>);
 
+  // ========================================
+  // DATA
+  // ========================================
   private readonly userSchoolId =
     this.authService.activeAccount()?.school || '';
 
+  private readonly userFacultyId =
+    this.authService.activeAccount()?.faculty || '';
+
+  private readonly userDepartmentId =
+    this.authService.activeAccount()?.department || '';
+
+  courses = signal<ICourse[]>([]);
+  invalidCourseCodeError: string | null = null;
+  showCourseCodeError = true;
+  private readonly courseCodeInput$ = new Subject<string>();
+
+  // ========================================
+  // COMPONENT STATE
+  // ========================================
   isLoading = signal<boolean>(false);
+  isloadingCourses = signal<boolean>(true);
 
   levelOptions = signal<{ label: string; value: string }[]>([
     { label: '100 Level', value: LevelsEnum.YEAR_ONE },
@@ -80,14 +114,26 @@ export class CreateCourseComponent {
   schoolsOptions = signal<ISchool[]>([]);
   facultiesOptions = signal<IFaculty[]>([]);
   departmentsOptions = signal<IDepartment[]>([]);
+  private readonly destroy$ = new Subject<void>();
 
+  // ========================================
+  // SEPARATE COURSE CODE CONTROL
+  // ========================================
+  // courseCodeControl = new FormControl<string>('', Validators.required);
+
+  // ========================================
+  // FORM CONFIGURATION
+  // ========================================
   form = new FormGroup({
     semester: new FormControl<string>(
       this.semesterOptions()[0].value,
       Validators.required
     ),
+    courseCode: new FormControl<string>(
+      { value: '', disabled: false },
+      Validators.required
+    ),
     courseTitle: new FormControl<string>('', Validators.required),
-    courseCode: new FormControl<string>('', Validators.required),
     school: new FormControl<ISchool | string>(
       { value: this.userSchoolId, disabled: true },
       Validators.required
@@ -103,9 +149,38 @@ export class CreateCourseComponent {
 
   private readonly sub: Subscription = new Subscription();
 
+  // ========================================
+  // LIFECYCLE HOOKS
+  // ========================================
   ngOnInit(): void {
-    this.getSchools();
+    this.initializeComponent();
+    this.setupCourseCodeListener();
+  }
 
+  ngOnDestroy(): void {
+    this.sub.unsubscribe();
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private setupCourseCodeListener(): void {
+    this.courseCodeInput$
+      .pipe(debounceTime(150), distinctUntilChanged(), takeUntil(this.destroy$))
+      .subscribe((code) => {
+        this.lookupCourseTitle(code);
+      });
+  }
+
+  // ========================================
+  // INITIALIZATION METHODS
+  // ========================================
+  private initializeComponent(): void {
+    this.handleRouteParams();
+    this.getSchools();
+    this.loadCourses();
+  }
+
+  private handleRouteParams(): void {
     this.route.queryParams.subscribe((params) => {
       const selectedLevel = params['level'] as string | undefined;
 
@@ -117,8 +192,29 @@ export class CreateCourseComponent {
     });
   }
 
-  compareSchoolFn(o1: any, o2: any) {
-    return o1 && o2 ? o1._id === o2 : o1 === o2;
+  get courseCodeControl(): FormControl<string> {
+    return this.form.get('courseCode') as FormControl<string>;
+  }
+
+  // ========================================
+  // DATA FETCHING METHODS
+  // ========================================
+  loadCourses(): void {
+    this.sub.add(
+      this.courseService
+        .getCourses()
+        .pipe(
+          map((resp) => resp.data.courses),
+          finalize(() => this.isloadingCourses.set(false))
+        )
+        .subscribe({
+          next: (courses) => this.courses.set(courses),
+          error: (error) => {
+            console.error('Error loading courses:', error);
+            this.isloadingCourses.set(false);
+          },
+        })
+    );
   }
 
   getSchools() {
@@ -148,22 +244,150 @@ export class CreateCourseComponent {
       this.store.select(facultiesSelector).subscribe({
         next: (faculties) => {
           this.facultiesOptions.set(faculties);
+
+          // Auto-select user's faculty if available
+          this.autoSelectUserFaculty(faculties);
+
+          this.getDepartments(this.userFacultyId);
         },
       })
     );
   }
 
-  getDepartments(event: MatSelectChange) {
-    const facultyId = (event.value as IFaculty)._id;
+  getDepartments(event: MatSelectChange | string) {
+    let facultyId: string = '';
+
+    if (typeof event === 'string') {
+      facultyId = event;
+    } else {
+      facultyId = (event.value as IFaculty)._id;
+    }
+
     this.store.dispatch(loadDepartments({ facultyId }));
 
     this.sub.add(
       this.store.select(departmentsSelector).subscribe({
         next: (departments) => {
           this.departmentsOptions.set(departments);
+
+          // Auto-select user's department if available
+          this.autoSelectUserDepartment(departments);
         },
       })
     );
+  }
+
+  // ========================================
+  // COURSE CODE HANDLING
+  // ========================================
+  onCodeSelected(courseCode: string): void {
+    this.courseCodeControl.setValue(courseCode);
+    this.lookupCourseTitle(courseCode);
+  }
+
+  onCourseCodeChanged(code: string): void {
+    this.courseCodeInput$.next(code);
+    this.form.get('courseCode')?.setValue(code);
+  }
+
+  private lookupCourseTitle(courseCode: string): void {
+    // Wait for courses to load
+    if (this.isloadingCourses() || this.courses().length === 0) {
+      return;
+    }
+
+    const matched = this.courses().find(
+      (course) =>
+        course.courseCode.trim().toLowerCase() ===
+        courseCode.trim().toLowerCase()
+    );
+
+    if (matched) {
+      this.updateFormWithMatchedCourse(matched);
+      this.invalidCourseCodeError = null;
+      this.showCourseCodeError = false;
+    } else {
+      this.clearAutoFillFields();
+      this.invalidCourseCodeError = 'The entered course code is not valid.';
+      this.showCourseCodeError = true;
+    }
+  }
+
+  private updateFormWithMatchedCourse(course: ICourse): void {
+    // Autofill course title and load
+    this.form.patchValue({
+      courseTitle: course.courseTitle,
+      courseLoad: course.courseLoad,
+    });
+
+    // Autofill additional fields if available
+    if (course.level) {
+      this.form.get('level')?.setValue(course.level);
+    }
+    if (course.semester) {
+      this.form.get('semester')?.setValue(course.semester);
+    }
+
+    // Clear errors
+    this.invalidCourseCodeError = null;
+    this.showCourseCodeError = false;
+  }
+
+  private clearAutoFillFields(): void {
+    this.form.patchValue({
+      courseTitle: '',
+      courseLoad: 1,
+    });
+  }
+
+  get courseCodes(): string[] {
+    return this.courses().map((course) => course.courseCode);
+  }
+
+  // ========================================
+  // AUTO-SELECTION METHODS
+  // ========================================
+  private autoSelectUserFaculty(faculties: IFaculty[]): void {
+    if (!this.userFacultyId || faculties.length === 0) return;
+
+    const userFaculty = faculties.find(
+      (faculty) => faculty._id === this.userFacultyId
+    );
+
+    if (userFaculty) {
+      this.form.get('faculty')?.setValue(userFaculty);
+    } else {
+      console.warn('❌ User faculty not found in available faculties list');
+    }
+  }
+
+  private autoSelectUserDepartment(departments: IDepartment[]): void {
+    if (!this.userDepartmentId || departments.length === 0) return;
+
+    const userDepartment = departments.find(
+      (dept) => dept._id === this.userDepartmentId
+    );
+
+    if (userDepartment) {
+      this.form.get('department')?.setValue(userDepartment);
+    } else {
+      console.warn('User department not found in available departments list');
+    }
+  }
+
+  // ========================================
+  // UTILITY METHODS
+  // ========================================
+  compareSchoolFn(o1: any, o2: any) {
+    return o1 && o2 ? o1._id === o2 : o1 === o2;
+  }
+
+  compareFacultyFn(o1: IFaculty, o2: IFaculty): boolean {
+    return o1 && o2 ? o1._id === o2._id : o1 === o2;
+  }
+
+  compareDepartmentFn(o1: IDepartment, o2: IDepartment): boolean {
+    return o1 && o2 ? o1._id === o2._id : o1 === o2;
   }
 
   increaseCourseUnit() {
@@ -182,22 +406,22 @@ export class CreateCourseComponent {
     this.form.get('courseLoad')?.setValue(unit);
   }
 
+  // ========================================
+  // ACTION METHODS
+  // ========================================
   submit() {
     this.isLoading.set(true);
-    const {
-      semester,
-      courseTitle,
-      courseCode,
-      courseLoad,
-      faculty,
-      department,
-      level,
-    } = this.form.getRawValue();
+
+    // Get course code from separate control
+    const courseCode = this.courseCodeControl.value || '';
+
+    const { semester, courseTitle, courseLoad, faculty, department, level } =
+      this.form.getRawValue();
 
     const payload: ICreateCourse = {
       semester: semester || '',
       courseTitle: courseTitle || '',
-      courseCode: courseCode || '',
+      courseCode: courseCode,
       courseLoad: courseLoad || 0,
       faculty: (faculty as IFaculty)._id || '',
       department: (department as IDepartment)._id || '',
@@ -221,14 +445,19 @@ export class CreateCourseComponent {
               });
             }
           },
+          error: (error) => {
+            console.error('Error creating course:', error);
+            this.toast.showNotification(
+              'error',
+              'Course Creation Failed',
+              'An error occurred while creating the course'
+            );
+          },
         })
     );
   }
+
   cancel() {
     this.router.navigate(['../course-management/'], { relativeTo: this.route });
-  }
-
-  ngOnDestroy(): void {
-    this.sub.unsubscribe();
   }
 }
