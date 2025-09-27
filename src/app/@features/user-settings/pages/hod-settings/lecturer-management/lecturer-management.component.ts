@@ -324,7 +324,7 @@ export class LecturerManagementComponent implements OnInit, OnDestroy {
   // Save updates
   private saveLecturerUpdates(): void {
     if (this.form.valid) {
-      const formData = this.form.value.lecturers as LecturerData[];
+      // const formData = this.form.value.lecturers as LecturerData[];
       // Here you would typically send the updates to your backend
       // console.log('Lecturer updates:', formData);
     }
