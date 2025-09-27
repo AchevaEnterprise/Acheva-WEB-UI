@@ -5,6 +5,11 @@ p {
   border-radius: 50px;
   width: fit-content;
 
+  &.active {
+    color: #2793ff;
+    background-color: #d4e9ff4d;
+  }
+
   &.pass {
     color: #06a561;
     background-color: #34c75933;

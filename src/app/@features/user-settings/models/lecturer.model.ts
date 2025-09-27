@@ -17,6 +17,8 @@ export interface LecturerAssignment {
   titles: string[];
   firstname: string;
   lastname: string;
+  lastModified?: string;
+  isActive?: boolean;
   email: string;
   masterUserId: string | null;
   faculty: string;

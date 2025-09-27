@@ -9,6 +9,7 @@ import {
   ChangeDetectorRef,
   effect,
   untracked,
+  ChangeDetectionStrategy,
 } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -35,14 +36,26 @@ import { EmptyStateComponent } from '../../../../../@shared/components/empty-sta
 import { ButtonComponent } from '../../../../../@shared/components/forms/button/button.component';
 import { SearchInputComponent } from '../../../../../@shared/components/forms/search-input/search-input.component';
 import { LoaderComponent } from '../../../../../@shared/components/loader/loader.component';
-import { PaginatorComponent } from '../../../../../@shared/components/paginator/paginator.component';
 import { StatusBadgeComponent } from '../../../../../@shared/components/status-badge/status-badge.component';
-import { SvgComponent } from '../../../../../@shared/components/svg/svg.component';
 import { UnassignCourseAdvisorComponent } from '../../../../../@shared/components/unassign-course-advisor/unassign-course-advisor.component';
 import { AuthenticationService } from '../../../../auth/service/auth.service';
-import { LecturerAssignment } from '../../../models/lecturer.model';
 import { LecturersService } from '../../../service/lecturer.service';
 import { IPaginator } from '../../../../../@core/models/paginator.model';
+import { CustomToggleComponent } from '../../../../../@shared/components/custom-toggle/custom-toggle.component';
+import { SvgComponent } from '../../../../../@shared/components/svg/svg.component';
+import { LecturerAssignment } from '../../../models/lecturer.model';
+
+// Standardized interface
+export interface LecturerData {
+  _id: string;
+  firstname: string;
+  lastname: string;
+  email: string;
+  assignedLevel?: string;
+  lastModified?: Date | string;
+  isActive: boolean;
+  department?: string;
+}
 
 @Component({
   selector: 'app-lecturer-management',
@@ -59,14 +72,16 @@ import { IPaginator } from '../../../../../@core/models/paginator.model';
     ButtonComponent,
     MatSlideToggleModule,
     StatusBadgeComponent,
-    PaginatorComponent,
+    // PaginatorComponent,
     SearchInputComponent,
     SvgComponent,
     LoaderComponent,
     EmptyStateComponent,
+    CustomToggleComponent,
   ],
   templateUrl: './lecturer-management.component.html',
   styleUrl: './lecturer-management.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LecturerManagementComponent implements OnInit, OnDestroy {
   private readonly lecturerService = inject(LecturersService);
@@ -92,7 +107,7 @@ export class LecturerManagementComponent implements OnInit, OnDestroy {
 
   displayedColumns: string[] = [
     'name',
-    'email',
+    // 'email',
     'level',
     'lastDateModified',
     'action',
@@ -101,17 +116,28 @@ export class LecturerManagementComponent implements OnInit, OnDestroy {
   ];
 
   // Data and loading states
-  lecturersData = signal<LecturerAssignment[]>([]);
+  lecturersData = signal<LecturerData[]>([]);
   loading = signal<boolean>(false);
   searchQuery = signal<string>('');
   filterValue = signal<string>('');
 
   // Available levels for assignment
   levelOptions = [
-    { label: '100 Level', value: '100' },
-    { label: '200 Level', value: '200' },
-    { label: '300 Level', value: '300' },
-    { label: '400 Level', value: '400' },
+    { label: '100', value: '100' },
+    { label: '200', value: '200' },
+    { label: '300', value: '300' },
+    { label: '400', value: '400' },
+  ];
+
+  // Filter options
+  filterOptions = [
+    { label: 'Filter', value: '' },
+    { label: 'Assigned', value: 'assigned' },
+    { label: 'Unassigned', value: 'unassigned' },
+    { label: '100', value: '100' },
+    { label: '200', value: '200' },
+    { label: '300', value: '300' },
+    { label: '400', value: '400' },
   ];
 
   constructor() {
@@ -125,10 +151,7 @@ export class LecturerManagementComponent implements OnInit, OnDestroy {
 
       untracked(() => {
         if (lecturers && lecturers.length >= 0) {
-          this.totalLecturers.set(lecturers.length);
           this.updateFormWithLecturers(lecturers);
-          this.currentPage.set(0);
-          this.selectedIndices.set(new Set<number>());
         }
       });
     });
@@ -152,15 +175,11 @@ export class LecturerManagementComponent implements OnInit, OnDestroy {
   paginationData = computed<IPaginator>(() => ({
     page: this.currentPage(),
     pageSize: this.pageSize(),
-    total: this.totalLecturers(),
+    total: this.filteredLecturers().length,
   }));
 
   filteredLecturers = computed(() => {
-    this.formArrayVersion();
-
-    let lecturers = this.lecturersArray.controls.map(
-      (control) => control.value as LecturerAssignment
-    );
+    let lecturers = this.lecturersData();
 
     // Apply search filter
     const query = this.searchQuery().toLowerCase();
@@ -174,19 +193,26 @@ export class LecturerManagementComponent implements OnInit, OnDestroy {
     }
 
     // Apply level filter
-    // const filter = this.filterValue();
-    // if (filter) {
-    //   if (filter === 'assigned') {
-    //     lecturers = lecturers.filter(lecturer => lecturer.level && lecturer.level !== 'N/A');
-    //   } else if (filter === 'unassigned') {
-    //     lecturers = lecturers.filter(lecturer => !lecturer.level || lecturer.level === 'N/A');
-    //   } else {
-    //     lecturers = lecturers.filter(lecturer => lecturer.level === filter);
-    //   }
-    // }
+    const filter = this.filterValue();
+    if (filter) {
+      if (filter === 'assigned') {
+        lecturers = lecturers.filter(
+          (lecturer) =>
+            lecturer.assignedLevel && lecturer.assignedLevel !== 'NONE'
+        );
+      } else if (filter === 'unassigned') {
+        lecturers = lecturers.filter(
+          (lecturer) =>
+            !lecturer.assignedLevel || lecturer.assignedLevel === 'NONE'
+        );
+      } else {
+        lecturers = lecturers.filter(
+          (lecturer) => lecturer.assignedLevel === filter
+        );
+      }
+    }
 
     return lecturers;
-    // return [];
   });
 
   paginatedLecturers = computed(() => {
@@ -208,7 +234,7 @@ export class LecturerManagementComponent implements OnInit, OnDestroy {
   }
 
   // Form management methods
-  private updateFormWithLecturers(lecturers: LecturerAssignment[]): void {
+  private updateFormWithLecturers(lecturers: LecturerData[]): void {
     // Clear existing form array
     while (this.lecturersArray.length !== 0) {
       this.lecturersArray.removeAt(0);
@@ -223,18 +249,15 @@ export class LecturerManagementComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
-  private createLecturerFormGroup(lecturer: LecturerAssignment): FormGroup {
+  private createLecturerFormGroup(lecturer: LecturerData): FormGroup {
     const group = this.fb.group({
       _id: [lecturer._id],
       firstname: [lecturer.firstname || '', Validators.required],
       lastname: [lecturer.lastname || '', Validators.required],
       email: [lecturer.email || '', [Validators.required, Validators.email]],
-      level: ['100'],
-      // level: [lecturer.level || ''],
-      // lastDateModified: [lecturer.lastDateModified],
-      lastDateModified: [],
-      // isActive: [lecturer.isActive !== false],
-      isActive: [false],
+      assignedLevel: [lecturer.assignedLevel || ''],
+      lastModified: [lecturer.lastModified],
+      isActive: [lecturer.isActive || false],
       isAssigned: [this.isAssigned(lecturer)],
     });
 
@@ -245,7 +268,7 @@ export class LecturerManagementComponent implements OnInit, OnDestroy {
     const errors: string[] = [];
 
     this.lecturersArray.controls.forEach((control) => {
-      const lecturer: LecturerAssignment = control.value as LecturerAssignment;
+      const lecturer: LecturerData = control.value as LecturerData;
       const lecturerName = `${lecturer.firstname} ${lecturer.lastname}`;
 
       if (control.get('firstname')?.errors?.['required']) {
@@ -274,7 +297,22 @@ export class LecturerManagementComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (resp) => {
           if (resp.status) {
-            this.lecturersData.set(resp.data);
+            // Map the response data to our standardized interface
+            const mappedData: LecturerData[] = resp.data.map(
+              (lecturer: LecturerAssignment) => ({
+                _id: lecturer._id,
+                firstname: lecturer.firstname,
+                lastname: lecturer.lastname,
+                email: lecturer.email,
+                assignedLevel:
+                  lecturer.assignedLevel || lecturer.assignedLevel || '',
+                lastModified: lecturer.lastModified ?? '',
+                isActive: lecturer.isActive ?? false,
+                department: lecturer.department,
+              })
+            );
+            this.lecturersData.set(mappedData);
+            this.totalLecturers.set(mappedData.length);
           }
         },
         error: (error) => {
@@ -286,7 +324,7 @@ export class LecturerManagementComponent implements OnInit, OnDestroy {
   // Save updates
   private saveLecturerUpdates(): void {
     if (this.form.valid) {
-      // const formData = this.form.value.lecturers as LecturerAssignment[];
+      const formData = this.form.value.lecturers as LecturerData[];
       // Here you would typically send the updates to your backend
       // console.log('Lecturer updates:', formData);
     }
@@ -325,10 +363,47 @@ export class LecturerManagementComponent implements OnInit, OnDestroy {
     const actualIndex = this.currentPage() * this.pageSize() + index;
     const control = this.lecturersArray.at(actualIndex);
     if (control) {
-      control.get('level')?.setValue(level);
-      control.get('isAssigned')?.setValue(!!level && level !== 'N/A');
+      control.get('assignedLevel')?.setValue(level);
+      control.get('isAssigned')?.setValue(!!level && level !== 'NONE');
       this.formArrayVersion.update((v) => v + 1);
     }
+  }
+
+  // Toggle lecturer status
+  toggleLecturerStatus(lecturerId: string, isActive: boolean): void {
+    const lecturerIndex = this.lecturersArray.controls.findIndex(
+      (control) => control.get('_id')?.value === lecturerId
+    );
+
+    if (lecturerIndex !== -1) {
+      this.lecturersArray.at(lecturerIndex).get('isActive')?.setValue(isActive);
+
+      // Update the original data as well
+      const updatedData = this.lecturersData().map((lecturer) =>
+        lecturer._id === lecturerId ? { ...lecturer, isActive } : lecturer
+      );
+      this.lecturersData.set(updatedData);
+
+      // Make API call to update status
+      this.updateLecturerStatusOnServer(lecturerId, isActive);
+    }
+  }
+
+  private updateLecturerStatusOnServer(
+    lecturerId: string,
+    isActive: boolean
+  ): void {
+    // Implement API call to update lecturer status
+    // this.lecturerService.updateLecturerStatus(lecturerId, isActive).subscribe({
+    //   next: (response) => {
+    //     console.log('Lecturer status updated successfully', response);
+    //   },
+    //   error: (error) => {
+    //     console.error('Error updating lecturer status:', error);
+    //     // Revert the change on error
+    //     this.toggleLecturerStatus(lecturerId, !isActive);
+    //   }
+    // });
   }
 
   // Utility methods
@@ -336,9 +411,23 @@ export class LecturerManagementComponent implements OnInit, OnDestroy {
     return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
   }
 
-  isAssigned(lecturer: LecturerAssignment): boolean {
-    // return !!(lecturer.level && lecturer.level !== 'N/A');
-    return false;
+  isAssigned(lecturer: LecturerData): boolean {
+    return !!(lecturer.assignedLevel && lecturer.assignedLevel !== 'NONE');
+  }
+
+  getLevelDisplay(level: string | undefined): string {
+    if (!level || level === 'NONE' || level === '') {
+      return 'N/A';
+    }
+    return `${level}`;
+  }
+
+  getStatusType(isActive: boolean): string {
+    return isActive ? 'active' : 'inactive';
+  }
+
+  getStatusLabel(isActive: boolean): string {
+    return isActive ? 'Active' : 'Inactive';
   }
 
   // Selection methods
@@ -353,24 +442,6 @@ export class LecturerManagementComponent implements OnInit, OnDestroy {
     this.selectedIndices.set(updated);
   }
 
-  toggleSelectAll(checked: boolean): void {
-    const startIndex = this.currentPage() * this.pageSize();
-    const endIndex = Math.min(
-      startIndex + this.pageSize(),
-      this.lecturersArray.length
-    );
-    const updated = new Set(this.selectedIndices());
-
-    for (let i = startIndex; i < endIndex; i++) {
-      if (checked) {
-        updated.add(i);
-      } else {
-        updated.delete(i);
-      }
-    }
-    this.selectedIndices.set(updated);
-  }
-
   isRowSelected(index: number): boolean {
     const actualIndex = this.currentPage() * this.pageSize() + index;
     return this.selectedIndices().has(actualIndex);
@@ -380,7 +451,7 @@ export class LecturerManagementComponent implements OnInit, OnDestroy {
     const startIndex = this.currentPage() * this.pageSize();
     const endIndex = Math.min(
       startIndex + this.pageSize(),
-      this.lecturersArray.length
+      this.filteredLecturers().length
     );
 
     if (endIndex <= startIndex) return false;
@@ -389,6 +460,21 @@ export class LecturerManagementComponent implements OnInit, OnDestroy {
       if (!this.selectedIndices().has(i)) return false;
     }
     return true;
+  }
+
+  isIndeterminate(): boolean {
+    const startIndex = this.currentPage() * this.pageSize();
+    const endIndex = Math.min(
+      startIndex + this.pageSize(),
+      this.filteredLecturers().length
+    );
+
+    let selectedCount = 0;
+    for (let i = startIndex; i < endIndex; i++) {
+      if (this.selectedIndices().has(i)) selectedCount++;
+    }
+
+    return selectedCount > 0 && selectedCount < endIndex - startIndex;
   }
 
   // Pagination
@@ -408,37 +494,21 @@ export class LecturerManagementComponent implements OnInit, OnDestroy {
     this.currentPage.set(0); // Reset to first page
   }
 
-  // Assignment actions
-  toggleAssignment(index: number, event: any): void {
-    if (event.checked) {
-      this.quickAssign(index);
-    } else {
-      this.quickUnassign(index);
-    }
-  }
-
   quickAssign(index: number): void {
-    // For quick assignment, you might want to show a level selector
-    // For now, we'll just open the assignment dialog
-    const actualIndex = this.currentPage() * this.pageSize() + index;
-    const lecturerData: LecturerAssignment = this.lecturersArray.at(actualIndex)
-      ?.value as LecturerAssignment;
-    if (lecturerData) {
-      this.confirmAssignAsCourseAdvisor(lecturerData);
+    const lecturer = this.paginatedLecturers()[index];
+    if (lecturer) {
+      this.confirmAssignAsCourseAdvisor(lecturer);
     }
   }
 
   quickUnassign(index: number): void {
-    const actualIndex = this.currentPage() * this.pageSize() + index;
-    const control = this.lecturersArray.at(actualIndex);
-    if (control) {
-      control.get('level')?.setValue('');
-      control.get('isAssigned')?.setValue(false);
-      this.formArrayVersion.update((v) => v + 1);
+    const lecturer = this.paginatedLecturers()[index];
+    if (lecturer) {
+      this.confirmUnassignAsCourseAdvisor(lecturer);
     }
   }
 
-  confirmAssignAsCourseAdvisor(lecturer: LecturerAssignment): void {
+  confirmAssignAsCourseAdvisor(lecturer: LecturerData): void {
     this.dialog
       .open(AssignCourseAdvisorComponent, {
         width: '40%',
@@ -455,7 +525,7 @@ export class LecturerManagementComponent implements OnInit, OnDestroy {
       });
   }
 
-  confirmUnassignAsCourseAdvisor(lecturer: LecturerAssignment): void {
+  confirmUnassignAsCourseAdvisor(lecturer: LecturerData): void {
     this.dialog
       .open(UnassignCourseAdvisorComponent, {
         width: '40%',
@@ -471,39 +541,15 @@ export class LecturerManagementComponent implements OnInit, OnDestroy {
       });
   }
 
-  // Bulk operations
-  getSelectedLecturers(): LecturerAssignment[] {
-    return Array.from(this.selectedIndices())
-      .map((i) => this.lecturersArray.at(i)?.value as LecturerAssignment)
-      .filter((v) => !!v);
-  }
-
-  bulkAssign(): void {
-    const selected = this.getSelectedLecturers();
-    if (selected.length > 0) {
-      // Implement bulk assignment logic
-    }
-  }
-
-  bulkUnassign(): void {
-    const selected = this.getSelectedLecturers();
-    if (selected.length > 0) {
-      // Implement bulk unassignment logic
-    }
-  }
-
   // Form validation
   validateForm(): boolean {
     return this.form.valid;
   }
 
-  hasFormErrors(): boolean {
-    return this.form.invalid && this.form.touched;
-  }
-
-  saveAllChanges(): void {
-    if (this.validateForm()) {
-      this.saveLecturerUpdates();
-    }
+  // Clear filters and search
+  clearFilters(): void {
+    this.searchQuery.set('');
+    this.filterValue.set('');
+    this.currentPage.set(0);
   }
 }

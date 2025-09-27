@@ -1,34 +1,73 @@
-.mat-mdc-row,
-.mat-mdc-header-row {
-  padding-top: 12px;
-  padding-bottom: 12px;
+/* Hide default label padding */
+
+.custom-toggle .mat-slide-toggle-label {
+  padding-left: 0;
+  margin-left: 5px; /* Adjust spacing */
 }
 
-.mdc-data-table__cell,
-.mdc-data-table__header-cell {
-  padding-top: 12px;
-  padding-bottom: 12px;
-}
-
-.custom-toggle.mat-slide-toggle {
-  position: relative;
-}
+/* Slider track */
 
 .custom-toggle .mat-slide-toggle-bar {
+  width: 70px;
+  height: 34px;
+  border-radius: 34px;
+  background-color: #ccc;
+  transition: 0.4s;
   position: relative;
 }
 
-.custom-toggle .toggle-text {
+/* Slider thumb */
+
+.custom-toggle .mat-slide-toggle-thumb {
+  width: 26px;
+  height: 26px;
+  top: 4px; /* center vertically in 34px height */
+  left: 4px;
+  background-color: white;
+  border-radius: 50%;
+  box-shadow: inset 0 2px 4px rgb(0 0 0 / 20%); /* inner shadow */
+  transition:
+    transform 0.4s,
+    box-shadow 0.4s;
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 10px;
-  font-weight: bold;
-  color: white;
-  pointer-events: none; // Let clicks go through
 }
 
-.custom-toggle:not(.mat-checked) .toggle-text {
-  display: none;
+/* When toggled ON */
+
+.custom-toggle.mat-checked .mat-slide-toggle-bar {
+  background: linear-gradient(to bottom, #2793ff, #7bf);
+}
+
+/* Thumb moves right when checked */
+
+.custom-toggle.mat-checked .mat-slide-toggle-thumb {
+  transform: translateX(37px);
+  box-shadow: inset 0 2px 4px #7bf;
+}
+
+/* Focus outline */
+
+.custom-toggle.mat-slide-toggle-focused .mat-slide-toggle-bar {
+  box-shadow: 0 0 1px #74baff;
+}
+
+/* Label text styling */
+
+.toggle-text {
+  font-size: 14px;
+  font-weight: 400;
+  color: white;
+  position: absolute;
+  top: 50%;
+  left: 2px;
+  transform: translateY(-50%);
+  pointer-events: none; /* so click passes through to toggle */
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+/* Show label text only when checked */
+
+.custom-toggle.mat-checked .toggle-text {
+  opacity: 1;
 }

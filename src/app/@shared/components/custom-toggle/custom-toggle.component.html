@@ -1,0 +1,11 @@
+<label
+  class="switch"
+  [class.checked]="checked"
+  tabindex="0"
+  (keydown.space)="toggle()"
+  (keydown.enter)="toggle()"
+>
+  <input type="checkbox" [checked]="checked" (change)="toggle()" hidden />
+  <span class="slider round"></span>
+  <span class="state">{{ label }}</span>
+</label>

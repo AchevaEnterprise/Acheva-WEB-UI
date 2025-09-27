@@ -1,3 +1,8 @@
-<p [class.pass]="type() === 'pass'" [class.fail]="type() === 'fail'">
+<p
+  [class.pass]="type() === 'pass'"
+  [class.active]="type() === 'active'"
+  [class.fail]="type() === 'fail'"
+  [ngStyle]="customStyle"
+>
   {{ status() }}
 </p>

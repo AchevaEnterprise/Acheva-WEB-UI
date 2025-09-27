@@ -1,0 +1,65 @@
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 70px;
+  height: 32px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.switch input {
+  display: none;
+}
+
+.slider {
+  position: absolute;
+  inset: 0;
+  background-color: #ccc;
+  border-radius: 34px;
+  transition: 0.4s;
+}
+
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider::before {
+  content: '';
+  position: absolute;
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background: white;
+  border-radius: 50%;
+  transition:
+    transform 0.4s,
+    box-shadow 0.4s;
+  box-shadow: inset 0 2px 4px rgb(0 0 0 / 20%);
+}
+
+.switch.checked .slider {
+  background: linear-gradient(to bottom, #2793ff, #7bf);
+}
+
+.switch.checked .slider::before {
+  transform: translateX(37px);
+  box-shadow: inset 0 2px 4px #7bf;
+}
+
+.state {
+  position: absolute;
+  top: 50%;
+  left: 2px;
+  transform: translateY(-50%);
+  font-size: 12px;
+  color: white;
+  font-weight: 400;
+  opacity: 0;
+  transition: opacity 0.4s;
+  pointer-events: none;
+}
+
+.switch.checked .state {
+  opacity: 1;
+}

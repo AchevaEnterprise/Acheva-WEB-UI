@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { IAPIResponse } from '../../../@core/models/api-response.model';
 import { LevelsEnum } from '../../../@core/models/school.model';
+import { LecturerAssignment } from '../models/lecturer.model';
 
 @Injectable({
   providedIn: 'root',
@@ -14,8 +15,8 @@ export class LecturersService {
 
   getLecturersInDepartment(
     departmentId: string
-  ): Observable<IAPIResponse<any>> {
-    return this.http.get<IAPIResponse<any>>(
+  ): Observable<IAPIResponse<LecturerAssignment[]>> {
+    return this.http.get<IAPIResponse<LecturerAssignment[]>>(
       `${this.lecturerUrl}/all/${departmentId}`
     );
   }
