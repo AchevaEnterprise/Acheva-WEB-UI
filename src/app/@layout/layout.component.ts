@@ -85,7 +85,7 @@ export class LayoutComponent implements OnInit {
       },
       error: (error) => {
         console.error('Failed to switch account:', error);
-      }
+      },
     });
   }
 }

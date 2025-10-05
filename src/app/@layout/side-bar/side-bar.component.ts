@@ -64,19 +64,19 @@ export class SideBarComponent implements OnInit {
       },
       error: (error) => {
         console.error('Failed to load linked accounts:', error);
-      }
+      },
     });
   }
 
   getAvailableRoles() {
-    return this.linkedAccounts().filter(account => 
-      account.role !== this.activeAccount()?.role
+    return this.linkedAccounts().filter(
+      (account) => account.role !== this.activeAccount()?.role
     );
   }
 
   hasCourseCoordinatorRole() {
-    return this.linkedAccounts().some(account => 
-      account.role === RoleEnum.COURSE_COORDINATOR
+    return this.linkedAccounts().some(
+      (account) => account.role === RoleEnum.COURSE_COORDINATOR
     );
   }
 
@@ -86,7 +86,7 @@ export class SideBarComponent implements OnInit {
         if (response.status) {
           this.switchAccountEvent.emit(accountId);
           this.closeRolePopup();
-          
+
           // Redirect to appropriate dashboard based on role
           if (response.data.role === RoleEnum.COURSE_COORDINATOR) {
             this.router.navigate(['/course-coordinator/dashboard']);
@@ -95,12 +95,12 @@ export class SideBarComponent implements OnInit {
       },
       error: (error) => {
         console.error('Failed to switch account:', error);
-      }
+      },
     });
   }
 
   toggleRolePopup() {
-    this.showRolePopup.update(val => !val);
+    this.showRolePopup.update((val) => !val);
   }
 
   closeRolePopup() {
