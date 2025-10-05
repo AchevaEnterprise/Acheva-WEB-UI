@@ -86,11 +86,6 @@ export class SideBarComponent implements OnInit {
         if (response.status) {
           this.switchAccountEvent.emit(accountId);
           this.closeRolePopup();
-
-          // Redirect to appropriate dashboard based on role
-          if (response.data.role === RoleEnum.COURSE_COORDINATOR) {
-            this.router.navigate(['/course-coordinator/dashboard']);
-          }
         }
       },
       error: (error) => {
