@@ -84,12 +84,14 @@
       <li class="w-full">
         <mat-divider></mat-divider>
         <button
-          [matMenuTriggerFor]="roleMenu"
+          (click)="toggleRolePopup()"
           class="flex items-center justify-between gap-4 border-[1px] border-[#D2D1D1] p-3 rounded-2xl mt-4 cursor-pointer w-full relative"
         >
-          <div
-            class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"
-          ></div>
+          @if (hasCourseCoordinatorRole()) {
+            <div
+              class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"
+            ></div>
+          }
           <div class="flex items-center gap-2">
             <img
               src=""
@@ -127,40 +129,6 @@
             ></app-svg>
           }
         </button>
-        <mat-menu
-          #roleMenu="matMenu"
-          class="role-switch-menu"
-          panelClass="custom-role-menu-panel"
-          xPosition="before"
-          yPosition="above"
-        >
-          <button
-            mat-menu-item
-            class="role-item selected"
-            (click)="switchAccount('advisor')"
-          >
-            <div class="role-content">Course Advisor</div>
-            <div class="role-indicator">
-              <span class="checkmark">&#10003;</span>
-            </div>
-          </button>
-          <button
-            mat-menu-item
-            class="role-item"
-            (click)="switchAccount('coordinator')"
-          >
-            <div class="role-content">Course Coordinator</div>
-            <div class="role-indicator">
-              <span class="badge-dot"></span>
-            </div>
-          </button>
-          <button mat-menu-item disabled class="role-item disabled">
-            <div class="role-content">Dean</div>
-            <div class="role-indicator">
-              <span class="default-label">default</span>
-            </div>
-          </button>
-        </mat-menu>
       </li>
     </ul>
   </div>
@@ -196,3 +164,43 @@
     }
   </div>
 </div>
+
+<!-- Custom Role Popup -->
+@if (showRolePopup()) {
+  <div class="role-popup-overlay" (click)="closeRolePopup()">
+    <div class="role-popup-card" (click)="$event.stopPropagation()">
+      @if (getAvailableRoles().length > 0) {
+        @for (account of getAvailableRoles(); track account.id) {
+          <div class="role-item" (click)="switchAccount(account.id)">
+            <span class="role-text">
+              @switch (account.role) {
+                @case (RoleEnum.COURSE_ADVISOR) {
+                  Course Advisor
+                }
+                @case (RoleEnum.COURSE_COORDINATOR) {
+                  Course Coordinator
+                }
+                @case (RoleEnum.DEAN) {
+                  Dean
+                }
+                @case (RoleEnum.HOD) {
+                  HOD
+                }
+                @case (RoleEnum.LECTURER) {
+                  Lecturer
+                }
+              }
+            </span>
+            @if (account.role === RoleEnum.COURSE_COORDINATOR) {
+              <span class="badge-dot"></span>
+            }
+          </div>
+        }
+      } @else {
+        <div class="role-item disabled">
+          <span class="role-text">No additional roles available</span>
+        </div>
+      }
+    </div>
+  </div>
+}
