@@ -47,7 +47,7 @@ export class LayoutComponent implements OnInit {
   ngOnInit(): void {
     // When authenticated load user profile and linked accounts
     this.store.dispatch(loadProfile());
-    // this.loadLinkedAccounts();
+    this.loadLinkedAccounts();
   }
 
   loadLinkedAccounts() {
@@ -76,6 +76,16 @@ export class LayoutComponent implements OnInit {
   });
 
   switchAccount(accountId: string) {
-    this.authService.switchAccount(accountId).subscribe();
+    this.authService.switchAccount(accountId).subscribe({
+      next: (response) => {
+        if (response.status) {
+          // Reload the page to refresh the UI with new role
+          window.location.reload();
+        }
+      },
+      error: (error) => {
+        console.error('Failed to switch account:', error);
+      },
+    });
   }
 }

@@ -7,7 +7,7 @@
       <button class="cursor-pointer" (click)="toggleSideBar()">
         <app-svg
           svgWidth="3rem"
-          svgHeight="rem"
+          svgHeight="3rem"
           src="icons/logos/acheva-letter.svg"
         ></app-svg>
       </button>
@@ -27,7 +27,7 @@
     </div>
 
     <ul
-      class="list-style-none p-[0.938rem] m-0 flex flex-col items-center overflow-y-auto"
+      class="list-none p-[0.938rem] m-0 flex flex-col items-center overflow-y-auto"
       [class]="{ 'h-[calc(100vh_-_21rem)]': expanded(), 'h-full': !expanded() }"
     >
       @for (menu of appMenu(); track $index) {
@@ -37,7 +37,7 @@
             class="w-full mb-[0.625rem] hover:bg-[#D4E9FF] hover:text-[#000] rounded-[1rem] cursor-pointer"
           >
             <a
-              class="flex items-center gap-2 pl-[0.6938rem] h-[3rem] text-decoration-none rounded-[1rem] transition-all duration-200 ease-in-out acva-para-2"
+              class="flex items-center gap-2 pl-[0.6938rem] h-[3rem] no-underline rounded-[1rem] transition-all duration-200 ease-in-out acva-para-2"
               [routerLink]="menu.route"
               routerLinkActive="bg-gradient-to-b from-[#2793FF] to-[#77BBFF] text-white"
             >
@@ -63,7 +63,7 @@
         } @else {
           <li class="w-full mb-[0.625rem]">
             <a
-              class="flex items-center gap-2 pl-[0.5rem] h-[3rem] text-neutral-300 text-decoration-none cursor-not-allowed"
+              class="flex items-center gap-2 pl-[0.5rem] h-[3rem] text-neutral-300 no-underline cursor-not-allowed"
               href="javascript:void(0)"
             >
               <app-svg
@@ -84,9 +84,14 @@
       <li class="w-full">
         <mat-divider></mat-divider>
         <button
-          [matMenuTriggerFor]="menu"
-          class="flex items-center justify-between gap-4 border-[1px] border-[#D2D1D1] p-3 rounded-2xl mt-4 cursor-pointer w-full"
+          (click)="toggleRolePopup()"
+          class="flex items-center justify-between gap-4 border-[1px] border-[#D2D1D1] p-3 rounded-2xl mt-4 cursor-pointer w-full relative"
         >
+          @if (hasCourseCoordinatorRole()) {
+            <div
+              class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"
+            ></div>
+          }
           <div class="flex items-center gap-2">
             <img
               src=""
@@ -124,29 +129,6 @@
             ></app-svg>
           }
         </button>
-        <mat-menu #menu="matMenu">
-          @for (account of accounts(); track $index) {
-            <button mat-menu-item (click)="switchAccount(account.id)">
-              @switch (account.role) {
-                @case (RoleEnum.COURSE_ADVISOR) {
-                  Course Advisor
-                }
-                @case (RoleEnum.COURSE_COORDINATOR) {
-                  Course Co-ordinator
-                }
-                @case (RoleEnum.DEAN) {
-                  Dean
-                }
-                @case (RoleEnum.HOD) {
-                  HOD
-                }
-                @case (RoleEnum.LECTURER) {
-                  Lecturer
-                }
-              }
-            </button>
-          }
-        </mat-menu>
       </li>
     </ul>
   </div>
@@ -182,3 +164,43 @@
     }
   </div>
 </div>
+
+<!-- Custom Role Popup -->
+@if (showRolePopup()) {
+  <div class="role-popup-overlay" (click)="closeRolePopup()">
+    <div class="role-popup-card" (click)="$event.stopPropagation()">
+      @if (getAvailableRoles().length > 0) {
+        @for (account of getAvailableRoles(); track account.id) {
+          <div class="role-item" (click)="switchAccount(account.id)">
+            <span class="role-text">
+              @switch (account.role) {
+                @case (RoleEnum.COURSE_ADVISOR) {
+                  Course Advisor
+                }
+                @case (RoleEnum.COURSE_COORDINATOR) {
+                  Course Coordinator
+                }
+                @case (RoleEnum.DEAN) {
+                  Dean
+                }
+                @case (RoleEnum.HOD) {
+                  HOD
+                }
+                @case (RoleEnum.LECTURER) {
+                  Lecturer
+                }
+              }
+            </span>
+            @if (account.role === RoleEnum.COURSE_COORDINATOR) {
+              <span class="badge-dot"></span>
+            }
+          </div>
+        }
+      } @else {
+        <div class="role-item disabled">
+          <span class="role-text">No additional roles available</span>
+        </div>
+      }
+    </div>
+  </div>
+}
