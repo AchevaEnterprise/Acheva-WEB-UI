@@ -80,6 +80,17 @@ export class SideBarComponent implements OnInit {
     );
   }
 
+  isRoleAssigned(role: RoleEnum) {
+    return this.linkedAccounts().some((account) => account.role === role);
+  }
+
+  switchToRole(role: RoleEnum) {
+    const account = this.linkedAccounts().find((acc) => acc.role === role);
+    if (account) {
+      this.switchAccount(account.id);
+    }
+  }
+
   switchAccount(accountId: string) {
     this.authService.switchAccount(accountId).subscribe({
       next: (response) => {

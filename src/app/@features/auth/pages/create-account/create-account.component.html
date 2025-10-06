@@ -164,7 +164,7 @@
           </div>
 
           <div class="input-style-1 acheva-input w-full">
-            <p class="acva-para-2 fw-400 label-text">Role</p>
+            <p class="acva-para-2 fw-400 label-text">Account</p>
 
             <mat-form-field [style.width.%]="100" appearance="outline">
               <span matPrefix mat-icon-button>
@@ -175,7 +175,10 @@
                 ></app-svg>
               </span>
 
-              <mat-select placeholder="Select your role" formControlName="role">
+              <mat-select
+                placeholder="Select your account"
+                formControlName="role"
+              >
                 @for (role of roleOptions(); track $index) {
                   <mat-option [value]="role.value">{{ role.label }}</mat-option>
                 }

@@ -229,11 +229,8 @@ export class LecturerManagementComponent implements OnInit, OnDestroy {
       firstname: [lecturer.firstname || '', Validators.required],
       lastname: [lecturer.lastname || '', Validators.required],
       email: [lecturer.email || '', [Validators.required, Validators.email]],
-      level: ['100'],
-      // level: [lecturer.level || ''],
-      // lastDateModified: [lecturer.lastDateModified],
+      assignedLevel: [lecturer.assignedLevel || 'NONE'],
       lastDateModified: [],
-      // isActive: [lecturer.isActive !== false],
       isActive: [false],
       isAssigned: [this.isAssigned(lecturer)],
     });
@@ -337,8 +334,7 @@ export class LecturerManagementComponent implements OnInit, OnDestroy {
   }
 
   isAssigned(lecturer: LecturerAssignment): boolean {
-    // return !!(lecturer.level && lecturer.level !== 'N/A');
-    return false;
+    return !!(lecturer.assignedLevel && lecturer.assignedLevel !== 'NONE');
   }
 
   // Selection methods
