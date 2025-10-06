@@ -101,23 +101,7 @@
             />
 
             @if (expanded()) {
-              @switch (activeAccount()?.role) {
-                @case (RoleEnum.COURSE_ADVISOR) {
-                  Course Advisor
-                }
-                @case (RoleEnum.COURSE_COORDINATOR) {
-                  Course Co-ordinator
-                }
-                @case (RoleEnum.DEAN) {
-                  Dean
-                }
-                @case (RoleEnum.HOD) {
-                  HOD
-                }
-                @case (RoleEnum.LECTURER) {
-                  Lecturer
-                }
-              }
+              Switch Roles
             }
           </div>
 
@@ -169,38 +153,57 @@
 @if (showRolePopup()) {
   <div class="role-popup-overlay" (click)="closeRolePopup()">
     <div class="role-popup-card" (click)="$event.stopPropagation()">
-      @if (getAvailableRoles().length > 0) {
-        @for (account of getAvailableRoles(); track account.id) {
-          <div class="role-item" (click)="switchAccount(account.id)">
-            <span class="role-text">
-              @switch (account.role) {
-                @case (RoleEnum.COURSE_ADVISOR) {
-                  Course Advisor
-                }
-                @case (RoleEnum.COURSE_COORDINATOR) {
-                  Course Coordinator
-                }
-                @case (RoleEnum.DEAN) {
-                  Dean
-                }
-                @case (RoleEnum.HOD) {
-                  HOD
-                }
-                @case (RoleEnum.LECTURER) {
-                  Lecturer
-                }
-              }
-            </span>
-            @if (account.role === RoleEnum.COURSE_COORDINATOR) {
-              <span class="badge-dot"></span>
-            }
-          </div>
+      <!-- Course Advisor -->
+      <div
+        class="role-item"
+        [class.disabled]="!isRoleAssigned(RoleEnum.COURSE_ADVISOR)"
+        [class.active]="isRoleAssigned(RoleEnum.COURSE_ADVISOR)"
+        (click)="
+          isRoleAssigned(RoleEnum.COURSE_ADVISOR) &&
+            switchToRole(RoleEnum.COURSE_ADVISOR)
+        "
+      >
+        <span class="role-text">Course Advisor</span>
+        @if (isRoleAssigned(RoleEnum.COURSE_ADVISOR)) {
+          <span class="checkmark">✓</span>
+        } @else {
+          <span class="default-text">default</span>
         }
-      } @else {
-        <div class="role-item disabled">
-          <span class="role-text">No additional roles available</span>
-        </div>
-      }
+      </div>
+
+      <!-- Course Coordinator -->
+      <div
+        class="role-item"
+        [class.disabled]="!isRoleAssigned(RoleEnum.COURSE_COORDINATOR)"
+        [class.active]="isRoleAssigned(RoleEnum.COURSE_COORDINATOR)"
+        (click)="
+          isRoleAssigned(RoleEnum.COURSE_COORDINATOR) &&
+            switchToRole(RoleEnum.COURSE_COORDINATOR)
+        "
+      >
+        <span class="role-text">Course Coordinator</span>
+        @if (isRoleAssigned(RoleEnum.COURSE_COORDINATOR)) {
+          <span class="badge-dot"></span>
+          <span class="checkmark">✓</span>
+        } @else {
+          <span class="default-text">default</span>
+        }
+      </div>
+
+      <!-- Dean -->
+      <div
+        class="role-item"
+        [class.disabled]="!isRoleAssigned(RoleEnum.DEAN)"
+        [class.active]="isRoleAssigned(RoleEnum.DEAN)"
+        (click)="isRoleAssigned(RoleEnum.DEAN) && switchToRole(RoleEnum.DEAN)"
+      >
+        <span class="role-text">Dean</span>
+        @if (isRoleAssigned(RoleEnum.DEAN)) {
+          <span class="checkmark">✓</span>
+        } @else {
+          <span class="default-text">default</span>
+        }
+      </div>
     </div>
   </div>
 }
