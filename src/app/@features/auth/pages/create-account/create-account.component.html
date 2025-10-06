@@ -175,7 +175,10 @@
                 ></app-svg>
               </span>
 
-              <mat-select placeholder="Select your account" formControlName="role">
+              <mat-select
+                placeholder="Select your account"
+                formControlName="role"
+              >
                 @for (role of roleOptions(); track $index) {
                   <mat-option [value]="role.value">{{ role.label }}</mat-option>
                 }

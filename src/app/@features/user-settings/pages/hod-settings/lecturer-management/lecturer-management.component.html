@@ -46,7 +46,11 @@
           <ng-container matColumnDef="level">
             <th mat-header-cell *matHeaderCellDef>ASSIGNED LEVEL</th>
             <td mat-cell *matCellDef="let element">
-              {{ element.assignedLevel && element.assignedLevel !== 'NONE' ? element.assignedLevel + ' Level' : 'Not Assigned' }}
+              {{
+                element.assignedLevel && element.assignedLevel !== 'NONE'
+                  ? element.assignedLevel + ' Level'
+                  : 'Not Assigned'
+              }}
             </td>
           </ng-container>
 
