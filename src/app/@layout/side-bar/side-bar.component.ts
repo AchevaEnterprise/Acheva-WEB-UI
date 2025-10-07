@@ -75,20 +75,35 @@ export class SideBarComponent implements OnInit {
   }
 
   hasCourseCoordinatorRole() {
-    return this.linkedAccounts().some(
-      (account) => account.role === RoleEnum.COURSE_COORDINATOR
-    );
+    const account = this.activeAccount();
+    if (!account) return false;
+    return account.role === RoleEnum.COURSE_COORDINATOR ||
+      (account as any).otherRoles?.includes(RoleEnum.COURSE_COORDINATOR);
   }
 
   isRoleAssigned(role: RoleEnum) {
-    return this.linkedAccounts().some((account) => account.role === role);
+    const account = this.activeAccount();
+    if (!account) return false;
+
+    // Lecturer is always assigned
+    if (role === RoleEnum.LECTURER) return true;
+
+    // Check if it's the current role or in otherRoles
+    return account.role === role || (account as any).otherRoles?.includes(role);
   }
 
   switchToRole(role: RoleEnum) {
-    const account = this.linkedAccounts().find((acc) => acc.role === role);
-    if (account) {
-      this.switchAccount(account.id);
-    }
+    this.authService.switchRole(role).subscribe({
+      next: (response) => {
+        if (response.status) {
+          this.closeRolePopup();
+          window.location.reload();
+        }
+      },
+      error: (error) => {
+        console.error('Failed to switch role:', error);
+      },
+    });
   }
 
   switchAccount(accountId: string) {

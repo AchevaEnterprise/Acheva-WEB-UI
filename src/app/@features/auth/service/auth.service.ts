@@ -149,6 +149,22 @@ export class AuthenticationService {
       );
   }
 
+  switchRole(role: string): Observable<IAPIResponse<any>> {
+    return this.http
+      .patch<IAPIResponse<any>>(`${this.authUrl}/lecturers/switch-role`, { role })
+      .pipe(
+        tap((res) => {
+          if (res.status) {
+            this.activeAccount.set(res.data);
+            localStorage.setItem(
+              STORAGE_KEYS.ACTIVE_ACCOUNT,
+              JSON.stringify(this.activeAccount())
+            );
+          }
+        })
+      );
+  }
+
   forgotPassword(email: string): Observable<IAPIResponse<any>> {
     return this.http.post<IAPIResponse<any>>(
       `${this.authUrl}/forgot-password`,
