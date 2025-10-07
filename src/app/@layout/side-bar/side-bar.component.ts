@@ -77,8 +77,10 @@ export class SideBarComponent implements OnInit {
   hasCourseCoordinatorRole() {
     const account = this.activeAccount();
     if (!account) return false;
-    return account.role === RoleEnum.COURSE_COORDINATOR ||
-      (account as any).otherRoles?.includes(RoleEnum.COURSE_COORDINATOR);
+    return (
+      account.role === RoleEnum.COURSE_COORDINATOR ||
+      (account as any).otherRoles?.includes(RoleEnum.COURSE_COORDINATOR)
+    );
   }
 
   isRoleAssigned(role: RoleEnum) {

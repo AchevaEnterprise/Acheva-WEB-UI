@@ -151,7 +151,9 @@ export class AuthenticationService {
 
   switchRole(role: string): Observable<IAPIResponse<any>> {
     return this.http
-      .patch<IAPIResponse<any>>(`${this.authUrl}/lecturers/switch-role`, { role })
+      .patch<
+        IAPIResponse<any>
+      >(`${this.authUrl}/lecturers/switch-role`, { role })
       .pipe(
         tap((res) => {
           if (res.status) {
