@@ -166,8 +166,6 @@
         <span class="role-text">Course Advisor</span>
         @if (isRoleAssigned(RoleEnum.COURSE_ADVISOR)) {
           <span class="checkmark">✓</span>
-        } @else {
-          <span class="default-text">default</span>
         }
       </div>
 
@@ -185,24 +183,13 @@
         @if (isRoleAssigned(RoleEnum.COURSE_COORDINATOR)) {
           <span class="badge-dot"></span>
           <span class="checkmark">✓</span>
-        } @else {
-          <span class="default-text">default</span>
         }
       </div>
 
-      <!-- Dean -->
-      <div
-        class="role-item"
-        [class.disabled]="!isRoleAssigned(RoleEnum.DEAN)"
-        [class.active]="isRoleAssigned(RoleEnum.DEAN)"
-        (click)="isRoleAssigned(RoleEnum.DEAN) && switchToRole(RoleEnum.DEAN)"
-      >
-        <span class="role-text">Dean</span>
-        @if (isRoleAssigned(RoleEnum.DEAN)) {
-          <span class="checkmark">✓</span>
-        } @else {
-          <span class="default-text">default</span>
-        }
+      <!-- Lecturer -->
+      <div class="role-item active" (click)="switchToRole(RoleEnum.LECTURER)">
+        <span class="role-text">Lecturer</span>
+        <span class="default-text">default</span>
       </div>
     </div>
   </div>
