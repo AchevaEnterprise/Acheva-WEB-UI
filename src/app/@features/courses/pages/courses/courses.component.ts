@@ -115,7 +115,7 @@ export class CoursesComponent {
 
             return this.courseService
               .getCourses(courseTitleParams)
-              .pipe(map((titleResp) => titleResp.data?.courses || []));
+              .pipe(map((titleResp) => (titleResp.data?.courses as ICourse[]) || []));
           }
         }),
         finalize(() => this.isSearching.set(false))
