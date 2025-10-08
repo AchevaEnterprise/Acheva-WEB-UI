@@ -28,4 +28,8 @@ export class StudentService {
     params = params.append('registrationNumber', regNo);
     return this.http.get<IAPIResponse<any>>(`${this.studentUrl}`, { params });
   }
+
+  getStudentsBySchool(): Observable<IAPIResponse<any>> {
+    return this.http.get<IAPIResponse<any>>(`${this.studentUrl}/school`);
+  }
 }

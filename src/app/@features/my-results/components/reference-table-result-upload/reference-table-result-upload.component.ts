@@ -201,11 +201,11 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
         Validators.required,
       ],
       fullName: [student.fullName || '', Validators.required],
-      test: [student.test ?? 0, [Validators.min(0), Validators.max(30)]],
-      lab: [student.lab ?? 0, [Validators.min(0), Validators.max(30)]],
-      exam: [student.exam ?? 0, [Validators.min(0), Validators.max(70)]],
-      total: [{ value: 0, disabled: true }],
-      grade: [student.grade || ''],
+      test: [student.test ?? '', [Validators.min(0), Validators.max(30)]],
+      lab: [student.lab ?? '', [Validators.min(0), Validators.max(30)]],
+      exam: [student.exam ?? '', [Validators.min(0), Validators.max(70)]],
+      total: [{ value: '', disabled: true }],
+      grade: [student.grade || '-'],
       status: [student.status || 'PENDING'],
     });
 
@@ -328,10 +328,10 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
         // Note: _id is undefined for new students - they get IDs after being saved
         registrationNumber: studentData.value,
         fullName: studentData.label.split(' (')[0],
-        test: '0',
-        lab: '0',
-        exam: '0',
-        grade: 'F',
+        test: '',
+        lab: '',
+        exam: '',
+        grade: '-',
         status: 'PENDING',
       };
 
@@ -465,6 +465,7 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
       D: 'bg-orange-100 text-orange-800',
       E: 'bg-orange-200 text-orange-900',
       F: 'bg-red-100 text-red-800',
+      '-': 'bg-gray-100 text-gray-500',
     };
     return gradeClasses[grade] || 'bg-gray-100 text-gray-800';
   }
