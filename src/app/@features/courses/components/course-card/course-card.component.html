@@ -1,15 +1,15 @@
 <div
-  class="flex flex-col justify-between border-[1px] border-neutral-300 rounded-[8px] w-full h-full p-4 relative"
+  class="flex flex-col justify-between border-[1px] border-neutral-300 rounded-[8px] w-full min-h-[280px] p-4 relative bg-white hover:shadow-md transition-shadow"
 >
   <div>
-    <h4 class="acva-clamp-2 acva-heading-6 fw-500">
+    <h4 class="acva-clamp-2 acva-heading-6 fw-500 mb-2">
       {{ course()?.courseTitle }}
     </h4>
-    <p class="text-neutral-500">
+    <p class="text-neutral-500 text-sm mb-4">
       {{ course()?.courseCode }} - {{ course()?.courseLoad }} Unit(s)
     </p>
 
-    <div class="my-4 grid gap-[8px]">
+    <div class="grid gap-3">
       <p class="text-neutral-400 text-sm flex items-center gap-2">
         <app-svg
           svgWidth="1rem"
@@ -39,10 +39,10 @@
     </div>
   </div>
 
-  <div class="flex justify-end">
+  <div class="flex justify-end mt-4">
     <app-button
       label="Create Result"
-      class="btn-md"
+      class="btn-sm w-full"
       (clickEvent)="createResult()"
     />
   </div>

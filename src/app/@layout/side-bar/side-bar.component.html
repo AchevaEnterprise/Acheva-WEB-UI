@@ -157,15 +157,17 @@
       <div
         class="role-item"
         [class.disabled]="!isRoleAssigned(RoleEnum.COURSE_ADVISOR)"
-        [class.active]="isRoleAssigned(RoleEnum.COURSE_ADVISOR)"
+        [class.active]="activeAccount()?.role === RoleEnum.COURSE_ADVISOR"
         (click)="
           isRoleAssigned(RoleEnum.COURSE_ADVISOR) &&
             switchToRole(RoleEnum.COURSE_ADVISOR)
         "
       >
         <span class="role-text">Course Advisor</span>
-        @if (isRoleAssigned(RoleEnum.COURSE_ADVISOR)) {
+        @if (activeAccount()?.role === RoleEnum.COURSE_ADVISOR) {
           <span class="checkmark">✓</span>
+        } @else if (isRoleAssigned(RoleEnum.COURSE_ADVISOR)) {
+          <span class="badge-dot"></span>
         }
       </div>
 
@@ -173,22 +175,30 @@
       <div
         class="role-item"
         [class.disabled]="!isRoleAssigned(RoleEnum.COURSE_COORDINATOR)"
-        [class.active]="isRoleAssigned(RoleEnum.COURSE_COORDINATOR)"
+        [class.active]="activeAccount()?.role === RoleEnum.COURSE_COORDINATOR"
         (click)="
           isRoleAssigned(RoleEnum.COURSE_COORDINATOR) &&
             switchToRole(RoleEnum.COURSE_COORDINATOR)
         "
       >
         <span class="role-text">Course Coordinator</span>
-        @if (isRoleAssigned(RoleEnum.COURSE_COORDINATOR)) {
-          <span class="badge-dot"></span>
+        @if (activeAccount()?.role === RoleEnum.COURSE_COORDINATOR) {
           <span class="checkmark">✓</span>
+        } @else if (isRoleAssigned(RoleEnum.COURSE_COORDINATOR)) {
+          <span class="badge-dot"></span>
         }
       </div>
 
       <!-- Lecturer -->
-      <div class="role-item active" (click)="switchToRole(RoleEnum.LECTURER)">
+      <div
+        class="role-item"
+        [class.active]="activeAccount()?.role === RoleEnum.LECTURER"
+        (click)="switchToRole(RoleEnum.LECTURER)"
+      >
         <span class="role-text">Lecturer</span>
+        @if (activeAccount()?.role === RoleEnum.LECTURER) {
+          <span class="checkmark">✓</span>
+        }
         <span class="default-text">default</span>
       </div>
     </div>

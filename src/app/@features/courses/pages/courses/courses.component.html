@@ -9,7 +9,10 @@
       <h3 class="acva-heading-5 fw-500">Course Template</h3>
     </div>
 
-    <app-search-input placeholder="Search Courses..." />
+    <app-search-input
+      placeholder="Search by course name or code (e.g. Math 105, Math Method)..."
+      (searchEvent)="onSearch($event)"
+    />
   </header>
 
   <div class="grid lg:grid-cols-[20%_1fr] md:grid-cols-2 sm:grid-cols-1 gap-4">
@@ -39,12 +42,14 @@
 
         <ng-container *ngIf="recentCourses$ | async as recentCourses">
           @if (recentCourses.length > 0) {
-            <div class="flex gap-4 overflow-x-auto">
+            <div class="flex gap-4 overflow-x-auto pb-2">
               @for (course of recentCourses; track $index) {
-                <app-course-card
-                  [course]="course"
-                  (useTemplateEvent)="createResult($event)"
-                />
+                <div class="flex-shrink-0" style="width: 280px">
+                  <app-course-card
+                    [course]="course"
+                    (useTemplateEvent)="createResult($event)"
+                  />
+                </div>
               }
             </div>
           } @else {
@@ -58,37 +63,111 @@
     </app-card>
   </div>
 
-  <mat-divider class="!mt-8"></mat-divider>
+  <!-- SEARCH RESULTS SECTION -->
+  @if (showSearchResults()) {
+    <div class="mt-8">
+      <header class="flex justify-between gap-4 items-baseline mb-4">
+        <h3 class="acva-heading-5 fw-500">
+          Search Results for "{{ searchQuery() }}"
+        </h3>
+        <button
+          class="text-blue-500 underline cursor-pointer"
+          (click)="clearSearch()"
+        >
+          Clear Search
+        </button>
+      </header>
 
-  <header class="flex justify-between gap-4 items-baseline my-4">
-    <h3 class="acva-heading-5 fw-500">Suggested Template</h3>
-    <a class="text-blue-500 underline" routerLink="/">View all</a>
-  </header>
+      <mat-divider></mat-divider>
 
-  <mat-divider></mat-divider>
-
-  <!-- COURSE TEMPLATE CARDS -->
-  <div class="min-h-24">
-    @if (isloadingCourses()) {
-      <app-loader />
-    }
-
-    <ng-container *ngIf="courses$ | async as courses">
-      @if (courses.length > 0) {
-        <div class="grid lg:grid-cols-3 sm:grid-cols-2 gap-4 mt-4">
-          @for (course of courses; track $index) {
-            <app-course-card
-              [course]="course"
-              (useTemplateEvent)="createResult($event)"
+      <div class="min-h-24 mt-4">
+        @if (isSearching()) {
+          <app-loader />
+        } @else {
+          @if (searchResults().length > 0) {
+            <div class="grid lg:grid-cols-3 sm:grid-cols-2 gap-4">
+              @for (course of searchResults(); track $index) {
+                <app-course-card
+                  [course]="course"
+                  (useTemplateEvent)="createResult($event)"
+                />
+              }
+            </div>
+          } @else {
+            <app-empty-state
+              iconSrc="images/general/empty-doc.svg"
+              description="No results found for '{{
+                searchQuery()
+              }}'. Try searching with course name or course code."
             />
           }
-        </div>
+        }
+      </div>
+    </div>
+  }
+
+  <mat-divider class="!mt-8"></mat-divider>
+
+  @if (!showSearchResults()) {
+    <header class="flex justify-between gap-4 items-baseline my-4">
+      <h3 class="acva-heading-5 fw-500">
+        {{ showAllCourses() ? 'All Courses' : 'Suggested Template' }}
+      </h3>
+      <button
+        class="text-blue-500 underline cursor-pointer bg-transparent border-none"
+        (click)="viewAllCourses()"
+      >
+        {{ showAllCourses() ? 'View less' : 'View all' }}
+      </button>
+    </header>
+
+    <mat-divider></mat-divider>
+
+    <!-- COURSE TEMPLATE CARDS -->
+    <div class="min-h-24">
+      @if (showAllCourses()) {
+        @if (isLoadingAllCourses()) {
+          <app-loader />
+        } @else {
+          @if (allCourses().length > 0) {
+            <div class="grid lg:grid-cols-3 sm:grid-cols-2 gap-4 mt-4">
+              @for (course of allCourses(); track $index) {
+                <app-course-card
+                  [course]="course"
+                  (useTemplateEvent)="createResult($event)"
+                />
+              }
+            </div>
+          } @else {
+            <app-empty-state
+              iconSrc="images/general/empty-doc.svg"
+              description="No courses available"
+            />
+          }
+        }
       } @else {
-        <app-empty-state
-          iconSrc="images/general/empty-doc.svg"
-          description="You have no recent templates"
-        />
+        @if (isloadingCourses()) {
+          <app-loader />
+        }
+
+        <ng-container *ngIf="courses$ | async as courses">
+          @if (courses.length > 0) {
+            <div class="grid lg:grid-cols-3 sm:grid-cols-2 gap-4 mt-4">
+              @for (course of courses; track $index) {
+                <app-course-card
+                  [course]="course"
+                  (useTemplateEvent)="createResult($event)"
+                />
+              }
+            </div>
+          } @else {
+            <app-empty-state
+              iconSrc="images/general/empty-doc.svg"
+              description="You have no recent templates"
+            />
+          }
+        </ng-container>
       }
-    </ng-container>
-  </div>
+    </div>
+  }
 </div>

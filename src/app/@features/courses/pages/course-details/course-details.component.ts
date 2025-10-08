@@ -384,6 +384,11 @@ export class CourseDetailsComponent implements OnInit, OnDestroy {
       courseCordinator: coordinator,
       courseLoad: course.courseLoad,
     });
+
+    // Set the selected course ID
+    if (course._id) {
+      this.selectedCourseId.set(course._id);
+    }
   }
 
   private clearAutoFillFields(): void {
@@ -409,6 +414,11 @@ export class CourseDetailsComponent implements OnInit, OnDestroy {
       faculty: course.faculty as unknown as IFaculty,
       department: course.department as unknown as IDepartment,
     });
+
+    // Set the selected course ID
+    if (course._id) {
+      this.selectedCourseId.set(course._id);
+    }
 
     // Disable fields after auto-fill
     this.form.get('level')?.disable();
@@ -445,17 +455,38 @@ export class CourseDetailsComponent implements OnInit, OnDestroy {
   // Form submission and navigation
   submit(): void {
     this.isLoading.set(true);
-    const { session, semester, school, department, level } =
+    const { session, semester, school, department, level, courseCode } =
       this.form.getRawValue();
-    const courseIdToUse = this.selectedCourseId() || this.courseId!;
+
+    // Find the course by courseCode if no courseId is available
+    let courseIdToUse = this.selectedCourseId() || this.courseId;
+
+    if (!courseIdToUse && courseCode) {
+      const matchedCourse = this.courses().find(
+        (course) =>
+          course.courseCode.trim().toLowerCase() ===
+          courseCode.trim().toLowerCase()
+      );
+      courseIdToUse = matchedCourse?._id || null;
+    }
+
+    if (!courseIdToUse) {
+      this.toast.showNotification(
+        'error',
+        'Course Selection Error',
+        'Please select a valid course'
+      );
+      this.isLoading.set(false);
+      return;
+    }
 
     const payload: ICreateResult = {
       course: courseIdToUse,
       session: session || '',
       level: level || '',
       semester: semester || '',
-      school: (school as ISchool)._id,
-      department: (department as IDepartment)._id,
+      school: (school as ISchool)?._id,
+      department: (department as IDepartment)?._id,
       status: ResultStatusEnum.PENDING,
     };
 

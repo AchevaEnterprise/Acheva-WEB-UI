@@ -194,6 +194,7 @@ export class ResultUploadComponent implements OnInit {
         next: (resp) => {
           if (resp.status) {
             console.warn('Students in department and level:', resp.data);
+            // Data will be handled by getResultEntries()
           }
         },
         error: (error) => {
@@ -214,14 +215,13 @@ export class ResultUploadComponent implements OnInit {
       .subscribe({
         next: (resp) => {
           if (resp.status) {
-            const { analytics, course, session, level, department } =
-              resp.data as {
-                course: { courseTitle: string };
-                session: string;
-                level: string;
-                analytics: Record<string, number>;
-                department: IDepartment;
-              };
+            const { analytics, course, session, level } = resp.data as {
+              course: { courseTitle: string };
+              session: string;
+              level: string;
+              analytics: Record<string, number>;
+              department: IDepartment;
+            };
 
             this.courseForm.patchValue({
               course: course.courseTitle,
@@ -243,7 +243,7 @@ export class ResultUploadComponent implements OnInit {
             this.totalStudentPass.set(analytics['totalPass'] || 0);
             this.totalStudentFail.set(analytics['totalFail'] || 0);
 
-            this.getStudentsInDepartmentAndLevel(department._id, level);
+            // Data will be loaded from getResultEntries()
           }
         },
         error: (error) => {
@@ -290,15 +290,33 @@ export class ResultUploadComponent implements OnInit {
             this.totalStudentPass.set(totalPass || 0);
             this.totalStudentFail.set(totalFail || 0);
 
-            // Update the students signal with the current segment data
-            const currentStudents = this.students();
+            // Update only the current segment data, preserve others
             const segmentKey = this.activeSegment().value as SegmentValue;
 
-            // Always update the data, even if it's the same reference
-            this.students.set({
-              ...currentStudents,
-              [segmentKey]: result || [],
+            // eslint-disable-next-line no-console
+            console.log(`API Response for ${segmentKey}:`, {
+              total,
+              resultCount: result?.length || 0,
+              result: result,
             });
+
+            // Process the result data to ensure proper display
+            const processedResult = (result || []).map((student) => ({
+              ...student,
+              // Ensure grades show dashes if empty/undefined
+              test: student.test ?? '-',
+              lab: student.lab ?? '-',
+              exam: student.exam ?? '-',
+              total: student.total ?? '-',
+              grade: student.grade ?? '-',
+              status: student.status ?? '-',
+            }));
+
+            // Use update to preserve other segment data
+            this.students.update((current) => ({
+              ...current,
+              [segmentKey]: processedResult,
+            }));
 
             // Force change detection to ensure UI updates
             this.cdr.detectChanges();
