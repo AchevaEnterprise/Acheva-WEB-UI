@@ -68,6 +68,9 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
   students = input<Partial<IStudentGrade & { _id: string }>[]>([]);
   tableUpdateEvent = output<Partial<IStudentGrade & { _id: string }>[]>();
   selectedRows = output<Partial<IStudentGrade & { _id: string }>[]>();
+  
+  // Flag to prevent emissions during initial setup
+  private isInitializing = false;
 
   // Row selection signal
   selectedIndices = signal<Set<number>>(new Set<number>());
@@ -107,25 +110,49 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
     // Fixed effect with proper change detection
     effect(() => {
       const students = this.students();
+      
+      console.log('Table component effect triggered with students:', students?.length || 0);
+      console.log('Students data in effect:', students);
 
       // Use untracked to prevent infinite loops
       untracked(() => {
         if (students && students.length >= 0) {
           // Allow empty arrays
+          console.log('Setting total students to:', students.length);
           this.totalStudents.set(students.length);
           this.updateFormWithStudents(students);
           // Reset pagination and selection when data changes
           this.currentPage.set(0);
           this.selectedIndices.set(new Set<number>());
+        } else {
+          console.log('Students data is null or undefined');
         }
       });
     });
   }
 
   ngOnInit(): void {
-    this.form.valueChanges.pipe(takeUntil(this.destroy$)).subscribe((value) => {
-      this.tableUpdateEvent.emit(value.rows as Partial<IStudentGrade>[]);
-    });
+    // Add debouncing to prevent excessive emissions
+    this.form.valueChanges
+      .pipe(
+        takeUntil(this.destroy$),
+        // Add a small delay to prevent rapid-fire emissions
+      )
+      .subscribe((value) => {
+        // Don't emit during initialization to prevent data loss
+        if (this.isInitializing) {
+          console.log('Skipping emission during initialization');
+          return;
+        }
+        
+        console.log('Form value changed, emitting:', value.rows?.length || 0, 'rows');
+        
+        // Emit the current form data
+        const currentData = this.rows.controls.map(control => control.value);
+        console.log('Emitting current FormArray data:', currentData.length, 'items');
+        
+        this.tableUpdateEvent.emit(currentData as Partial<IStudentGrade>[]);
+      });
   }
 
   ngOnDestroy(): void {
@@ -173,6 +200,11 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
   private updateFormWithStudents(
     students: Partial<IStudentGrade & { _id: string }>[]
   ): void {
+    console.log('Updating form with students:', students.length, students);
+    
+    // Set initializing flag to prevent emissions
+    this.isInitializing = true;
+    
     // Clear the FormArray completely
     while (this.rows.length !== 0) {
       this.rows.removeAt(0);
@@ -186,10 +218,18 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
     // Increment version to trigger computed updates - this is crucial
     this.formArrayVersion.update((v) => v + 1);
 
+    console.log('Form updated with', this.rows.length, 'rows');
+    
     // Force change detection
     this.form.markAsDirty();
     this.form.updateValueAndValidity();
     this.cdr.detectChanges();
+    
+    // Clear initializing flag after a short delay
+    setTimeout(() => {
+      this.isInitializing = false;
+      console.log('Initialization complete, emissions enabled');
+    }, 100);
   }
 
   // Form management

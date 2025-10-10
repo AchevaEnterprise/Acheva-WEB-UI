@@ -41,8 +41,11 @@
 
   <div class="flex justify-end mt-4">
     <button
-      class="bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium py-1.5 px-3 rounded transition-colors duration-200"
+      class="text-xs font-medium py-1.5 px-3 rounded transition-colors duration-200"
+      style="background-color: #7bf; color: white;"
       (click)="createResult()"
+      onmouseover="this.style.backgroundColor='#f1f1f1'; this.style.color='#333';"
+      onmouseout="this.style.backgroundColor='#7bf'; this.style.color='white';"
     >
       Create Result
     </button>

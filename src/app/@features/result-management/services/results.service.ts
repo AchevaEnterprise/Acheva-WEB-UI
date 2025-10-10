@@ -73,6 +73,15 @@ export class ResultsService {
     );
   }
 
+  createBulkResultEntries(
+    entries: ICreateResultEntry[]
+  ): Observable<IAPIResponse<any>> {
+    return this.http.post<IAPIResponse<any>>(
+      `${this.resultsUrl}/entries/bulk`,
+      entries
+    );
+  }
+
   updateResult(
     resultId: string,
     result: Partial<ICreateResult>
@@ -102,6 +111,15 @@ export class ResultsService {
     );
   }
 
+  updateBulkResultEntries(
+    entries: any[]
+  ): Observable<IAPIResponse<any>> {
+    return this.http.patch<IAPIResponse<any>>(
+      `${this.resultsUrl}/entries/bulk`,
+      entries
+    );
+  }
+
   deleteResultEntry(resultEntryId: string): Observable<IAPIResponse<any>> {
     return this.http.delete<IAPIResponse<any>>(
       `${this.resultsUrl}/${resultEntryId}/entries`
@@ -117,6 +135,7 @@ export class ResultsService {
     );
   }
 
+  // Import Result - Upload CSV/Excel files
   uploadResultFile(
     resultId: string,
     file: File
@@ -127,6 +146,58 @@ export class ResultsService {
     return this.http.post<IAPIResponse<any>>(
       `${this.resultsUrl}/entries/import/${resultId}`,
       formData
+    );
+  }
+
+  // Create single result entry for grid input
+  createSingleResultEntry(
+    entry: {
+      registrationNumber: string;
+      fullName: string;
+      test: number;
+      lab: number;
+      exam: number;
+      total: number;
+      result: string;
+    }
+  ): Observable<IAPIResponse<any>> {
+    return this.http.post<IAPIResponse<any>>(
+      `${this.resultsUrl}/entries`,
+      entry
+    );
+  }
+
+  // Create multiple result entries for bulk grid operations
+  createMultipleResultEntries(
+    entries: Array<{
+      registrationNumber: string;
+      fullName: string;
+      test: number;
+      lab: number;
+      exam: number;
+      total: number;
+      result: string;
+    }>
+  ): Observable<IAPIResponse<any>> {
+    return this.http.post<IAPIResponse<any>>(
+      `${this.resultsUrl}/entries/bulk`,
+      entries
+    );
+  }
+
+  updateResultEntriesWithAnalytics(
+    resultId: string,
+    entries: any[]
+  ): Observable<IAPIResponse<any>> {
+    return this.http.patch<IAPIResponse<any>>(
+      `${this.resultsUrl}/${resultId}/entries`,
+      { entries }
+    );
+  }
+
+  getResultAnalytics(resultId: string): Observable<IAPIResponse<any>> {
+    return this.http.get<IAPIResponse<any>>(
+      `${this.resultsUrl}/${resultId}/analytics`
     );
   }
 }

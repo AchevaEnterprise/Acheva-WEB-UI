@@ -1,3 +1,4 @@
+import { DatePipe } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
@@ -32,6 +33,7 @@ import { MyResultListCardComponent } from '../../components/my-result-list-card/
     LoaderComponent,
     EmptyStateComponent,
     RouterLink,
+    DatePipe,
   ],
   templateUrl: './my-results.component.html',
   styleUrl: './my-results.component.scss',
@@ -43,6 +45,7 @@ export class MyResultsComponent implements OnInit {
 
   isloadingResults = signal(false);
   results = signal<any[]>([]);
+  drafts = signal<any[]>([]);
 
   view = signal<'list' | 'grid'>('list');
   viewLabel = signal<string>('Grid View');
@@ -105,9 +108,26 @@ export class MyResultsComponent implements OnInit {
 
   ngOnInit(): void {
     this.getResults();
+    // Refresh drafts when component loads
+    if (this.activeSegment().value === 'DRAFT') {
+      this.loadDrafts();
+    }
+    
+    // Listen for when user returns to this page to refresh drafts
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && this.activeSegment().value === 'DRAFT') {
+        console.log('Page became visible, refreshing drafts');
+        this.loadDrafts();
+      }
+    });
   }
 
   getResults() {
+    if (this.activeSegment().value === 'DRAFT') {
+      this.loadDrafts();
+      return;
+    }
+
     this.isloadingResults.set(true);
     this.resultService
       .getResults({
@@ -121,6 +141,57 @@ export class MyResultsComponent implements OnInit {
           }
         },
       });
+  }
+
+  loadDrafts() {
+    this.isloadingResults.set(true);
+
+    try {
+      const draftsListData = localStorage.getItem('result_drafts_list');
+      console.log('Loading drafts from localStorage:', draftsListData);
+
+      if (!draftsListData) {
+        this.drafts.set([]);
+        this.isloadingResults.set(false);
+        return;
+      }
+
+      const draftsList = JSON.parse(draftsListData);
+      const draftsWithDetails = draftsList.map((draft: any) => {
+        // Get the actual draft data from first available segment
+        let draftData = null;
+
+        for (const segment of draft.segments) {
+          const draftKey = `result_draft_${draft.resultId}_${segment}`;
+          const segmentDraftData = localStorage.getItem(draftKey);
+          if (segmentDraftData) {
+            draftData = JSON.parse(segmentDraftData);
+            break;
+          }
+        }
+
+        if (draftData) {
+          return {
+            _id: draft.resultId,
+            title: `Draft - ${draft.resultId}`,
+            status: 'DRAFT',
+            timestamp: draft.timestamp,
+            segments: draft.segments,
+            studentCount: draftData.students?.length || 0,
+            isDraft: true
+          };
+        }
+        return null;
+      }).filter(Boolean);
+
+      console.log('Processed drafts:', draftsWithDetails);
+      this.drafts.set(draftsWithDetails);
+    } catch (error) {
+      console.error('Error loading drafts:', error);
+      this.drafts.set([]);
+    }
+
+    this.isloadingResults.set(false);
   }
 
   toggleView() {
@@ -144,12 +215,37 @@ export class MyResultsComponent implements OnInit {
     );
 
     this.getResults();
+
+    // Refresh drafts when switching to DRAFT segment
+    if (switchValue === 'DRAFT') {
+      setTimeout(() => this.loadDrafts(), 100);
+    }
+  }
+
+  deleteDraft(resultId: string) {
+    // Remove all draft data for this result
+    const segments = ['REGULAR', 'REFERENCE', 'UNREGISTERED'];
+    segments.forEach(segment => {
+      localStorage.removeItem(`result_draft_${resultId}_${segment}`);
+    });
+
+    // Update drafts list
+    const draftsListData = localStorage.getItem('result_drafts_list');
+    if (draftsListData) {
+      const draftsList = JSON.parse(draftsListData);
+      const updatedList = draftsList.filter((d: any) => d.resultId !== resultId);
+      localStorage.setItem('result_drafts_list', JSON.stringify(updatedList));
+    }
+
+    // Refresh drafts display
+    this.loadDrafts();
   }
 
   viewResult(result: IResult) {
     this.router.navigate(['upload-result'], {
       queryParams: { resultId: result._id },
       relativeTo: this.route,
-    });
-  }
+  });
+}
+
 }
