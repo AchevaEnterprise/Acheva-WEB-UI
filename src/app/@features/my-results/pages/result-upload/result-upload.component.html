@@ -120,7 +120,23 @@
 <!-- STUDENT GRADE TABLE -->
 <div>
   <header class="mt-4 mb-3">
-    <h4 class="acva-heading-6 fw-500">Student Grade</h4>
+    <div class="flex items-center gap-3">
+      <h4 class="acva-heading-6 fw-500">Student Grade</h4>
+      @if (isDraftMode()) {
+        <span
+          class="px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded-full"
+        >
+          Draft Mode - Auto-saving...
+        </span>
+      }
+      @if (hasUnsavedChanges()) {
+        <span
+          class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full"
+        >
+          Unsaved Changes
+        </span>
+      }
+    </div>
   </header>
 
   <div class="flex gap-3 items-center justify-between">
@@ -174,21 +190,21 @@
         <app-reference-table-result-upload
           #regularTableResultUploadRef
           [students]="students()['REGULAR']"
-          (selectedRows)="onSelectedRowsChange($event)"
+          (tableUpdateEvent)="onTableDataChanged($event)"
         />
       }
       @case ('REFERENCE') {
         <app-reference-table-result-upload
           #referenceTableResultUploadRef
           [students]="students()['REFERENCE']"
-          (selectedRows)="onSelectedRowsChange($event)"
+          (tableUpdateEvent)="onTableDataChanged($event)"
         />
       }
       @case ('UNREGISTERED') {
         <app-reference-table-result-upload
           #unregisteredTableResultUploadRef
           [students]="students()['UNREGISTERED']"
-          (selectedRows)="onSelectedRowsChange($event)"
+          (tableUpdateEvent)="onTableDataChanged($event)"
         />
       }
     }

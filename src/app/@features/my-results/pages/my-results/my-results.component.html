@@ -65,35 +65,74 @@
     @if (isloadingResults()) {
       <app-loader />
     } @else {
-      @if (results().length > 0) {
-        <!-- GRID VIEW -->
-        @if (view() === 'grid') {
-          <div class="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            @for (result of results(); track $index) {
-              <app-my-result-grid-card
-                [result]="result"
-                (viewEvent)="viewResult($event)"
-              />
-            }
-          </div>
-        }
-
-        <!-- LIST VIEW -->
-        @if (view() === 'list') {
-          @for (result of results(); track $index) {
-            <div>
-              <app-my-result-list-card
-                [result]="result"
-                (viewEvent)="viewResult($event)"
-              />
+      @if (activeSegment().value === 'DRAFT') {
+        <!-- DRAFT VIEW -->
+        @if (drafts().length > 0) {
+          <!-- GRID VIEW -->
+          @if (view() === 'grid') {
+            <div
+              class="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+            >
+              @for (draft of drafts(); track $index) {
+                <app-my-result-grid-card
+                  [result]="draft"
+                  (viewEvent)="viewResult($event)"
+                />
+              }
             </div>
           }
+
+          <!-- LIST VIEW -->
+          @if (view() === 'list') {
+            @for (draft of drafts(); track $index) {
+              <div>
+                <app-my-result-list-card
+                  [result]="draft"
+                  (viewEvent)="viewResult($event)"
+                />
+              </div>
+            }
+          }
+        } @else {
+          <app-empty-state
+            iconSrc="images/general/empty-doc.svg"
+            description="You have no draft results"
+          />
         }
       } @else {
-        <app-empty-state
-          iconSrc="images/general/empty-doc.svg"
-          description="You have no results"
-        />
+        <!-- REGULAR RESULTS VIEW -->
+        @if (results().length > 0) {
+          <!-- GRID VIEW -->
+          @if (view() === 'grid') {
+            <div
+              class="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+            >
+              @for (result of results(); track $index) {
+                <app-my-result-grid-card
+                  [result]="result"
+                  (viewEvent)="viewResult($event)"
+                />
+              }
+            </div>
+          }
+
+          <!-- LIST VIEW -->
+          @if (view() === 'list') {
+            @for (result of results(); track $index) {
+              <div>
+                <app-my-result-list-card
+                  [result]="result"
+                  (viewEvent)="viewResult($event)"
+                />
+              </div>
+            }
+          }
+        } @else {
+          <app-empty-state
+            iconSrc="images/general/empty-doc.svg"
+            description="You have no results"
+          />
+        }
       }
     }
   </div>

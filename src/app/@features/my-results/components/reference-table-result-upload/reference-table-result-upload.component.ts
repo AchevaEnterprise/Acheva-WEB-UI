@@ -123,9 +123,20 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.form.valueChanges.pipe(takeUntil(this.destroy$)).subscribe((value) => {
-      this.tableUpdateEvent.emit(value.rows as Partial<IStudentGrade>[]);
-    });
+    // Add debouncing to prevent excessive emissions
+    this.form.valueChanges
+      .pipe(
+        takeUntil(this.destroy$)
+        // Add a small delay to prevent rapid-fire emissions
+      )
+      .subscribe((value) => {
+        console.log(
+          'Form value changed, emitting:',
+          value.rows?.length || 0,
+          'rows'
+        );
+        this.tableUpdateEvent.emit(value.rows as Partial<IStudentGrade>[]);
+      });
   }
 
   ngOnDestroy(): void {
@@ -173,6 +184,8 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
   private updateFormWithStudents(
     students: Partial<IStudentGrade & { _id: string }>[]
   ): void {
+    console.log('Updating form with students:', students.length, students);
+
     // Clear the FormArray completely
     while (this.rows.length !== 0) {
       this.rows.removeAt(0);
@@ -185,6 +198,8 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
 
     // Increment version to trigger computed updates - this is crucial
     this.formArrayVersion.update((v) => v + 1);
+
+    console.log('Form updated with', this.rows.length, 'rows');
 
     // Force change detection
     this.form.markAsDirty();
