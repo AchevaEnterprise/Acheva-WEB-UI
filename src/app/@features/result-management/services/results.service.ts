@@ -111,9 +111,7 @@ export class ResultsService {
     );
   }
 
-  updateBulkResultEntries(
-    entries: any[]
-  ): Observable<IAPIResponse<any>> {
+  updateBulkResultEntries(entries: any[]): Observable<IAPIResponse<any>> {
     return this.http.patch<IAPIResponse<any>>(
       `${this.resultsUrl}/entries/bulk`,
       entries
@@ -150,17 +148,15 @@ export class ResultsService {
   }
 
   // Create single result entry for grid input
-  createSingleResultEntry(
-    entry: {
-      registrationNumber: string;
-      fullName: string;
-      test: number;
-      lab: number;
-      exam: number;
-      total: number;
-      result: string;
-    }
-  ): Observable<IAPIResponse<any>> {
+  createSingleResultEntry(entry: {
+    registrationNumber: string;
+    fullName: string;
+    test: number;
+    lab: number;
+    exam: number;
+    total: number;
+    result: string;
+  }): Observable<IAPIResponse<any>> {
     return this.http.post<IAPIResponse<any>>(
       `${this.resultsUrl}/entries`,
       entry

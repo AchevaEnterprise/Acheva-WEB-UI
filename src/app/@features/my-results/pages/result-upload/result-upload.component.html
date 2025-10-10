@@ -190,7 +190,6 @@
         <app-reference-table-result-upload
           #regularTableResultUploadRef
           [students]="students()['REGULAR']"
-          
           (tableUpdateEvent)="onTableDataChanged($event)"
         />
       }
@@ -198,7 +197,6 @@
         <app-reference-table-result-upload
           #referenceTableResultUploadRef
           [students]="students()['REFERENCE']"
-          
           (tableUpdateEvent)="onTableDataChanged($event)"
         />
       }
@@ -206,7 +204,6 @@
         <app-reference-table-result-upload
           #unregisteredTableResultUploadRef
           [students]="students()['UNREGISTERED']"
-          
           (tableUpdateEvent)="onTableDataChanged($event)"
         />
       }

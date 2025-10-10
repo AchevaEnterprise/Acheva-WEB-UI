@@ -1,10 +1,4 @@
-import {
-  Component,
-  inject,
-  OnInit,
-  signal,
-  viewChild,
-} from '@angular/core';
+import { Component, inject, OnInit, signal, viewChild } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
@@ -157,7 +151,7 @@ export class ResultUploadComponent implements OnInit {
 
   // Track loading state for data fetching
   loadingData = signal<boolean>(false);
-  
+
   // Auto-save and draft management
   private autoSaveTimer: any = null;
   isDraftMode = signal<boolean>(false);
@@ -173,22 +167,29 @@ export class ResultUploadComponent implements OnInit {
     category: new FormControl('regular'),
   });
 
-  constructor() { }
+  constructor() {}
 
   // ========================================
   // LIFECYCLE HOOKS
   // ========================================
   ngOnInit(): void {
-    console.log('ResultUpload component initializing with resultId:', this.resultId);
-    
+    console.log(
+      'ResultUpload component initializing with resultId:',
+      this.resultId
+    );
+
     this.categoryListener();
-    
+
     if (!this.resultId) {
       console.error('No resultId found in query parameters');
-      this.toast.showNotification('error', 'Missing Data', 'Result ID is required');
+      this.toast.showNotification(
+        'error',
+        'Missing Data',
+        'Result ID is required'
+      );
       return;
     }
-    
+
     try {
       this.getResult();
       // Try to load from draft first, then from API
@@ -197,7 +198,11 @@ export class ResultUploadComponent implements OnInit {
       }
     } catch (error) {
       console.error('Error during component initialization:', error);
-      this.toast.showNotification('error', 'Initialization Error', 'Failed to initialize component');
+      this.toast.showNotification(
+        'error',
+        'Initialization Error',
+        'Failed to initialize component'
+      );
     }
   }
 
@@ -277,7 +282,11 @@ export class ResultUploadComponent implements OnInit {
             console.log('Result data loaded successfully');
           } else {
             console.error('getResult failed with status false:', resp);
-            this.toast.showNotification('error', 'Load Error', resp.message || 'Failed to load result');
+            this.toast.showNotification(
+              'error',
+              'Load Error',
+              resp.message || 'Failed to load result'
+            );
           }
         },
         error: (error) => {
@@ -292,7 +301,12 @@ export class ResultUploadComponent implements OnInit {
   }
 
   getResultEntries() {
-    console.log('Getting result entries for:', this.resultId, 'category:', this.activeSegment().value);
+    console.log(
+      'Getting result entries for:',
+      this.resultId,
+      'category:',
+      this.activeSegment().value
+    );
     this.loadingData.set(true);
 
     this.resultsService
@@ -338,24 +352,28 @@ export class ResultUploadComponent implements OnInit {
             ];
 
             // Calculate total students including those without grades
-            const totalStudentsCount = (entries?.length || 0) + (studentsWithoutEntries?.length || 0);
-            
+            const totalStudentsCount =
+              (entries?.length || 0) + (studentsWithoutEntries?.length || 0);
+
             this.analyticsChartData.set(analyticsData);
             this.totalStudent.set(totalStudentsCount);
             this.totalStudentPass.set(totalPass || 0);
             this.totalStudentFail.set(totalFail || 0);
-            
+
             console.log('Full API Response:', resp.data);
             console.log('Raw entries from API:', entries);
-            console.log('Raw studentsWithoutEntries from API:', studentsWithoutEntries);
-            console.log('Analytics from getResultEntries:', { 
-              total, 
-              totalPass, 
-              totalFail, 
-              analytics, 
+            console.log(
+              'Raw studentsWithoutEntries from API:',
+              studentsWithoutEntries
+            );
+            console.log('Analytics from getResultEntries:', {
+              total,
+              totalPass,
+              totalFail,
+              analytics,
               entriesCount: entries?.length || 0,
               studentsWithoutEntriesCount: studentsWithoutEntries?.length || 0,
-              calculatedTotal: totalStudentsCount
+              calculatedTotal: totalStudentsCount,
             });
 
             // Update only the current segment data, preserve others
@@ -367,20 +385,48 @@ export class ResultUploadComponent implements OnInit {
 
             (entries || []).forEach((student, index) => {
               console.log(`Processing entry ${index}:`, student);
-              
+
               // Check if student has meaningful data (not just zeros or empty values)
-              const testValue = typeof student.test === 'string' ? parseFloat(student.test) : student.test;
-              const labValue = typeof student.lab === 'string' ? parseFloat(student.lab) : student.lab;
-              const examValue = typeof student.exam === 'string' ? parseFloat(student.exam) : student.exam;
-              const totalValue = typeof student.total === 'string' ? parseFloat(student.total) : student.total;
+              const testValue =
+                typeof student.test === 'string'
+                  ? parseFloat(student.test)
+                  : student.test;
+              const labValue =
+                typeof student.lab === 'string'
+                  ? parseFloat(student.lab)
+                  : student.lab;
+              const examValue =
+                typeof student.exam === 'string'
+                  ? parseFloat(student.exam)
+                  : student.exam;
+              const totalValue =
+                typeof student.total === 'string'
+                  ? parseFloat(student.total)
+                  : student.total;
 
               const hasActualResults =
-                (testValue !== undefined && testValue !== null && !isNaN(testValue) && testValue > 0) ||
-                (labValue !== undefined && labValue !== null && !isNaN(labValue) && labValue > 0) ||
-                (examValue !== undefined && examValue !== null && !isNaN(examValue) && examValue > 0) ||
-                (totalValue !== undefined && totalValue !== null && !isNaN(totalValue) && totalValue > 0);
+                (testValue !== undefined &&
+                  testValue !== null &&
+                  !isNaN(testValue) &&
+                  testValue > 0) ||
+                (labValue !== undefined &&
+                  labValue !== null &&
+                  !isNaN(labValue) &&
+                  labValue > 0) ||
+                (examValue !== undefined &&
+                  examValue !== null &&
+                  !isNaN(examValue) &&
+                  examValue > 0) ||
+                (totalValue !== undefined &&
+                  totalValue !== null &&
+                  !isNaN(totalValue) &&
+                  totalValue > 0);
 
-              console.log(`Entry ${index} has actual results:`, hasActualResults, { testValue, labValue, examValue, totalValue });
+              console.log(
+                `Entry ${index} has actual results:`,
+                hasActualResults,
+                { testValue, labValue, examValue, totalValue }
+              );
 
               if (hasActualResults) {
                 studentsWithActualResults.push(student);
@@ -388,9 +434,15 @@ export class ResultUploadComponent implements OnInit {
                 studentsWithoutActualResults.push(student);
               }
             });
-            
-            console.log('Students with actual results:', studentsWithActualResults.length);
-            console.log('Students without actual results:', studentsWithoutActualResults.length);
+
+            console.log(
+              'Students with actual results:',
+              studentsWithActualResults.length
+            );
+            console.log(
+              'Students without actual results:',
+              studentsWithoutActualResults.length
+            );
 
             // Process students with actual results
             const processedEntries = studentsWithActualResults.map(
@@ -446,43 +498,55 @@ export class ResultUploadComponent implements OnInit {
               ...processedStudentsFromEntries,
               ...processedStudentsWithoutEntries,
             ];
-            
+
             console.log('Final combined results breakdown:', {
               processedEntries: processedEntries.length,
-              processedStudentsFromEntries: processedStudentsFromEntries.length, 
-              processedStudentsWithoutEntries: processedStudentsWithoutEntries.length,
-              totalCombined: combinedResults.length
+              processedStudentsFromEntries: processedStudentsFromEntries.length,
+              processedStudentsWithoutEntries:
+                processedStudentsWithoutEntries.length,
+              totalCombined: combinedResults.length,
             });
-            
+
             if (combinedResults.length === 1) {
-              console.warn('WARNING: Only 1 result found. This might indicate a data processing issue.');
+              console.warn(
+                'WARNING: Only 1 result found. This might indicate a data processing issue.'
+              );
               console.log('Single result details:', combinedResults[0]);
             }
 
             // Set loading flag to prevent table emissions during data loading
             this.isLoadingData = true;
-            
+
             // Use update to preserve other segment data
             this.students.update((current) => ({
               ...current,
               [segmentKey]: combinedResults,
             }));
-            
+
             // Update analytics immediately after data is loaded
             setTimeout(() => {
               this.updateAnalyticsRealTime();
               // Clear loading flag after data is set
               this.isLoadingData = false;
             }, 200);
-            
-            console.log('Students data updated for segment:', segmentKey, 'Total students:', combinedResults.length);
+
+            console.log(
+              'Students data updated for segment:',
+              segmentKey,
+              'Total students:',
+              combinedResults.length
+            );
             console.log('Combined results breakdown:', {
               processedEntries: processedEntries.length,
               processedStudentsFromEntries: processedStudentsFromEntries.length,
-              processedStudentsWithoutEntries: processedStudentsWithoutEntries.length,
-              combinedTotal: combinedResults.length
+              processedStudentsWithoutEntries:
+                processedStudentsWithoutEntries.length,
+              combinedTotal: combinedResults.length,
             });
-            console.log('Sample combined results:', combinedResults.slice(0, 3));
+            console.log(
+              'Sample combined results:',
+              combinedResults.slice(0, 3)
+            );
           }
         },
         error: (error) => {
@@ -533,17 +597,29 @@ export class ResultUploadComponent implements OnInit {
 
   performSwitch(switchValue: SegmentValue) {
     console.log('=== SEGMENT SWITCH START ===');
-    console.log('Switching from', this.activeSegment().value, 'to', switchValue);
-    
+    console.log(
+      'Switching from',
+      this.activeSegment().value,
+      'to',
+      switchValue
+    );
+
     // Always save current segment data as draft before switching (to preserve all data)
     const currentSegment = this.activeSegment().value as SegmentValue;
     const currentStudents = this.students()[currentSegment] || [];
-    
-    console.log('Current segment students before switch:', currentStudents.length);
+
+    console.log(
+      'Current segment students before switch:',
+      currentStudents.length
+    );
     console.log('Current students data:', currentStudents.slice(0, 2)); // Show first 2 for debugging
-    
+
     if (currentStudents.length > 0) {
-      console.log('Saving current segment data before switch:', currentStudents.length, 'students');
+      console.log(
+        'Saving current segment data before switch:',
+        currentStudents.length,
+        'students'
+      );
       this.saveToDraft();
     }
 
@@ -566,7 +642,11 @@ export class ResultUploadComponent implements OnInit {
 
     // Check what data exists for the new segment
     const newSegmentStudents = this.students()[switchValue] || [];
-    console.log('New segment existing data:', newSegmentStudents.length, 'students');
+    console.log(
+      'New segment existing data:',
+      newSegmentStudents.length,
+      'students'
+    );
 
     // Try to load from draft first, then from API
     console.log('Loading data for new segment:', switchValue);
@@ -579,9 +659,9 @@ export class ResultUploadComponent implements OnInit {
 
   private mapSegmentToFormValue(segmentValue: SegmentValue): string | null {
     const mapping: Record<SegmentValue, string> = {
-      'REGULAR': 'regular',
-      'REFERENCE': 'reference', 
-      'UNREGISTERED': 'unregistered',
+      REGULAR: 'regular',
+      REFERENCE: 'reference',
+      UNREGISTERED: 'unregistered',
     };
     return mapping[segmentValue] || null;
   }
@@ -592,25 +672,33 @@ export class ResultUploadComponent implements OnInit {
   saveChanges() {
     const currentSegment = this.activeSegment().value as SegmentValue;
     const currentStudents = this.students()[currentSegment] || [];
-    
+
     // Filter only students with actual data changes
-    const updatedEntries = currentStudents.filter(student => {
-      const hasScores = student.test !== '-' || student.lab !== '-' || student.exam !== '-';
-      return hasScores && student._id;
-    }).map(student => ({
-      _id: student._id,
-      test: student.test === '-' ? 0 : Number(student.test),
-      lab: student.lab === '-' ? 0 : Number(student.lab), 
-      exam: student.exam === '-' ? 0 : Number(student.exam),
-      total: student.total === '-' ? 0 : Number(student.total)
-    }));
+    const updatedEntries = currentStudents
+      .filter((student) => {
+        const hasScores =
+          student.test !== '-' || student.lab !== '-' || student.exam !== '-';
+        return hasScores && student._id;
+      })
+      .map((student) => ({
+        _id: student._id,
+        test: student.test === '-' ? 0 : Number(student.test),
+        lab: student.lab === '-' ? 0 : Number(student.lab),
+        exam: student.exam === '-' ? 0 : Number(student.exam),
+        total: student.total === '-' ? 0 : Number(student.total),
+      }));
 
     if (updatedEntries.length === 0) {
-      this.toast.showNotification('warning', 'No Changes', 'No changes to save');
+      this.toast.showNotification(
+        'warning',
+        'No Changes',
+        'No changes to save'
+      );
       return;
     }
 
-    this.resultsService.updateResultEntriesWithAnalytics(this.resultId!, updatedEntries)
+    this.resultsService
+      .updateResultEntriesWithAnalytics(this.resultId!, updatedEntries)
       .subscribe({
         next: (resp: any) => {
           if (resp.status) {
@@ -618,20 +706,32 @@ export class ResultUploadComponent implements OnInit {
             if (resp.data) {
               this.updateAnalyticsFromResponse(resp.data);
             }
-            this.toast.showNotification('success', 'Success', 'Changes saved successfully');
+            this.toast.showNotification(
+              'success',
+              'Success',
+              'Changes saved successfully'
+            );
             // Clear draft after successful save
             this.clearDraft();
             // Refresh data to get updated analytics
             this.getResultEntries();
           } else {
             console.warn('Save changes response status false:', resp);
-            this.toast.showNotification('error', 'Error', resp.message || 'Failed to save changes');
+            this.toast.showNotification(
+              'error',
+              'Error',
+              resp.message || 'Failed to save changes'
+            );
           }
         },
         error: (error: any) => {
           console.error('Error saving changes:', error);
-          this.toast.showNotification('error', 'Error', 'Failed to save changes');
-        }
+          this.toast.showNotification(
+            'error',
+            'Error',
+            'Failed to save changes'
+          );
+        },
       });
   }
 
@@ -640,7 +740,7 @@ export class ResultUploadComponent implements OnInit {
       console.warn('Analytics response data is null or undefined');
       return;
     }
-    
+
     if (data.analytics) {
       const analyticsData = [
         data.analytics['A'] || 0,
@@ -652,7 +752,7 @@ export class ResultUploadComponent implements OnInit {
       ];
       this.analyticsChartData.set(analyticsData);
     }
-    
+
     if (data.total !== undefined) this.totalStudent.set(data.total);
     if (data.totalPass !== undefined) this.totalStudentPass.set(data.totalPass);
     if (data.totalFail !== undefined) this.totalStudentFail.set(data.totalFail);
@@ -662,32 +762,31 @@ export class ResultUploadComponent implements OnInit {
   // ANALYTICS METHODS
   // ========================================
   getAnalytics() {
-    this.resultsService.getResultAnalytics(this.resultId!)
-      .subscribe({
-        next: (resp: any) => {
-          if (resp.status && resp.data) {
-            const { total, totalPass, totalFail, analytics } = resp.data;
-            
-            // Update analytics chart data
-            const analyticsData = [
-              analytics['A'] || 0,
-              analytics['B'] || 0,
-              analytics['C'] || 0,
-              analytics['D'] || 0,
-              analytics['E'] || 0,
-              analytics['F'] || 0,
-            ];
-            
-            this.analyticsChartData.set(analyticsData);
-            this.totalStudent.set(total || 0);
-            this.totalStudentPass.set(totalPass || 0);
-            this.totalStudentFail.set(totalFail || 0);
-          }
-        },
-        error: (error: any) => {
-          console.error('Error fetching analytics:', error);
+    this.resultsService.getResultAnalytics(this.resultId!).subscribe({
+      next: (resp: any) => {
+        if (resp.status && resp.data) {
+          const { total, totalPass, totalFail, analytics } = resp.data;
+
+          // Update analytics chart data
+          const analyticsData = [
+            analytics['A'] || 0,
+            analytics['B'] || 0,
+            analytics['C'] || 0,
+            analytics['D'] || 0,
+            analytics['E'] || 0,
+            analytics['F'] || 0,
+          ];
+
+          this.analyticsChartData.set(analyticsData);
+          this.totalStudent.set(total || 0);
+          this.totalStudentPass.set(totalPass || 0);
+          this.totalStudentFail.set(totalFail || 0);
         }
-      });
+      },
+      error: (error: any) => {
+        console.error('Error fetching analytics:', error);
+      },
+    });
   }
 
   // ========================================
@@ -696,19 +795,19 @@ export class ResultUploadComponent implements OnInit {
   updateAnalyticsRealTime() {
     const currentSegment = this.activeSegment().value as SegmentValue;
     const currentStudents = this.students()[currentSegment] || [];
-    
+
     console.log('Current students for analytics:', currentStudents);
-    
+
     const analytics = { A: 0, B: 0, C: 0, D: 0, E: 0, F: 0 };
     let totalPass = 0;
     let totalFail = 0;
-    
-    currentStudents.forEach(student => {
+
+    currentStudents.forEach((student) => {
       if (student.grade && student.grade !== '-') {
         const grade = student.grade.toUpperCase();
         if (analytics.hasOwnProperty(grade)) {
           analytics[grade as keyof typeof analytics]++;
-          
+
           if (['A', 'B', 'C', 'D', 'E'].includes(grade)) {
             totalPass++;
           } else if (grade === 'F') {
@@ -717,76 +816,103 @@ export class ResultUploadComponent implements OnInit {
         }
       }
     });
-    
-    const analyticsData = [analytics.A, analytics.B, analytics.C, analytics.D, analytics.E, analytics.F];
-    
+
+    const analyticsData = [
+      analytics.A,
+      analytics.B,
+      analytics.C,
+      analytics.D,
+      analytics.E,
+      analytics.F,
+    ];
+
     this.analyticsChartData.set(analyticsData);
     this.totalStudent.set(currentStudents.length);
     this.totalStudentPass.set(totalPass);
     this.totalStudentFail.set(totalFail);
-    
-    console.log('Real-time analytics updated:', { 
+
+    console.log('Real-time analytics updated:', {
       segment: currentSegment,
       totalStudents: currentStudents.length,
-      totalPass, 
-      totalFail, 
+      totalPass,
+      totalFail,
       analytics,
-      analyticsData
+      analyticsData,
     });
   }
-  
+
   onDataChange() {
     this.updateAnalyticsRealTime();
   }
-  
+
   onStudentDataUpdate() {
     setTimeout(() => {
       this.updateAnalyticsRealTime();
     }, 100);
   }
-  
+
   // ========================================
   // AUTO-SAVE AND DRAFT FUNCTIONALITY
   // ========================================
   private isUpdatingData = false;
   private isLoadingData = false;
-  
+
   onTableDataChanged(updatedData: Partial<IStudentGrade>[]) {
     // Prevent infinite loops and ignore changes during data loading
     if (this.isUpdatingData || this.isLoadingData || this.loadingData()) {
-      console.log('Skipping table data change - updating:', this.isUpdatingData, 'loading:', this.isLoadingData || this.loadingData());
+      console.log(
+        'Skipping table data change - updating:',
+        this.isUpdatingData,
+        'loading:',
+        this.isLoadingData || this.loadingData()
+      );
       return;
     }
-    
-    console.log('Table data changed - received:', updatedData?.length || 0, 'items');
-    
+
+    console.log(
+      'Table data changed - received:',
+      updatedData?.length || 0,
+      'items'
+    );
+
     const currentSegment = this.activeSegment().value as SegmentValue;
     const currentStudents = this.students()[currentSegment] || [];
-    
+
     // Only process if the data is actually different
     if (updatedData?.length === currentStudents.length) {
       console.log('Data length unchanged, checking for actual changes...');
       // You could add more sophisticated change detection here if needed
     }
-    
+
     console.log('Current students before update:', currentStudents.length);
-    console.log('About to update segment:', currentSegment, 'with', updatedData?.length, 'students');
-    
+    console.log(
+      'About to update segment:',
+      currentSegment,
+      'with',
+      updatedData?.length,
+      'students'
+    );
+
     this.isUpdatingData = true;
-    
+
     // Update students data
     this.students.update((current) => {
       const updated = {
         ...current,
         [currentSegment]: updatedData,
       };
-      console.log('Students updated - new count for', currentSegment, ':', updated[currentSegment]?.length);
+      console.log(
+        'Students updated - new count for',
+        currentSegment,
+        ':',
+        updated[currentSegment]?.length
+      );
       return updated;
     });
-    
+
     // Mark as having unsaved changes
     this.hasUnsavedChanges.set(true);
-    
+
     // Use setTimeout to break the execution cycle
     setTimeout(() => {
       this.updateAnalyticsRealTime();
@@ -794,46 +920,50 @@ export class ResultUploadComponent implements OnInit {
       this.isUpdatingData = false;
     }, 100);
   }
-  
+
   private scheduleAutoSave() {
     // Clear existing timer
     if (this.autoSaveTimer) {
       clearTimeout(this.autoSaveTimer);
     }
-    
+
     // Schedule auto-save after 2 seconds of inactivity
     this.autoSaveTimer = setTimeout(() => {
       this.autoSaveChanges();
     }, 2000);
   }
-  
+
   private autoSaveChanges() {
     if (!this.hasUnsavedChanges()) return;
-    
+
     const currentSegment = this.activeSegment().value as SegmentValue;
     const currentStudents = this.students()[currentSegment] || [];
-    
+
     // Filter students with actual changes
-    const changedEntries = currentStudents.filter(student => {
-      const hasScores = student.test !== '-' || student.lab !== '-' || student.exam !== '-';
-      return hasScores && student._id;
-    }).map(student => ({
-      _id: student._id,
-      test: student.test === '-' ? 0 : Number(student.test),
-      lab: student.lab === '-' ? 0 : Number(student.lab),
-      exam: student.exam === '-' ? 0 : Number(student.exam),
-      total: student.total === '-' ? 0 : Number(student.total),
-      grade: student.grade === '-' ? null : student.grade,
-      status: student.status === '-' ? null : student.status
-    }));
-    
+    const changedEntries = currentStudents
+      .filter((student) => {
+        const hasScores =
+          student.test !== '-' || student.lab !== '-' || student.exam !== '-';
+        return hasScores && student._id;
+      })
+      .map((student) => ({
+        _id: student._id,
+        test: student.test === '-' ? 0 : Number(student.test),
+        lab: student.lab === '-' ? 0 : Number(student.lab),
+        exam: student.exam === '-' ? 0 : Number(student.exam),
+        total: student.total === '-' ? 0 : Number(student.total),
+        grade: student.grade === '-' ? null : student.grade,
+        status: student.status === '-' ? null : student.status,
+      }));
+
     if (changedEntries.length === 0) return;
-    
+
     // Save as draft first
     this.saveToDraft(changedEntries);
-    
+
     // Auto-save to backend
-    this.resultsService.updateResultEntriesWithAnalytics(this.resultId!, changedEntries)
+    this.resultsService
+      .updateResultEntriesWithAnalytics(this.resultId!, changedEntries)
       .subscribe({
         next: (resp: any) => {
           if (resp.status) {
@@ -850,117 +980,145 @@ export class ResultUploadComponent implements OnInit {
           console.error('Auto-save failed:', error);
           // Keep as draft if auto-save fails
           this.isDraftMode.set(true);
-        }
+        },
       });
   }
-  
+
   private saveToDraft(entries?: any[]) {
     const draftKey = `result_draft_${this.resultId}_${this.activeSegment().value}`;
     const currentSegment = this.activeSegment().value as SegmentValue;
     const currentStudents = this.students()[currentSegment] || [];
-    
-    console.log('Attempting to save draft for segment:', currentSegment, 'Students count:', currentStudents.length);
-    
+
+    console.log(
+      'Attempting to save draft for segment:',
+      currentSegment,
+      'Students count:',
+      currentStudents.length
+    );
+
     // Always save all students data, not just those with changes
     // This ensures we preserve the full dataset when switching segments
     if (currentStudents.length === 0) {
       console.log('No students to save, skipping draft save');
       return;
     }
-    
+
     const draftData = {
       resultId: this.resultId,
       segment: this.activeSegment().value,
-      entries: entries || currentStudents.filter(s => 
-        (s.test !== undefined && s.test !== '-') || 
-        (s.lab !== undefined && s.lab !== '-') || 
-        (s.exam !== undefined && s.exam !== '-')
-      ),
+      entries:
+        entries ||
+        currentStudents.filter(
+          (s) =>
+            (s.test !== undefined && s.test !== '-') ||
+            (s.lab !== undefined && s.lab !== '-') ||
+            (s.exam !== undefined && s.exam !== '-')
+        ),
       timestamp: new Date().toISOString(),
-      students: currentStudents // Save ALL students, not just those with changes
+      students: currentStudents, // Save ALL students, not just those with changes
     };
-    
+
     try {
       localStorage.setItem(draftKey, JSON.stringify(draftData));
       this.isDraftMode.set(true);
-      
+
       // Also save to main drafts list
       this.addToMainDraftsList();
-      
-      console.log('Draft saved successfully:', draftKey, 'with', currentStudents.length, 'students');
+
+      console.log(
+        'Draft saved successfully:',
+        draftKey,
+        'with',
+        currentStudents.length,
+        'students'
+      );
       console.log('Draft data:', draftData);
     } catch (error) {
       console.error('Error saving draft:', error);
     }
   }
-  
+
   private addToMainDraftsList() {
     const draftsKey = 'result_drafts_list';
     const existingDrafts = JSON.parse(localStorage.getItem(draftsKey) || '[]');
-    
+
     const draftInfo = {
       resultId: this.resultId,
       timestamp: new Date().toISOString(),
-      segments: [this.activeSegment().value]
+      segments: [this.activeSegment().value],
     };
-    
+
     // Check if draft already exists
-    const existingIndex = existingDrafts.findIndex((d: any) => d.resultId === this.resultId);
-    
+    const existingIndex = existingDrafts.findIndex(
+      (d: any) => d.resultId === this.resultId
+    );
+
     if (existingIndex >= 0) {
       // Update existing draft
       existingDrafts[existingIndex] = {
         ...existingDrafts[existingIndex],
         timestamp: draftInfo.timestamp,
-        segments: [...new Set([...existingDrafts[existingIndex].segments, this.activeSegment().value])]
+        segments: [
+          ...new Set([
+            ...existingDrafts[existingIndex].segments,
+            this.activeSegment().value,
+          ]),
+        ],
       };
     } else {
       // Add new draft
       existingDrafts.push(draftInfo);
     }
-    
+
     localStorage.setItem(draftsKey, JSON.stringify(existingDrafts));
     console.log('Main drafts list updated:', existingDrafts);
   }
-  
+
   private loadFromDraft() {
     const draftKey = `result_draft_${this.resultId}_${this.activeSegment().value}`;
     const draftData = localStorage.getItem(draftKey);
-    
+
     console.log('Attempting to load draft for key:', draftKey);
-    
+
     if (draftData) {
       try {
         const draft = JSON.parse(draftData);
-        
+
         console.log('Draft found:', draft);
         console.log('Draft students count:', draft.students?.length || 0);
-        
+
         // Only load draft if it has meaningful data
         if (draft.students && draft.students.length > 0) {
           // Set loading flag to prevent table emissions during draft loading
           this.isLoadingData = true;
-          
+
           // Restore students data
           this.students.update((current) => ({
             ...current,
-            [this.activeSegment().value as SegmentValue]: draft.students
+            [this.activeSegment().value as SegmentValue]: draft.students,
           }));
-          
+
           this.isDraftMode.set(true);
           this.hasUnsavedChanges.set(true);
-          
+
           // Update analytics
           setTimeout(() => {
             this.updateAnalyticsRealTime();
             // Clear loading flag after draft is loaded
             this.isLoadingData = false;
           }, 200);
-          
-          console.log('Successfully loaded', draft.students.length, 'students from draft:', draft.timestamp);
+
+          console.log(
+            'Successfully loaded',
+            draft.students.length,
+            'students from draft:',
+            draft.timestamp
+          );
           return true;
         } else {
-          console.log('Draft exists but has no students data, loading from API instead');
+          console.log(
+            'Draft exists but has no students data, loading from API instead'
+          );
         }
       } catch (error) {
         console.error('Error loading draft:', error);
@@ -968,21 +1126,21 @@ export class ResultUploadComponent implements OnInit {
     } else {
       console.log('No draft found for key:', draftKey);
     }
-    
+
     return false;
   }
-  
+
   clearDraft() {
     const draftKey = `result_draft_${this.resultId}_${this.activeSegment().value}`;
     localStorage.removeItem(draftKey);
     this.isDraftMode.set(false);
     this.hasUnsavedChanges.set(false);
   }
-  
+
   // Method to check if there are drafts for this result
   hasDrafts(): boolean {
     const segments: SegmentValue[] = ['REGULAR', 'REFERENCE', 'UNREGISTERED'];
-    return segments.some(segment => {
+    return segments.some((segment) => {
       const draftKey = `result_draft_${this.resultId}_${segment}`;
       return localStorage.getItem(draftKey) !== null;
     });
@@ -997,7 +1155,11 @@ export class ResultUploadComponent implements OnInit {
   saveCurrentAsDraft() {
     if (this.hasUnsavedChanges()) {
       this.saveToDraft();
-      this.toast.showNotification('success', 'Draft Saved', 'Your changes have been saved as draft');
+      this.toast.showNotification(
+        'success',
+        'Draft Saved',
+        'Your changes have been saved as draft'
+      );
     }
   }
 
@@ -1005,34 +1167,49 @@ export class ResultUploadComponent implements OnInit {
   forceSaveDraft() {
     this.hasUnsavedChanges.set(true);
     this.saveToDraft();
-    this.toast.showNotification('success', 'Draft Saved', 'Draft manually saved for testing');
+    this.toast.showNotification(
+      'success',
+      'Draft Saved',
+      'Draft manually saved for testing'
+    );
   }
 
   // ========================================
   // BULK OPERATIONS
   // ========================================
   createBulkEntries(entries: any[]) {
-    this.resultsService.createMultipleResultEntries(entries)
-      .subscribe({
-        next: (resp: any) => {
-          if (resp.status) {
-            this.toast.showNotification('success', 'Success', 'Bulk entries created successfully');
-            this.getResultEntries();
-            this.updateAnalyticsRealTime();
-            this.clearDraft();
-          }
-        },
-        error: (error: any) => {
-          console.error('Error creating bulk entries:', error);
-          this.toast.showNotification('error', 'Error', 'Failed to create bulk entries');
+    this.resultsService.createMultipleResultEntries(entries).subscribe({
+      next: (resp: any) => {
+        if (resp.status) {
+          this.toast.showNotification(
+            'success',
+            'Success',
+            'Bulk entries created successfully'
+          );
+          this.getResultEntries();
+          this.updateAnalyticsRealTime();
+          this.clearDraft();
         }
-      });
+      },
+      error: (error: any) => {
+        console.error('Error creating bulk entries:', error);
+        this.toast.showNotification(
+          'error',
+          'Error',
+          'Failed to create bulk entries'
+        );
+      },
+    });
   }
 
   // Create single entry for individual grid input
   createSingleEntry(entry: any) {
     if (!entry.registrationNumber || !entry.fullName) {
-      this.toast.showNotification('error', 'Missing Data', 'Registration number and full name are required');
+      this.toast.showNotification(
+        'error',
+        'Missing Data',
+        'Registration number and full name are required'
+      );
       return;
     }
 
@@ -1043,102 +1220,134 @@ export class ResultUploadComponent implements OnInit {
       lab: entry.lab === '-' ? 0 : Number(entry.lab),
       exam: entry.exam === '-' ? 0 : Number(entry.exam),
       total: entry.total === '-' ? 0 : Number(entry.total),
-      result: this.resultId!
+      result: this.resultId!,
     };
 
-    this.resultsService.createSingleResultEntry(entryData)
-      .subscribe({
-        next: (resp: any) => {
-          if (resp.status) {
-            this.toast.showNotification('success', 'Success', 'Entry created successfully');
-            this.getResultEntries();
-            this.updateAnalyticsRealTime();
-          }
-        },
-        error: (error: any) => {
-          console.error('Error creating entry:', error);
-          this.toast.showNotification('error', 'Error', 'Failed to create entry');
+    this.resultsService.createSingleResultEntry(entryData).subscribe({
+      next: (resp: any) => {
+        if (resp.status) {
+          this.toast.showNotification(
+            'success',
+            'Success',
+            'Entry created successfully'
+          );
+          this.getResultEntries();
+          this.updateAnalyticsRealTime();
         }
-      });
+      },
+      error: (error: any) => {
+        console.error('Error creating entry:', error);
+        this.toast.showNotification('error', 'Error', 'Failed to create entry');
+      },
+    });
   }
 
   saveBulkChanges() {
     const currentSegment = this.activeSegment().value as SegmentValue;
     const currentStudents = this.students()[currentSegment] || [];
-    
-    // Separate new entries from existing entries
-    const newEntries = currentStudents.filter(student => {
-      const hasScores = student.test !== '-' || student.lab !== '-' || student.exam !== '-';
-      return hasScores && !student._id && student.registrationNumber && student.fullName; // No _id means new entry
-    }).map(student => ({
-      registrationNumber: student.registrationNumber!,
-      fullName: student.fullName!,
-      test: student.test === '-' ? 0 : Number(student.test),
-      lab: student.lab === '-' ? 0 : Number(student.lab),
-      exam: student.exam === '-' ? 0 : Number(student.exam),
-      total: student.total === '-' ? 0 : Number(student.total),
-      result: this.resultId!
-    }));
 
-    const existingEntries = currentStudents.filter(student => {
-      const hasScores = student.test !== '-' || student.lab !== '-' || student.exam !== '-';
-      return hasScores && student._id; // Has _id means existing entry
-    }).map(student => ({
-      _id: student._id,
-      test: student.test === '-' ? 0 : Number(student.test),
-      lab: student.lab === '-' ? 0 : Number(student.lab),
-      exam: student.exam === '-' ? 0 : Number(student.exam),
-      total: student.total === '-' ? 0 : Number(student.total)
-    }));
+    // Separate new entries from existing entries
+    const newEntries = currentStudents
+      .filter((student) => {
+        const hasScores =
+          student.test !== '-' || student.lab !== '-' || student.exam !== '-';
+        return (
+          hasScores &&
+          !student._id &&
+          student.registrationNumber &&
+          student.fullName
+        ); // No _id means new entry
+      })
+      .map((student) => ({
+        registrationNumber: student.registrationNumber!,
+        fullName: student.fullName!,
+        test: student.test === '-' ? 0 : Number(student.test),
+        lab: student.lab === '-' ? 0 : Number(student.lab),
+        exam: student.exam === '-' ? 0 : Number(student.exam),
+        total: student.total === '-' ? 0 : Number(student.total),
+        result: this.resultId!,
+      }));
+
+    const existingEntries = currentStudents
+      .filter((student) => {
+        const hasScores =
+          student.test !== '-' || student.lab !== '-' || student.exam !== '-';
+        return hasScores && student._id; // Has _id means existing entry
+      })
+      .map((student) => ({
+        _id: student._id,
+        test: student.test === '-' ? 0 : Number(student.test),
+        lab: student.lab === '-' ? 0 : Number(student.lab),
+        exam: student.exam === '-' ? 0 : Number(student.exam),
+        total: student.total === '-' ? 0 : Number(student.total),
+      }));
 
     if (newEntries.length === 0 && existingEntries.length === 0) {
-      this.toast.showNotification('warning', 'No Changes', 'No changes to save');
+      this.toast.showNotification(
+        'warning',
+        'No Changes',
+        'No changes to save'
+      );
       return;
     }
 
     // Create new entries first
     if (newEntries.length > 0) {
-      this.resultsService.createMultipleResultEntries(newEntries)
-        .subscribe({
-          next: (resp: any) => {
-            if (resp.status) {
-              // Then update existing entries if any
-              if (existingEntries.length > 0) {
-                this.updateExistingEntries(existingEntries);
-              } else {
-                this.toast.showNotification('success', 'Success', 'New entries created successfully');
-                this.getResultEntries();
-                this.updateAnalyticsRealTime();
-                this.clearDraft();
-              }
+      this.resultsService.createMultipleResultEntries(newEntries).subscribe({
+        next: (resp: any) => {
+          if (resp.status) {
+            // Then update existing entries if any
+            if (existingEntries.length > 0) {
+              this.updateExistingEntries(existingEntries);
+            } else {
+              this.toast.showNotification(
+                'success',
+                'Success',
+                'New entries created successfully'
+              );
+              this.getResultEntries();
+              this.updateAnalyticsRealTime();
+              this.clearDraft();
             }
-          },
-          error: (error: any) => {
-            console.error('Error creating new entries:', error);
-            this.toast.showNotification('error', 'Error', 'Failed to create new entries');
           }
-        });
+        },
+        error: (error: any) => {
+          console.error('Error creating new entries:', error);
+          this.toast.showNotification(
+            'error',
+            'Error',
+            'Failed to create new entries'
+          );
+        },
+      });
     } else if (existingEntries.length > 0) {
       this.updateExistingEntries(existingEntries);
     }
   }
 
   private updateExistingEntries(entries: any[]) {
-    this.resultsService.updateBulkResultEntries(entries)
-      .subscribe({
-        next: (resp: any) => {
-          if (resp.status) {
-            this.toast.showNotification('success', 'Success', 'Changes saved successfully');
-            this.getResultEntries();
-            this.updateAnalyticsRealTime();
-            this.clearDraft();
-          }
-        },
-        error: (error: any) => {
-          console.error('Error updating entries:', error);
-          this.toast.showNotification('error', 'Error', 'Failed to update entries');
+    this.resultsService.updateBulkResultEntries(entries).subscribe({
+      next: (resp: any) => {
+        if (resp.status) {
+          this.toast.showNotification(
+            'success',
+            'Success',
+            'Changes saved successfully'
+          );
+          this.getResultEntries();
+          this.updateAnalyticsRealTime();
+          this.clearDraft();
         }
-      });
+      },
+      error: (error: any) => {
+        console.error('Error updating entries:', error);
+        this.toast.showNotification(
+          'error',
+          'Error',
+          'Failed to update entries'
+        );
+      },
+    });
   }
 
   // ========================================

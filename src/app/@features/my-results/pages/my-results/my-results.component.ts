@@ -112,7 +112,7 @@ export class MyResultsComponent implements OnInit {
     if (this.activeSegment().value === 'DRAFT') {
       this.loadDrafts();
     }
-    
+
     // Listen for when user returns to this page to refresh drafts
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden && this.activeSegment().value === 'DRAFT') {
@@ -157,32 +157,34 @@ export class MyResultsComponent implements OnInit {
       }
 
       const draftsList = JSON.parse(draftsListData);
-      const draftsWithDetails = draftsList.map((draft: any) => {
-        // Get the actual draft data from first available segment
-        let draftData = null;
+      const draftsWithDetails = draftsList
+        .map((draft: any) => {
+          // Get the actual draft data from first available segment
+          let draftData = null;
 
-        for (const segment of draft.segments) {
-          const draftKey = `result_draft_${draft.resultId}_${segment}`;
-          const segmentDraftData = localStorage.getItem(draftKey);
-          if (segmentDraftData) {
-            draftData = JSON.parse(segmentDraftData);
-            break;
+          for (const segment of draft.segments) {
+            const draftKey = `result_draft_${draft.resultId}_${segment}`;
+            const segmentDraftData = localStorage.getItem(draftKey);
+            if (segmentDraftData) {
+              draftData = JSON.parse(segmentDraftData);
+              break;
+            }
           }
-        }
 
-        if (draftData) {
-          return {
-            _id: draft.resultId,
-            title: `Draft - ${draft.resultId}`,
-            status: 'DRAFT',
-            timestamp: draft.timestamp,
-            segments: draft.segments,
-            studentCount: draftData.students?.length || 0,
-            isDraft: true
-          };
-        }
-        return null;
-      }).filter(Boolean);
+          if (draftData) {
+            return {
+              _id: draft.resultId,
+              title: `Draft - ${draft.resultId}`,
+              status: 'DRAFT',
+              timestamp: draft.timestamp,
+              segments: draft.segments,
+              studentCount: draftData.students?.length || 0,
+              isDraft: true,
+            };
+          }
+          return null;
+        })
+        .filter(Boolean);
 
       console.log('Processed drafts:', draftsWithDetails);
       this.drafts.set(draftsWithDetails);
@@ -225,7 +227,7 @@ export class MyResultsComponent implements OnInit {
   deleteDraft(resultId: string) {
     // Remove all draft data for this result
     const segments = ['REGULAR', 'REFERENCE', 'UNREGISTERED'];
-    segments.forEach(segment => {
+    segments.forEach((segment) => {
       localStorage.removeItem(`result_draft_${resultId}_${segment}`);
     });
 
@@ -233,7 +235,9 @@ export class MyResultsComponent implements OnInit {
     const draftsListData = localStorage.getItem('result_drafts_list');
     if (draftsListData) {
       const draftsList = JSON.parse(draftsListData);
-      const updatedList = draftsList.filter((d: any) => d.resultId !== resultId);
+      const updatedList = draftsList.filter(
+        (d: any) => d.resultId !== resultId
+      );
       localStorage.setItem('result_drafts_list', JSON.stringify(updatedList));
     }
 
@@ -245,7 +249,6 @@ export class MyResultsComponent implements OnInit {
     this.router.navigate(['upload-result'], {
       queryParams: { resultId: result._id },
       relativeTo: this.route,
-  });
-}
-
+    });
+  }
 }

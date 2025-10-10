@@ -70,7 +70,9 @@
         @if (drafts().length > 0) {
           <!-- GRID VIEW -->
           @if (view() === 'grid') {
-            <div class="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div
+              class="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+            >
               @for (draft of drafts(); track $index) {
                 <app-my-result-grid-card
                   [result]="draft"
@@ -102,7 +104,9 @@
         @if (results().length > 0) {
           <!-- GRID VIEW -->
           @if (view() === 'grid') {
-            <div class="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div
+              class="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+            >
               @for (result of results(); track $index) {
                 <app-my-result-grid-card
                   [result]="result"

@@ -37,7 +37,7 @@ import { LevelsEnum } from '../../../../@core/models/school.model';
     LoaderComponent,
     AsyncPipe,
     NgIf,
-  ],  
+  ],
   templateUrl: './courses.component.html',
   styleUrl: './courses.component.scss',
 })
@@ -55,7 +55,7 @@ export class CoursesComponent {
   searchQuery = signal<string>('');
   private searchSubject = new BehaviorSubject<string>('');
   isSearching = signal(false);
-  searchResults = signal<ICourse[]>([]);  
+  searchResults = signal<ICourse[]>([]);
   showSearchResults = signal(false);
 
   // View all functionality
