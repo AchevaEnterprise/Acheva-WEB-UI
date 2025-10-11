@@ -28,7 +28,7 @@ export class SideBarComponent implements OnInit {
   private readonly router = inject(Router);
 
   ngOnInit() {
-    this.loadLinkedAccounts();
+    // Remove immediate API call to prevent auth loop
   }
 
   switchAccountEvent = output<string>();

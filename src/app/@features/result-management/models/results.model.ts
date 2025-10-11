@@ -22,6 +22,19 @@ export interface IResult {
   createdAt: Date;
   updatedAt: Date;
   course: ICourse;
+  // Draft-specific properties
+  isDraft?: boolean;
+  studentCount?: number;
+  studentsWithGrades?: number;
+  completionPercentage?: number;
+  courseDetails?: {
+    courseTitle: string;
+    session: string;
+    level: string;
+    units: number;
+  };
+  segments?: string[];
+  timestamp?: string;
 }
 
 export interface ICreateResult {

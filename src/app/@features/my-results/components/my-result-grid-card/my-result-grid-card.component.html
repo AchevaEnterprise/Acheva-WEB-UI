@@ -3,15 +3,26 @@
     <header class="flex justify-between gap-8">
       <div>
         <h4 class="acva-clamp-2 acva-heading-6 fw-500">
-          {{ result()?.course?.courseTitle }}
+          {{
+            result()?.isDraft
+              ? result()?.courseDetails?.courseTitle
+              : result()?.course?.courseTitle
+          }}
         </h4>
         <p class="text-neutral-500">
-          {{ result()?.course?.courseCode }} -
-          {{ result()?.course?.courseLoad }} Unit(s)
+          {{ result()?.isDraft ? 'Draft' : result()?.course?.courseCode }} -
+          {{
+            result()?.isDraft
+              ? result()?.courseDetails?.units
+              : result()?.course?.courseLoad
+          }}
+          Unit(s)
         </p>
       </div>
 
-      <!-- <p class="acva-para-2 text-neutral-500 fw-500">Draft</p> -->
+      @if (result()?.isDraft) {
+        <p class="acva-para-2 text-orange-600 fw-500">Draft</p>
+      }
     </header>
 
     <div class="mt-4 grid gap-[8px]">
@@ -21,7 +32,17 @@
           svgHeight="1rem"
           src="icons/general/calendar-icon.svg"
         ></app-svg>
-        {{ result()?.semester }} - {{ result()?.session }}
+        {{
+          result()?.isDraft
+            ? result()?.courseDetails?.level
+            : result()?.semester
+        }}
+        -
+        {{
+          result()?.isDraft
+            ? result()?.courseDetails?.session
+            : result()?.session
+        }}
       </p>
 
       <p class="text-neutral-400 text-sm flex items-center gap-2">
@@ -29,13 +50,24 @@
           svgWidth="1rem"
           svgHeight="1rem"
           src="icons/general/role-icon.svg"
-        ></app-svg
-        >0 Students
+        ></app-svg>
+        {{ result()?.isDraft ? result()?.studentCount : '0' }} Students
+        @if (result()?.isDraft && (result()?.studentsWithGrades ?? 0) > 0) {
+          <span class="text-green-600"
+            >({{ result()?.studentsWithGrades }} graded)</span
+          >
+        }
       </p>
 
       <div class="progress-container w-full">
-        <mat-progress-bar mode="determinate" value="0"></mat-progress-bar>
-        <p class="acva-caption text-neutral-500">0% Done</p>
+        <mat-progress-bar
+          mode="determinate"
+          [value]="result()?.isDraft ? result()?.completionPercentage : 0"
+        >
+        </mat-progress-bar>
+        <p class="acva-caption text-neutral-500">
+          {{ result()?.isDraft ? result()?.completionPercentage : 0 }}% Done
+        </p>
       </div>
     </div>
   </div>

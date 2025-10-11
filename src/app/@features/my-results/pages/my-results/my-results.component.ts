@@ -174,11 +174,19 @@ export class MyResultsComponent implements OnInit {
           if (draftData) {
             return {
               _id: draft.resultId,
-              title: `Draft - ${draft.resultId}`,
+              title: draft.courseDetails?.courseTitle || draftData.courseDetails?.courseTitle || `Draft - ${draft.resultId}`,
               status: 'DRAFT',
               timestamp: draft.timestamp,
               segments: draft.segments,
-              studentCount: draftData.students?.length || 0,
+              studentCount: draft.totalStudents || draftData.totalStudents || draftData.students?.length || 0,
+              studentsWithGrades: draft.studentsWithGrades || draftData.studentsWithGrades || 0,
+              completionPercentage: draft.completionPercentage || draftData.completionPercentage || 0,
+              courseDetails: draft.courseDetails || draftData.courseDetails || {
+                courseTitle: 'Unknown Course',
+                session: 'Unknown Session',
+                level: 'Unknown Level',
+                units: 3
+              },
               isDraft: true,
             };
           }

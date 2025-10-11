@@ -154,6 +154,7 @@ export class ResultUploadComponent implements OnInit {
 
   // Auto-save and draft management
   private autoSaveTimer: any = null;
+  private debouncedUpdateTimer: any = null;
   isDraftMode = signal<boolean>(false);
   hasUnsavedChanges = signal<boolean>(false);
 
@@ -168,6 +169,27 @@ export class ResultUploadComponent implements OnInit {
   });
 
   constructor() {}
+
+  // Helper method to extract units from course title
+  private extractUnitsFromCourse(courseTitle: string): number {
+    // Look for patterns like "3 units", "(3)", "3U", etc.
+    const unitPatterns = [
+      /\b(\d+)\s*units?\b/i,
+      /\((\d+)\)/,
+      /\b(\d+)U\b/i,
+      /\b(\d+)\s*credit/i
+    ];
+    
+    for (const pattern of unitPatterns) {
+      const match = courseTitle.match(pattern);
+      if (match) {
+        return parseInt(match[1], 10);
+      }
+    }
+    
+    // Default to 3 units if not found
+    return 3;
+  }
 
   // ========================================
   // LIFECYCLE HOOKS
@@ -876,23 +898,24 @@ export class ResultUploadComponent implements OnInit {
     );
 
     const currentSegment = this.activeSegment().value as SegmentValue;
-    const currentStudents = this.students()[currentSegment] || [];
+    
+    // Mark as having unsaved changes immediately
+    this.hasUnsavedChanges.set(true);
 
-    // Only process if the data is actually different
-    if (updatedData?.length === currentStudents.length) {
-      console.log('Data length unchanged, checking for actual changes...');
-      // You could add more sophisticated change detection here if needed
+    // Clear existing debounced update timer
+    if (this.debouncedUpdateTimer) {
+      clearTimeout(this.debouncedUpdateTimer);
     }
 
-    console.log('Current students before update:', currentStudents.length);
-    console.log(
-      'About to update segment:',
-      currentSegment,
-      'with',
-      updatedData?.length,
-      'students'
-    );
+    // Debounce the data update to prevent focus loss during typing
+    this.debouncedUpdateTimer = setTimeout(() => {
+      this.performDebouncedUpdate(updatedData, currentSegment);
+    }, 1500); // Wait 1.5 seconds after user stops typing
+  }
 
+  private performDebouncedUpdate(updatedData: Partial<IStudentGrade>[], currentSegment: SegmentValue) {
+    console.log('Performing debounced update for segment:', currentSegment);
+    
     this.isUpdatingData = true;
 
     // Update students data
@@ -909,9 +932,6 @@ export class ResultUploadComponent implements OnInit {
       );
       return updated;
     });
-
-    // Mark as having unsaved changes
-    this.hasUnsavedChanges.set(true);
 
     // Use setTimeout to break the execution cycle
     setTimeout(() => {
@@ -996,34 +1016,50 @@ export class ResultUploadComponent implements OnInit {
       currentStudents.length
     );
 
-    // Always save all students data, not just those with changes
-    // This ensures we preserve the full dataset when switching segments
     if (currentStudents.length === 0) {
       console.log('No students to save, skipping draft save');
       return;
     }
 
+    // Calculate completion percentage
+    const studentsWithGrades = currentStudents.filter(s => 
+      (s.test !== undefined && s.test !== '-' && s.test !== '') || 
+      (s.lab !== undefined && s.lab !== '-' && s.lab !== '') || 
+      (s.exam !== undefined && s.exam !== '-' && s.exam !== '')
+    );
+    
+    const completionPercentage = currentStudents.length > 0 
+      ? Math.round((studentsWithGrades.length / currentStudents.length) * 100)
+      : 0;
+    
+    // Get course details from form
+    const courseDetails = {
+      courseTitle: this.courseForm.get('course')?.value || 'Unknown Course',
+      session: this.courseForm.get('session')?.value || 'Unknown Session',
+      level: this.courseForm.get('level')?.value || 'Unknown Level',
+      units: this.extractUnitsFromCourse(this.courseForm.get('course')?.value || ''),
+    };
+
     const draftData = {
       resultId: this.resultId,
       segment: this.activeSegment().value,
-      entries:
-        entries ||
-        currentStudents.filter(
-          (s) =>
-            (s.test !== undefined && s.test !== '-') ||
-            (s.lab !== undefined && s.lab !== '-') ||
-            (s.exam !== undefined && s.exam !== '-')
-        ),
+      entries: entries || studentsWithGrades,
       timestamp: new Date().toISOString(),
-      students: currentStudents, // Save ALL students, not just those with changes
+      students: currentStudents,
+      // Enhanced draft metadata
+      courseDetails,
+      totalStudents: currentStudents.length,
+      studentsWithGrades: studentsWithGrades.length,
+      completionPercentage,
+      isDraft: true
     };
 
     try {
       localStorage.setItem(draftKey, JSON.stringify(draftData));
       this.isDraftMode.set(true);
 
-      // Also save to main drafts list
-      this.addToMainDraftsList();
+      // Also save to main drafts list with enhanced data
+      this.addToMainDraftsList(draftData);
 
       console.log(
         'Draft saved successfully:',
@@ -1032,13 +1068,12 @@ export class ResultUploadComponent implements OnInit {
         currentStudents.length,
         'students'
       );
-      console.log('Draft data:', draftData);
     } catch (error) {
       console.error('Error saving draft:', error);
     }
   }
 
-  private addToMainDraftsList() {
+  private addToMainDraftsList(draftData: any) {
     const draftsKey = 'result_drafts_list';
     const existingDrafts = JSON.parse(localStorage.getItem(draftsKey) || '[]');
 
@@ -1046,6 +1081,12 @@ export class ResultUploadComponent implements OnInit {
       resultId: this.resultId,
       timestamp: new Date().toISOString(),
       segments: [this.activeSegment().value],
+      // Enhanced draft info
+      courseDetails: draftData.courseDetails,
+      totalStudents: draftData.totalStudents,
+      studentsWithGrades: draftData.studentsWithGrades,
+      completionPercentage: draftData.completionPercentage,
+      isDraft: true
     };
 
     // Check if draft already exists
@@ -1054,20 +1095,54 @@ export class ResultUploadComponent implements OnInit {
     );
 
     if (existingIndex >= 0) {
-      // Update existing draft
+      // Update existing draft with aggregated data from all segments
+      const existing = existingDrafts[existingIndex];
+      const updatedSegments = [...new Set([...existing.segments, this.activeSegment().value])];
+      
+      // Calculate total completion across all segments
+      let totalStudentsAllSegments = existing.totalStudents || 0;
+      let totalWithGradesAllSegments = existing.studentsWithGrades || 0;
+      
+      // If this is a new segment, add to totals
+      if (!existing.segments.includes(this.activeSegment().value)) {
+        totalStudentsAllSegments += draftData.totalStudents;
+        totalWithGradesAllSegments += draftData.studentsWithGrades;
+      } else {
+        // Update existing segment data
+        const segmentData = existing.segmentData?.[this.activeSegment().value];
+        totalStudentsAllSegments = totalStudentsAllSegments - (segmentData?.totalStudents || 0) + draftData.totalStudents;
+        totalWithGradesAllSegments = totalWithGradesAllSegments - (segmentData?.studentsWithGrades || 0) + draftData.studentsWithGrades;
+      }
+      
       existingDrafts[existingIndex] = {
-        ...existingDrafts[existingIndex],
+        ...existing,
         timestamp: draftInfo.timestamp,
-        segments: [
-          ...new Set([
-            ...existingDrafts[existingIndex].segments,
-            this.activeSegment().value,
-          ]),
-        ],
+        segments: updatedSegments,
+        courseDetails: draftData.courseDetails,
+        totalStudents: totalStudentsAllSegments,
+        studentsWithGrades: totalWithGradesAllSegments,
+        completionPercentage: totalStudentsAllSegments > 0 ? Math.round((totalWithGradesAllSegments / totalStudentsAllSegments) * 100) : 0,
+        segmentData: {
+          ...existing.segmentData,
+          [this.activeSegment().value]: {
+            totalStudents: draftData.totalStudents,
+            studentsWithGrades: draftData.studentsWithGrades,
+            completionPercentage: draftData.completionPercentage
+          }
+        }
       };
     } else {
       // Add new draft
-      existingDrafts.push(draftInfo);
+      existingDrafts.push({
+        ...draftInfo,
+        segmentData: {
+          [this.activeSegment().value]: {
+            totalStudents: draftData.totalStudents,
+            studentsWithGrades: draftData.studentsWithGrades,
+            completionPercentage: draftData.completionPercentage
+          }
+        }
+      });
     }
 
     localStorage.setItem(draftsKey, JSON.stringify(existingDrafts));
