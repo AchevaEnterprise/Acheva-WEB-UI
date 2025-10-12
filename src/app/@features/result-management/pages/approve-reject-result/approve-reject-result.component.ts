@@ -9,7 +9,7 @@ import { MatRadioModule } from '@angular/material/radio';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
 import { ActivatedRoute } from '@angular/router';
-import { IDepartment } from '../../../../@core/models/school.model';
+
 import { CardComponent } from '../../../../@shared/components/card/card.component';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
 import { SearchInputComponent } from '../../../../@shared/components/forms/search-input/search-input.component';
@@ -21,7 +21,7 @@ import { RoleEnum } from '../../../auth/model/auth.model';
 import { AnalyticsChartComponent } from '../../../my-results/components/analytics-chart/analytics-chart.component';
 import { ReferenceTableResultUploadComponent } from '../../../my-results/components/reference-table-result-upload/reference-table-result-upload.component';
 import { RegularTableResultUploadComponent } from '../../../my-results/components/regular-table-result-upload/regular-table-result-upload.component';
-import { StudentService } from '../../../students/services/student.service';
+
 import { ResultsService } from '../../services/results.service';
 
 @Component({
@@ -50,7 +50,7 @@ import { ResultsService } from '../../services/results.service';
 export class ApproveRejectResultComponent implements OnInit {
   // private readonly utilityService = inject(UtilityService);
   private readonly resultsService = inject(ResultsService);
-  private readonly studentService = inject(StudentService);
+
   private readonly route = inject(ActivatedRoute);
 
   private readonly resultId = this.route.snapshot.queryParamMap.get('resultId');
@@ -112,22 +112,97 @@ export class ApproveRejectResultComponent implements OnInit {
     category: new FormControl('regular'),
   });
 
-  students = signal<any[]>([]);
+  students = signal<Record<string, any[]>>({
+    REGULAR: [],
+    REFERENCE: [],
+    UNREGISTERED: [],
+  });
 
   ngOnInit(): void {
     this.categoryListener();
     if (this.resultId) this.getResult();
   }
 
-  getStudentsInDepartmentAndLevel(departmentId: string, level: string) {
-    this.studentService
-      .getStudentsInDepartmentAndLevel(departmentId, level)
+  getResultEntries() {
+    console.log('Getting result entries for segment:', this.activeSegment().value);
+    
+    this.resultsService
+      .getResultEntries(this.resultId!, {
+        category: this.activeSegment().value,
+      })
       .subscribe({
         next: (resp) => {
+          console.log('Result entries response:', resp);
+          
           if (resp.status) {
-            this.students.set(resp.data);
+            const { entries, studentsWithoutEntries, analytics } = resp.data as {
+              entries: any[];
+              studentsWithoutEntries: any[];
+              analytics?: Record<string, number>;
+            };
+            
+            console.log('Entries:', entries);
+            console.log('Students without entries:', studentsWithoutEntries);
+            
+            // Process entries with actual data - preserve existing grades and scores
+            const processedEntries = (entries || []).map(student => {
+              console.log('Processing student entry:', student);
+              return {
+                ...student,
+                test: (student.test !== undefined && student.test !== null) ? student.test : '-',
+                lab: (student.lab !== undefined && student.lab !== null) ? student.lab : '-',
+                exam: (student.exam !== undefined && student.exam !== null) ? student.exam : '-',
+                total: (student.total !== undefined && student.total !== null) ? student.total : '-',
+                grade: student.grade || '-',
+                status: student.status || '-'
+              };
+            });
+            
+            // Process students without entries
+            const processedStudentsWithoutEntries = (studentsWithoutEntries || []).map(student => ({
+              ...student,
+              test: '-',
+              lab: '-',
+              exam: '-',
+              total: '-',
+              grade: '-',
+              status: '-'
+            }));
+            
+            const allStudents = [
+              ...processedEntries,
+              ...processedStudentsWithoutEntries
+            ];
+            
+            console.log('Final processed students:', allStudents);
+            
+            // Update only the current segment data
+            this.students.update((current) => ({
+              ...current,
+              [this.activeSegment().value]: allStudents,
+            }));
+            
+            // Update analytics if available
+            if (analytics) {
+              const analyticsData = [
+                analytics['A'] || 0,
+                analytics['B'] || 0,
+                analytics['C'] || 0,
+                analytics['D'] || 0,
+                analytics['E'] || 0,
+                analytics['F'] || 0,
+              ];
+              
+              this.analyticsChartData.set(analyticsData);
+              this.totalStudent.set(analytics['total'] || allStudents.length);
+              this.totalStudentPass.set(analytics['totalPass'] || 0);
+              this.totalStudentFail.set(analytics['totalFail'] || 0);
+            }
           }
         },
+        error: (error) => {
+          console.error('Error fetching result entries:', error);
+        }
       });
   }
 
@@ -135,13 +210,12 @@ export class ApproveRejectResultComponent implements OnInit {
     this.resultsService.getResult(this.resultId!).subscribe({
       next: (resp) => {
         if (resp.status) {
-          const { analytics, course, session, level, department } =
+          const { analytics, course, session, level } =
             resp.data as {
               course: { courseTitle: string };
               session: string;
               level: string;
               analytics: Record<string, number>;
-              department: IDepartment;
             };
 
           this.courseForm.patchValue({
@@ -151,20 +225,21 @@ export class ApproveRejectResultComponent implements OnInit {
           });
 
           const analyticsData = [
-            analytics['A'],
-            analytics['B'],
-            analytics['C'],
-            analytics['D'],
-            analytics['E'],
-            analytics['F'],
+            analytics['A'] || 0,
+            analytics['B'] || 0,
+            analytics['C'] || 0,
+            analytics['D'] || 0,
+            analytics['E'] || 0,
+            analytics['F'] || 0,
           ];
 
           this.analyticsChartData.set(analyticsData);
-          this.totalStudent.set(analytics['total']);
-          this.totalStudentPass.set(analytics['totalPass']);
-          this.totalStudentFail.set(analytics['totalFail']);
+          this.totalStudent.set(analytics['total'] || 0);
+          this.totalStudentPass.set(analytics['totalPass'] || 0);
+          this.totalStudentFail.set(analytics['totalFail'] || 0);
 
-          this.getStudentsInDepartmentAndLevel(department._id, level);
+          // Load entries for all segments
+          this.getResultEntries();
         }
       },
     });
@@ -188,9 +263,15 @@ export class ApproveRejectResultComponent implements OnInit {
 
     switch (switchValue) {
       case 'REGULAR': {
+        this.getResultEntries();
         break;
       }
       case 'REFERENCE': {
+        this.getResultEntries();
+        break;
+      }
+      case 'UNREGISTERED': {
+        this.getResultEntries();
         break;
       }
     }

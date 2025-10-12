@@ -1,11 +1,4 @@
-import { Component, computed, inject, input, output } from '@angular/core';
-import {
-  FormArray,
-  FormBuilder,
-  FormControl,
-  FormGroup,
-  ReactiveFormsModule,
-} from '@angular/forms';
+import { Component, input, output, effect, untracked } from '@angular/core';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatTableModule } from '@angular/material/table';
 import { EmptyStateComponent } from '../../../../@shared/components/empty-state/empty-state.component';
@@ -18,7 +11,6 @@ import { IStudentGrade } from '../../../courses/models/student-grade.model';
   imports: [
     PaginatorComponent,
     MatTableModule,
-    ReactiveFormsModule,
     MatCheckboxModule,
     StatusBadgeComponent,
     EmptyStateComponent,
@@ -28,12 +20,8 @@ import { IStudentGrade } from '../../../courses/models/student-grade.model';
   exportAs: 'regularTableResultUploadRef',
 })
 export class RegularTableResultUploadComponent {
-  private readonly fb = inject(FormBuilder);
-
   students = input<any>();
   tableUpdateEvent = output<Partial<IStudentGrade>[]>();
-
-  form!: FormGroup;
 
   displayedColumns: string[] = [
     'registrationNumber',
@@ -45,37 +33,33 @@ export class RegularTableResultUploadComponent {
     'grade',
     'status',
   ];
-  dataSource = computed<Partial<IStudentGrade>[]>(() => {
-    const students = this.students() as Partial<IStudentGrade>[];
 
-    if (students) {
-      this.form = this.fb.group({
-        rows: this.fb.array(students.map((student) => this.createRow(student))),
+  private studentsData: Partial<IStudentGrade>[] = [];
+
+  constructor() {
+    // Watch for input changes without causing re-renders
+    effect(() => {
+      const students = this.students();
+      untracked(() => {
+        if (students) {
+          this.studentsData = students;
+        }
       });
-      return students;
-    }
-
-    return [];
-  });
-
-  get rows() {
-    return this.form.get('rows') as FormArray;
-  }
-
-  createRow(student: Partial<IStudentGrade>): FormGroup {
-    return this.fb.group({
-      registrationNumber: new FormControl(student.registrationNumber),
-      fullName: new FormControl(student.fullName),
-      test: new FormControl(student.test),
-      lab: new FormControl(student.lab),
-      exam: new FormControl(student.exam),
-      grade: new FormControl(student.grade),
-      status: new FormControl(student.status),
     });
   }
 
-  saveRow(index: number) {
-    const row = this.rows.at(index).value as Partial<IStudentGrade>;
-    console.warn('Saving row data:', row);
+  dataSource() {
+    return this.studentsData;
+  }
+
+  updateField(element: any, field: string, event: Event) {
+    const input = event.target as HTMLInputElement;
+    element[field] = input.value;
+    // Don't trigger any updates to prevent focus loss
+  }
+
+  onInputBlur() {
+    // Only emit when user leaves the input
+    this.tableUpdateEvent.emit(this.studentsData);
   }
 }

@@ -12,8 +12,8 @@ const endpoints = [
   '/auth/lecturers/register',
   '/auth/lecturers/signin',
   '/auth/lecturers/refresh-token',
-  '/auth/lecturers/linked-accounts', // Confirm is this doesn't need being authenticated
-  '/auth/lecturers/switch-account', // Confirm is this doesn't need being authenticated
+  
+ '/auth/lecturers/switch-account', // Confirm is this doesn't need being authenticated
   '/auth/resend-email-verification',
   '/auth/verify-email',
   '/auth/forgot-password',
@@ -22,6 +22,10 @@ const endpoints = [
 
 let refreshInProgress = false;
 let refreshSubject = new Subject<string>();
+let refreshFailureCount = 0;
+const maxRefreshFailures = 2;
+let lastRefreshFailure = 0;
+const refreshCooldownMs = 30000; // 30 seconds
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthenticationService);
@@ -41,9 +45,11 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
       if (error.status === HttpStatusCode.Unauthorized) {
+        console.log('Received 401 Unauthorized response');
         const refreshToken = authService.getRefreshToken;
 
         if (!refreshToken) {
+          console.log('No refresh token found, logging out');
           authService.logOut();
           toast.showNotification(
             'warning',
@@ -67,17 +73,31 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
         refreshInProgress = true;
 
+        // Check circuit breaker
+        const now = Date.now();
+        if (refreshFailureCount >= maxRefreshFailures && 
+            (now - lastRefreshFailure) < refreshCooldownMs) {
+          console.log('Refresh circuit breaker active, forcing logout');
+          authService.logOut();
+          return throwError(() => new Error('Token refresh circuit breaker active'));
+        }
+
+        console.log('Attempting to refresh token');
         return authService.refreshToken(refreshToken).pipe(
           switchMap((res) => {
-            const { accessToken, refreshToken } = res.data;
+            console.log('Token refresh successful');
+            const { accessToken, refreshToken: newRefreshToken } = res.data;
             authService.setToken(accessToken);
-            authService.setRefreshToken(refreshToken);
+            authService.setRefreshToken(newRefreshToken);
 
             refreshSubject.next(accessToken);
             refreshSubject.complete();
 
             refreshInProgress = false;
             refreshSubject = new Subject<string>(); // reinitialize
+            
+            // Reset failure count on success
+            refreshFailureCount = 0;
 
             const retryReq = req.clone({
               setHeaders: { Authorization: `Bearer ${accessToken}` },
@@ -85,6 +105,20 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
             return next(retryReq);
           }),
           catchError((refreshError) => {
+            console.log('Token refresh failed:', refreshError.status, refreshError.message);
+            refreshInProgress = false;
+            refreshSubject.complete();
+            refreshSubject = new Subject<string>(); // reinitialize
+            
+            // Update circuit breaker state
+            refreshFailureCount++;
+            lastRefreshFailure = Date.now();
+            
+            // Force logout after max failures
+            if (refreshFailureCount >= maxRefreshFailures) {
+              console.log('Max refresh failures reached, forcing logout');
+            }
+            
             authService.logOut();
             toast.showNotification(
               'warning',

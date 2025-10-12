@@ -168,15 +168,21 @@
     @switch (activeSegment().value) {
       @case ('REGULAR') {
         <app-regular-table-result-upload
-          [students]="students()"
+          [students]="students()['REGULAR']"
           #regularTableResultUploadRef
         />
       }
       @case ('REFERENCE') {
-        <app-reference-table-result-upload />
+        <app-reference-table-result-upload
+          [students]="students()['REFERENCE']"
+          #referenceTableResultUploadRef
+        />
       }
       @case ('UNREGISTERED') {
-        <app-reference-table-result-upload />
+        <app-reference-table-result-upload
+          [students]="students()['UNREGISTERED']"
+          #unregisteredTableResultUploadRef
+        />
       }
     }
   </div>

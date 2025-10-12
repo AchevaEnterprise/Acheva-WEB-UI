@@ -148,6 +148,7 @@
         icon="icons/general/save-btn-icon.svg"
         class="btn-md"
         (clickEvent)="saveChanges()"
+        [class.opacity-50]="!canSaveChanges()"
       />
       <app-button
         label="Upload Results"

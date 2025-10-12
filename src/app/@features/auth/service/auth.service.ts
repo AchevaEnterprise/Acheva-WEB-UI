@@ -64,6 +64,7 @@ export class AuthenticationService {
       .pipe(
         tap((resp) => {
           const { accessToken, refreshToken } = resp.data;
+          
 
           this.setToken(accessToken);
           this.setRefreshToken(refreshToken);
@@ -92,7 +93,7 @@ export class AuthenticationService {
   }
 
   public getProfile() {
-    const userId = this.activeAccount()?.id;
+     const userId = this.activeAccount()?.id;
     if (!userId) {
       return of({
         status: false,
