@@ -77,6 +77,7 @@
                 <app-my-result-grid-card
                   [result]="draft"
                   (viewEvent)="viewResult($event)"
+                  (deleteEvent)="deleteDraft($event)"
                 />
               }
             </div>
@@ -89,6 +90,7 @@
                 <app-my-result-list-card
                   [result]="draft"
                   (viewEvent)="viewResult($event)"
+                  (deleteEvent)="deleteDraft($event)"
                 />
               </div>
             }

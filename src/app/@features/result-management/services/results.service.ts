@@ -39,8 +39,8 @@ export class ResultsService {
     let params = new HttpParams();
     params = params.append('category', query?.category || '');
 
-    if (query?.fullName) params.append('fullName', query?.fullName || '');
-    if (query?.limit) params.append('limit', query?.limit || '');
+    if (query?.fullName) params = params.append('fullName', query?.fullName || '');
+    if (query?.limit) params = params.append('limit', query?.limit || '');
 
     return this.http.get<IAPIResponse<any>>(
       `${this.resultsUrl}/${resultId}/entries`,

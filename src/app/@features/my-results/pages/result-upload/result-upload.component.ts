@@ -8,7 +8,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { finalize } from 'rxjs';
 import { IDepartment } from '../../../../@core/models/school.model';
 import { ToastService } from '../../../../@core/utility/toast.service';
@@ -27,6 +27,7 @@ import { StudentService } from '../../../students/services/student.service';
 import { AnalyticsChartComponent } from '../../components/analytics-chart/analytics-chart.component';
 import { ReferenceTableResultUploadComponent } from '../../components/reference-table-result-upload/reference-table-result-upload.component';
 import { DeleteConfirmationDialogComponent } from '../../components/app-delete-confirmation-dialog/app-delete-confirmation-dialog.component';
+import { ConfirmationComponent } from '../../../../@shared/components/confirmation/confirmation.component';
 
 type SegmentValue = 'REGULAR' | 'REFERENCE' | 'UNREGISTERED';
 
@@ -61,6 +62,7 @@ export class ResultUploadComponent implements OnInit {
   private readonly toast = inject(ToastService);
   private readonly dialog = inject(MatDialog);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   deletingEntries = signal<boolean>(false);
   selectedStudentsWithIds = signal<Partial<IStudentGrade & { _id: string }>[]>(
@@ -157,6 +159,9 @@ export class ResultUploadComponent implements OnInit {
   private debouncedUpdateTimer: any = null;
   isDraftMode = signal<boolean>(false);
   hasUnsavedChanges = signal<boolean>(false);
+  
+  // Save button state
+  canSaveChanges = signal<boolean>(false);
 
   // ========================================
   // FORMS
@@ -692,6 +697,31 @@ export class ResultUploadComponent implements OnInit {
   // SAVE CHANGES METHOD
   // ========================================
   saveChanges() {
+    if (!this.canSaveChanges()) {
+      this.toast.showNotification(
+        'warning',
+        'Incomplete Data',
+        'Please fill in all necessary rows in the table before saving'
+      );
+      return;
+    }
+
+    const dialogRef = this.dialog.open(ConfirmationComponent, {
+      width: '600px',
+      data: {
+        message: 'Are you sure you want to save these changes? Note, if you save these changes, You can now send to the course coordinator.',
+        subTitle: 'Kindly confirm this action'
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((confirmed: boolean) => {
+      if (confirmed) {
+        this.performSaveAndNavigate();
+      }
+    });
+  }
+
+  private performSaveAndNavigate() {
     const currentSegment = this.activeSegment().value as SegmentValue;
     const currentStudents = this.students()[currentSegment] || [];
 
@@ -733,10 +763,10 @@ export class ResultUploadComponent implements OnInit {
               'Success',
               'Changes saved successfully'
             );
-            // Clear draft after successful save
-            this.clearDraft();
-            // Refresh data to get updated analytics
-            this.getResultEntries();
+            // Transfer data to result management and clear my-results draft
+            this.transferToResultManagement();
+            // Navigate to result management
+            this.router.navigate(['/result-management']);
           } else {
             console.warn('Save changes response status false:', resp);
             this.toast.showNotification(
@@ -852,6 +882,9 @@ export class ResultUploadComponent implements OnInit {
     this.totalStudent.set(currentStudents.length);
     this.totalStudentPass.set(totalPass);
     this.totalStudentFail.set(totalFail);
+    
+    // Update save button state
+    this.updateSaveButtonState();
 
     console.log('Real-time analytics updated:', {
       segment: currentSegment,
@@ -1212,6 +1245,76 @@ export class ResultUploadComponent implements OnInit {
     this.hasUnsavedChanges.set(false);
   }
 
+  private transferToResultManagement() {
+    // Get all current data
+    const allSegments: SegmentValue[] = ['REGULAR', 'REFERENCE', 'UNREGISTERED'];
+    const completeResultData: any = {
+      resultId: this.resultId,
+      courseDetails: {
+        courseTitle: this.courseForm.get('course')?.value || 'Unknown Course',
+        session: this.courseForm.get('session')?.value || 'Unknown Session',
+        level: this.courseForm.get('level')?.value || 'Unknown Level',
+        units: this.extractUnitsFromCourse(this.courseForm.get('course')?.value || ''),
+      },
+      analytics: {
+        chartData: this.analyticsChartData(),
+        totalStudent: this.totalStudent(),
+        totalStudentPass: this.totalStudentPass(),
+        totalStudentFail: this.totalStudentFail(),
+      },
+      segments: {},
+      timestamp: new Date().toISOString(),
+      status: 'PENDING'
+    };
+
+    // Collect data from all segments
+    allSegments.forEach(segment => {
+      const segmentStudents = this.students()[segment] || [];
+      if (segmentStudents.length > 0) {
+        completeResultData.segments[segment] = segmentStudents;
+      }
+    });
+
+    // Save to result management storage
+    const resultManagementKey = `result_management_${this.resultId}`;
+    localStorage.setItem(resultManagementKey, JSON.stringify(completeResultData));
+
+    // Add to result management list
+    const resultManagementList = JSON.parse(localStorage.getItem('result_management_list') || '[]');
+    const existingIndex = resultManagementList.findIndex((r: any) => r.resultId === this.resultId);
+    
+    const resultInfo = {
+      resultId: this.resultId,
+      courseTitle: completeResultData.courseDetails.courseTitle,
+      session: completeResultData.courseDetails.session,
+      level: completeResultData.courseDetails.level,
+      timestamp: completeResultData.timestamp,
+      status: 'PENDING',
+      hasCompleteData: true
+    };
+
+    if (existingIndex >= 0) {
+      resultManagementList[existingIndex] = resultInfo;
+    } else {
+      resultManagementList.push(resultInfo);
+    }
+
+    localStorage.setItem('result_management_list', JSON.stringify(resultManagementList));
+
+    // Clear from my-results drafts
+    allSegments.forEach(segment => {
+      localStorage.removeItem(`result_draft_${this.resultId}_${segment}`);
+    });
+
+    // Update my-results draft list
+    const draftsListData = localStorage.getItem('result_drafts_list');
+    if (draftsListData) {
+      const draftsList = JSON.parse(draftsListData);
+      const updatedList = draftsList.filter((d: any) => d.resultId !== this.resultId);
+      localStorage.setItem('result_drafts_list', JSON.stringify(updatedList));
+    }
+  }
+
   // Method to check if there are drafts for this result
   hasDrafts(): boolean {
     const segments: SegmentValue[] = ['REGULAR', 'REFERENCE', 'UNREGISTERED'];
@@ -1224,6 +1327,29 @@ export class ResultUploadComponent implements OnInit {
   // Method to manually trigger analytics update
   triggerAnalyticsUpdate() {
     this.updateAnalyticsRealTime();
+  }
+  
+  // Check if all necessary rows are filled
+  private updateSaveButtonState() {
+    const currentSegment = this.activeSegment().value as SegmentValue;
+    const currentStudents = this.students()[currentSegment] || [];
+    
+    if (currentStudents.length === 0) {
+      this.canSaveChanges.set(false);
+      return;
+    }
+    
+    // Check if all students have at least one score filled
+    const allRowsFilled = currentStudents.every((student) => {
+      const hasTest = student.test !== undefined && student.test !== '-' && student.test !== '';
+      const hasLab = student.lab !== undefined && student.lab !== '-' && student.lab !== '';
+      const hasExam = student.exam !== undefined && student.exam !== '-' && student.exam !== '';
+      
+      // At least one score must be filled
+      return hasTest || hasLab || hasExam;
+    });
+    
+    this.canSaveChanges.set(allRowsFilled);
   }
 
   // Force save current state as draft

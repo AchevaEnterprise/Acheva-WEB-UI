@@ -19,8 +19,13 @@ import { IResult } from '../../../result-management/models/results.model';
 export class MyResultListCardComponent {
   result = input<IResult>();
   viewEvent = output<IResult>();
+  deleteEvent = output<string>();
 
   viewResult() {
     this.viewEvent.emit(this.result()!);
+  }
+
+  deleteResult() {
+    this.deleteEvent.emit(this.result()?._id!);
   }
 }

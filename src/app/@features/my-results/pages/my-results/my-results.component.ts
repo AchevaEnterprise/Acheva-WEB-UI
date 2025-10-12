@@ -1,9 +1,11 @@
 import { DatePipe } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
+import { ToastService } from '../../../../@core/utility/toast.service';
 import { EmptyStateComponent } from '../../../../@shared/components/empty-state/empty-state.component';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
 import { SearchInputComponent } from '../../../../@shared/components/forms/search-input/search-input.component';
@@ -16,6 +18,7 @@ import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
 import { RoleEnum } from '../../../auth/model/auth.model';
 import { IResult } from '../../../result-management/models/results.model';
 import { ResultsService } from '../../../result-management/services/results.service';
+import { DeleteConfirmationDialogComponent } from '../../components/app-delete-confirmation-dialog/app-delete-confirmation-dialog.component';
 import { MyResultGridCardComponent } from '../../components/my-result-grid-card/my-result-grid-card.component';
 import { MyResultListCardComponent } from '../../components/my-result-list-card/my-result-list-card.component';
 
@@ -42,6 +45,8 @@ export class MyResultsComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly resultService = inject(ResultsService);
+  private readonly dialog = inject(MatDialog);
+  private readonly toast = inject(ToastService);
 
   isloadingResults = signal(false);
   results = signal<any[]>([]);
@@ -57,54 +62,12 @@ export class MyResultsComponent implements OnInit {
       value: 'DRAFT',
       accessRole: [RoleEnum.LECTURER, RoleEnum.COURSE_COORDINATOR],
     },
-    {
-      label: 'Pending',
-      value: 'PENDING',
-      accessRole: [
-        RoleEnum.HOD,
-        RoleEnum.COURSE_COORDINATOR,
-        RoleEnum.LECTURER,
-      ],
-    },
-    {
-      label: 'Unverified',
-      value: 'UNVERIFIED',
-      accessRole: [
-        RoleEnum.DEAN,
-        RoleEnum.HOD,
-        RoleEnum.COURSE_COORDINATOR,
-        RoleEnum.LECTURER,
-      ],
-    },
-    {
-      label: 'Verified',
-      value: 'VERIFIED',
-      accessRole: [
-        RoleEnum.DEAN,
-        RoleEnum.HOD,
-        RoleEnum.COURSE_ADVISOR,
-        RoleEnum.COURSE_COORDINATOR,
-        RoleEnum.LECTURER,
-      ],
-    },
-    {
-      label: 'Published',
-      value: 'PUBLISHED',
-      accessRole: [
-        RoleEnum.DEAN,
-        RoleEnum.HOD,
-        RoleEnum.COURSE_ADVISOR,
-        RoleEnum.COURSE_COORDINATOR,
-        RoleEnum.LECTURER,
-      ],
-    },
-    {
-      label: 'Imported',
-      value: 'IMPORTED',
-      accessRole: [RoleEnum.DEAN, RoleEnum.HOD, RoleEnum.COURSE_ADVISOR],
-    },
   ]);
-  activeSegment = signal<ISegmentSwitcher>(this.segments()[0]);
+  activeSegment = signal<ISegmentSwitcher>({
+    label: 'Drafts',
+    value: 'DRAFT',
+    accessRole: [RoleEnum.LECTURER, RoleEnum.COURSE_COORDINATOR],
+  });
 
   ngOnInit(): void {
     this.getResults();
@@ -233,24 +196,52 @@ export class MyResultsComponent implements OnInit {
   }
 
   deleteDraft(resultId: string) {
-    // Remove all draft data for this result
-    const segments = ['REGULAR', 'REFERENCE', 'UNREGISTERED'];
-    segments.forEach((segment) => {
-      localStorage.removeItem(`result_draft_${resultId}_${segment}`);
+    const draft = this.drafts().find(d => d._id === resultId);
+    if (!draft) return;
+
+    const dialogData = {
+      title: 'Delete Draft Result',
+      message: `Are you sure you want to delete the draft for "${draft.courseDetails?.courseTitle || 'Unknown Course'}"? This action cannot be undone and will permanently remove all saved progress.`,
+      confirmText: 'Delete Draft',
+      cancelText: 'Cancel',
+      isDangerous: true,
+    };
+
+    const dialogRef = this.dialog.open(DeleteConfirmationDialogComponent, {
+      width: '500px',
+      disableClose: true,
+      data: dialogData,
     });
 
-    // Update drafts list
-    const draftsListData = localStorage.getItem('result_drafts_list');
-    if (draftsListData) {
-      const draftsList = JSON.parse(draftsListData);
-      const updatedList = draftsList.filter(
-        (d: any) => d.resultId !== resultId
-      );
-      localStorage.setItem('result_drafts_list', JSON.stringify(updatedList));
-    }
+    dialogRef.afterClosed().subscribe((confirmed: boolean) => {
+      if (!confirmed) return;
 
-    // Refresh drafts display
-    this.loadDrafts();
+      // Remove all draft data for this result
+      const segments = ['REGULAR', 'REFERENCE', 'UNREGISTERED'];
+      segments.forEach((segment) => {
+        localStorage.removeItem(`result_draft_${resultId}_${segment}`);
+      });
+
+      // Update drafts list
+      const draftsListData = localStorage.getItem('result_drafts_list');
+      if (draftsListData) {
+        const draftsList = JSON.parse(draftsListData);
+        const updatedList = draftsList.filter(
+          (d: any) => d.resultId !== resultId
+        );
+        localStorage.setItem('result_drafts_list', JSON.stringify(updatedList));
+      }
+
+      // Show success message
+      this.toast.showNotification(
+        'success',
+        'Draft Deleted',
+        'Draft result has been deleted successfully'
+      );
+
+      // Refresh drafts display
+      this.loadDrafts();
+    });
   }
 
   viewResult(result: IResult) {
