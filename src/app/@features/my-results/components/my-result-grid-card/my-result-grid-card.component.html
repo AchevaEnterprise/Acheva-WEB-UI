@@ -1,4 +1,6 @@
-<div class="bg-white border border-[#E5E7EB] rounded-[8px] w-full h-full shadow-sm">
+<div
+  class="bg-white border border-[#E5E7EB] rounded-[8px] w-full h-full shadow-sm"
+>
   <div class="p-4">
     <!-- Header with title and status -->
     <div class="flex justify-between items-start mb-3">
@@ -11,19 +13,23 @@
           }}
         </h4>
         <p class="acva-caption text-[#6B7280] fw-400">
-          CSC 101 - 
+          CSC 101 -
           {{
             result()?.isDraft
               ? result()?.courseDetails?.units
               : result()?.course?.courseLoad
-          }} Units
+          }}
+          Units
         </p>
       </div>
-      
+
       <!-- Status badge -->
       <div class="ml-2">
         @if (result()?.isDraft) {
-          <span class="px-2 py-1 bg-[#FEF3C7] text-[#D97706] text-xs fw-500 rounded-[4px]">Drafts</span>
+          <span
+            class="px-2 py-1 bg-[#FEF3C7] text-[#D97706] text-xs fw-500 rounded-[4px]"
+            >Drafts</span
+          >
         }
       </div>
     </div>
@@ -38,33 +44,45 @@
         ></app-svg>
         <span>1st Semester - 2024/2025</span>
       </div>
-      
+
       <div class="flex items-center gap-2 text-[#6B7280] acva-caption">
         <app-svg
           svgWidth="14px"
           svgHeight="14px"
           src="icons/general/role-icon.svg"
         ></app-svg>
-        <span>{{ result()?.isDraft ? result()?.studentCount || 67 : 67 }} Students</span>
+        <span
+          >{{
+            result()?.isDraft ? result()?.studentCount || 67 : 67
+          }}
+          Students</span
+        >
       </div>
     </div>
 
     <!-- Progress bar -->
     <div class="w-full">
       <div class="flex justify-between items-center mb-2">
-        <span class="acva-caption text-[#6B7280]">{{ result()?.isDraft ? result()?.completionPercentage || 0 : 100 }}% done</span>
+        <span class="acva-caption text-[#6B7280]"
+          >{{ result()?.isDraft ? result()?.completionPercentage || 0 : 100 }}%
+          done</span
+        >
       </div>
       <div class="w-full bg-[#E5E7EB] rounded-full h-3">
-        <div 
+        <div
           class="h-3 bg-[#2793FF] rounded-full transition-all duration-300"
-          [style.width.%]="result()?.isDraft ? (result()?.completionPercentage || 0) : 100">
-        </div>
+          [style.width.%]="
+            result()?.isDraft ? result()?.completionPercentage || 0 : 100
+          "
+        ></div>
       </div>
     </div>
   </div>
 
   <!-- Footer with menu -->
-  <div class="flex justify-end items-center px-4 py-2 bg-[#F9FAFB] border-t border-[#E5E7EB]">
+  <div
+    class="flex justify-end items-center px-4 py-2 bg-[#F9FAFB] border-t border-[#E5E7EB]"
+  >
     <button [matMenuTriggerFor]="menu" class="cursor-pointer">
       <app-svg
         svgWidth="3rem"

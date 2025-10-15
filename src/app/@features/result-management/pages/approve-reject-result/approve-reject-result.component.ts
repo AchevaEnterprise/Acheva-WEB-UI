@@ -124,8 +124,11 @@ export class ApproveRejectResultComponent implements OnInit {
   }
 
   getResultEntries() {
-    console.log('Getting result entries for segment:', this.activeSegment().value);
-    
+    console.log(
+      'Getting result entries for segment:',
+      this.activeSegment().value
+    );
+
     this.resultsService
       .getResultEntries(this.resultId!, {
         category: this.activeSegment().value,
@@ -133,55 +136,70 @@ export class ApproveRejectResultComponent implements OnInit {
       .subscribe({
         next: (resp) => {
           console.log('Result entries response:', resp);
-          
+
           if (resp.status) {
-            const { entries, studentsWithoutEntries, analytics } = resp.data as {
-              entries: any[];
-              studentsWithoutEntries: any[];
-              analytics?: Record<string, number>;
-            };
-            
+            const { entries, studentsWithoutEntries, analytics } =
+              resp.data as {
+                entries: any[];
+                studentsWithoutEntries: any[];
+                analytics?: Record<string, number>;
+              };
+
             console.log('Entries:', entries);
             console.log('Students without entries:', studentsWithoutEntries);
-            
+
             // Process entries with actual data - preserve existing grades and scores
-            const processedEntries = (entries || []).map(student => {
+            const processedEntries = (entries || []).map((student) => {
               console.log('Processing student entry:', student);
               return {
                 ...student,
-                test: (student.test !== undefined && student.test !== null) ? student.test : '-',
-                lab: (student.lab !== undefined && student.lab !== null) ? student.lab : '-',
-                exam: (student.exam !== undefined && student.exam !== null) ? student.exam : '-',
-                total: (student.total !== undefined && student.total !== null) ? student.total : '-',
+                test:
+                  student.test !== undefined && student.test !== null
+                    ? student.test
+                    : '-',
+                lab:
+                  student.lab !== undefined && student.lab !== null
+                    ? student.lab
+                    : '-',
+                exam:
+                  student.exam !== undefined && student.exam !== null
+                    ? student.exam
+                    : '-',
+                total:
+                  student.total !== undefined && student.total !== null
+                    ? student.total
+                    : '-',
                 grade: student.grade || '-',
-                status: student.status || '-'
+                status: student.status || '-',
               };
             });
-            
+
             // Process students without entries
-            const processedStudentsWithoutEntries = (studentsWithoutEntries || []).map(student => ({
+            const processedStudentsWithoutEntries = (
+              studentsWithoutEntries || []
+            ).map((student) => ({
               ...student,
               test: '-',
               lab: '-',
               exam: '-',
               total: '-',
               grade: '-',
-              status: '-'
+              status: '-',
             }));
-            
+
             const allStudents = [
               ...processedEntries,
-              ...processedStudentsWithoutEntries
+              ...processedStudentsWithoutEntries,
             ];
-            
+
             console.log('Final processed students:', allStudents);
-            
+
             // Update only the current segment data
             this.students.update((current) => ({
               ...current,
               [this.activeSegment().value]: allStudents,
             }));
-            
+
             // Update analytics if available
             if (analytics) {
               const analyticsData = [
@@ -192,7 +210,7 @@ export class ApproveRejectResultComponent implements OnInit {
                 analytics['E'] || 0,
                 analytics['F'] || 0,
               ];
-              
+
               this.analyticsChartData.set(analyticsData);
               this.totalStudent.set(analytics['total'] || allStudents.length);
               this.totalStudentPass.set(analytics['totalPass'] || 0);
@@ -202,7 +220,7 @@ export class ApproveRejectResultComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error fetching result entries:', error);
-        }
+        },
       });
   }
 
@@ -210,13 +228,12 @@ export class ApproveRejectResultComponent implements OnInit {
     this.resultsService.getResult(this.resultId!).subscribe({
       next: (resp) => {
         if (resp.status) {
-          const { analytics, course, session, level } =
-            resp.data as {
-              course: { courseTitle: string };
-              session: string;
-              level: string;
-              analytics: Record<string, number>;
-            };
+          const { analytics, course, session, level } = resp.data as {
+            course: { courseTitle: string };
+            session: string;
+            level: string;
+            analytics: Record<string, number>;
+          };
 
           this.courseForm.patchValue({
             course: course.courseTitle,

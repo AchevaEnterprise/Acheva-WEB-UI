@@ -12,8 +12,8 @@ const endpoints = [
   '/auth/lecturers/register',
   '/auth/lecturers/signin',
   '/auth/lecturers/refresh-token',
-  
- '/auth/lecturers/switch-account', // Confirm is this doesn't need being authenticated
+
+  '/auth/lecturers/switch-account', // Confirm is this doesn't need being authenticated
   '/auth/resend-email-verification',
   '/auth/verify-email',
   '/auth/forgot-password',
@@ -75,11 +75,15 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
         // Check circuit breaker
         const now = Date.now();
-        if (refreshFailureCount >= maxRefreshFailures && 
-            (now - lastRefreshFailure) < refreshCooldownMs) {
+        if (
+          refreshFailureCount >= maxRefreshFailures &&
+          now - lastRefreshFailure < refreshCooldownMs
+        ) {
           console.log('Refresh circuit breaker active, forcing logout');
           authService.logOut();
-          return throwError(() => new Error('Token refresh circuit breaker active'));
+          return throwError(
+            () => new Error('Token refresh circuit breaker active')
+          );
         }
 
         console.log('Attempting to refresh token');
@@ -95,7 +99,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
             refreshInProgress = false;
             refreshSubject = new Subject<string>(); // reinitialize
-            
+
             // Reset failure count on success
             refreshFailureCount = 0;
 
@@ -105,20 +109,24 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
             return next(retryReq);
           }),
           catchError((refreshError) => {
-            console.log('Token refresh failed:', refreshError.status, refreshError.message);
+            console.log(
+              'Token refresh failed:',
+              refreshError.status,
+              refreshError.message
+            );
             refreshInProgress = false;
             refreshSubject.complete();
             refreshSubject = new Subject<string>(); // reinitialize
-            
+
             // Update circuit breaker state
             refreshFailureCount++;
             lastRefreshFailure = Date.now();
-            
+
             // Force logout after max failures
             if (refreshFailureCount >= maxRefreshFailures) {
               console.log('Max refresh failures reached, forcing logout');
             }
-            
+
             authService.logOut();
             toast.showNotification(
               'warning',
