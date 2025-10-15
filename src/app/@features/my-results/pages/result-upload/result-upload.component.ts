@@ -737,7 +737,7 @@ export class ResultUploadComponent implements OnInit {
     const dialogRef = this.dialog.open(ConfirmationComponent, {
       width: '600px',
       data: {
-        message: 'Are you sure you want to save these changes? Note, if you save these changes, You can now send to the course coordinator.',
+        message: 'Are you sure you want to save these changes?  if you save these changes, You can now send to the course coordinator.',
         subTitle: 'Kindly confirm this action'
       },
     });
@@ -1158,8 +1158,8 @@ private performSaveAndNavigate() {
   }
 
   private addToMainDraftsList(draftData: any) {
-    const draftsKey = 'result_drafts_list';
-    const existingDrafts = JSON.parse(localStorage.getItem(draftsKey) || '[]');
+  const draftsKey = 'result_drafts_list';
+  const existingDrafts = JSON.parse(localStorage.getItem(draftsKey) || '[]');
 
     const draftInfo = {
       resultId: this.resultId,
@@ -1170,7 +1170,7 @@ private performSaveAndNavigate() {
       totalStudents: draftData.totalStudents,
       studentsWithGrades: draftData.studentsWithGrades,
       completionPercentage: draftData.completionPercentage,
-      isDraft: true,
+      isDraft: true
     };
 
     // Check if draft already exists
@@ -1181,14 +1181,12 @@ private performSaveAndNavigate() {
     if (existingIndex >= 0) {
       // Update existing draft with aggregated data from all segments
       const existing = existingDrafts[existingIndex];
-      const updatedSegments = [
-        ...new Set([...existing.segments, this.activeSegment().value]),
-      ];
-
+      const updatedSegments = [...new Set([...existing.segments, this.activeSegment().value])];
+      
       // Calculate total completion across all segments
       let totalStudentsAllSegments = existing.totalStudents || 0;
       let totalWithGradesAllSegments = existing.studentsWithGrades || 0;
-
+      
       // If this is a new segment, add to totals
       if (!existing.segments.includes(this.activeSegment().value)) {
         totalStudentsAllSegments += draftData.totalStudents;
@@ -1196,49 +1194,41 @@ private performSaveAndNavigate() {
       } else {
         // Update existing segment data
         const segmentData = existing.segmentData?.[this.activeSegment().value];
-        totalStudentsAllSegments =
-          totalStudentsAllSegments -
-          (segmentData?.totalStudents || 0) +
-          draftData.totalStudents;
-        totalWithGradesAllSegments =
-          totalWithGradesAllSegments -
-          (segmentData?.studentsWithGrades || 0) +
-          draftData.studentsWithGrades;
+        totalStudentsAllSegments = totalStudentsAllSegments - (segmentData?.totalStudents || 0) + draftData.totalStudents;
+        totalWithGradesAllSegments = totalWithGradesAllSegments - (segmentData?.studentsWithGrades || 0) + draftData.studentsWithGrades;
       }
-
-      existingDrafts[existingIndex] = {
+      
+      const updatedDraft = {
         ...existing,
         timestamp: draftInfo.timestamp,
         segments: updatedSegments,
         courseDetails: draftData.courseDetails,
         totalStudents: totalStudentsAllSegments,
         studentsWithGrades: totalWithGradesAllSegments,
-        completionPercentage:
-          totalStudentsAllSegments > 0
-            ? Math.round(
-                (totalWithGradesAllSegments / totalStudentsAllSegments) * 100
-              )
-            : 0,
+        completionPercentage: totalStudentsAllSegments > 0 ? Math.round((totalWithGradesAllSegments / totalStudentsAllSegments) * 100) : 0,
         segmentData: {
           ...existing.segmentData,
           [this.activeSegment().value]: {
             totalStudents: draftData.totalStudents,
             studentsWithGrades: draftData.studentsWithGrades,
-            completionPercentage: draftData.completionPercentage,
-          },
-        },
+            completionPercentage: draftData.completionPercentage
+          }
+        }
       };
+      // Remove old draft and insert updated at the top
+      existingDrafts.splice(existingIndex, 1);
+      existingDrafts.unshift(updatedDraft);
     } else {
-      // Add new draft
-      existingDrafts.push({
+      // Add new draft at the top
+      existingDrafts.unshift({
         ...draftInfo,
         segmentData: {
           [this.activeSegment().value]: {
             totalStudents: draftData.totalStudents,
             studentsWithGrades: draftData.studentsWithGrades,
-            completionPercentage: draftData.completionPercentage,
-          },
-        },
+            completionPercentage: draftData.completionPercentage
+          }
+        }
       });
     }
 
