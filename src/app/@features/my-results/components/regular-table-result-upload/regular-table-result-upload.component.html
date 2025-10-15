@@ -21,7 +21,7 @@
           <input
             type="text"
             class="border border-neutral-300 rounded-[8px] p-2 my-4 w-full"
-            [value]="element.test || ''"
+            [value]="!element.test || element.test === '-' ? '-' : element.test"
             (input)="updateField(element, 'test', $event)"
             (blur)="onInputBlur()"
           />
@@ -34,7 +34,7 @@
           <input
             type="text"
             class="border border-neutral-300 rounded-[8px] p-2 w-full"
-            [value]="element.lab || ''"
+            [value]="!element.lab || element.lab === '-' ? '-' : element.lab"
             (input)="updateField(element, 'lab', $event)"
             (blur)="onInputBlur()"
           />
@@ -47,7 +47,7 @@
           <input
             type="text"
             class="border border-neutral-300 rounded-[8px] p-2 w-full"
-            [value]="element.exam || ''"
+            [value]="!element.exam || element.exam === '-' ? '-' : element.exam"
             (input)="updateField(element, 'exam', $event)"
             (blur)="onInputBlur()"
           />
@@ -57,21 +57,30 @@
       <ng-container matColumnDef="total">
         <th mat-header-cell *matHeaderCellDef>TOTAL</th>
         <td mat-cell *matCellDef="let element">
-          {{ element.total || '-' }}
+          {{ !element.total || element.total === '-' ? '-' : element.total }}
         </td>
       </ng-container>
 
       <ng-container matColumnDef="grade">
         <th mat-header-cell *matHeaderCellDef>FINAL GRADE</th>
         <td mat-cell *matCellDef="let element">
-          {{ element.finalGrade || '-' }}
+          {{
+            !element.finalGrade || element.finalGrade === '-'
+              ? '-'
+              : element.finalGrade
+          }}
         </td>
       </ng-container>
 
       <ng-container matColumnDef="status">
         <th mat-header-cell *matHeaderCellDef>STATUS</th>
         <td mat-cell *matCellDef="let element">
-          <app-status-badge type="pass" [status]="element.status || 'Pass'" />
+          <span *ngIf="!element.status || element.status === '-'">-</span>
+          <app-status-badge
+            *ngIf="element.status && element.status !== '-'"
+            type="pass"
+            [status]="element.status"
+          />
         </td>
       </ng-container>
 

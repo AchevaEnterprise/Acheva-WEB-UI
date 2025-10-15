@@ -52,7 +52,7 @@
               min="0"
               class="border border-neutral-300 rounded-[8px] p-2 my-4 w-[3rem]"
               max="30"
-              placeholder="0"
+              placeholder="-"
             />
             @if (hasControlError(i, 'test', 'max')) {
               <mat-error>Maximum score is 30</mat-error>
@@ -74,7 +74,7 @@
               min="0"
               class="border border-neutral-300 rounded-[8px] p-2 my-4 w-[3rem]"
               max="30"
-              placeholder="0"
+              placeholder="-"
             />
             @if (hasControlError(i, 'lab', 'max')) {
               <mat-error>Maximum score is 30</mat-error>
@@ -96,7 +96,7 @@
               min="0"
               class="border border-neutral-300 rounded-[8px] p-2 my-4 w-[3rem]"
               max="70"
-              placeholder="0"
+              placeholder="-"
             />
             @if (hasControlError(i, 'exam', 'max')) {
               <mat-error>Maximum score is 70</mat-error>
@@ -129,9 +129,9 @@
             <div class="flex items-center">
               <span
                 class="px-2 py-1 rounded text-sm font-medium"
-                [class]="getGradeClass(getControlValue(i, 'grade'))"
+                [class]="getGradeClass(getDisplayGrade(i))"
               >
-                {{ getControlValue(i, 'grade') || '-' }}
+                {{ getDisplayGrade(i) }}
               </span>
             </div>
           </td>
@@ -146,9 +146,9 @@
             <div class="flex items-center justify-between">
               <span
                 class="px-2 py-1 rounded text-sm font-medium"
-                [class]="getStatusClass(getControlValue(i, 'status'))"
+                [class]="getStatusClass(getDisplayStatus(i))"
               >
-                {{ getControlValue(i, 'status') }}
+                {{ getDisplayStatus(i) }}
               </span>
             </div>
           </td>

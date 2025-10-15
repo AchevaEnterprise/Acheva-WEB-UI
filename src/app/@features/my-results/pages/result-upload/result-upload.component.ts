@@ -8,7 +8,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute , Router  } from '@angular/router';
 import { finalize } from 'rxjs';
 import { IDepartment } from '../../../../@core/models/school.model';
 import { ToastService } from '../../../../@core/utility/toast.service';
@@ -28,7 +28,6 @@ import { AnalyticsChartComponent } from '../../components/analytics-chart/analyt
 import { ReferenceTableResultUploadComponent } from '../../components/reference-table-result-upload/reference-table-result-upload.component';
 import { DeleteConfirmationDialogComponent } from '../../components/app-delete-confirmation-dialog/app-delete-confirmation-dialog.component';
 import { ConfirmationComponent } from '../../../../@shared/components/confirmation/confirmation.component';
-
 type SegmentValue = 'REGULAR' | 'REFERENCE' | 'UNREGISTERED';
 
 @Component({
@@ -54,6 +53,26 @@ type SegmentValue = 'REGULAR' | 'REFERENCE' | 'UNREGISTERED';
   styleUrl: './result-upload.component.scss',
 })
 export class ResultUploadComponent implements OnInit {
+  // Utility to map all grade fields from 0/undefined/'' to '-'
+  private mapStudentFieldsToDash(
+    student: Partial<IStudentGrade>
+  ): Partial<IStudentGrade> {
+    const fields = ['test', 'lab', 'exam', 'total', 'grade', 'status'];
+    const mapped: any = { ...student };
+    for (const field of fields) {
+      if (mapped[field] === undefined || mapped[field] === '') {
+        mapped[field] = '-';
+      }
+    }
+    return mapped;
+  }
+
+  // Utility to map an array of students
+  private mapStudentsArrayToDash(
+    students: Partial<IStudentGrade>[]
+  ): Partial<IStudentGrade>[] {
+    return students.map((s) => this.mapStudentFieldsToDash(s));
+  }
   // ========================================
   // DEPENDENCY INJECTION
   // ========================================
@@ -150,6 +169,22 @@ export class ResultUploadComponent implements OnInit {
     REFERENCE: [],
     UNREGISTERED: [],
   });
+        // Save button state
+  
+  // Helper to create a blank student row with dashes
+  createBlankStudent(): Partial<IStudentGrade> {
+    // Always return mapped blank student
+    return this.mapStudentFieldsToDash({
+      registrationNumber: '',
+      fullName: '',
+      test: '-',
+      lab: '-',
+      exam: '-',
+      total: '-',
+      grade: '-',
+      status: '-',
+    });
+  }
 
   // Track loading state for data fetching
   loadingData = signal<boolean>(false);
@@ -159,7 +194,7 @@ export class ResultUploadComponent implements OnInit {
   private debouncedUpdateTimer: any = null;
   isDraftMode = signal<boolean>(false);
   hasUnsavedChanges = signal<boolean>(false);
-  
+
   // Save button state
   canSaveChanges = signal<boolean>(false);
 
@@ -173,6 +208,11 @@ export class ResultUploadComponent implements OnInit {
     category: new FormControl('regular'),
   });
 
+  // canSaveChanges(): boolean {
+  //   // Only allow save if there are unsaved changes
+  //   return !!this.hasUnsavedChanges && this.hasUnsavedChanges();
+  // }
+
   constructor() {}
 
   // Helper method to extract units from course title
@@ -182,16 +222,16 @@ export class ResultUploadComponent implements OnInit {
       /\b(\d+)\s*units?\b/i,
       /\((\d+)\)/,
       /\b(\d+)U\b/i,
-      /\b(\d+)\s*credit/i
+      /\b(\d+)\s*credit/i,
     ];
-    
+
     for (const pattern of unitPatterns) {
       const match = courseTitle.match(pattern);
       if (match) {
         return parseInt(match[1], 10);
       }
     }
-    
+
     // Default to 3 units if not found
     return 3;
   }
@@ -393,17 +433,25 @@ export class ResultUploadComponent implements OnInit {
               'Raw studentsWithoutEntries from API:',
               studentsWithoutEntries
             );
+            // Map all grade fields to dash before updating state
+            const mappedEntries = this.mapStudentsArrayToDash(entries || []);
+            const mappedStudentsWithoutEntries = this.mapStudentsArrayToDash(
+              studentsWithoutEntries || []
+            );
+            console.log('Mapped entries for UI:', mappedEntries);
+            console.log(
+              'Mapped studentsWithoutEntries for UI:',
+              mappedStudentsWithoutEntries
+            );
             console.log('Analytics from getResultEntries:', {
               total,
               totalPass,
               totalFail,
               analytics,
-              entriesCount: entries?.length || 0,
-              studentsWithoutEntriesCount: studentsWithoutEntries?.length || 0,
+              entriesCount: mappedEntries.length,
+              studentsWithoutEntriesCount: mappedStudentsWithoutEntries.length,
               calculatedTotal: totalStudentsCount,
             });
-
-            // Update only the current segment data, preserve others
             const segmentKey = this.activeSegment().value as SegmentValue;
 
             // Filter entries to separate students with actual results from those without
@@ -413,46 +461,26 @@ export class ResultUploadComponent implements OnInit {
             (entries || []).forEach((student, index) => {
               console.log(`Processing entry ${index}:`, student);
 
-              // Check if student has meaningful data (not just zeros or empty values)
-              const testValue =
-                typeof student.test === 'string'
-                  ? parseFloat(student.test)
-                  : student.test;
-              const labValue =
-                typeof student.lab === 'string'
-                  ? parseFloat(student.lab)
-                  : student.lab;
-              const examValue =
-                typeof student.exam === 'string'
-                  ? parseFloat(student.exam)
-                  : student.exam;
-              const totalValue =
-                typeof student.total === 'string'
-                  ? parseFloat(student.total)
-                  : student.total;
-
-              const hasActualResults =
-                (testValue !== undefined &&
-                  testValue !== null &&
-                  !isNaN(testValue) &&
-                  testValue > 0) ||
-                (labValue !== undefined &&
-                  labValue !== null &&
-                  !isNaN(labValue) &&
-                  labValue > 0) ||
-                (examValue !== undefined &&
-                  examValue !== null &&
-                  !isNaN(examValue) &&
-                  examValue > 0) ||
-                (totalValue !== undefined &&
-                  totalValue !== null &&
-                  !isNaN(totalValue) &&
-                  totalValue > 0);
+              // Treat 0 as a valid input; only show dash if all are empty/null/undefined
+              const hasActualResults = [
+                student.test,
+                student.lab,
+                student.exam,
+                student.total,
+              ].some(
+                (v) =>
+                  v !== undefined && v !== null && v !== '' && !isNaN(Number(v))
+              );
 
               console.log(
                 `Entry ${index} has actual results:`,
                 hasActualResults,
-                { testValue, labValue, examValue, totalValue }
+                {
+                  test: student.test,
+                  lab: student.lab,
+                  exam: student.exam,
+                  total: student.total,
+                }
               );
 
               if (hasActualResults) {
@@ -547,7 +575,7 @@ export class ResultUploadComponent implements OnInit {
             // Use update to preserve other segment data
             this.students.update((current) => ({
               ...current,
-              [segmentKey]: combinedResults,
+              [segmentKey]: this.mapStudentsArrayToDash(combinedResults),
             }));
 
             // Update analytics immediately after data is loaded
@@ -709,7 +737,7 @@ export class ResultUploadComponent implements OnInit {
     const dialogRef = this.dialog.open(ConfirmationComponent, {
       width: '600px',
       data: {
-        message: 'Are you sure you want to save these changes? Note, if you save these changes, You can now send to the course coordinator.',
+        message: 'Are you sure you want to save these changes?  if you save these changes, You can now send to the course coordinator.',
         subTitle: 'Kindly confirm this action'
       },
     });
@@ -721,9 +749,12 @@ export class ResultUploadComponent implements OnInit {
     });
   }
 
-  private performSaveAndNavigate() {
+private performSaveAndNavigate() {
     const currentSegment = this.activeSegment().value as SegmentValue;
     const currentStudents = this.students()[currentSegment] || [];
+
+
+
 
     // Filter only students with actual data changes
     const updatedEntries = currentStudents
@@ -763,7 +794,10 @@ export class ResultUploadComponent implements OnInit {
               'Success',
               'Changes saved successfully'
             );
-            // Transfer data to result management and clear my-results draft
+            // Clear draft after successful save
+            this.clearDraft();
+            // Refresh data to get updated analytics
+            this.getResultEntries();
             this.transferToResultManagement();
             // Navigate to result management
             this.router.navigate(['/result-management']);
@@ -854,12 +888,21 @@ export class ResultUploadComponent implements OnInit {
     let totalPass = 0;
     let totalFail = 0;
 
-    currentStudents.forEach((student) => {
-      if (student.grade && student.grade !== '-') {
-        const grade = student.grade.toUpperCase();
+    // Only count students with a valid grade (not '-', '', undefined, null)
+    const studentsWithGrades = currentStudents.filter((student) => {
+      return (
+        student.grade !== undefined &&
+        student.grade !== '-' &&
+        student.grade !== '' &&
+        student.grade !== null
+      );
+    });
+
+    studentsWithGrades.forEach((student) => {
+      if (student.grade) {
+        const grade = student.grade.toString().toUpperCase();
         if (analytics.hasOwnProperty(grade)) {
           analytics[grade as keyof typeof analytics]++;
-
           if (['A', 'B', 'C', 'D', 'E'].includes(grade)) {
             totalPass++;
           } else if (grade === 'F') {
@@ -879,16 +922,15 @@ export class ResultUploadComponent implements OnInit {
     ];
 
     this.analyticsChartData.set(analyticsData);
-    this.totalStudent.set(currentStudents.length);
+    this.totalStudent.set(studentsWithGrades.length);
     this.totalStudentPass.set(totalPass);
     this.totalStudentFail.set(totalFail);
-    
-    // Update save button state
+// Update save button state
     this.updateSaveButtonState();
 
     console.log('Real-time analytics updated:', {
       segment: currentSegment,
-      totalStudents: currentStudents.length,
+      totalStudents: studentsWithGrades.length,
       totalPass,
       totalFail,
       analytics,
@@ -931,7 +973,7 @@ export class ResultUploadComponent implements OnInit {
     );
 
     const currentSegment = this.activeSegment().value as SegmentValue;
-    
+
     // Mark as having unsaved changes immediately
     this.hasUnsavedChanges.set(true);
 
@@ -941,14 +983,19 @@ export class ResultUploadComponent implements OnInit {
     }
 
     // Debounce the data update to prevent focus loss during typing
+    // Always map updatedData to dash before updating
+    const mappedData = this.mapStudentsArrayToDash(updatedData);
     this.debouncedUpdateTimer = setTimeout(() => {
-      this.performDebouncedUpdate(updatedData, currentSegment);
+      this.performDebouncedUpdate(mappedData, currentSegment);
     }, 1500); // Wait 1.5 seconds after user stops typing
   }
 
-  private performDebouncedUpdate(updatedData: Partial<IStudentGrade>[], currentSegment: SegmentValue) {
+  private performDebouncedUpdate(
+    updatedData: Partial<IStudentGrade>[],
+    currentSegment: SegmentValue
+  ) {
     console.log('Performing debounced update for segment:', currentSegment);
-    
+
     this.isUpdatingData = true;
 
     // Update students data
@@ -983,7 +1030,7 @@ export class ResultUploadComponent implements OnInit {
     // Schedule auto-save after 2 seconds of inactivity
     this.autoSaveTimer = setTimeout(() => {
       this.autoSaveChanges();
-    }, 2000);
+    }, 3000);
   }
 
   private autoSaveChanges() {
@@ -1055,22 +1102,26 @@ export class ResultUploadComponent implements OnInit {
     }
 
     // Calculate completion percentage
-    const studentsWithGrades = currentStudents.filter(s => 
-      (s.test !== undefined && s.test !== '-' && s.test !== '') || 
-      (s.lab !== undefined && s.lab !== '-' && s.lab !== '') || 
-      (s.exam !== undefined && s.exam !== '-' && s.exam !== '')
+    const studentsWithGrades = currentStudents.filter(
+      (s) =>
+        (s.test !== undefined && s.test !== '-' && s.test !== '') ||
+        (s.lab !== undefined && s.lab !== '-' && s.lab !== '') ||
+        (s.exam !== undefined && s.exam !== '-' && s.exam !== '')
     );
-    
-    const completionPercentage = currentStudents.length > 0 
-      ? Math.round((studentsWithGrades.length / currentStudents.length) * 100)
-      : 0;
-    
+
+    const completionPercentage =
+      currentStudents.length > 0
+        ? Math.round((studentsWithGrades.length / currentStudents.length) * 100)
+        : 0;
+
     // Get course details from form
     const courseDetails = {
       courseTitle: this.courseForm.get('course')?.value || 'Unknown Course',
       session: this.courseForm.get('session')?.value || 'Unknown Session',
       level: this.courseForm.get('level')?.value || 'Unknown Level',
-      units: this.extractUnitsFromCourse(this.courseForm.get('course')?.value || ''),
+      units: this.extractUnitsFromCourse(
+        this.courseForm.get('course')?.value || ''
+      ),
     };
 
     const draftData = {
@@ -1084,7 +1135,7 @@ export class ResultUploadComponent implements OnInit {
       totalStudents: currentStudents.length,
       studentsWithGrades: studentsWithGrades.length,
       completionPercentage,
-      isDraft: true
+      isDraft: true,
     };
 
     try {
@@ -1107,8 +1158,8 @@ export class ResultUploadComponent implements OnInit {
   }
 
   private addToMainDraftsList(draftData: any) {
-    const draftsKey = 'result_drafts_list';
-    const existingDrafts = JSON.parse(localStorage.getItem(draftsKey) || '[]');
+  const draftsKey = 'result_drafts_list';
+  const existingDrafts = JSON.parse(localStorage.getItem(draftsKey) || '[]');
 
     const draftInfo = {
       resultId: this.resultId,
@@ -1147,7 +1198,7 @@ export class ResultUploadComponent implements OnInit {
         totalWithGradesAllSegments = totalWithGradesAllSegments - (segmentData?.studentsWithGrades || 0) + draftData.studentsWithGrades;
       }
       
-      existingDrafts[existingIndex] = {
+      const updatedDraft = {
         ...existing,
         timestamp: draftInfo.timestamp,
         segments: updatedSegments,
@@ -1164,9 +1215,12 @@ export class ResultUploadComponent implements OnInit {
           }
         }
       };
+      // Remove old draft and insert updated at the top
+      existingDrafts.splice(existingIndex, 1);
+      existingDrafts.unshift(updatedDraft);
     } else {
-      // Add new draft
-      existingDrafts.push({
+      // Add new draft at the top
+      existingDrafts.unshift({
         ...draftInfo,
         segmentData: {
           [this.activeSegment().value]: {
@@ -1200,10 +1254,11 @@ export class ResultUploadComponent implements OnInit {
           // Set loading flag to prevent table emissions during draft loading
           this.isLoadingData = true;
 
-          // Restore students data
+          // Restore students data, mapping all grade fields to dash
           this.students.update((current) => ({
             ...current,
-            [this.activeSegment().value as SegmentValue]: draft.students,
+            [this.activeSegment().value as SegmentValue]:
+              this.mapStudentsArrayToDash(draft.students),
           }));
 
           this.isDraftMode.set(true);
@@ -1244,7 +1299,6 @@ export class ResultUploadComponent implements OnInit {
     this.isDraftMode.set(false);
     this.hasUnsavedChanges.set(false);
   }
-
   private transferToResultManagement() {
     // Get all current data
     const allSegments: SegmentValue[] = ['REGULAR', 'REFERENCE', 'UNREGISTERED'];
@@ -1328,7 +1382,7 @@ export class ResultUploadComponent implements OnInit {
   triggerAnalyticsUpdate() {
     this.updateAnalyticsRealTime();
   }
-  
+
   // Check if all necessary rows are filled
   private updateSaveButtonState() {
     const currentSegment = this.activeSegment().value as SegmentValue;
@@ -1450,37 +1504,65 @@ export class ResultUploadComponent implements OnInit {
     // Separate new entries from existing entries
     const newEntries = currentStudents
       .filter((student) => {
-        const hasScores =
-          student.test !== '-' || student.lab !== '-' || student.exam !== '-';
+        const test = (student as any)?.test ?? '-';
+        const lab = (student as any)?.lab ?? '-';
+        const exam = (student as any)?.exam ?? '-';
+        const hasScores = test !== '-' || lab !== '-' || exam !== '-';
         return (
           hasScores &&
-          !student._id &&
-          student.registrationNumber &&
-          student.fullName
+          !(student as any)?._id &&
+          (student as any)?.registrationNumber &&
+          (student as any)?.fullName
         ); // No _id means new entry
       })
       .map((student) => ({
-        registrationNumber: student.registrationNumber!,
-        fullName: student.fullName!,
-        test: student.test === '-' ? 0 : Number(student.test),
-        lab: student.lab === '-' ? 0 : Number(student.lab),
-        exam: student.exam === '-' ? 0 : Number(student.exam),
-        total: student.total === '-' ? 0 : Number(student.total),
+        registrationNumber: (student as any)?.registrationNumber!,
+        fullName: (student as any)?.fullName!,
+        test:
+          ((student as any)?.test ?? '-') === '-'
+            ? 0
+            : Number((student as any)?.test),
+        lab:
+          ((student as any)?.lab ?? '-') === '-'
+            ? 0
+            : Number((student as any)?.lab),
+        exam:
+          ((student as any)?.exam ?? '-') === '-'
+            ? 0
+            : Number((student as any)?.exam),
+        total:
+          ((student as any)?.total ?? '-') === '-'
+            ? 0
+            : Number((student as any)?.total),
         result: this.resultId!,
       }));
 
     const existingEntries = currentStudents
       .filter((student) => {
-        const hasScores =
-          student.test !== '-' || student.lab !== '-' || student.exam !== '-';
-        return hasScores && student._id; // Has _id means existing entry
+        const test = (student as any)?.test ?? '-';
+        const lab = (student as any)?.lab ?? '-';
+        const exam = (student as any)?.exam ?? '-';
+        const hasScores = test !== '-' || lab !== '-' || exam !== '-';
+        return hasScores && (student as any)?._id; // Has _id means existing entry
       })
       .map((student) => ({
-        _id: student._id,
-        test: student.test === '-' ? 0 : Number(student.test),
-        lab: student.lab === '-' ? 0 : Number(student.lab),
-        exam: student.exam === '-' ? 0 : Number(student.exam),
-        total: student.total === '-' ? 0 : Number(student.total),
+        _id: (student as any)?._id,
+        test:
+          ((student as any)?.test ?? '-') === '-'
+            ? 0
+            : Number((student as any)?.test),
+        lab:
+          ((student as any)?.lab ?? '-') === '-'
+            ? 0
+            : Number((student as any)?.lab),
+        exam:
+          ((student as any)?.exam ?? '-') === '-'
+            ? 0
+            : Number((student as any)?.exam),
+        total:
+          ((student as any)?.total ?? '-') === '-'
+            ? 0
+            : Number((student as any)?.total),
       }));
 
     if (newEntries.length === 0 && existingEntries.length === 0) {

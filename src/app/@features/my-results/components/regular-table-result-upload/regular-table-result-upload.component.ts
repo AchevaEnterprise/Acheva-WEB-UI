@@ -40,6 +40,7 @@ export class RegularTableResultUploadComponent {
     // Watch for input changes without causing re-renders
     effect(() => {
       const students = this.students();
+
       untracked(() => {
         if (students) {
           this.studentsData = students;
@@ -54,7 +55,15 @@ export class RegularTableResultUploadComponent {
 
   updateField(element: any, field: string, event: Event) {
     const input = event.target as HTMLInputElement;
-    element[field] = input.value;
+    // If input is empty, set to '-'. If input is a number (including 0), keep as number string.
+    const value = input.value.trim();
+    if (value === '' || value === '-') {
+      element[field] = '-';
+    } else if (!isNaN(Number(value))) {
+      element[field] = value;
+    } else {
+      element[field] = '-';
+    }
     // Don't trigger any updates to prevent focus loss
   }
 

@@ -45,14 +45,14 @@ export class LayoutComponent implements OnInit {
   }
 
   ngOnInit(): void {
-     //Delay API calls to allow proper authentication flow
+    //Delay API calls to allow proper authentication flow
     setTimeout(() => {
       if (this.authService.isAuthenticated) {
-       this.store.dispatch(loadProfile());
-         this.loadLinkedAccounts();
+        this.store.dispatch(loadProfile());
+        this.loadLinkedAccounts();
       }
     }, 1000);
-   }
+  }
 
   loadLinkedAccounts() {
     this.store.dispatch(loadProfileLinkedAccounts());

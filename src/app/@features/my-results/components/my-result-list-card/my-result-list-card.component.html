@@ -1,5 +1,5 @@
-<div class="bg-white border-b border-[#E5E7EB] py-4">
-  <div class="flex items-center justify-between w-full">
+<div class="bg-white border-b border-[#E5E7EB] py-6">
+  <div class="flex items-center justify-between w-full gap-8">
     <!-- Course Title and Code -->
     <div class="flex-1 min-w-0 pr-4">
       <h5 class="acva-para-2 fw-500 text-[#111827] mb-1 truncate">
@@ -9,9 +9,7 @@
             : result()?.course?.courseTitle
         }}
       </h5>
-      <p class="acva-caption text-[#6B7280] fw-400">
-        CSC 101
-      </p>
+      <p class="acva-caption text-[#6B7280] fw-400">CSC 101</p>
     </div>
 
     <!-- Units -->
@@ -21,22 +19,19 @@
           result()?.isDraft
             ? result()?.courseDetails?.units
             : result()?.course?.courseLoad
-        }} Units
+        }}
+        Units
       </p>
     </div>
 
     <!-- Semester -->
     <div class="text-center px-4">
-      <p class="acva-para-1 fw-400 text-[#374151]">
-        1st Semester
-      </p>
+      <p class="acva-para-1 fw-400 text-[#374151]">1st Semester</p>
     </div>
 
     <!-- Session -->
     <div class="text-center px-4">
-      <p class="acva-para-1 fw-400 text-[#374151]">
-        2024/2025
-      </p>
+      <p class="acva-para-1 fw-400 text-[#374151]">2024/2025</p>
     </div>
 
     <!-- Students Count -->
@@ -50,14 +45,17 @@
     <div class="flex items-center gap-3 px-4 min-w-[180px]">
       <div class="w-24">
         <div class="w-full bg-[#E5E7EB] rounded-full h-3">
-          <div 
+          <div
             class="h-3 bg-[#2793FF] rounded-full transition-all duration-300"
-            [style.width.%]="result()?.isDraft ? (result()?.completionPercentage || 0) : 100">
-          </div>
+            [style.width.%]="
+              result()?.isDraft ? result()?.completionPercentage || 0 : 100
+            "
+          ></div>
         </div>
       </div>
       <span class="acva-caption text-[#6B7280] whitespace-nowrap">
-        {{ result()?.isDraft ? result()?.completionPercentage || 0 : 100 }}% done
+        {{ result()?.isDraft ? result()?.completionPercentage || 0 : 100 }}%
+        done
       </span>
     </div>
 

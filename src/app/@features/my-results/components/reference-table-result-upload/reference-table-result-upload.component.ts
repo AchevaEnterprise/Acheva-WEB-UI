@@ -55,6 +55,30 @@ import { EmptyStateComponent } from '../../../../@shared/components/empty-state/
   exportAs: 'referenceTableResultUploadRef',
 })
 export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
+  // Utility: returns true if any of test/lab/exam is a number (including 0)
+  private hasAnyScore(row: any): boolean {
+    const isFilled = (val: any) => {
+      // Accept 0 as valid, but not empty string/null/undefined
+      if (val === 0 || val === '0') return true;
+      return (
+        val !== undefined && val !== null && val !== '' && !isNaN(Number(val))
+      );
+    };
+    return isFilled(row?.test) || isFilled(row?.lab) || isFilled(row?.exam);
+  }
+
+  // For template: get grade for display (show '-' unless any score is filled, including 0)
+  getDisplayGrade(index: number): string {
+    const row = this.paginatedRows()[index]?.value;
+    // If any score is 0 or more, show grade, else '-'
+    return this.hasAnyScore(row) ? row?.grade || 'F' : '-';
+  }
+
+  // For template: get status for display (show 'PENDING' unless any score is filled, including 0)
+  getDisplayStatus(index: number): string {
+    const row = this.paginatedRows()[index]?.value;
+    return this.hasAnyScore(row) ? row?.status || 'FAIL' : 'PENDING';
+  }
   // Injected services
   private readonly studentService = inject(StudentService);
   private readonly fb = inject(FormBuilder);
@@ -210,18 +234,37 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
   // Form management
   createRow(student: Partial<IStudentGrade & { _id: string }>): FormGroup {
     const row = this.fb.group({
-      _id: [student._id || ''], // Add ID field to track entries
+      _id: [student._id ?? ''], // Add ID field to track entries
       registrationNumber: [
-        student.registrationNumber || '',
+        student.registrationNumber ?? '',
         Validators.required,
       ],
-      fullName: [student.fullName || '', Validators.required],
-      test: [student.test ?? '', [Validators.min(0), Validators.max(30)]],
-      lab: [student.lab ?? '', [Validators.min(0), Validators.max(30)]],
-      exam: [student.exam ?? '', [Validators.min(0), Validators.max(70)]],
+      fullName: [student.fullName ?? '', Validators.required],
+      test: [
+        student.test !== undefined &&
+        student.test !== null &&
+        student.test !== ''
+          ? student.test
+          : '',
+        [Validators.min(0), Validators.max(30)],
+      ],
+      lab: [
+        student.lab !== undefined && student.lab !== null && student.lab !== ''
+          ? student.lab
+          : '',
+        [Validators.min(0), Validators.max(30)],
+      ],
+      exam: [
+        student.exam !== undefined &&
+        student.exam !== null &&
+        student.exam !== ''
+          ? student.exam
+          : '',
+        [Validators.min(0), Validators.max(70)],
+      ],
       total: [{ value: '', disabled: true }],
-      grade: [student.grade || '-'],
-      status: [student.status || 'PENDING'],
+      grade: [student.grade ?? '-'],
+      status: [student.status ?? 'PENDING'],
     });
 
     ['test', 'lab', 'exam'].forEach((field) => {
@@ -236,9 +279,22 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
   }
 
   private calculateTotalAndGrade(row: FormGroup): void {
-    const test = Number(row.get('test')?.value) || 0;
-    const lab = Number(row.get('lab')?.value) || 0;
-    const exam = Number(row.get('exam')?.value) || 0;
+    // Use strict check so 0 is preserved, not treated as empty
+    const testRaw = row.get('test')?.value;
+    const labRaw = row.get('lab')?.value;
+    const examRaw = row.get('exam')?.value;
+    const test =
+      testRaw !== '' && testRaw !== null && testRaw !== undefined
+        ? Number(testRaw)
+        : 0;
+    const lab =
+      labRaw !== '' && labRaw !== null && labRaw !== undefined
+        ? Number(labRaw)
+        : 0;
+    const exam =
+      examRaw !== '' && examRaw !== null && examRaw !== undefined
+        ? Number(examRaw)
+        : 0;
     const total = test + lab + exam;
 
     row.get('total')?.setValue(total, { emitEvent: false });
