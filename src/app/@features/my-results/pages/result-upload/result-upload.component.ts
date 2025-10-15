@@ -155,10 +155,10 @@ export class ResultUploadComponent implements OnInit {
     ],
   });
 
-  analyticsChartData = signal<number[]>([]);
-  totalStudent = signal<number | null>(null);
-  totalStudentPass = signal<number | null>(null);
-  totalStudentFail = signal<number | null>(null);
+  analyticsChartData = signal<number[]>([0, 0, 0, 0, 0, 0]);
+  totalStudent = signal<number>(0);
+  totalStudentPass = signal<number>(0);
+  totalStudentFail = signal<number>(0);
 
   uploadingResult = signal<boolean>(false);
   selectedStudents = signal<Partial<IStudentGrade>[]>([]);
@@ -258,18 +258,25 @@ export class ResultUploadComponent implements OnInit {
     }
 
     try {
+      // Always try to load data, don't let getResult errors block initialization
       this.getResult();
+      
       // Try to load from draft first, then from API
       if (!this.loadFromDraft()) {
         this.getResultEntries();
       }
+      
+      // Force analytics update after all data loading attempts
+      setTimeout(() => {
+        this.updateAnalyticsRealTime();
+        console.log('Analytics updated after init - students count:', this.students()[this.activeSegment().value as SegmentValue]?.length || 0);
+      }, 200);
     } catch (error) {
       console.error('Error during component initialization:', error);
-      this.toast.showNotification(
-        'error',
-        'Initialization Error',
-        'Failed to initialize component'
-      );
+      // Still try to load result entries even if initialization has issues
+      this.getResultEntries();
+      // Still update analytics even if there are errors
+      this.updateAnalyticsRealTime();
     }
   }
 
@@ -306,6 +313,12 @@ export class ResultUploadComponent implements OnInit {
     console.log('Getting result for ID:', this.resultId);
     this.loadingData.set(true);
 
+    if (!this.resultId) {
+      console.error('No resultId available for getResult');
+      this.loadingData.set(false);
+      return;
+    }
+
     this.resultsService
       .getResult(this.resultId!)
       .pipe(
@@ -317,7 +330,7 @@ export class ResultUploadComponent implements OnInit {
       .subscribe({
         next: (resp) => {
           console.log('getResult response:', resp);
-          if (resp.status) {
+          if (resp.status && resp.data) {
             const { analytics, course, session, level } = resp.data as {
               course: { courseTitle: string };
               session: string;
@@ -327,42 +340,38 @@ export class ResultUploadComponent implements OnInit {
             };
 
             this.courseForm.patchValue({
-              course: course.courseTitle,
-              session: session,
-              level: level,
+              course: course?.courseTitle || 'Unknown Course',
+              session: session || 'Unknown Session',
+              level: level || 'Unknown Level',
             });
 
             const analyticsData = [
-              analytics['A'] || 0,
-              analytics['B'] || 0,
-              analytics['C'] || 0,
-              analytics['D'] || 0,
-              analytics['E'] || 0,
-              analytics['F'] || 0,
+              analytics?.['A'] || 0,
+              analytics?.['B'] || 0,
+              analytics?.['C'] || 0,
+              analytics?.['D'] || 0,
+              analytics?.['E'] || 0,
+              analytics?.['F'] || 0,
             ];
 
             this.analyticsChartData.set(analyticsData);
-            this.totalStudent.set(analytics['total'] || 0);
-            this.totalStudentPass.set(analytics['totalPass'] || 0);
-            this.totalStudentFail.set(analytics['totalFail'] || 0);
+            this.totalStudent.set(analytics?.['total'] || 0);
+            this.totalStudentPass.set(analytics?.['totalPass'] || 0);
+            this.totalStudentFail.set(analytics?.['totalFail'] || 0);
 
             console.log('Result data loaded successfully');
           } else {
-            console.error('getResult failed with status false:', resp);
-            this.toast.showNotification(
-              'error',
-              'Load Error',
-              resp.message || 'Failed to load result'
-            );
+            console.error('getResult failed - status false or no data:', resp);
+            // Don't show error toast if just missing data, continue with defaults
+            console.log('Continuing with default values');
           }
         },
         error: (error) => {
-          console.error('Error fetching result:', error);
-          this.toast.showNotification(
-            'error',
-            'Data Load Error',
-            'Failed to load result data'
-          );
+          console.error('Error fetching result - full error:', error);
+          console.error('Error status:', error.status);
+          console.error('Error message:', error.message);
+          // Don't show error toast, just log and continue
+          console.log('Continuing despite getResult error');
         },
       });
   }
@@ -578,12 +587,13 @@ export class ResultUploadComponent implements OnInit {
               [segmentKey]: this.mapStudentsArrayToDash(combinedResults),
             }));
 
-            // Update analytics immediately after data is loaded
+            // Clear loading flag after data is set
+            this.isLoadingData = false;
+            
+            // Force immediate analytics update
             setTimeout(() => {
               this.updateAnalyticsRealTime();
-              // Clear loading flag after data is set
-              this.isLoadingData = false;
-            }, 200);
+            }, 0);
 
             console.log(
               'Students data updated for segment:',
@@ -708,6 +718,11 @@ export class ResultUploadComponent implements OnInit {
     if (!this.loadFromDraft()) {
       console.log('No draft found, loading from API');
       this.getResultEntries();
+    } else {
+      // If draft was loaded, ensure analytics are updated immediately
+      setTimeout(() => {
+        this.updateAnalyticsRealTime();
+      }, 0);
     }
     console.log('=== SEGMENT SWITCH END ===');
   }
@@ -888,7 +903,7 @@ private performSaveAndNavigate() {
     let totalPass = 0;
     let totalFail = 0;
 
-    // Only count students with a valid grade (not '-', '', undefined, null)
+    // Count students with valid grades for grade distribution
     const studentsWithGrades = currentStudents.filter((student) => {
       return (
         student.grade !== undefined &&
@@ -922,15 +937,18 @@ private performSaveAndNavigate() {
     ];
 
     this.analyticsChartData.set(analyticsData);
-    this.totalStudent.set(studentsWithGrades.length);
+    // Show total students immediately, not just those with grades
+    this.totalStudent.set(currentStudents.length);
     this.totalStudentPass.set(totalPass);
     this.totalStudentFail.set(totalFail);
-// Update save button state
+    
+    // Update save button state
     this.updateSaveButtonState();
 
     console.log('Real-time analytics updated:', {
       segment: currentSegment,
-      totalStudents: studentsWithGrades.length,
+      totalStudents: currentStudents.length,
+      studentsWithGrades: studentsWithGrades.length,
       totalPass,
       totalFail,
       analytics,
@@ -1030,7 +1048,7 @@ private performSaveAndNavigate() {
     // Schedule auto-save after 2 seconds of inactivity
     this.autoSaveTimer = setTimeout(() => {
       this.autoSaveChanges();
-    }, 3000);
+    }, 9000);
   }
 
   private autoSaveChanges() {
@@ -1264,13 +1282,18 @@ private performSaveAndNavigate() {
           this.isDraftMode.set(true);
           this.hasUnsavedChanges.set(true);
 
-          // Update analytics
+          // Clear loading flag before analytics update
+          this.isLoadingData = false;
+          
+          // Force immediate analytics update - call multiple times to ensure it works
+          this.updateAnalyticsRealTime();
           setTimeout(() => {
             this.updateAnalyticsRealTime();
-            // Clear loading flag after draft is loaded
-            this.isLoadingData = false;
-          }, 200);
-
+          }, 0);
+          setTimeout(() => {
+            this.updateAnalyticsRealTime();
+          }, 300);
+  
           console.log(
             'Successfully loaded',
             draft.students.length,

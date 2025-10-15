@@ -114,7 +114,7 @@
             <input
               class="border border-neutral-300 rounded-[8px] p-2 my-4 w-[3rem]"
               matInput
-              [value]="getControlValue(i, 'total') || '-'"
+              [value]="getControlValue(i, 'total') === '' || isNaN(getControlValue(i, 'total')) ? '-' : getControlValue(i, 'total')"
               readonly
             />
           </td>

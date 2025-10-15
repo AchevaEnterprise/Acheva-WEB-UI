@@ -55,16 +55,24 @@ export class RegularTableResultUploadComponent {
 
   updateField(element: any, field: string, event: Event) {
     const input = event.target as HTMLInputElement;
-    // If input is empty, set to '-'. If input is a number (including 0), keep as number string.
     const value = input.value.trim();
-    if (value === '' || value === '-') {
-      element[field] = '-';
-    } else if (!isNaN(Number(value))) {
-      element[field] = value;
-    } else {
-      element[field] = '-';
-    }
-    // Don't trigger any updates to prevent focus loss
+    element[field] = value === '' ? '-' : value;
+    
+    // Calculate total when any field changes
+    this.calculateTotal(element);
+  }
+
+  private calculateTotal(element: any) {
+    const test = element.test !== '-' && element.test !== '' && !isNaN(Number(element.test)) ? Number(element.test) : 0;
+    const lab = element.lab !== '-' && element.lab !== '' && !isNaN(Number(element.lab)) ? Number(element.lab) : 0;
+    const exam = element.exam !== '-' && element.exam !== '' && !isNaN(Number(element.exam)) ? Number(element.exam) : 0;
+    
+    // Check if any field has valid numeric input
+    const hasValidInput = (element.test !== '-' && element.test !== '' && !isNaN(Number(element.test))) ||
+                          (element.lab !== '-' && element.lab !== '' && !isNaN(Number(element.lab))) ||
+                          (element.exam !== '-' && element.exam !== '' && !isNaN(Number(element.exam)));
+    
+    element.total = hasValidInput ? test + lab + exam : '-';
   }
 
   onInputBlur() {

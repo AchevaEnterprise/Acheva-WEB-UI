@@ -74,10 +74,10 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
     return this.hasAnyScore(row) ? row?.grade || 'F' : '-';
   }
 
-  // For template: get status for display (show 'PENDING' unless any score is filled, including 0)
+  // For template: get status for display (show empty unless any score is filled, including 0)
   getDisplayStatus(index: number): string {
     const row = this.paginatedRows()[index]?.value;
-    return this.hasAnyScore(row) ? row?.status || 'FAIL' : 'PENDING';
+    return this.hasAnyScore(row) ? row?.status || 'FAIL' : '';
   }
   // Injected services
   private readonly studentService = inject(StudentService);
@@ -264,7 +264,7 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
       ],
       total: [{ value: '', disabled: true }],
       grade: [student.grade ?? '-'],
-      status: [student.status ?? 'PENDING'],
+      status: [student.status ?? '-'],
     });
 
     ['test', 'lab', 'exam'].forEach((field) => {
@@ -283,6 +283,13 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
     const testRaw = row.get('test')?.value;
     const labRaw = row.get('lab')?.value;
     const examRaw = row.get('exam')?.value;
+    
+    // Check if any field has been filled (including 0)
+    const hasAnyInput = 
+      (testRaw !== '' && testRaw !== null && testRaw !== undefined) ||
+      (labRaw !== '' && labRaw !== null && labRaw !== undefined) ||
+      (examRaw !== '' && examRaw !== null && examRaw !== undefined);
+    
     const test =
       testRaw !== '' && testRaw !== null && testRaw !== undefined
         ? Number(testRaw)
@@ -297,7 +304,8 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
         : 0;
     const total = test + lab + exam;
 
-    row.get('total')?.setValue(total, { emitEvent: false });
+    // Show total as number if any input exists, otherwise show empty
+    row.get('total')?.setValue(hasAnyInput ? total : '', { emitEvent: false });
 
     const { grade, status } = this.getGradeAndStatus(total);
     row.get('grade')?.setValue(grade, { emitEvent: false });
@@ -403,7 +411,7 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
         lab: '',
         exam: '',
         grade: '-',
-        status: 'PENDING',
+        status: '-',
       };
 
       this.rows.push(this.createRow(newStudent));
@@ -601,5 +609,9 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
     if (this.form.valid) {
       this.tableUpdateEvent.emit(this.form.value.rows);
     }
+  }
+
+  isNaN(value: any): boolean {
+    return isNaN(value);
   }
 }
