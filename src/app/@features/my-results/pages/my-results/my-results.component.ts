@@ -51,6 +51,8 @@ export class MyResultsComponent implements OnInit {
   isloadingResults = signal(false);
   results = signal<any[]>([]);
   drafts = signal<any[]>([]);
+  allDrafts = signal<any[]>([]);
+  searchTerm = signal<string>('');
 
   view = signal<'list' | 'grid'>('list');
   viewLabel = signal<string>('Grid View');
@@ -114,6 +116,7 @@ export class MyResultsComponent implements OnInit {
       console.log('Loading drafts from localStorage:', draftsListData);
 
       if (!draftsListData) {
+        this.allDrafts.set([]);
         this.drafts.set([]);
         this.isloadingResults.set(false);
         return;
@@ -170,9 +173,11 @@ export class MyResultsComponent implements OnInit {
         .filter(Boolean);
 
       console.log('Processed drafts:', draftsWithDetails);
-      this.drafts.set(draftsWithDetails);
+      this.allDrafts.set(draftsWithDetails);
+      this.filterDrafts();
     } catch (error) {
       console.error('Error loading drafts:', error);
+      this.allDrafts.set([]);
       this.drafts.set([]);
     }
 
@@ -254,6 +259,27 @@ export class MyResultsComponent implements OnInit {
       // Refresh drafts display
       this.loadDrafts();
     });
+  }
+
+  filterDrafts() {
+    const term = this.searchTerm().toLowerCase();
+    if (!term) {
+      this.drafts.set(this.allDrafts());
+      return;
+    }
+    
+    const filtered = this.allDrafts().filter(draft => 
+      draft.title?.toLowerCase().includes(term) ||
+      draft.courseDetails?.courseTitle?.toLowerCase().includes(term) ||
+      draft.courseDetails?.session?.toLowerCase().includes(term) ||
+      draft.courseDetails?.level?.toLowerCase().includes(term)
+    );
+    this.drafts.set(filtered);
+  }
+
+  onSearch(searchTerm: string) {
+    this.searchTerm.set(searchTerm);
+    this.filterDrafts();
   }
 
   viewResult(result: IResult) {

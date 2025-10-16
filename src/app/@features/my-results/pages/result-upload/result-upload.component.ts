@@ -8,7 +8,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
-import { ActivatedRoute , Router  } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { finalize } from 'rxjs';
 import { IDepartment } from '../../../../@core/models/school.model';
 import { ToastService } from '../../../../@core/utility/toast.service';
@@ -169,8 +169,8 @@ export class ResultUploadComponent implements OnInit {
     REFERENCE: [],
     UNREGISTERED: [],
   });
-        // Save button state
-  
+  // Save button state
+
   // Helper to create a blank student row with dashes
   createBlankStudent(): Partial<IStudentGrade> {
     // Always return mapped blank student
@@ -213,7 +213,7 @@ export class ResultUploadComponent implements OnInit {
   //   return !!this.hasUnsavedChanges && this.hasUnsavedChanges();
   // }
 
-  constructor() {}
+  constructor() { }
 
   // Helper method to extract units from course title
   private extractUnitsFromCourse(courseTitle: string): number {
@@ -260,12 +260,12 @@ export class ResultUploadComponent implements OnInit {
     try {
       // Always try to load data, don't let getResult errors block initialization
       this.getResult();
-      
+
       // Try to load from draft first, then from API
       if (!this.loadFromDraft()) {
         this.getResultEntries();
       }
-      
+
       // Force analytics update after all data loading attempts
       setTimeout(() => {
         this.updateAnalyticsRealTime();
@@ -589,7 +589,7 @@ export class ResultUploadComponent implements OnInit {
 
             // Clear loading flag after data is set
             this.isLoadingData = false;
-            
+
             // Force immediate analytics update
             setTimeout(() => {
               this.updateAnalyticsRealTime();
@@ -764,7 +764,7 @@ export class ResultUploadComponent implements OnInit {
     });
   }
 
-private performSaveAndNavigate() {
+  private performSaveAndNavigate() {
     const currentSegment = this.activeSegment().value as SegmentValue;
     const currentStudents = this.students()[currentSegment] || [];
 
@@ -941,7 +941,7 @@ private performSaveAndNavigate() {
     this.totalStudent.set(currentStudents.length);
     this.totalStudentPass.set(totalPass);
     this.totalStudentFail.set(totalFail);
-    
+
     // Update save button state
     this.updateSaveButtonState();
 
@@ -1036,7 +1036,7 @@ private performSaveAndNavigate() {
       this.updateAnalyticsRealTime();
       this.scheduleAutoSave();
       this.isUpdatingData = false;
-    }, 100);
+    }, 60);
   }
 
   private scheduleAutoSave() {
@@ -1045,10 +1045,10 @@ private performSaveAndNavigate() {
       clearTimeout(this.autoSaveTimer);
     }
 
-    // Schedule auto-save after 2 seconds of inactivity
+    // Schedule auto-save after 1 minute of inactivity
     this.autoSaveTimer = setTimeout(() => {
       this.autoSaveChanges();
-    }, 9000);
+    }, 60);
   }
 
   private autoSaveChanges() {
@@ -1176,8 +1176,8 @@ private performSaveAndNavigate() {
   }
 
   private addToMainDraftsList(draftData: any) {
-  const draftsKey = 'result_drafts_list';
-  const existingDrafts = JSON.parse(localStorage.getItem(draftsKey) || '[]');
+    const draftsKey = 'result_drafts_list';
+    const existingDrafts = JSON.parse(localStorage.getItem(draftsKey) || '[]');
 
     const draftInfo = {
       resultId: this.resultId,
@@ -1200,11 +1200,11 @@ private performSaveAndNavigate() {
       // Update existing draft with aggregated data from all segments
       const existing = existingDrafts[existingIndex];
       const updatedSegments = [...new Set([...existing.segments, this.activeSegment().value])];
-      
+
       // Calculate total completion across all segments
       let totalStudentsAllSegments = existing.totalStudents || 0;
       let totalWithGradesAllSegments = existing.studentsWithGrades || 0;
-      
+
       // If this is a new segment, add to totals
       if (!existing.segments.includes(this.activeSegment().value)) {
         totalStudentsAllSegments += draftData.totalStudents;
@@ -1215,7 +1215,7 @@ private performSaveAndNavigate() {
         totalStudentsAllSegments = totalStudentsAllSegments - (segmentData?.totalStudents || 0) + draftData.totalStudents;
         totalWithGradesAllSegments = totalWithGradesAllSegments - (segmentData?.studentsWithGrades || 0) + draftData.studentsWithGrades;
       }
-      
+
       const updatedDraft = {
         ...existing,
         timestamp: draftInfo.timestamp,
@@ -1284,7 +1284,7 @@ private performSaveAndNavigate() {
 
           // Clear loading flag before analytics update
           this.isLoadingData = false;
-          
+
           // Force immediate analytics update - call multiple times to ensure it works
           this.updateAnalyticsRealTime();
           setTimeout(() => {
@@ -1292,8 +1292,8 @@ private performSaveAndNavigate() {
           }, 0);
           setTimeout(() => {
             this.updateAnalyticsRealTime();
-          }, 300);
-  
+          }, 2000);
+
           console.log(
             'Successfully loaded',
             draft.students.length,
@@ -1359,7 +1359,7 @@ private performSaveAndNavigate() {
     // Add to result management list
     const resultManagementList = JSON.parse(localStorage.getItem('result_management_list') || '[]');
     const existingIndex = resultManagementList.findIndex((r: any) => r.resultId === this.resultId);
-    
+
     const resultInfo = {
       resultId: this.resultId,
       courseTitle: completeResultData.courseDetails.courseTitle,
@@ -1410,22 +1410,22 @@ private performSaveAndNavigate() {
   private updateSaveButtonState() {
     const currentSegment = this.activeSegment().value as SegmentValue;
     const currentStudents = this.students()[currentSegment] || [];
-    
+
     if (currentStudents.length === 0) {
       this.canSaveChanges.set(false);
       return;
     }
-    
+
     // Check if all students have at least one score filled
     const allRowsFilled = currentStudents.every((student) => {
       const hasTest = student.test !== undefined && student.test !== '-' && student.test !== '';
       const hasLab = student.lab !== undefined && student.lab !== '-' && student.lab !== '';
       const hasExam = student.exam !== undefined && student.exam !== '-' && student.exam !== '';
-      
+
       // At least one score must be filled
       return hasTest || hasLab || hasExam;
     });
-    
+
     this.canSaveChanges.set(allRowsFilled);
   }
 
@@ -1858,4 +1858,39 @@ private performSaveAndNavigate() {
     if (selectedCount === 1) return 'Delete Entry';
     return `Delete ${selectedCount} Entries`;
   }
+  
+
+  // Student search functionality
+  onStudentSearch(searchTerm: string) {
+  // const currentSegment = this.activeSegment().value as SegmentValue;
+  
+  // // Get original data (backup the first time)
+  // if (this.originalStudentsData()[currentSegment].length === 0) {
+  //   this.originalStudentsData.update((current) => ({
+  //     ...current,
+  //     [currentSegment]: [...this.students()[currentSegment]],
+  //   }));
+  // }
+  
+  // const allStudents = this.originalStudentsData()[currentSegment] || [];
+  
+  // if (!searchTerm.trim()) {
+  //   // Restore original data when search is cleared
+  //   this.students.update((current) => ({
+  //     ...current,
+  //     [currentSegment]: [...allStudents],
+  //   }));
+  //   return;
+  // }
+  
+  // const filtered = allStudents.filter(student => 
+  //   student.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //   student.registrationNumber?.toLowerCase().includes(searchTerm.toLowerCase())
+  // );
+  
+  // this.students.update((current) => ({
+  //   ...current,
+  //   [currentSegment]: filtered,
+  // }));
+}
 }

@@ -15,7 +15,7 @@
   <!-- SEARCH FILTERS -->
   <div class="flex flex-wrap justify-between gap-3">
     <div class="flex flex-wrap gap-3">
-      <app-search-input placeholder="Search Results" />
+      <app-search-input placeholder="Search Results" (searchEvent)="onSearch($event)" />
 
       <div class="input-style-1 acheva-input">
         <mat-form-field appearance="outline">
