@@ -20,6 +20,12 @@ export class LecturersService {
     );
   }
 
+  getLecturer(lecturerId: string): Observable<IAPIResponse<any>> {
+    return this.http.get<IAPIResponse<any>>(
+      `${this.lecturerUrl}/${lecturerId}`
+    );
+  }
+
   getdepartmentHOD(departmentId: string): Observable<IAPIResponse<any>> {
     return this.http.get<IAPIResponse<any>>(
       `${this.lecturerUrl}/hod/${departmentId}`

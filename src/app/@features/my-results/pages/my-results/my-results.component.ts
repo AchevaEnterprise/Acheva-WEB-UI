@@ -85,6 +85,18 @@ export class MyResultsComponent implements OnInit {
         this.loadDrafts();
       }
     });
+
+    // Listen for result transfer events
+    window.addEventListener('resultTransferred', (e: any) => {
+      console.log('Result transferred, refreshing My Results drafts');
+      this.loadDrafts();
+    });
+
+    // Listen for drafts cleared events
+    window.addEventListener('draftsCleared', (e: any) => {
+      console.log('Drafts cleared, refreshing My Results drafts');
+      this.loadDrafts();
+    });
   }
 
   getResults() {
@@ -124,6 +136,12 @@ export class MyResultsComponent implements OnInit {
 
       const draftsList = JSON.parse(draftsListData);
       const draftsWithDetails = draftsList
+        .filter((draft: any) => {
+          // EXCLUDE results that have been transferred to Results Management
+          const resultManagementKey = `result_management_${draft.resultId}`;
+          const isInResultManagement = localStorage.getItem(resultManagementKey) !== null;
+          return !isInResultManagement; // Only show drafts that haven't been transferred
+        })
         .map((draft: any) => {
           // Get the actual draft data from first available segment
           let draftData = null;

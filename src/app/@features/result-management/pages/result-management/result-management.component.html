@@ -50,6 +50,7 @@
           <app-result-management-file-table
             [status]="activeSegment().value"
             [expand]="expandView()"
+            [results]="results()"
             (viewResultEvent)="viewResult($event)"
           />
 
