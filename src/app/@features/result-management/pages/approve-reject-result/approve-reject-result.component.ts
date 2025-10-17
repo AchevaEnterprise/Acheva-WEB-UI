@@ -129,6 +129,13 @@ export class ApproveRejectResultComponent implements OnInit {
       this.activeSegment().value
     );
 
+    // Check if data is already loaded from localStorage
+    const currentStudents = this.students()[this.activeSegment().value];
+    if (currentStudents && currentStudents.length > 0) {
+      console.log('Data already loaded from localStorage, skipping API call');
+      return;
+    }
+
     this.resultsService
       .getResultEntries(this.resultId!, {
         category: this.activeSegment().value,
@@ -225,6 +232,42 @@ export class ApproveRejectResultComponent implements OnInit {
   }
 
   getResult() {
+    // Try loading from localStorage first
+    const localStorageKey = `result_management_${this.resultId}`;
+    const localData = localStorage.getItem(localStorageKey);
+    
+    if (localData) {
+      try {
+        const resultData = JSON.parse(localData);
+        console.log('Loading result from localStorage:', resultData);
+        
+        // Set course form data
+        this.courseForm.patchValue({
+          course: resultData.courseDetails.courseTitle,
+          session: resultData.courseDetails.session,
+          level: resultData.courseDetails.level,
+        });
+        
+        // Set analytics data
+        this.analyticsChartData.set(resultData.analytics.chartData || []);
+        this.totalStudent.set(resultData.analytics.totalStudent || 0);
+        this.totalStudentPass.set(resultData.analytics.totalStudentPass || 0);
+        this.totalStudentFail.set(resultData.analytics.totalStudentFail || 0);
+        
+        // Load student data from localStorage
+        this.students.set(resultData.segments || {
+          REGULAR: [],
+          REFERENCE: [],
+          UNREGISTERED: [],
+        });
+        
+        return;
+      } catch (error) {
+        console.error('Error loading from localStorage:', error);
+      }
+    }
+    
+    // Fallback to API if localStorage fails
     this.resultsService.getResult(this.resultId!).subscribe({
       next: (resp) => {
         if (resp.status) {

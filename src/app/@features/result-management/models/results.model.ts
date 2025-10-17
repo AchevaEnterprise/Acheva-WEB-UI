@@ -13,15 +13,21 @@ export interface IResult {
   session: string;
   level: string;
   semester: string;
-  department: IDepartment;
-  school: ISchool;
+  department: IDepartment | any; // Allow flexible department structure
+  school: ISchool | any;
   status: ResultStatusEnum;
   uploadedBy: string;
   isApproved: boolean;
   comments: any[];
-  createdAt: Date;
-  updatedAt: Date;
-  course: ICourse;
+  createdAt: Date | string; // Allow string dates from localStorage
+  updatedAt: Date | string; // Allow string dates from localStorage
+  course: ICourse | any;
+  // Additional fields for comprehensive data
+  lecturer?: string;
+  faculty?: string;
+  createdBy?: {
+    fullName: string;
+  } | string; // Allow flexible structure
   // Draft-specific properties
   isDraft?: boolean;
   studentCount?: number;
@@ -35,6 +41,7 @@ export interface IResult {
   };
   segments?: string[];
   timestamp?: string;
+  lastModified?: string;
 }
 
 export interface ICreateResult {
