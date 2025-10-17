@@ -51,15 +51,8 @@
               [formControl]="getFormControl(i, 'test')"
               min="0"
               class="border border-neutral-300 rounded-[8px] p-2 my-4 w-[3rem]"
-              max="30"
               placeholder="-"
             />
-            @if (hasControlError(i, 'test', 'max')) {
-              <mat-error>Maximum score is 30</mat-error>
-            }
-            @if (hasControlError(i, 'test', 'min')) {
-              <mat-error>Minimum score is 0</mat-error>
-            }
           </td>
         </ng-container>
 
@@ -73,15 +66,8 @@
               [formControl]="getFormControl(i, 'lab')"
               min="0"
               class="border border-neutral-300 rounded-[8px] p-2 my-4 w-[3rem]"
-              max="30"
               placeholder="-"
             />
-            @if (hasControlError(i, 'lab', 'max')) {
-              <mat-error>Maximum score is 30</mat-error>
-            }
-            @if (hasControlError(i, 'lab', 'min')) {
-              <mat-error>Minimum score is 0</mat-error>
-            }
           </td>
         </ng-container>
 
@@ -95,15 +81,8 @@
               [formControl]="getFormControl(i, 'exam')"
               min="0"
               class="border border-neutral-300 rounded-[8px] p-2 my-4 w-[3rem]"
-              max="70"
               placeholder="-"
             />
-            @if (hasControlError(i, 'exam', 'max')) {
-              <mat-error>Maximum score is 70</mat-error>
-            }
-            @if (hasControlError(i, 'exam', 'min')) {
-              <mat-error>Minimum score is 0</mat-error>
-            }
           </td>
         </ng-container>
 
@@ -117,6 +96,9 @@
               [value]="getControlValue(i, 'total') === '' || isNaN(getControlValue(i, 'total')) ? '-' : getControlValue(i, 'total')"
               readonly
             />
+            @if (getControlValue(i, 'total') > 100) {
+              <mat-error>Maximum score is 100</mat-error>
+            }
           </td>
         </ng-container>
 
