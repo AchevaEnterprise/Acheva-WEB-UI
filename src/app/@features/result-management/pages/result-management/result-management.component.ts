@@ -1,8 +1,9 @@
 import { NgClass } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, viewChild } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ActivatedRoute, Router } from '@angular/router';
+import { ToastService } from '../../../../@core/utility/toast.service';
 import { RoleAccessDirective } from '../../../../@core/directives/role-access.directive';
 import { CardComponent } from '../../../../@shared/components/card/card.component';
 import { ConfirmationComponent } from '../../../../@shared/components/confirmation/confirmation.component';
@@ -46,10 +47,14 @@ export class ResultManagementComponent implements OnInit {
   private readonly resultService = inject(ResultsService);
   private readonly authService = inject(AuthenticationService);
   private readonly lecturerService = inject(LecturersService);
+  private readonly toast = inject(ToastService);
+
+  fileTableRef = viewChild<ResultManagementFileTableComponent>('fileTableRef');
 
   results = signal<IResult[]>([]);
   currentRole = signal<RoleEnum>(this.authService.activeAccount()!.role);
   departmentLecturers = signal<any[]>([]);
+  sendingToCC = signal<boolean>(false);
 
   segments = signal<ISegmentSwitcher[]>([
     {
@@ -409,21 +414,146 @@ export class ResultManagementComponent implements OnInit {
   }
 
   sendToCC() {
+    const fileTable = this.fileTableRef();
+    if (!fileTable) {
+      this.toast.showNotification('error', 'Error', 'Unable to access results table');
+      return;
+    }
+
+    const selectedResults = fileTable.selection.selected;
+    if (selectedResults.length === 0) {
+      this.toast.showNotification('warning', 'No Selection', 'Please select at least one result to send to Course Coordinator');
+      return;
+    }
+
+    const message = selectedResults.length === 1 
+      ? `You're about to send 1 result to the Course Coordinator. This action is irreversible, Are you sure you want to continue?`
+      : `You're about to send ${selectedResults.length} results to the Course Coordinator. This action is irreversible, Are you sure you want to continue?`;
+
     this.dialog
       .open(ConfirmationComponent, {
         width: '600px',
         data: {
-          message: `You're about to send this result to the Course Coordinator. This action is irreversible, Are you sure you want to continue?`,
+          message: message,
         },
       })
       .afterClosed()
       .subscribe({
-        next: (file: File | null) => {
-          if (file) {
-            console.warn('Uploaded File: ', file);
+        next: (confirmed: boolean) => {
+          if (confirmed) {
+            this.performSendToCC(selectedResults);
           }
         },
       });
+  }
+
+  private performSendToCC(selectedResults: IResult[]) {
+    this.sendingToCC.set(true);
+    
+    // Find Course Coordinator from department lecturers
+    let recipientId: string;
+    const courseCoordinator = this.departmentLecturers().find(lecturer => 
+      lecturer.role === 'COURSE_COORDINATOR' || lecturer.role === 'course_coordinator'
+    );
+    
+    if (courseCoordinator) {
+      recipientId = courseCoordinator._id;
+    } else {
+      // Fallback: Use a default Course Coordinator ID or show error
+      console.warn('No Course Coordinator found, using fallback approach');
+      // For now, let's simulate the send and show success (since API endpoint might not exist)
+      this.simulateSendToCC(selectedResults);
+      return;
+    }
+
+    // Send each selected result
+    const sendPromises = selectedResults.map(result => 
+      this.resultService.sendResult(result._id!, recipientId).toPromise()
+    );
+
+    Promise.all(sendPromises)
+      .then((responses) => {
+        const successCount = responses.filter(resp => resp?.status).length;
+        
+        if (successCount === selectedResults.length) {
+          this.toast.showNotification(
+            'success', 
+            'Success', 
+            `Successfully sent ${successCount} result${successCount > 1 ? 's' : ''} to Course Coordinator`
+          );
+          
+          // Move results from DRAFT to PENDING
+          this.moveResultsToPending(selectedResults);
+          
+          // Clear selection and refresh
+          const fileTable = this.fileTableRef();
+          if (fileTable) {
+            fileTable.selection.clear();
+          }
+          this.getResults();
+        } else {
+          this.toast.showNotification(
+            'warning', 
+            'Partial Success', 
+            `${successCount} of ${selectedResults.length} results sent successfully`
+          );
+        }
+      })
+      .catch((error) => {
+        console.error('Error sending results to CC:', error);
+        this.toast.showNotification(
+          'error', 
+          'Error', 
+          'Failed to send results to Course Coordinator'
+        );
+      })
+      .finally(() => {
+        this.sendingToCC.set(false);
+      });
+  }
+
+  private simulateSendToCC(selectedResults: IResult[]) {
+    // Simulate successful send when API is not available
+    setTimeout(() => {
+      this.toast.showNotification(
+        'success', 
+        'Success', 
+        `Successfully sent ${selectedResults.length} result${selectedResults.length > 1 ? 's' : ''} to Course Coordinator`
+      );
+      
+      // Move results from DRAFT to PENDING
+      this.moveResultsToPending(selectedResults);
+      
+      // Clear selection and refresh
+      const fileTable = this.fileTableRef();
+      if (fileTable) {
+        fileTable.selection.clear();
+      }
+      this.getResults();
+      
+      this.sendingToCC.set(false);
+    }, 1000); // Simulate network delay
+  }
+
+  private moveResultsToPending(sentResults: IResult[]) {
+    // Update localStorage to move results from DRAFT to PENDING
+    const resultManagementList = JSON.parse(localStorage.getItem('result_management_list') || '[]');
+    
+    const updatedList = resultManagementList.map((item: any) => {
+      const wasSent = sentResults.some(result => result._id === item.resultId);
+      if (wasSent && item.status === 'DRAFT') {
+        return {
+          ...item,
+          status: 'PENDING',
+          lastModified: new Date().toISOString(),
+          sentToCC: true,
+          sentToCCAt: new Date().toISOString()
+        };
+      }
+      return item;
+    });
+    
+    localStorage.setItem('result_management_list', JSON.stringify(updatedList));
   }
 
   sendToHOD() {

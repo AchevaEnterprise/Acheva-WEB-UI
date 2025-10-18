@@ -13,7 +13,8 @@
       <div class="flex gap-2">
         <app-button
           *appRoleAccess="[RoleEnum.LECTURER]"
-          label="Send to CC"
+          [label]="sendingToCC() ? 'Sending...' : 'Send to CC'"
+          [disabled]="sendingToCC()"
           class="btn-md"
           matTooltip="Send to Course Cordinator"
           (clickEvent)="sendToCC()"
@@ -48,6 +49,7 @@
       >
         <ng-container content>
           <app-result-management-file-table
+            #fileTableRef
             [status]="activeSegment().value"
             [expand]="expandView()"
             [results]="results()"
