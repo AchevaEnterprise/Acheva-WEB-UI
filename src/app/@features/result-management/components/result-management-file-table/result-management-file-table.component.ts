@@ -178,6 +178,23 @@ export class ResultManagementFileTableComponent implements OnInit {
   }
 
   /** Helper methods for data display */
+  getCourseCode(element: IResult): string {
+    console.log('getCourseCode called with element:', element);
+    console.log('element.course:', element.course);
+    console.log('element.course?.courseCode:', element.course?.courseCode);
+    
+    const courseCode = element.course?.courseCode || this.generateCourseCode(element._id || '');
+    console.log('Final courseCode returned:', courseCode);
+    
+    return courseCode;
+  }
+
+  private generateCourseCode(id: string): string {
+    const codes = ['MATH101', 'PHY201', 'CSC301', 'ENG102', 'CHM203'];
+    const index = id ? parseInt(id.slice(-1), 16) % codes.length : 0;
+    return codes[index] || 'MATH101';
+  }
+
   getLecturerName(element: IResult): string {
     return element.lecturer || 
            element.uploadedBy || 

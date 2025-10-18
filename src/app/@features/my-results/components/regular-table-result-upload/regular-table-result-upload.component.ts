@@ -1,3 +1,4 @@
+import { CommonModule } from '@angular/common';
 import { Component, input, output, effect, untracked } from '@angular/core';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatTableModule } from '@angular/material/table';
@@ -9,6 +10,7 @@ import { IStudentGrade } from '../../../courses/models/student-grade.model';
 @Component({
   selector: 'app-regular-table-result-upload',
   imports: [
+    CommonModule,
     PaginatorComponent,
     MatTableModule,
     MatCheckboxModule,

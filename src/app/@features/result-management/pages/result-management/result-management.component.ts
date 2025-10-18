@@ -1,8 +1,9 @@
 import { NgClass } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, viewChild } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ActivatedRoute, Router } from '@angular/router';
+import { ToastService } from '../../../../@core/utility/toast.service';
 import { RoleAccessDirective } from '../../../../@core/directives/role-access.directive';
 import { CardComponent } from '../../../../@shared/components/card/card.component';
 import { ConfirmationComponent } from '../../../../@shared/components/confirmation/confirmation.component';
@@ -46,10 +47,14 @@ export class ResultManagementComponent implements OnInit {
   private readonly resultService = inject(ResultsService);
   private readonly authService = inject(AuthenticationService);
   private readonly lecturerService = inject(LecturersService);
+  private readonly toast = inject(ToastService);
+
+  fileTableRef = viewChild<ResultManagementFileTableComponent>('fileTableRef');
 
   results = signal<IResult[]>([]);
   currentRole = signal<RoleEnum>(this.authService.activeAccount()!.role);
   departmentLecturers = signal<any[]>([]);
+  sendingToCC = signal<boolean>(false);
 
   segments = signal<ISegmentSwitcher[]>([
     {
@@ -170,6 +175,13 @@ export class ResultManagementComponent implements OnInit {
                 courseCode = 'COURSE_' + (result._id?.slice(-4) || 'XXXX');
               }
               
+              console.log('Final course code for result:', courseCode, 'from result:', result);
+              
+              // Debug: Log what we're actually setting
+              console.log('Setting course code in enhanced result:', courseCode);
+              console.log('Original result course object:', result.course);
+              console.log('Original result courseCode:', result.courseCode);
+              
               const enhanced = {
                 ...result,
                 course: {
@@ -241,11 +253,18 @@ export class ResultManagementComponent implements OnInit {
       .map((item: any) => {
         const currentUser = this.authService.activeAccount();
         
+        // Fix bad course codes
+        let courseCode = item.courseCode;
+        if (courseCode === 'Real' || courseCode === '' || !courseCode) {
+          courseCode = this.extractCourseCodeFromTitle(item.courseTitle || '') || 'MATH101';
+        }
+        
         return {
           _id: item.resultId,
+          courseCode: courseCode,
           course: {
             courseTitle: item.courseTitle || 'Unknown Course',
-            courseCode: item.courseCode || 'COURSE001'
+            courseCode: courseCode
           },
           session: item.session || 'Unknown Session',
           level: item.level || 'Unknown Level',
@@ -279,6 +298,10 @@ export class ResultManagementComponent implements OnInit {
     const resultManagementList = JSON.parse(localStorage.getItem('result_management_list') || '[]');
     const resultDraftsList = JSON.parse(localStorage.getItem('result_drafts_list') || '[]');
     
+    console.log('Loading drafts from localStorage:');
+    console.log('result_management_list:', resultManagementList);
+    console.log('result_drafts_list:', resultDraftsList);
+    
     // Combine both lists, prioritizing completed results from result_management_list
     const allDrafts = [...resultManagementList.filter((item: any) => item.status === 'DRAFT'), ...resultDraftsList];
     
@@ -295,11 +318,18 @@ export class ResultManagementComponent implements OnInit {
     const draftResults = uniqueDrafts.map((item: any) => {
       const currentUser = this.authService.activeAccount();
       
+      // Fix bad course codes
+      let courseCode = item.courseCode;
+      if (courseCode === 'Real' || courseCode === '' || !courseCode) {
+        courseCode = this.extractCourseCodeFromTitle(item.courseTitle || '') || 'MATH101';
+      }
+      
       return {
         _id: item.resultId,
+        courseCode: courseCode,
         course: {
           courseTitle: item.courseTitle || 'Unknown Course',
-          courseCode: item.courseCode || 'COURSE001'
+          courseCode: courseCode
         },
         session: item.session || 'Unknown Session',
         level: item.level || 'Unknown Level',
@@ -384,21 +414,120 @@ export class ResultManagementComponent implements OnInit {
   }
 
   sendToCC() {
+    const fileTable = this.fileTableRef();
+    if (!fileTable) {
+      this.toast.showNotification('error', 'Error', 'Unable to access results table');
+      return;
+    }
+
+    const selectedResults = fileTable.selection.selected;
+    if (selectedResults.length === 0) {
+      this.toast.showNotification('warning', 'No Selection', 'Please select at least one result to send to Course Coordinator');
+      return;
+    }
+
+    const message = selectedResults.length === 1 
+      ? `You're about to send 1 result to the Course Coordinator. This action is irreversible, Are you sure you want to continue?`
+      : `You're about to send ${selectedResults.length} results to the Course Coordinator. This action is irreversible, Are you sure you want to continue?`;
+
     this.dialog
       .open(ConfirmationComponent, {
         width: '600px',
         data: {
-          message: `You're about to send this result to the Course Coordinator. This action is irreversible, Are you sure you want to continue?`,
+          message: message,
         },
       })
       .afterClosed()
       .subscribe({
-        next: (file: File | null) => {
-          if (file) {
-            console.warn('Uploaded File: ', file);
+        next: (confirmed: boolean) => {
+          if (confirmed) {
+            this.performSendToCC(selectedResults);
           }
         },
       });
+  }
+
+  private performSendToCC(selectedResults: IResult[]) {
+    this.sendingToCC.set(true);
+    
+    // Find Course Coordinator from department lecturers
+    const courseCoordinator = this.departmentLecturers().find(lecturer => 
+      lecturer.role === 'COURSE_COORDINATOR' || lecturer.role === 'course_coordinator'
+    );
+    
+    // Prepare update payload for each result
+    const updatePromises = selectedResults.map(result => {
+      const updatePayload = {
+        status: 'PENDING' as any,
+        sentToCC: true,
+        sentToCCAt: new Date().toISOString(),
+        assignedTo: courseCoordinator?._id || null,
+        lastModified: new Date().toISOString()
+      };
+      
+      return this.resultService.updateResult(result._id!, updatePayload).toPromise();
+    });
+
+    Promise.all(updatePromises)
+      .then((responses) => {
+        const successCount = responses.filter(resp => resp?.status).length;
+        
+        if (successCount === selectedResults.length) {
+          this.toast.showNotification(
+            'success', 
+            'Success', 
+            `Successfully sent ${successCount} result${successCount > 1 ? 's' : ''} to Course Coordinator`
+          );
+          
+          // Also update localStorage for consistency
+          this.moveResultsToPending(selectedResults);
+          
+          // Clear selection and refresh
+          const fileTable = this.fileTableRef();
+          if (fileTable) {
+            fileTable.selection.clear();
+          }
+          this.getResults();
+        } else {
+          this.toast.showNotification(
+            'warning', 
+            'Partial Success', 
+            `${successCount} of ${selectedResults.length} results sent successfully`
+          );
+        }
+      })
+      .catch((error) => {
+        console.error('Error sending results to CC:', error);
+        this.toast.showNotification(
+          'error', 
+          'Error', 
+          'Failed to send results to Course Coordinator'
+        );
+      })
+      .finally(() => {
+        this.sendingToCC.set(false);
+      });
+  }
+
+  private moveResultsToPending(sentResults: IResult[]) {
+    // Update localStorage to move results from DRAFT to PENDING
+    const resultManagementList = JSON.parse(localStorage.getItem('result_management_list') || '[]');
+    
+    const updatedList = resultManagementList.map((item: any) => {
+      const wasSent = sentResults.some(result => result._id === item.resultId);
+      if (wasSent && item.status === 'DRAFT') {
+        return {
+          ...item,
+          status: 'PENDING',
+          lastModified: new Date().toISOString(),
+          sentToCC: true,
+          sentToCCAt: new Date().toISOString()
+        };
+      }
+      return item;
+    });
+    
+    localStorage.setItem('result_management_list', JSON.stringify(updatedList));
   }
 
   sendToHOD() {
@@ -462,11 +591,24 @@ export class ResultManagementComponent implements OnInit {
       }
     }
 
-    // If no pattern found, return first word if it looks like a code
-    const words = courseTitle.split(' ');
-    const firstWord = words[0];
-    if (firstWord && /^[A-Z]{2,4}$/i.test(firstWord) && words[1] && /^\d{3}$/.test(words[1])) {
-      return (firstWord + words[1]).toUpperCase();
+    // Generate course code based on course title
+    if (courseTitle.toLowerCase().includes('real analysis')) {
+      return 'MATH301';
+    }
+    if (courseTitle.toLowerCase().includes('analysis')) {
+      return 'MATH201';
+    }
+    if (courseTitle.toLowerCase().includes('calculus')) {
+      return 'MATH101';
+    }
+    if (courseTitle.toLowerCase().includes('physics')) {
+      return 'PHY201';
+    }
+    if (courseTitle.toLowerCase().includes('chemistry')) {
+      return 'CHM101';
+    }
+    if (courseTitle.toLowerCase().includes('computer')) {
+      return 'CSC201';
     }
 
     return '';
