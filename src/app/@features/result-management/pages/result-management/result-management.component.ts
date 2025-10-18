@@ -451,27 +451,24 @@ export class ResultManagementComponent implements OnInit {
     this.sendingToCC.set(true);
     
     // Find Course Coordinator from department lecturers
-    let recipientId: string;
     const courseCoordinator = this.departmentLecturers().find(lecturer => 
       lecturer.role === 'COURSE_COORDINATOR' || lecturer.role === 'course_coordinator'
     );
     
-    if (courseCoordinator) {
-      recipientId = courseCoordinator._id;
-    } else {
-      // Fallback: Use a default Course Coordinator ID or show error
-      console.warn('No Course Coordinator found, using fallback approach');
-      // For now, let's simulate the send and show success (since API endpoint might not exist)
-      this.simulateSendToCC(selectedResults);
-      return;
-    }
+    // Prepare update payload for each result
+    const updatePromises = selectedResults.map(result => {
+      const updatePayload = {
+        status: 'PENDING' as any,
+        sentToCC: true,
+        sentToCCAt: new Date().toISOString(),
+        assignedTo: courseCoordinator?._id || null,
+        lastModified: new Date().toISOString()
+      };
+      
+      return this.resultService.updateResult(result._id!, updatePayload).toPromise();
+    });
 
-    // Send each selected result
-    const sendPromises = selectedResults.map(result => 
-      this.resultService.sendResult(result._id!, recipientId).toPromise()
-    );
-
-    Promise.all(sendPromises)
+    Promise.all(updatePromises)
       .then((responses) => {
         const successCount = responses.filter(resp => resp?.status).length;
         
@@ -482,7 +479,7 @@ export class ResultManagementComponent implements OnInit {
             `Successfully sent ${successCount} result${successCount > 1 ? 's' : ''} to Course Coordinator`
           );
           
-          // Move results from DRAFT to PENDING
+          // Also update localStorage for consistency
           this.moveResultsToPending(selectedResults);
           
           // Clear selection and refresh
@@ -510,29 +507,6 @@ export class ResultManagementComponent implements OnInit {
       .finally(() => {
         this.sendingToCC.set(false);
       });
-  }
-
-  private simulateSendToCC(selectedResults: IResult[]) {
-    // Simulate successful send when API is not available
-    setTimeout(() => {
-      this.toast.showNotification(
-        'success', 
-        'Success', 
-        `Successfully sent ${selectedResults.length} result${selectedResults.length > 1 ? 's' : ''} to Course Coordinator`
-      );
-      
-      // Move results from DRAFT to PENDING
-      this.moveResultsToPending(selectedResults);
-      
-      // Clear selection and refresh
-      const fileTable = this.fileTableRef();
-      if (fileTable) {
-        fileTable.selection.clear();
-      }
-      this.getResults();
-      
-      this.sendingToCC.set(false);
-    }, 1000); // Simulate network delay
   }
 
   private moveResultsToPending(sentResults: IResult[]) {
