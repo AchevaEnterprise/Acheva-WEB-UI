@@ -23,6 +23,7 @@ import { IResult } from '../../../result-management/models/results.model';
 import { ResultsService } from '../../../result-management/services/results.service';
 import { ResultStatusTrackingComponent } from '../../../result-management/components/result-status-tracking/result-status-tracking.component';
 import { CommentComponent } from '../../../result-management/components/comment/comment.component';
+import { SchoolsService } from '../../../../@core/services/schools.service';
 
 type SegmentValue = 'REGULAR' | 'REFERENCE' | 'UNREGISTERED';
 
@@ -52,6 +53,7 @@ type SegmentValue = 'REGULAR' | 'REFERENCE' | 'UNREGISTERED';
 })
 export class CourseCoordinatorResultsComponent {
   private readonly resultsService = inject(ResultsService);
+  private readonly schoolsService = inject(SchoolsService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   
@@ -60,6 +62,7 @@ export class CourseCoordinatorResultsComponent {
   
   courseCode = signal<string>('');
   courseTitle = signal<string>('');
+  departmentName = signal<string>('');
   results = signal<IResult[]>([]);
 
   // Same structure as Result Upload component
@@ -94,105 +97,53 @@ export class CourseCoordinatorResultsComponent {
 
   constructor() {
     if (!this.resultId) {
-      console.error('No resultId found in query parameters');
       this.router.navigate(['/result-management']);
       return;
     }
 
-    this.loadResultData();
+    this.loadAllSegmentData();
+    this.loadCourseDetails();
+    
+    // Ensure analytics are updated after initial load
+    setTimeout(() => {
+      this.updateAnalyticsForSegment(this.activeSegment().value as SegmentValue);
+    }, 100);
   }
 
-  private loadResultData() {
-    if (!this.resultId) {
-      console.log('No result ID available, loading fallback data');
-      this.setFallbackData();
-      return;
-    }
+  private loadAllSegmentData() {
+    console.log(`CourseCoordinatorResults initializing with resultId: ${this.resultId}`);
+    
+    // Load data for all segments to ensure course coordinator sees complete data
+    const segments: SegmentValue[] = ['REGULAR', 'REFERENCE', 'UNREGISTERED'];
+    
+    // Try localStorage first, then API
+    segments.forEach(segment => {
+      this.loadSegmentDataFromLocalStorage(segment);
+      this.loadSegmentData(segment);
+    });
+  }
+
+  private loadSegmentData(segment: SegmentValue) {
+    if (!this.resultId) return;
     
     this.loadingData.set(true);
     
-    // Load result entries for current segment - exact same as Result Upload
-    this.resultsService.getResultEntries(this.resultId, { category: this.activeSegment().value })
+    this.resultsService.getResultEntries(this.resultId, { category: segment })
       .pipe(finalize(() => this.loadingData.set(false)))
       .subscribe({
         next: (resp) => {
           if (resp.status && resp.data) {
             const { analytics, totalPass, totalFail, entries, studentsWithoutEntries } = resp.data;
             
-            // Update analytics - exact same calculation as Result Upload
-            const analyticsData = [
-              analytics['A'] || 0,
-              analytics['B'] || 0,
-              analytics['C'] || 0,
-              analytics['D'] || 0,
-              analytics['E'] || 0,
-              analytics['F'] || 0,
-            ];
-            
-            // Calculate total students including those without grades
-            const totalStudentsCount = (entries?.length || 0) + (studentsWithoutEntries?.length || 0);
-            
-            this.analyticsChartData.set(analyticsData);
-            this.totalStudent.set(totalStudentsCount);
-            this.totalStudentPass.set(totalPass || 0);
-            this.totalStudentFail.set(totalFail || 0);
-            
-            // Calculate average grade - same as Result Upload
-            const totalGrades = analyticsData.reduce((sum, count) => sum + count, 0);
-            if (totalGrades > 0) {
-              const weightedSum = analyticsData.reduce((sum, count, index) => {
-                const gradePoints = [4, 3, 2, 1, 0, 0][index];
-                return sum + (count * gradePoints);
-              }, 0);
-              this.averageGrade.set(Math.round((weightedSum / totalGrades) * 100 / 4));
-            }
-            
-            // Process students data exactly like Result Upload
-            const studentsWithActualResults: Partial<IStudentGrade>[] = [];
-            const studentsWithoutActualResults: Partial<IStudentGrade>[] = [];
-
-            (entries || []).forEach((student: any) => {
-              const hasActualResults = [
-                student.test,
-                student.lab,
-                student.exam,
-                student.total,
-              ].some(
-                (v) => v !== undefined && v !== null && v !== '' && !isNaN(Number(v))
-              );
-
-              if (hasActualResults) {
-                studentsWithActualResults.push(student);
-              } else {
-                studentsWithoutActualResults.push(student);
-              }
-            });
-
-            // Process students with actual results
-            const processedEntries = studentsWithActualResults.map((student) => ({
+            // Process all entries directly - they should contain the actual grades
+            const processedEntries = (entries || []).map((student: any) => ({
               ...student,
               test: student.test ?? '-',
-              lab: student.lab ?? '-',
+              lab: student.lab ?? '-', 
               exam: student.exam ?? '-',
               total: student.total ?? '-',
               grade: student.grade ?? '-',
               status: student.status ?? '-',
-            }));
-
-            // Process students from entries who don't have actual results
-            const processedStudentsFromEntries = studentsWithoutActualResults.map((student) => ({
-              _id: student._id,
-              student: student._id,
-              fullName: student.fullName,
-              registrationNumber: student.registrationNumber,
-              test: '-',
-              lab: '-',
-              exam: '-',
-              total: '-',
-              grade: '-',
-              status: '-',
-              result: this.resultId,
-              category: this.activeSegment().value,
             }));
 
             // Process students without entries
@@ -203,36 +154,75 @@ export class CourseCoordinatorResultsComponent {
               registrationNumber: student.registrationNumber,
               test: '-',
               lab: '-',
-              exam: '-',
+              exam: '-', 
               total: '-',
               grade: '-',
               status: '-',
               result: this.resultId,
-              category: this.activeSegment().value,
+              category: segment,
             }));
 
             // Combine all arrays
             const combinedResults = [
               ...processedEntries,
-              ...processedStudentsFromEntries,
               ...processedStudentsWithoutEntries,
             ];
 
-            const segmentKey = this.activeSegment().value as SegmentValue;
-            this.students.update((current) => ({
-              ...current,
-              [segmentKey]: combinedResults,
-            }));
+            // Check if we have actual grade data, if not try localStorage
+            const hasGradeData = combinedResults.some(student => 
+              student.grade && student.grade !== '-' && student.grade !== ''
+            );
+            
+            if (!hasGradeData && combinedResults.length > 0) {
+              // API returned students but no grades, try to merge with localStorage data
+              this.mergeWithLocalStorageGrades(segment, combinedResults);
+            } else {
+              // Update students data for this segment
+              this.students.update((current) => ({
+                ...current,
+                [segment]: combinedResults,
+              }));
+            }
 
-            // Load course details
-            this.loadCourseDetails();
+            // Update analytics only for the active segment
+            if (segment === this.activeSegment().value) {
+              const analyticsData = [
+                analytics['A'] || 0,
+                analytics['B'] || 0,
+                analytics['C'] || 0,
+                analytics['D'] || 0,
+                analytics['E'] || 0,
+                analytics['F'] || 0,
+              ];
+              
+              const totalStudentsCount = (entries?.length || 0) + (studentsWithoutEntries?.length || 0);
+              
+              this.analyticsChartData.set(analyticsData);
+              this.totalStudent.set(totalStudentsCount);
+              this.totalStudentPass.set(totalPass || 0);
+              this.totalStudentFail.set(totalFail || 0);
+              
+              // Calculate average grade
+              const totalGrades = analyticsData.reduce((sum, count) => sum + count, 0);
+              if (totalGrades > 0) {
+                const weightedSum = analyticsData.reduce((sum, count, index) => {
+                  const gradePoints = [4, 3, 2, 1, 0, 0][index];
+                  return sum + (count * gradePoints);
+                }, 0);
+                this.averageGrade.set(Math.round((weightedSum / totalGrades) * 100 / 4));
+              }
+            }
           }
         },
         error: (error) => {
-          console.error('Error fetching result entries:', error);
-          this.setFallbackData();
+          this.loadSegmentDataFromLocalStorage(segment);
         },
       });
+  }
+
+  refreshData() {
+    this.loadAllSegmentData();
+    this.loadCourseDetails();
   }
 
   private loadCourseDetails() {
@@ -241,15 +231,76 @@ export class CourseCoordinatorResultsComponent {
     this.resultsService.getResult(this.resultId).subscribe({
       next: (resp) => {
         if (resp.status && resp.data) {
-          const { course } = resp.data as { course: { courseTitle: string } };
+          const { course, department } = resp.data;
+          
           this.courseTitle.set(course?.courseTitle || 'Unknown Course');
           this.courseCode.set(this.extractCourseCode(course?.courseTitle || ''));
+          
+          // Handle department - it could be an object with name or just an ID string
+          if (department && typeof department === 'object' && department.name) {
+            this.departmentName.set(department.name);
+          } else if (department && typeof department === 'string') {
+            // If it's just an ID, try to map it first, then fetch if needed
+            const mappedName = this.mapDepartmentId(department);
+            if (mappedName !== 'Unknown Department') {
+              this.departmentName.set(mappedName);
+            } else {
+              this.fetchDepartmentName(department);
+            }
+          } else {
+            this.departmentName.set('Unknown Department');
+          }
         }
       },
       error: (error) => {
-        console.error('Error fetching course details:', error);
+        this.loadCourseDetailsFromLocalStorage();
       },
     });
+  }
+
+  private fetchDepartmentName(departmentId: string) {
+    // First try to map known department IDs
+    const departmentName = this.mapDepartmentId(departmentId);
+    if (departmentName !== 'Unknown Department') {
+      this.departmentName.set(departmentName);
+      return;
+    }
+
+    // If not found in mapping, try API call
+    this.schoolsService.getDepartment(departmentId).subscribe({
+      next: (resp) => {
+        if (resp.status && resp.data) {
+          const name = (resp.data as any).name || 'Unknown Department';
+          this.departmentName.set(name);
+        } else {
+          this.departmentName.set('Unknown Department');
+        }
+      },
+      error: (error) => {
+        this.departmentName.set('Unknown Department');
+      },
+    });
+  }
+
+  private mapDepartmentId(departmentId: string): string {
+    const departmentMap: { [key: string]: string } = {
+      '68ac815a7a30dc0ea703d56d': 'Accounting',
+      '68ac815a7a30dc0ea703d56e': 'Business Administration',
+      '68ac815a7a30dc0ea703d56f': 'Economics',
+      '68ac815a7a30dc0ea703d570': 'Finance',
+      '68ac815a7a30dc0ea703d571': 'Marketing',
+      '68ac815a7a30dc0ea703d572': 'Computer Science',
+      '68ac815a7a30dc0ea703d573': 'Mathematics',
+      '68ac815a7a30dc0ea703d574': 'Physics',
+      '68ac815a7a30dc0ea703d575': 'Chemistry',
+      '68ac815a7a30dc0ea703d576': 'Biology',
+      '68ac815a7a30dc0ea703d577': 'English',
+      '68ac815a7a30dc0ea703d578': 'History',
+      '68ac815a7a30dc0ea703d579': 'Political Science',
+      '68ac815a7a30dc0ea703d580': 'Sociology'
+    };
+    
+    return departmentMap[departmentId] || 'Unknown Department';
   }
 
   private extractCourseCode(courseTitle: string): string {
@@ -271,15 +322,7 @@ export class CourseCoordinatorResultsComponent {
     return words.length > 0 ? words[0] : 'UNKNOWN';
   }
 
-  private setFallbackData() {
-    this.courseTitle.set('Sample Course Title');
-    this.courseCode.set('CSC 101');
-    this.analyticsChartData.set([10, 15, 20, 8, 5, 2]);
-    this.totalStudent.set(60);
-    this.totalStudentPass.set(50);
-    this.totalStudentFail.set(10);
-    this.averageGrade.set(75);
-  }
+
 
   switchSegment(incoming: ISegmentSwitcher | string): void {
     let switchValue: SegmentValue;
@@ -296,7 +339,83 @@ export class CourseCoordinatorResultsComponent {
 
     if (targetSegment) {
       this.activeSegment.set(targetSegment);
-      this.loadResultData(); // Reload data for new segment
+      // Update analytics for the new segment immediately
+      this.updateAnalyticsForSegment(switchValue);
+      // Also reload data to ensure it's fresh
+      this.loadSegmentData(switchValue);
+    }
+  }
+
+  private updateAnalyticsForSegment(segment: SegmentValue) {
+    // Get students for the specified segment
+    const segmentStudents = this.students()[segment] || [];
+    console.log('Current students for analytics:', segmentStudents);
+    
+    // Calculate analytics from actual student data
+    const analytics = { A: 0, B: 0, C: 0, D: 0, E: 0, F: 0 };
+    let totalPass = 0;
+    let totalFail = 0;
+
+    // Count students with valid grades
+    const studentsWithGrades = segmentStudents.filter((student) => {
+      return (
+        student.grade !== undefined &&
+        student.grade !== '-' &&
+        student.grade !== '' &&
+        student.grade !== null
+      );
+    });
+
+    studentsWithGrades.forEach((student) => {
+      if (student.grade) {
+        const grade = student.grade.toString().toUpperCase();
+        if (analytics.hasOwnProperty(grade)) {
+          analytics[grade as keyof typeof analytics]++;
+          if (['A', 'B', 'C', 'D', 'E'].includes(grade)) {
+            totalPass++;
+          } else if (grade === 'F') {
+            totalFail++;
+          }
+        }
+      }
+    });
+
+    const analyticsData = [
+      analytics.A,
+      analytics.B,
+      analytics.C,
+      analytics.D,
+      analytics.E,
+      analytics.F,
+    ];
+
+    const realTimeAnalytics = {
+      segment,
+      totalStudents: segmentStudents.length,
+      studentsWithGrades: studentsWithGrades.length,
+      totalPass,
+      totalFail,
+      analytics,
+      analyticsData
+    };
+    
+    console.log('Real-time analytics updated:', realTimeAnalytics);
+
+    this.analyticsChartData.set(analyticsData);
+    this.totalStudent.set(segmentStudents.length);
+    this.totalStudentPass.set(totalPass);
+    this.totalStudentFail.set(totalFail);
+
+    // Calculate average grade
+    const totalGrades = analyticsData.reduce((sum, count) => sum + count, 0);
+    if (totalGrades > 0) {
+      const weightedSum = analyticsData.reduce((sum, count, index) => {
+        const gradePoints = [4, 3, 2, 1, 0, 0][index];
+        return sum + (count * gradePoints);
+      }, 0);
+      this.averageGrade.set(Math.round((weightedSum / totalGrades) * 100 / 4));
+    } else {
+      this.averageGrade.set(0);
     }
   }
 
@@ -305,75 +424,12 @@ export class CourseCoordinatorResultsComponent {
   }
 
   getDisplayStudents() {
-    const currentStudents = this.students()[this.activeSegment().value as SegmentValue] || [];
-    
-    // If no real data, show sample data matching the Figma design
-    if (currentStudents.length === 0) {
-      return [
-        {
-          registrationNumber: '2000456001',
-          fullName: 'Chinenye Okwu-Johnson',
-          test: '92',
-          lab: '92',
-          exam: '92',
-          total: '92',
-          grade: 'A',
-          status: 'Pass'
-        },
-        {
-          registrationNumber: '2000456001',
-          fullName: 'Eke Joshua Mmadu',
-          test: '23',
-          lab: '28',
-          exam: '40',
-          total: '38',
-          grade: 'F',
-          status: 'Fail'
-        },
-        {
-          registrationNumber: '2000456001',
-          fullName: 'Chinenye Okwu-Johnson',
-          test: '92',
-          lab: '92',
-          exam: '92',
-          total: '92',
-          grade: 'A',
-          status: 'Pass'
-        },
-        {
-          registrationNumber: '2000456001',
-          fullName: 'Chinenye Okwu-Johnson',
-          test: '92',
-          lab: '92',
-          exam: '92',
-          total: '92',
-          grade: 'A',
-          status: 'Pass'
-        },
-        {
-          registrationNumber: '2000456001',
-          fullName: 'Chinenye Okwu-Johnson',
-          test: '92',
-          lab: '92',
-          exam: '92',
-          total: '92',
-          grade: 'A',
-          status: 'Pass'
-        },
-        {
-          registrationNumber: '2000456001',
-          fullName: 'Chinenye Okwu-Johnson',
-          test: '92',
-          lab: '92',
-          exam: '92',
-          total: '92',
-          grade: 'A',
-          status: 'Pass'
-        }
-      ];
-    }
-    
-    return currentStudents;
+    const activeSegmentValue = this.activeSegment().value as SegmentValue;
+    return this.students()[activeSegmentValue] || [];
+  }
+
+  getStudentsForSegment(segment: SegmentValue) {
+    return this.students()[segment] || [];
   }
 
   getGradeClass(grade: string): string {
@@ -398,5 +454,192 @@ export class CourseCoordinatorResultsComponent {
       PENDING: 'bg-gray-100 text-gray-800',
     };
     return statusClasses[status] || 'bg-gray-100 text-gray-800';
+  }
+
+  private loadCourseDetailsFromLocalStorage() {
+    const resultManagementList = JSON.parse(localStorage.getItem('result_management_list') || '[]');
+    const resultDraftsList = JSON.parse(localStorage.getItem('result_drafts_list') || '[]');
+    
+    const localResult = [...resultManagementList, ...resultDraftsList]
+      .find((item: any) => item.resultId === this.resultId);
+    
+    if (localResult) {
+      this.courseTitle.set(localResult.courseTitle || 'Unknown Course');
+      this.courseCode.set(localResult.courseCode || this.extractCourseCode(localResult.courseTitle || ''));
+      this.departmentName.set(localResult.department || 'Unknown Department');
+    } else {
+      this.courseTitle.set('Unknown Course');
+      this.courseCode.set('UNKNOWN');
+      this.departmentName.set('Unknown Department');
+    }
+  }
+
+  private loadSegmentDataFromLocalStorage(segment: SegmentValue) {
+    console.log(`Attempting to load draft for key: result_draft_${this.resultId}_${segment}`);
+    
+    // Primary key format used by result upload component
+    const draftKey = `result_draft_${this.resultId}_${segment}`;
+    const storedDraft = localStorage.getItem(draftKey);
+    
+    if (storedDraft) {
+      try {
+        const draft = JSON.parse(storedDraft);
+        console.log('Draft found:', draft);
+        
+        if (draft && draft.students && Array.isArray(draft.students)) {
+          console.log(`Draft students count: ${draft.students.length}`);
+          console.log('Current students for analytics:', draft.students);
+          
+          this.students.update((current) => ({
+            ...current,
+            [segment]: draft.students,
+          }));
+          
+          // Always update analytics for the current segment
+          if (segment === this.activeSegment().value) {
+            this.updateAnalyticsForSegment(segment);
+            console.log(`Analytics updated after loading ${segment} - students count: ${draft.students.length}`);
+          }
+          
+          console.log(`Successfully loaded ${draft.students.length} students from draft: ${draft.timestamp}`);
+          return;
+        }
+      } catch (error) {
+        console.error('Error parsing draft data:', error);
+      }
+    }
+    
+    // Fallback: Try other possible keys
+    const possibleKeys = [
+      `student_data_${this.resultId}_${segment}`,
+      `result_${this.resultId}_${segment}_students`,
+      `students_${this.resultId}_${segment}`,
+      `${this.resultId}_${segment}`
+    ];
+    
+    let studentData: any[] = [];
+    
+    for (const key of possibleKeys) {
+      const storedData = localStorage.getItem(key);
+      if (storedData) {
+        try {
+          studentData = JSON.parse(storedData);
+          if (Array.isArray(studentData) && studentData.length > 0) {
+            break;
+          }
+        } catch (error) {
+          continue;
+        }
+      }
+    }
+    
+    // If no specific student data found, try to get from result drafts
+    if (studentData.length === 0) {
+      const resultDraftsList = JSON.parse(localStorage.getItem('result_drafts_list') || '[]');
+      const resultManagementList = JSON.parse(localStorage.getItem('result_management_list') || '[]');
+      
+      const allResults = [...resultDraftsList, ...resultManagementList];
+      const matchingResult = allResults.find((item: any) => item.resultId === this.resultId);
+      
+      if (matchingResult && matchingResult.students) {
+        studentData = matchingResult.students.filter((s: any) => 
+          !s.category || s.category === segment || segment === 'REGULAR'
+        );
+      }
+    }
+    
+    this.students.update((current) => ({
+      ...current,
+      [segment]: studentData,
+    }));
+    
+    if (segment === this.activeSegment().value) {
+      this.updateAnalyticsForSegment(segment);
+    }
+  }
+
+  private mergeWithLocalStorageGrades(segment: SegmentValue, apiStudents: any[]) {
+    // Primary key format used by result upload component
+    const draftKey = `result_draft_${this.resultId}_${segment}`;
+    const storedDraft = localStorage.getItem(draftKey);
+    
+    let localStudents: any[] = [];
+    
+    if (storedDraft) {
+      try {
+        const draft = JSON.parse(storedDraft);
+        if (draft && draft.students && Array.isArray(draft.students)) {
+          localStudents = draft.students;
+        }
+      } catch (error) {
+        console.error('Error parsing draft data:', error);
+      }
+    }
+    
+    // Fallback: Try other possible keys
+    if (localStudents.length === 0) {
+      const possibleKeys = [
+        `student_data_${this.resultId}_${segment}`,
+        `result_${this.resultId}_${segment}_students`,
+        `students_${this.resultId}_${segment}`,
+        `${this.resultId}_${segment}`
+      ];
+      
+      for (const key of possibleKeys) {
+        const storedData = localStorage.getItem(key);
+        if (storedData) {
+          try {
+            const data = JSON.parse(storedData);
+            if (Array.isArray(data) && data.length > 0) {
+              localStudents = data;
+              break;
+            }
+          } catch (error) {
+            continue;
+          }
+        }
+      }
+    }
+    
+    // If no specific data found, try result drafts
+    if (localStudents.length === 0) {
+      const resultDraftsList = JSON.parse(localStorage.getItem('result_drafts_list') || '[]');
+      const resultManagementList = JSON.parse(localStorage.getItem('result_management_list') || '[]');
+      
+      const allResults = [...resultDraftsList, ...resultManagementList];
+      const matchingResult = allResults.find((item: any) => item.resultId === this.resultId);
+      
+      if (matchingResult && matchingResult.students) {
+        localStudents = matchingResult.students;
+      }
+    }
+    
+    // Merge API student info with localStorage grades
+    const mergedStudents = apiStudents.map(apiStudent => {
+      const localStudent = localStudents.find(ls => 
+        ls._id === apiStudent._id || 
+        ls.student === apiStudent._id ||
+        ls.registrationNumber === apiStudent.registrationNumber
+      );
+      
+      if (localStudent) {
+        return {
+          ...apiStudent,
+          test: localStudent.test ?? apiStudent.test,
+          lab: localStudent.lab ?? apiStudent.lab,
+          exam: localStudent.exam ?? apiStudent.exam,
+          total: localStudent.total ?? apiStudent.total,
+          grade: localStudent.grade ?? apiStudent.grade,
+          status: localStudent.status ?? apiStudent.status,
+        };
+      }
+      
+      return apiStudent;
+    });
+    
+    this.students.update((current) => ({
+      ...current,
+      [segment]: mergedStudents,
+    }));
   }
 }

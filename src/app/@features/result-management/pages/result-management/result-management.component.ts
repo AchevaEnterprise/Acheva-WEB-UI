@@ -26,6 +26,7 @@ import { ResultsService } from '../../services/results.service';
 
 @Component({
   selector: 'app-result-management',
+  standalone: true,
   imports: [
     NgClass,
     SegmentSwitcherComponent,

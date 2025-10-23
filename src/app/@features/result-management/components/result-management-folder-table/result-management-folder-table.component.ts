@@ -16,7 +16,6 @@ import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
 import { ICourse } from '../../../courses/models/course.model';
 import { IResult } from '../../models/results.model';
 
-
 interface CourseFolder {
   courseCode: string;
   courseTitle: string;
@@ -29,6 +28,7 @@ interface CourseFolder {
 
 @Component({
   selector: 'app-result-management-folder-table',
+  standalone: true,
   imports: [
     SvgComponent,
     DatePipe,
@@ -43,7 +43,6 @@ interface CourseFolder {
     MatIconModule,
     EmptyStateComponent,
     LoaderComponent,
-
   ],
   templateUrl: './result-management-folder-table.component.html',
   styleUrl: './result-management-folder-table.component.scss',
@@ -80,10 +79,9 @@ export class ResultManagementFolderTableComponent {
       return;
     }
 
-    // Group results by course code
     const folderMap = new Map<string, CourseFolder>();
     
-    results.forEach(result => {
+    results.forEach((result: IResult) => {
       const courseCode = result.course?.courseCode || 'UNKNOWN';
       const courseTitle = result.course?.courseTitle || 'Unknown Course';
       
@@ -107,11 +105,9 @@ export class ResultManagementFolderTableComponent {
     this.folderDataSource.set(Array.from(folderMap.values()));
   }
 
-  /** Single click - toggle selection */
   onSingleClick(folder: CourseFolder, event: Event) {
     event.stopPropagation();
     this.folderSelection.toggle(folder);
-    // Also update the main selection with all results from selected folders
     this.updateMainSelection();
   }
 
@@ -124,14 +120,12 @@ export class ResultManagementFolderTableComponent {
     });
   }
 
-  /** Double click - switch to detailed results view */
   onDoubleClick(folder: CourseFolder, event: Event) {
     event.stopPropagation();
     this.selectedFolderForDetails = folder;
     this.showDetailedView.set(true);
   }
 
-  /** Go back to folder view */
   backToFolderView() {
     this.showDetailedView.set(false);
     this.selectedFolderForDetails = null;
@@ -139,24 +133,19 @@ export class ResultManagementFolderTableComponent {
     this.selectedResultForAnalytics = null;
   }
 
-  /** Click on individual result - navigate to standalone course coordinator results view */
   viewResultDetails(result: IResult) {
-    // Navigate to standalone course coordinator results view
     this.viewResultEvent.emit(result as any);
   }
 
-  /** Go back from course analytics to detailed view */
   backFromAnalytics() {
     this.showCourseAnalytics.set(false);
     this.selectedResultForAnalytics = null;
   }
 
-  /** Check if folder is expanded */
   isExpanded(folder: CourseFolder): boolean {
     return this.expandedFolder === folder;
   }
 
-  /** Selection methods */
   isAllSelected() {
     const numSelected = this.folderSelection.selected.length;
     const numRows = this.folderDataSource().length;
@@ -184,7 +173,6 @@ export class ResultManagementFolderTableComponent {
     return this.folderSelection.isSelected(folder);
   }
 
-  /** Helper methods */
   getFormattedDate(date: any, format: string = 'MMM d, yyyy'): string {
     if (!date) return 'Not Available';
     
@@ -206,17 +194,13 @@ export class ResultManagementFolderTableComponent {
            'Unknown Lecturer';
   }
 
-
-
   getFacultyName(faculty: any): string {
     if (!faculty) return 'Unknown Faculty';
     
-    // If faculty is an object with name property
     if (typeof faculty === 'object' && faculty.name) {
       return faculty.name;
     }
     
-    // If faculty is a string (ObjectId), map known IDs
     if (typeof faculty === 'string') {
       const facultyMap: { [key: string]: string } = {
         '68ac80d77a30dc0ea703d55e': 'Management Sciences',
@@ -238,12 +222,10 @@ export class ResultManagementFolderTableComponent {
   getDepartmentName(department: any): string {
     if (!department) return 'Unknown Department';
     
-    // If department is an object with name property
     if (typeof department === 'object' && department.name) {
       return department.name;
     }
     
-    // If department is a string (ObjectId), map known IDs
     if (typeof department === 'string') {
       const departmentMap: { [key: string]: string } = {
         '68ac815a7a30dc0ea703d56d': 'Accounting',

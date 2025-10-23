@@ -10,6 +10,7 @@
   <div>
     <h1 class="acva-heading-4 fw-600 text-neutral-800">Course Coordinator Results View</h1>
     <p class="acva-para-1 text-neutral-500">{{ courseCode() }} - {{ courseTitle() }}</p>
+    <p class="acva-para-2 text-neutral-400">Department: {{ departmentName() }}</p>
   </div>
 </div>
 
@@ -80,24 +81,30 @@
   </div>
 
   <div class="mt-4">
-    @switch (activeSegment().value) {
-      @case ('REGULAR') {
-        <app-reference-table-result-upload
-          #regularTableResultUploadRef
-          [students]="students()['REGULAR']"
-        />
-      }
-      @case ('REFERENCE') {
-        <app-reference-table-result-upload
-          #referenceTableResultUploadRef
-          [students]="students()['REFERENCE']"
-        />
-      }
-      @case ('UNREGISTERED') {
-        <app-reference-table-result-upload
-          #unregisteredTableResultUploadRef
-          [students]="students()['UNREGISTERED']"
-        />
+    @if (loadingData()) {
+      <div class="flex justify-center items-center py-8">
+        <p class="text-neutral-500">Loading student data...</p>
+      </div>
+    } @else {
+      @switch (activeSegment().value) {
+        @case ('REGULAR') {
+          <app-reference-table-result-upload
+            #regularTableResultUploadRef
+            [students]="getStudentsForSegment('REGULAR')"
+          />
+        }
+        @case ('REFERENCE') {
+          <app-reference-table-result-upload
+            #referenceTableResultUploadRef
+            [students]="getStudentsForSegment('REFERENCE')"
+          />
+        }
+        @case ('UNREGISTERED') {
+          <app-reference-table-result-upload
+            #unregisteredTableResultUploadRef
+            [students]="getStudentsForSegment('UNREGISTERED')"
+          />
+        }
       }
     }
   </div>
