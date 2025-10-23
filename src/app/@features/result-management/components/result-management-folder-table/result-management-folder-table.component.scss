@@ -4,10 +4,15 @@ tr.table-detail-row {
 
 tr.table-element-row {
   cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
 tr.table-element-row:not(.table-expanded-row):hover {
-  background: #f7d6de4d;
+  background: #f3f4f6;
+}
+
+tr.table-expanded-row {
+  background: #e5f3ff;
 }
 
 .table-element-row td {
@@ -24,6 +29,34 @@ tr.table-element-row:not(.table-expanded-row):hover {
 
 .table-element-detail-wrapper-expanded {
   grid-template-rows: 1fr;
+}
 
-  //   padding-block: 10px;
+// Folder icon styling
+.folder-icon {
+  color: #3b82f6;
+}
+
+// Result count badge
+.result-count-badge {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+  font-weight: 600;
+  border-radius: 12px;
+  padding: 4px 12px;
+  font-size: 0.75rem;
+}
+
+// Expanded content styling
+.expanded-content {
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  border-left: 4px solid #3b82f6;
+  margin: 8px 0;
+  border-radius: 8px;
+}
+
+// Individual result row hover
+.result-row:hover {
+  background: #e0f2fe;
+  transform: translateX(2px);
+  transition: all 0.2s ease;
 }

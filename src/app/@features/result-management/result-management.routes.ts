@@ -15,6 +15,10 @@ export const routes: Routes = [
     path: 'verify-result',
     data: {
       title: 'Result Management',
+      breadcrumbs: [
+        { label: 'My Results', link: '/my-result' },
+        { label: 'Results Upload' }
+      ]
     },
     loadComponent: () =>
       import(

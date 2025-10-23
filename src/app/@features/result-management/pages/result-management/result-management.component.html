@@ -48,15 +48,25 @@
         [iconSrc]="segmentCardIconSrc()"
       >
         <ng-container content>
-          <app-result-management-file-table
+          <!-- LECTURER VIEW: Regular file table -->
+          <app-result-management-file-table 
+            *appRoleAccess="[RoleEnum.LECTURER]"
             #fileTableRef
-            [status]="activeSegment().value"
             [expand]="expandView()"
             [results]="results()"
+            [status]="activeSegment().value"
             (viewResultEvent)="viewResult($event)"
           />
-
-          <!-- <app-result-management-folder-table [expand]="expandView()" /> -->
+          
+          <!-- COURSE COORDINATOR VIEW: Folder table -->
+          <app-result-management-folder-table 
+            *appRoleAccess="[RoleEnum.COURSE_COORDINATOR]"
+            #folderTableRef
+            [expand]="expandView()"
+            [results]="results()"
+            [status]="activeSegment().value"
+            (viewResultEvent)="viewResult($event)"
+          />
         </ng-container>
       </app-card>
 

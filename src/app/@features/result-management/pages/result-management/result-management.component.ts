@@ -16,6 +16,7 @@ import { RoleEnum } from '../../../auth/model/auth.model';
 import { AuthenticationService } from '../../../auth/service/auth.service';
 import { ICourse } from '../../../courses/models/course.model';
 import { LecturersService } from '../../../user-settings/service/lecturer.service';
+import { NotificationService } from '../../../notifications/service/notification.service';
 import { CommentComponent } from '../../components/comment/comment.component';
 import { ResultManagementFileTableComponent } from '../../components/result-management-file-table/result-management-file-table.component';
 import { ResultManagementFolderTableComponent } from '../../components/result-management-folder-table/result-management-folder-table.component';
@@ -47,8 +48,10 @@ export class ResultManagementComponent implements OnInit {
   private readonly resultService = inject(ResultsService);
   private readonly authService = inject(AuthenticationService);
   private readonly lecturerService = inject(LecturersService);
+  private readonly notificationService = inject(NotificationService);
   private readonly toast = inject(ToastService);
 
+  folderTableRef = viewChild<ResultManagementFolderTableComponent>('folderTableRef');
   fileTableRef = viewChild<ResultManagementFileTableComponent>('fileTableRef');
 
   results = signal<IResult[]>([]);
@@ -124,6 +127,7 @@ export class ResultManagementComponent implements OnInit {
   ngOnInit(): void {
     this.loadDepartmentLecturers();
     this.getResults();
+    this.loadNotifications();
   }
 
   private loadDepartmentLecturers() {
@@ -196,9 +200,9 @@ export class ResultManagementComponent implements OnInit {
               return enhanced;
             });
             
-            // Merge localStorage results with API results
+            // Merge localStorage results with API results, removing duplicates
             const currentResults = this.results();
-            const mergedResults = [...currentResults, ...enhancedResults];
+            const mergedResults = this.deduplicateResults([...currentResults, ...enhancedResults]);
             this.results.set(mergedResults);
           }
         },
@@ -209,6 +213,14 @@ export class ResultManagementComponent implements OnInit {
     // Load from localStorage first for completed drafts
     this.loadDraftResultsFromLocalStorage();
     
+    // Get sent result IDs to exclude from API results
+    const resultManagementList = JSON.parse(localStorage.getItem('result_management_list') || '[]');
+    const sentToCCIds = resultManagementList
+      .filter((item: any) => item.sentToCC === true)
+      .map((item: any) => item.resultId);
+    
+    console.log('Sent to CC IDs:', sentToCCIds);
+    
     // Then load from API and merge
     this.resultService
       .getResults({
@@ -217,7 +229,18 @@ export class ResultManagementComponent implements OnInit {
       .subscribe({
         next: (resp) => {
           if (resp.status && resp.data.result) {
-            const enhancedResults = resp.data.result.map((result: any) => {
+            console.log('API Draft results before filtering:', resp.data.result);
+            
+            // Filter out results that have been sent to CC
+            const availableApiResults = resp.data.result.filter((result: any) => {
+              const isSent = sentToCCIds.includes(result._id);
+              console.log(`Result ${result._id} (${result.course?.courseTitle}) - Sent to CC: ${isSent}`);
+              return !isSent;
+            });
+            
+            console.log('Available API results after filtering:', availableApiResults);
+            
+            const enhancedResults = availableApiResults.map((result: any) => {
               const enhanced = {
                 ...result,
                 course: {
@@ -232,9 +255,9 @@ export class ResultManagementComponent implements OnInit {
               return enhanced;
             });
             
-            // Merge with localStorage results
+            // Merge with localStorage results, removing duplicates
             const currentResults = this.results();
-            const mergedResults = [...currentResults, ...enhancedResults];
+            const mergedResults = this.deduplicateResults([...currentResults, ...enhancedResults]);
             this.results.set(mergedResults);
           }
         },
@@ -246,10 +269,20 @@ export class ResultManagementComponent implements OnInit {
 
   private loadCompletedResultsFromLocalStorage() {
     const resultManagementList = JSON.parse(localStorage.getItem('result_management_list') || '[]');
+    const currentUser = this.authService.activeAccount();
     
-    // Filter results that match current segment status
-    const completedResults = resultManagementList
-      .filter((item: any) => item.status === this.activeSegment().value)
+    // Filter results that match current segment status and user role
+    let completedResults = resultManagementList
+      .filter((item: any) => item.status === this.activeSegment().value);
+    
+    // For DRAFT status, include results sent to CC for Course Coordinator
+    if (this.activeSegment().value === 'DRAFT' && currentUser?.role === 'COURSE_COORDINATOR') {
+      // Course Coordinator sees results sent to them in DRAFT section
+      const sentToCCResults = resultManagementList.filter((item: any) => item.sentToCC === true && item.status === 'DRAFT');
+      completedResults = [...completedResults, ...sentToCCResults];
+    }
+    
+    const processedResults = completedResults
       .map((item: any) => {
         const currentUser = this.authService.activeAccount();
         
@@ -262,8 +295,9 @@ export class ResultManagementComponent implements OnInit {
         return {
           _id: item.resultId,
           courseCode: courseCode,
+          courseTitle: item.courseTitle,
           course: {
-            courseTitle: item.courseTitle || 'Unknown Course',
+            courseTitle: item.courseTitle,
             courseCode: courseCode
           },
           session: item.session || 'Unknown Session',
@@ -291,7 +325,7 @@ export class ResultManagementComponent implements OnInit {
         };
       });
     
-    this.results.set(completedResults);
+    this.results.set(processedResults);
   }
 
   private loadDraftResultsFromLocalStorage() {
@@ -302,16 +336,28 @@ export class ResultManagementComponent implements OnInit {
     console.log('result_management_list:', resultManagementList);
     console.log('result_drafts_list:', resultDraftsList);
     
-    // Combine both lists, prioritizing completed results from result_management_list
-    const allDrafts = [...resultManagementList.filter((item: any) => item.status === 'DRAFT'), ...resultDraftsList];
+    // Get IDs of results that have been sent to CC
+    const sentToCCIds = resultManagementList
+      .filter((item: any) => item.sentToCC === true)
+      .map((item: any) => item.resultId);
     
-    if (allDrafts.length === 0) {
-      this.results.set([]);
+    console.log('Sent to CC IDs from localStorage:', sentToCCIds);
+    
+    // Only include drafts that haven't been sent to CC
+    const availableDrafts = [
+      ...resultManagementList.filter((item: any) => item.status === 'DRAFT'),
+      ...resultDraftsList.filter((item: any) => !sentToCCIds.includes(item.resultId))
+    ];
+    
+    console.log('Available drafts after filtering:', availableDrafts.length);
+    
+    if (availableDrafts.length === 0) {
+      // Don't clear results here, let API results load
       return;
     }
     
-    // Remove duplicates, keeping the first occurrence (completed results take priority)
-    const uniqueDrafts = allDrafts.filter((item, index, self) => 
+    // Remove duplicates, keeping the first occurrence
+    const uniqueDrafts = availableDrafts.filter((item, index, self) => 
       index === self.findIndex(t => t.resultId === item.resultId)
     );
     
@@ -352,10 +398,12 @@ export class ResultManagementComponent implements OnInit {
         isDraft: true,
         studentCount: item.totalStudents || 0,
         studentsWithGrades: item.studentsWithGrades || 0,
-        completionPercentage: item.completionPercentage || 0
+        completionPercentage: item.completionPercentage || 0,
+        isFromLocalStorage: true
       };
     });
     
+    console.log('Processed draft results from localStorage:', draftResults.length);
     this.results.set(draftResults);
   }
 
@@ -414,13 +462,30 @@ export class ResultManagementComponent implements OnInit {
   }
 
   sendToCC() {
-    const fileTable = this.fileTableRef();
-    if (!fileTable) {
-      this.toast.showNotification('error', 'Error', 'Unable to access results table');
-      return;
+    // Lecturers use file table, Course Coordinators use folder table
+    const currentUser = this.authService.activeAccount();
+    let selectedResults: IResult[] = [];
+    
+    if (currentUser?.role === RoleEnum.LECTURER) {
+      const fileTable = this.fileTableRef();
+      if (!fileTable) {
+        console.error('File table reference not found');
+        this.toast.showNotification('error', 'Error', 'Unable to access results table');
+        return;
+      }
+      selectedResults = fileTable.selection.selected;
+    } else {
+      const folderTable = this.folderTableRef();
+      if (!folderTable) {
+        console.error('Folder table reference not found');
+        this.toast.showNotification('error', 'Error', 'Unable to access results table');
+        return;
+      }
+      selectedResults = folderTable.selection.selected;
     }
-
-    const selectedResults = fileTable.selection.selected;
+    
+    console.log('Selected results for sending to CC:', selectedResults);
+    
     if (selectedResults.length === 0) {
       this.toast.showNotification('warning', 'No Selection', 'Please select at least one result to send to Course Coordinator');
       return;
@@ -451,53 +516,94 @@ export class ResultManagementComponent implements OnInit {
     this.sendingToCC.set(true);
     
     // Find Course Coordinator from department lecturers
+    console.log('Available lecturers:', this.departmentLecturers());
     const courseCoordinator = this.departmentLecturers().find(lecturer => 
       lecturer.role === 'COURSE_COORDINATOR' || lecturer.role === 'course_coordinator'
     );
+    console.log('Found Course Coordinator:', courseCoordinator);
     
-    // Prepare update payload for each result
-    const updatePromises = selectedResults.map(result => {
-      const updatePayload = {
-        status: 'PENDING' as any,
-        sentToCC: true,
-        sentToCCAt: new Date().toISOString(),
-        assignedTo: courseCoordinator?._id || null,
-        lastModified: new Date().toISOString()
-      };
-      
-      return this.resultService.updateResult(result._id!, updatePayload).toPromise();
+    if (!courseCoordinator) {
+      console.error('Course Coordinator not found in department lecturers');
+      this.toast.showNotification('error', 'Error', 'Course Coordinator not found in your department');
+      this.sendingToCC.set(false);
+      return;
+    }
+    
+    // Validate selected results have valid IDs
+    const validResults = selectedResults.filter(result => result._id);
+    if (validResults.length === 0) {
+      console.error('No valid result IDs found in selected results');
+      this.toast.showNotification('error', 'Error', 'Selected results do not have valid IDs');
+      this.sendingToCC.set(false);
+      return;
+    }
+    
+    // Use the send results API for each result
+    console.log('Sending results:', validResults.map(r => ({ id: r._id, course: r.course?.courseTitle })));
+    console.log('To recipient:', courseCoordinator._id);
+    
+    const sendPromises = validResults.map(result => {
+      console.log(`Sending result ${result._id} to ${courseCoordinator._id}`);
+      return this.resultService.sendResult(result._id!, courseCoordinator._id).toPromise()
+        .catch(error => {
+          console.error(`Failed to send result ${result._id}:`, error);
+          return { status: false, error };
+        });
     });
 
-    Promise.all(updatePromises)
+    Promise.all(sendPromises)
       .then((responses) => {
-        const successCount = responses.filter(resp => resp?.status).length;
+        console.log('Send results responses:', responses);
+        const successCount = responses.filter(resp => resp?.status === true).length;
         
-        if (successCount === selectedResults.length) {
+        if (successCount === validResults.length) {
           this.toast.showNotification(
             'success', 
             'Success', 
             `Successfully sent ${successCount} result${successCount > 1 ? 's' : ''} to Course Coordinator`
           );
           
-          // Also update localStorage for consistency
-          this.moveResultsToPending(selectedResults);
+          // Update localStorage for consistency
+          this.moveResultsToCCDraft(validResults);
+          
+          // Trigger notification refresh in toolbar
+          this.refreshToolbarNotifications();
           
           // Clear selection and refresh
-          const fileTable = this.fileTableRef();
-          if (fileTable) {
-            fileTable.selection.clear();
+          const currentUser = this.authService.activeAccount();
+          if (currentUser?.role === RoleEnum.LECTURER) {
+            const fileTable = this.fileTableRef();
+            if (fileTable) {
+              fileTable.selection.clear();
+            }
+          } else {
+            const folderTable = this.folderTableRef();
+            if (folderTable) {
+              folderTable.selection.clear();
+              folderTable.folderSelection.clear();
+            }
           }
           this.getResults();
         } else {
+          const failedCount = validResults.length - successCount;
           this.toast.showNotification(
-            'warning', 
-            'Partial Success', 
-            `${successCount} of ${selectedResults.length} results sent successfully`
+            successCount > 0 ? 'warning' : 'error', 
+            successCount > 0 ? 'Partial Success' : 'Failed', 
+            successCount > 0 
+              ? `${successCount} of ${validResults.length} results sent successfully. ${failedCount} failed.`
+              : `Failed to send ${failedCount} result${failedCount > 1 ? 's' : ''} to Course Coordinator`
           );
+          
+          // Still update localStorage for successful sends
+          if (successCount > 0) {
+            const successfulResults = validResults.filter((_, index) => responses[index]?.status === true);
+            this.moveResultsToCCDraft(successfulResults);
+            this.getResults();
+          }
         }
       })
       .catch((error) => {
-        console.error('Error sending results to CC:', error);
+        console.error('Error in Promise.all for sending results to CC:', error);
         this.toast.showNotification(
           'error', 
           'Error', 
@@ -509,25 +615,56 @@ export class ResultManagementComponent implements OnInit {
       });
   }
 
-  private moveResultsToPending(sentResults: IResult[]) {
-    // Update localStorage to move results from DRAFT to PENDING
+  private moveResultsToCCDraft(sentResults: IResult[]) {
+    console.log('Moving results to CC draft:', sentResults.map(r => ({ id: r._id, course: r.course?.courseTitle })));
+    
+    // Remove results from lecturer's draft and add to CC draft
     const resultManagementList = JSON.parse(localStorage.getItem('result_management_list') || '[]');
+    const resultDraftsList = JSON.parse(localStorage.getItem('result_drafts_list') || '[]');
     
-    const updatedList = resultManagementList.map((item: any) => {
-      const wasSent = sentResults.some(result => result._id === item.resultId);
-      if (wasSent && item.status === 'DRAFT') {
-        return {
-          ...item,
-          status: 'PENDING',
-          lastModified: new Date().toISOString(),
-          sentToCC: true,
-          sentToCCAt: new Date().toISOString()
-        };
-      }
-      return item;
-    });
+    // Remove from drafts and add to CC draft with preserved course info
+    const sentResultIds = sentResults.map(result => result._id);
     
-    localStorage.setItem('result_management_list', JSON.stringify(updatedList));
+    // Filter out sent results from drafts
+    const updatedDraftsList = resultDraftsList.filter((item: any) => 
+      !sentResultIds.includes(item.resultId)
+    );
+    
+    // Remove from management list drafts as well
+    const filteredManagementList = resultManagementList.filter((item: any) => 
+      !(item.status === 'DRAFT' && sentResultIds.includes(item.resultId))
+    );
+    
+    // Add sent results to DRAFT status for Course Coordinator with sentToCC flag
+    const ccDraftResults = sentResults.map(result => ({
+      resultId: result._id,
+      courseCode: result.course?.courseCode || (result as any).courseCode,
+      courseTitle: result.course?.courseTitle || (result as any).courseTitle,
+      session: result.session,
+      level: result.level,
+      semester: result.semester,
+      department: this.getDepartmentName(result.department),
+      faculty: this.getFacultyName(result.faculty),
+      status: 'DRAFT',
+      timestamp: new Date().toISOString(),
+      lastModified: new Date().toISOString(),
+      sentToCC: true,
+      sentToCCAt: new Date().toISOString(),
+      lecturer: result.lecturer,
+      uploadedBy: result.uploadedBy,
+      totalStudents: result.studentCount || 0,
+      studentsWithGrades: result.studentsWithGrades || 0,
+      completionPercentage: result.completionPercentage || 0
+    }));
+    
+    // Update localStorage
+    const updatedManagementList = [...filteredManagementList, ...ccDraftResults];
+    
+    console.log('Updated management list:', updatedManagementList);
+    console.log('Updated drafts list:', updatedDraftsList);
+    
+    localStorage.setItem('result_management_list', JSON.stringify(updatedManagementList));
+    localStorage.setItem('result_drafts_list', JSON.stringify(updatedDraftsList));
   }
 
   sendToHOD() {
@@ -549,23 +686,25 @@ export class ResultManagementComponent implements OnInit {
   }
 
   viewResult(course: ICourse) {
-    // For DRAFT segment, navigate to result-upload to view/edit
-    if (this.activeSegment().value === 'DRAFT') {
+    const currentUser = this.authService.activeAccount();
+    
+    // For LECTURERS: Navigate to result-upload for editing
+    if (currentUser?.role === RoleEnum.LECTURER) {
       this.router.navigate(['/my-result/upload-result'], {
         queryParams: { resultId: course._id },
       });
       return;
     }
-
-    // For completed results from localStorage, navigate to approve-reject-result
-    if ((course as any).isFromLocalStorage) {
-      this.router.navigate(['approve-reject-result'], {
-        relativeTo: this.route,
+    
+    // For COURSE COORDINATORS: Navigate to standalone course coordinator results view
+    if (currentUser?.role === RoleEnum.COURSE_COORDINATOR) {
+      this.router.navigate(['/my-result/course-coordinator-results'], {
         queryParams: { resultId: course._id },
       });
       return;
     }
-
+    
+    // For other roles (HOD, DEAN, etc.): Navigate to verify-result
     this.router.navigate(['verify-result'], {
       relativeTo: this.route,
       queryParams: { resultId: course._id },
@@ -665,5 +804,100 @@ export class ResultManagementComponent implements OnInit {
         console.warn('Failed to fetch lecturer:', error);
       }
     });
+  }
+
+  private deduplicateResults(results: IResult[]): IResult[] {
+    const seen = new Set<string>();
+    return results.filter(result => {
+      const key = result._id || `${result.course?.courseCode}-${result.session}-${result.level}`;
+      if (seen.has(key)) {
+        return false;
+      }
+      seen.add(key);
+      return true;
+    });
+  }
+
+  private loadNotifications() {
+    this.notificationService.getNotifications().subscribe({
+      next: (resp) => {
+        if (resp.status) {
+          console.log('Notifications loaded:', resp.data);
+        }
+      },
+      error: (error) => {
+        console.warn('Failed to load notifications:', error);
+      }
+    });
+  }
+
+  private refreshToolbarNotifications() {
+    // Find toolbar component and refresh its notifications
+    const toolbar = document.querySelector('app-tool-bar');
+    if (toolbar) {
+      // Dispatch custom event to refresh notifications
+      const event = new CustomEvent('refreshNotifications');
+      toolbar.dispatchEvent(event);
+    }
+  }
+
+  private getDepartmentName(department: any): string {
+    if (!department) return 'Unknown Department';
+    
+    // If department is an object with name property
+    if (typeof department === 'object' && department.name) {
+      return department.name;
+    }
+    
+    // If department is a string (ObjectId), map known IDs
+    if (typeof department === 'string') {
+      const departmentMap: { [key: string]: string } = {
+        '68ac815a7a30dc0ea703d56d': 'Accounting',
+        '68ac815a7a30dc0ea703d56e': 'Business Administration',
+        '68ac815a7a30dc0ea703d56f': 'Economics',
+        '68ac815a7a30dc0ea703d570': 'Finance',
+        '68ac815a7a30dc0ea703d571': 'Marketing',
+        '68ac815a7a30dc0ea703d572': 'Computer Science',
+        '68ac815a7a30dc0ea703d573': 'Mathematics',
+        '68ac815a7a30dc0ea703d574': 'Physics',
+        '68ac815a7a30dc0ea703d575': 'Chemistry',
+        '68ac815a7a30dc0ea703d576': 'Biology',
+        '68ac815a7a30dc0ea703d577': 'English',
+        '68ac815a7a30dc0ea703d578': 'History',
+        '68ac815a7a30dc0ea703d579': 'Political Science',
+        '68ac815a7a30dc0ea703d580': 'Sociology'
+      };
+      
+      return departmentMap[department] || department.substring(0, 8) + '...';
+    }
+    
+    return 'Unknown Department';
+  }
+
+  private getFacultyName(faculty: any): string {
+    if (!faculty) return 'Unknown Faculty';
+    
+    // If faculty is an object with name property
+    if (typeof faculty === 'object' && faculty.name) {
+      return faculty.name;
+    }
+    
+    // If faculty is a string (ObjectId), map known IDs
+    if (typeof faculty === 'string') {
+      const facultyMap: { [key: string]: string } = {
+        '68ac80d77a30dc0ea703d55e': 'Management Sciences',
+        '68ac80d77a30dc0ea703d55f': 'Engineering',
+        '68ac80d77a30dc0ea703d560': 'Sciences',
+        '68ac80d77a30dc0ea703d561': 'Arts',
+        '68ac80d77a30dc0ea703d562': 'Social Sciences',
+        '68ac80d77a30dc0ea703d563': 'Education',
+        '68ac80d77a30dc0ea703d564': 'Law',
+        '68ac80d77a30dc0ea703d565': 'Medicine'
+      };
+      
+      return facultyMap[faculty] || faculty.substring(0, 8) + '...';
+    }
+    
+    return 'Unknown Faculty';
   }
 }
