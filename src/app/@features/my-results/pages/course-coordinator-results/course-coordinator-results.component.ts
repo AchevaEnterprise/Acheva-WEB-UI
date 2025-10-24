@@ -58,7 +58,7 @@ export class CourseCoordinatorResultsComponent {
   private readonly router = inject(Router);
   
   // Get result data from query params
-  private readonly resultId = this.route.snapshot.queryParamMap.get('resultId');
+  readonly resultId = this.route.snapshot.queryParamMap.get('resultId');
   
   courseCode = signal<string>('');
   courseTitle = signal<string>('');
@@ -103,11 +103,6 @@ export class CourseCoordinatorResultsComponent {
 
     this.loadAllSegmentData();
     this.loadCourseDetails();
-    
-    // Ensure analytics are updated after initial load
-    setTimeout(() => {
-      this.updateAnalyticsForSegment(this.activeSegment().value as SegmentValue);
-    }, 100);
   }
 
   private loadAllSegmentData() {
@@ -133,7 +128,7 @@ export class CourseCoordinatorResultsComponent {
       .subscribe({
         next: (resp) => {
           if (resp.status && resp.data) {
-            const { analytics, totalPass, totalFail, entries, studentsWithoutEntries } = resp.data;
+            const { entries, studentsWithoutEntries } = resp.data;
             
             // Process all entries directly - they should contain the actual grades
             const processedEntries = (entries || []).map((student: any) => ({
@@ -184,34 +179,10 @@ export class CourseCoordinatorResultsComponent {
               }));
             }
 
-            // Update analytics only for the active segment
-            if (segment === this.activeSegment().value) {
-              const analyticsData = [
-                analytics['A'] || 0,
-                analytics['B'] || 0,
-                analytics['C'] || 0,
-                analytics['D'] || 0,
-                analytics['E'] || 0,
-                analytics['F'] || 0,
-              ];
-              
-              const totalStudentsCount = (entries?.length || 0) + (studentsWithoutEntries?.length || 0);
-              
-              this.analyticsChartData.set(analyticsData);
-              this.totalStudent.set(totalStudentsCount);
-              this.totalStudentPass.set(totalPass || 0);
-              this.totalStudentFail.set(totalFail || 0);
-              
-              // Calculate average grade
-              const totalGrades = analyticsData.reduce((sum, count) => sum + count, 0);
-              if (totalGrades > 0) {
-                const weightedSum = analyticsData.reduce((sum, count, index) => {
-                  const gradePoints = [4, 3, 2, 1, 0, 0][index];
-                  return sum + (count * gradePoints);
-                }, 0);
-                this.averageGrade.set(Math.round((weightedSum / totalGrades) * 100 / 4));
-              }
-            }
+            // Always update analytics after data is loaded
+            setTimeout(() => {
+              this.updateAnalyticsForSegment(segment);
+            }, 100);
           }
         },
         error: (error) => {
@@ -495,11 +466,11 @@ export class CourseCoordinatorResultsComponent {
             [segment]: draft.students,
           }));
           
-          // Always update analytics for the current segment
-          if (segment === this.activeSegment().value) {
+          // Always update analytics after loading from localStorage
+          setTimeout(() => {
             this.updateAnalyticsForSegment(segment);
             console.log(`Analytics updated after loading ${segment} - students count: ${draft.students.length}`);
-          }
+          }, 50);
           
           console.log(`Successfully loaded ${draft.students.length} students from draft: ${draft.timestamp}`);
           return;
@@ -553,9 +524,10 @@ export class CourseCoordinatorResultsComponent {
       [segment]: studentData,
     }));
     
-    if (segment === this.activeSegment().value) {
+    // Always update analytics after loading data
+    setTimeout(() => {
       this.updateAnalyticsForSegment(segment);
-    }
+    }, 50);
   }
 
   private mergeWithLocalStorageGrades(segment: SegmentValue, apiStudents: any[]) {

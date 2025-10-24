@@ -93,7 +93,7 @@ export class ResultUploadComponent implements OnInit {
   // ========================================
   // COMPONENT PROPERTIES
   // ========================================
-  private readonly resultId = this.route.snapshot.queryParamMap.get('resultId');
+  readonly resultId = this.route.snapshot.queryParamMap.get('resultId');
 
   // Separate view child references for each segment
   referenceTableResultUploadRef =

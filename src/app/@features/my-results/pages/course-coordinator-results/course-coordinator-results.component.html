@@ -1,21 +1,32 @@
 <!-- HEADER WITH BACK BUTTON -->
 <div class="flex items-center gap-4 mb-6">
-  <button 
-    mat-icon-button 
+  <button
+    mat-icon-button
     (click)="goBack()"
     class="!w-10 !h-10 !bg-gray-100 hover:!bg-gray-200 transition-colors"
   >
     <mat-icon>arrow_back</mat-icon>
   </button>
   <div>
-    <h1 class="acva-heading-4 fw-600 text-neutral-800">Course Coordinator Results View</h1>
-    <p class="acva-para-1 text-neutral-500">{{ courseCode() }} - {{ courseTitle() }}</p>
-    <p class="acva-para-2 text-neutral-400">Department: {{ departmentName() }}</p>
+    <h1 class="acva-heading-4 fw-600 text-neutral-800">
+      Course Coordinator Results View
+    </h1>
+    <p class="acva-para-1 text-neutral-500">
+      {{ courseCode() }} - {{ courseTitle() }}
+    </p>
+    <p class="acva-para-2 text-neutral-400">
+      Department: {{ departmentName() }}
+    </p>
   </div>
 </div>
 
 <!-- COURSE ANALYTICS -->
-<app-card label="Course Analytics" [showDivider]="true" dividerClass="!mt-3" class="mb-4">
+<app-card
+  label="Course Analytics"
+  [showDivider]="true"
+  dividerClass="!mt-3"
+  class="mb-4"
+>
   <p rightHeaderContent class="acva-para-1 text-neutral-500">
     Average Grade <span class="text-neutral-800">{{ averageGrade() }}%</span>
   </p>
@@ -72,13 +83,13 @@
     </div>
   </div>
 
-  <div class="flex items-center justify-between mt-4">
+  <!--<div class="flex items-center justify-between mt-4">
     <app-segment-switcher
       [activeSegment]="activeSegment()"
       [segments]="segments()"
       (switchEvent)="switchSegment($event)"
     />
-  </div>
+  </div>-->
 
   <div class="mt-4">
     @if (loadingData()) {
@@ -91,18 +102,24 @@
           <app-reference-table-result-upload
             #regularTableResultUploadRef
             [students]="getStudentsForSegment('REGULAR')"
+            [resultId]="resultId || ''"
+            [segment]="'REGULAR'"
           />
         }
         @case ('REFERENCE') {
           <app-reference-table-result-upload
             #referenceTableResultUploadRef
             [students]="getStudentsForSegment('REFERENCE')"
+            [resultId]="resultId || ''"
+            [segment]="'REFERENCE'"
           />
         }
         @case ('UNREGISTERED') {
           <app-reference-table-result-upload
             #unregisteredTableResultUploadRef
             [students]="getStudentsForSegment('UNREGISTERED')"
+            [resultId]="resultId || ''"
+            [segment]="'UNREGISTERED'"
           />
         }
       }

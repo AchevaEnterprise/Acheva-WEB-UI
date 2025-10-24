@@ -1,4 +1,11 @@
 @if (dataSource().length > 0) {
+  <!-- Save Status -->
+  @if (savingToBackend()) {
+    <div class="mb-4 p-2 bg-blue-50 text-blue-800 rounded text-sm">
+      Saving changes to backend...
+    </div>
+  }
+  
   <!-- Table Section -->
   <div class="overflow-x-auto">
     <form [formGroup]="form">
@@ -52,6 +59,7 @@
               min="0"
               class="border border-neutral-300 rounded-[8px] p-2 my-4 w-[3rem]"
               placeholder="-"
+              (keypress)="onKeyPress($event)"
             />
           </td>
         </ng-container>
@@ -67,6 +75,7 @@
               min="0"
               class="border border-neutral-300 rounded-[8px] p-2 my-4 w-[3rem]"
               placeholder="-"
+              (keypress)="onKeyPress($event)"
             />
           </td>
         </ng-container>
@@ -82,6 +91,7 @@
               min="0"
               class="border border-neutral-300 rounded-[8px] p-2 my-4 w-[3rem]"
               placeholder="-"
+              (keypress)="onKeyPress($event)"
             />
           </td>
         </ng-container>
@@ -164,8 +174,9 @@
     </div>
   } -->
 
-  <!-- Pagination -->
 
+
+  <!-- Pagination -->
   <app-paginator
     [paginator]="paginationData()"
     (pageEvent)="onPageChange($event)"

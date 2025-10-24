@@ -5,13 +5,14 @@ import {
   NG_VALUE_ACCESSOR,
   ReactiveFormsModule,
 } from '@angular/forms';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectChange, MatSelectModule } from '@angular/material/select';
 import { NgxMatSelectSearchModule } from 'ngx-mat-select-search';
 import { debounceTime, distinctUntilChanged, filter } from 'rxjs';
 
 @Component({
   selector: 'app-search-select',
-  imports: [MatSelectModule, NgxMatSelectSearchModule, ReactiveFormsModule],
+  imports: [MatFormFieldModule, MatSelectModule, NgxMatSelectSearchModule, ReactiveFormsModule],
   templateUrl: './search-select.component.html',
   styleUrl: './search-select.component.scss',
   providers: [
