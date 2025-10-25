@@ -111,6 +111,13 @@ export class ResultManagementFolderTableComponent {
       const folder = folderMap.get(courseCode)!;
       folder.results.push(result);
       folder.resultCount = folder.results.length;
+      
+      // Sort results by updatedAt date (most recent first)
+      folder.results.sort((a, b) => {
+        const dateA = new Date(a.updatedAt || a.createdAt || 0).getTime();
+        const dateB = new Date(b.updatedAt || b.createdAt || 0).getTime();
+        return dateB - dateA;
+      });
     });
 
     this.folderDataSource.set(Array.from(folderMap.values()));
