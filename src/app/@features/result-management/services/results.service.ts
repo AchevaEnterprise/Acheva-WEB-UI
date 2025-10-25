@@ -1,8 +1,9 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { IAPIResponse } from '../../../@core/models/api-response.model';
+import { NotificationService } from '../../notifications/service/notification.service';
 import {
   ICreateResult,
   ICreateResultEntry,
@@ -17,6 +18,7 @@ import {
 })
 export class ResultsService {
   private readonly http = inject(HttpClient);
+  private readonly notificationService = inject(NotificationService);
   private readonly resultsUrl = `${environment.BASE_URL}/results`;
 
   getResults(query?: IResultQuery): Observable<IAPIResponse<any>> {
@@ -53,11 +55,32 @@ export class ResultsService {
 
   sendResult(
     resultId: string,
-    recepientId: string
+    recepientId: string,
+    courseTitle?: string,
+    senderRole?: string,
+    recipientRole?: string
   ): Observable<IAPIResponse<any>> {
     return this.http.patch<IAPIResponse<any>>(
       `${this.resultsUrl}/${resultId}/send/${recepientId}`,
       {}
+    ).pipe(
+      tap((response) => {
+        if (response.status) {
+          // Create notification for recipient
+          const notification = {
+            title: 'New Result Received',
+            message: `You have received a new result${courseTitle ? ` for ${courseTitle}` : ''} from ${senderRole || 'colleague'}`,
+            type: 'RESULT_RECEIVED',
+            recipientId: recepientId,
+            data: { resultId, courseTitle, senderRole, recipientRole }
+          };
+          
+          this.notificationService.createNotification(notification).subscribe();
+          
+          // Trigger notification refresh
+          document.dispatchEvent(new CustomEvent('refreshNotifications'));
+        }
+      })
     );
   }
 
