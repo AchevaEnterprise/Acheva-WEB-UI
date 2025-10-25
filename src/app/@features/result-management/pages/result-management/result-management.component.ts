@@ -211,6 +211,8 @@ export class ResultManagementComponent implements OnInit {
   }
 
   private loadDraftResults() {
+    const currentUser = this.authService.activeAccount();
+    
     // Load from localStorage first for completed drafts
     this.loadDraftResultsFromLocalStorage();
     
@@ -232,12 +234,28 @@ export class ResultManagementComponent implements OnInit {
           if (resp.status && resp.data.result) {
             console.log('API Draft results before filtering:', resp.data.result);
             
-            // Filter out results that have been sent to CC
-            const availableApiResults = resp.data.result.filter((result: any) => {
-              const isSent = sentToCCIds.includes(result._id);
-              console.log(`Result ${result._id} (${result.course?.courseTitle}) - Sent to CC: ${isSent}`);
-              return !isSent;
-            });
+            // For LECTURERS: Filter out results that have been sent to CC
+            // For COURSE_COORDINATORS: Only show results sent to them
+            let availableApiResults;
+            
+            if (currentUser?.role === RoleEnum.LECTURER) {
+              // Lecturers should NOT see results they've sent to CC
+              availableApiResults = resp.data.result.filter((result: any) => {
+                const isSent = sentToCCIds.includes(result._id);
+                console.log(`Lecturer view - Result ${result._id} (${result.course?.courseTitle}) - Sent to CC: ${isSent}`);
+                return !isSent;
+              });
+            } else if (currentUser?.role === RoleEnum.COURSE_COORDINATOR) {
+              // Course Coordinators should ONLY see results sent to them
+              availableApiResults = resp.data.result.filter((result: any) => {
+                const isSent = sentToCCIds.includes(result._id);
+                console.log(`CC view - Result ${result._id} (${result.course?.courseTitle}) - Sent to CC: ${isSent}`);
+                return isSent;
+              });
+            } else {
+              // Other roles see all drafts
+              availableApiResults = resp.data.result;
+            }
             
             console.log('Available API results after filtering:', availableApiResults);
             
@@ -273,14 +291,26 @@ export class ResultManagementComponent implements OnInit {
     const currentUser = this.authService.activeAccount();
     
     // Filter results that match current segment status and user role
-    let completedResults = resultManagementList
-      .filter((item: any) => item.status === this.activeSegment().value);
+    let completedResults;
     
-    // For DRAFT status, include results sent to CC for Course Coordinator
-    if (this.activeSegment().value === 'DRAFT' && currentUser?.role === 'COURSE_COORDINATOR') {
-      // Course Coordinator sees results sent to them in DRAFT section
-      const sentToCCResults = resultManagementList.filter((item: any) => item.sentToCC === true && item.status === 'DRAFT');
-      completedResults = [...completedResults, ...sentToCCResults];
+    if (this.activeSegment().value === 'DRAFT') {
+      if (currentUser?.role === RoleEnum.LECTURER) {
+        // Lecturers should NOT see results they've sent to CC
+        completedResults = resultManagementList.filter((item: any) => 
+          item.status === 'DRAFT' && !item.sentToCC
+        );
+      } else if (currentUser?.role === RoleEnum.COURSE_COORDINATOR) {
+        // Course Coordinators should ONLY see results sent to them
+        completedResults = resultManagementList.filter((item: any) => 
+          item.status === 'DRAFT' && item.sentToCC === true
+        );
+      } else {
+        // Other roles see all drafts
+        completedResults = resultManagementList.filter((item: any) => item.status === 'DRAFT');
+      }
+    } else {
+      // For non-DRAFT statuses, show all results matching the status
+      completedResults = resultManagementList.filter((item: any) => item.status === this.activeSegment().value);
     }
     
     const processedResults = completedResults
@@ -330,6 +360,7 @@ export class ResultManagementComponent implements OnInit {
   }
 
   private loadDraftResultsFromLocalStorage() {
+    const currentUser = this.authService.activeAccount();
     const resultManagementList = JSON.parse(localStorage.getItem('result_management_list') || '[]');
     const resultDraftsList = JSON.parse(localStorage.getItem('result_drafts_list') || '[]');
     
@@ -344,11 +375,24 @@ export class ResultManagementComponent implements OnInit {
     
     console.log('Sent to CC IDs from localStorage:', sentToCCIds);
     
-    // Only include drafts that haven't been sent to CC
-    const availableDrafts = [
-      ...resultManagementList.filter((item: any) => item.status === 'DRAFT'),
-      ...resultDraftsList.filter((item: any) => !sentToCCIds.includes(item.resultId))
-    ];
+    let availableDrafts;
+    
+    if (currentUser?.role === RoleEnum.LECTURER) {
+      // Lecturers should NOT see results they've sent to CC
+      availableDrafts = [
+        ...resultManagementList.filter((item: any) => item.status === 'DRAFT' && !item.sentToCC),
+        ...resultDraftsList.filter((item: any) => !sentToCCIds.includes(item.resultId))
+      ];
+    } else if (currentUser?.role === RoleEnum.COURSE_COORDINATOR) {
+      // Course Coordinators should ONLY see results sent to them
+      availableDrafts = resultManagementList.filter((item: any) => item.status === 'DRAFT' && item.sentToCC === true);
+    } else {
+      // Other roles see all drafts
+      availableDrafts = [
+        ...resultManagementList.filter((item: any) => item.status === 'DRAFT'),
+        ...resultDraftsList
+      ];
+    }
     
     console.log('Available drafts after filtering:', availableDrafts.length);
     
@@ -358,8 +402,8 @@ export class ResultManagementComponent implements OnInit {
     }
     
     // Remove duplicates, keeping the first occurrence
-    const uniqueDrafts = availableDrafts.filter((item, index, self) => 
-      index === self.findIndex(t => t.resultId === item.resultId)
+    const uniqueDrafts = availableDrafts.filter((item: any, index: number, self: any[]) => 
+      index === self.findIndex((t: any) => t.resultId === item.resultId)
     );
     
     const draftResults = uniqueDrafts.map((item: any) => {
@@ -577,6 +621,11 @@ export class ResultManagementComponent implements OnInit {
             if (fileTable) {
               fileTable.selection.clear();
             }
+            // Remove sent results from current view immediately
+            const sentResultIds = validResults.map(result => result._id);
+            this.results.update(currentResults => 
+              currentResults.filter(result => !sentResultIds.includes(result._id))
+            );
           } else {
             const folderTable = this.folderTableRef();
             if (folderTable) {
@@ -599,6 +648,14 @@ export class ResultManagementComponent implements OnInit {
           if (successCount > 0) {
             const successfulResults = validResults.filter((_, index) => responses[index]?.status === true);
             this.moveResultsToCCDraft(successfulResults);
+            // Remove sent results from current view immediately for lecturers
+            const currentUser = this.authService.activeAccount();
+            if (currentUser?.role === RoleEnum.LECTURER) {
+              const sentResultIds = successfulResults.map(result => result._id);
+              this.results.update(currentResults => 
+                currentResults.filter(result => !sentResultIds.includes(result._id))
+              );
+            }
             this.getResults();
           }
         }
