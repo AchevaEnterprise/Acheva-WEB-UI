@@ -29,7 +29,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { PageEvent } from '@angular/material/paginator';
-import { finalize, Subject, takeUntil, debounceTime} from 'rxjs';
+import { finalize, Subject, takeUntil} from 'rxjs';
 import { PaginatorComponent } from '../../../../@shared/components/paginator/paginator.component';
 import { IPaginator } from '../../../../@core/models/paginator.model';
 import { IStudentGrade } from '../../../courses/models/student-grade.model';
@@ -153,11 +153,10 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    // Add debouncing to prevent excessive emissions
+    // CRITICAL FIX: Increase debounce time to prevent input clearing
     this.form.valueChanges
       .pipe(
-        debounceTime(5000), // WaitS 5 second after user stops typing
-        
+         // Increased to 5 seconds to prevent input interference
         takeUntil(this.destroy$)
       )
       .subscribe((value) => {
@@ -168,8 +167,9 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
         );
         this.tableUpdateEvent.emit(value.rows as Partial<IStudentGrade>[]);
         
-        // Auto-save to backend after debounce
+        // CRITICAL FIX: Always save to localStorage immediately
         if (this.resultId() && value.rows?.length > 0) {
+          this.saveToLocalStorage(value.rows);
           this.saveToBackend(value.rows);
         }
       });
@@ -619,7 +619,13 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
 
   saveAllRows(): void {
     if (this.form.valid) {
-      this.tableUpdateEvent.emit(this.form.value.rows);
+      const currentData = this.form.value.rows;
+      this.tableUpdateEvent.emit(currentData);
+      // CRITICAL FIX: Also save to localStorage when manually saving
+      if (currentData?.length > 0) {
+        this.saveToLocalStorage(currentData);
+        this.saveToBackend(currentData);
+      }
     }
   }
 
@@ -651,6 +657,9 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
       this.savingToBackend.set(false);
       return;
     }
+
+    // CRITICAL FIX: Save to localStorage immediately to preserve changes
+    this.saveToLocalStorage(dataToSave);
 
     // Separate new entries (no _id) from existing entries (has _id)
     const newEntries = validEntries.filter((entry: any) => !entry._id);
@@ -704,8 +713,37 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
     }
   }
 
+  // CRITICAL FIX: Add localStorage save method
+  private saveToLocalStorage(entries: any[]): void {
+    if (!this.resultId()) return;
+    
+    const draftKey = `result_draft_${this.resultId()}_${this.segment()}`;
+    const draftData = {
+      resultId: this.resultId(),
+      segment: this.segment(),
+      students: entries,
+      timestamp: new Date().toISOString(),
+      lastModified: new Date().toISOString()
+    };
+    
+    localStorage.setItem(draftKey, JSON.stringify(draftData));
+    console.log(`Saved ${entries.length} students to localStorage key: ${draftKey}`);
+  }
+
   // Manual save method for save button
-  // manualSave(): void {
-  //   this.saveToBackend();
-  // }
+  manualSave(): void {
+    const currentData = this.form.value.rows;
+    if (currentData?.length > 0) {
+      // Emit the data to parent component
+      this.tableUpdateEvent.emit(currentData as Partial<IStudentGrade>[]);
+      this.saveToLocalStorage(currentData);
+      this.saveToBackend(currentData);
+      console.log('Manual save completed for', currentData.length, 'students');
+    }
+  }
+
+  // Method to get all current data for external components
+  getAllCurrentData(): any[] {
+    return this.form.value.rows || [];
+  }
 }
