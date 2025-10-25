@@ -29,16 +29,17 @@ import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { PageEvent } from '@angular/material/paginator';
-import { finalize, Subject, takeUntil } from 'rxjs';
+import { finalize, Subject, takeUntil, debounceTime} from 'rxjs';
 import { PaginatorComponent } from '../../../../@shared/components/paginator/paginator.component';
 import { IPaginator } from '../../../../@core/models/paginator.model';
 import { IStudentGrade } from '../../../courses/models/student-grade.model';
 import { StudentService } from '../../../students/services/student.service';
 import { EmptyStateComponent } from '../../../../@shared/components/empty-state/empty-state.component';
+import { ResultsService } from '../../../result-management/services/results.service';
 
 @Component({
   selector: 'app-reference-table-result-upload',
-  imports: [
+  imports: [  
     PaginatorComponent,
     MatTableModule,
     MatFormFieldModule,
@@ -81,17 +82,22 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
   }
   // Injected services
   private readonly studentService = inject(StudentService);
+  private readonly resultsService = inject(ResultsService);
   private readonly fb = inject(FormBuilder);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly destroy$ = new Subject<void>();
 
   // Input/Output properties
-
+  resultId = input<string>('');
+  segment = input<string>('REGULAR');
   paginationEvent = output<PageEvent>();
 
   students = input<Partial<IStudentGrade & { _id: string }>[]>([]);
   tableUpdateEvent = output<Partial<IStudentGrade & { _id: string }>[]>();
   selectedRows = output<Partial<IStudentGrade & { _id: string }>[]>();
+  
+  // Saving state
+  savingToBackend = signal<boolean>(false);
 
   // Row selection signal
   selectedIndices = signal<Set<number>>(new Set<number>());
@@ -150,8 +156,9 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
     // Add debouncing to prevent excessive emissions
     this.form.valueChanges
       .pipe(
+        debounceTime(5000), // WaitS 5 second after user stops typing
+        
         takeUntil(this.destroy$)
-        // Add a small delay to prevent rapid-fire emissions
       )
       .subscribe((value) => {
         console.log(
@@ -160,6 +167,11 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
           'rows'
         );
         this.tableUpdateEvent.emit(value.rows as Partial<IStudentGrade>[]);
+        
+        // Auto-save to backend after debounce
+        if (this.resultId() && value.rows?.length > 0) {
+          this.saveToBackend(value.rows);
+        }
       });
   }
 
@@ -614,4 +626,86 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
   isNaN(value: any): boolean {
     return isNaN(value);
   }
+
+  onKeyPress(event: KeyboardEvent): void {
+    const charCode = event.which ? event.which : event.keyCode;
+    // Only allow numbers (0-9)
+    if (charCode < 48 || charCode > 57) {
+      event.preventDefault();
+    }
+  }
+
+  // Save to backend API
+  saveToBackend(entries?: any[]): void {
+    const dataToSave = entries || this.form.value.rows;
+    if (!this.resultId() || !dataToSave?.length) return;
+
+    this.savingToBackend.set(true);
+    
+    // Filter entries with actual grade data
+    const validEntries = dataToSave.filter((entry: any) => 
+      entry.test !== '' || entry.lab !== '' || entry.exam !== ''
+    );
+
+    if (validEntries.length === 0) {
+      this.savingToBackend.set(false);
+      return;
+    }
+
+    // Separate new entries (no _id) from existing entries (has _id)
+    const newEntries = validEntries.filter((entry: any) => !entry._id);
+    const existingEntries = validEntries.filter((entry: any) => entry._id);
+
+    // Prepare entries for API
+    const prepareEntry = (entry: any) => ({
+      registrationNumber: entry.registrationNumber,
+      fullName: entry.fullName,
+      test: Number(entry.test) || 0,
+      lab: Number(entry.lab) || 0,
+      exam: Number(entry.exam) || 0,
+      total: Number(entry.total) || 0,
+      result: this.resultId(),
+      category: this.segment(),
+      ...(entry._id && { _id: entry._id })
+    });
+
+    // Handle new entries
+    if (newEntries.length > 0) {
+      const newEntriesData = newEntries.map(prepareEntry);
+      this.resultsService.createBulkResultEntries(newEntriesData)
+        .pipe(finalize(() => this.savingToBackend.set(false)))
+        .subscribe({
+          next: (resp) => {
+            if (resp.status) {
+              console.log('New entries saved successfully');
+            }
+          },
+          error: (error) => {
+            console.error('Error saving new entries:', error);
+          }
+        });
+    }
+
+    // Handle existing entries
+    if (existingEntries.length > 0) {
+      const existingEntriesData = existingEntries.map(prepareEntry);
+      this.resultsService.updateBulkResultEntries(existingEntriesData)
+        .pipe(finalize(() => this.savingToBackend.set(false)))
+        .subscribe({
+          next: (resp) => {
+            if (resp.status) {
+              console.log('Existing entries updated successfully');
+            }
+          },
+          error: (error) => {
+            console.error('Error updating existing entries:', error);
+          }
+        });
+    }
+  }
+
+  // Manual save method for save button
+  // manualSave(): void {
+  //   this.saveToBackend();
+  // }
 }
