@@ -29,7 +29,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { PageEvent } from '@angular/material/paginator';
-import { finalize, Subject, takeUntil, debounceTime } from 'rxjs';
+import { finalize, Subject, takeUntil, debounceTime} from 'rxjs';
 import { PaginatorComponent } from '../../../../@shared/components/paginator/paginator.component';
 import { IPaginator } from '../../../../@core/models/paginator.model';
 import { IStudentGrade } from '../../../courses/models/student-grade.model';
@@ -39,7 +39,7 @@ import { ResultsService } from '../../../result-management/services/results.serv
 
 @Component({
   selector: 'app-reference-table-result-upload',
-  imports: [
+  imports: [  
     PaginatorComponent,
     MatTableModule,
     MatFormFieldModule,
@@ -156,7 +156,8 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
     // Add debouncing to prevent excessive emissions
     this.form.valueChanges
       .pipe(
-        debounceTime(1000), // Wait 1 second after user stops typing
+        debounceTime(5000), // WaitS 5 second after user stops typing
+        
         takeUntil(this.destroy$)
       )
       .subscribe((value) => {
@@ -704,7 +705,7 @@ export class ReferenceTableResultUploadComponent implements OnInit, OnDestroy {
   }
 
   // Manual save method for save button
-  manualSave(): void {
-    this.saveToBackend();
-  }
+  // manualSave(): void {
+  //   this.saveToBackend();
+  // }
 }

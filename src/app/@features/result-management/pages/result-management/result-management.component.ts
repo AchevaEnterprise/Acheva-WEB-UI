@@ -564,7 +564,7 @@ export class ResultManagementComponent implements OnInit {
             `Successfully sent ${successCount} result${successCount > 1 ? 's' : ''} to Course Coordinator`
           );
           
-          // Update localStorage for consistency
+          // Move results from lecturer drafts to course coordinator drafts
           this.moveResultsToCCDraft(validResults);
           
           // Trigger notification refresh in toolbar
@@ -595,7 +595,7 @@ export class ResultManagementComponent implements OnInit {
               : `Failed to send ${failedCount} result${failedCount > 1 ? 's' : ''} to Course Coordinator`
           );
           
-          // Still update localStorage for successful sends
+          // Still move successful sends to CC drafts
           if (successCount > 0) {
             const successfulResults = validResults.filter((_, index) => responses[index]?.status === true);
             this.moveResultsToCCDraft(successfulResults);
@@ -619,14 +619,12 @@ export class ResultManagementComponent implements OnInit {
   private moveResultsToCCDraft(sentResults: IResult[]) {
     console.log('Moving results to CC draft:', sentResults.map(r => ({ id: r._id, course: r.course?.courseTitle })));
     
-    // Remove results from lecturer's draft and add to CC draft
     const resultManagementList = JSON.parse(localStorage.getItem('result_management_list') || '[]');
     const resultDraftsList = JSON.parse(localStorage.getItem('result_drafts_list') || '[]');
     
-    // Remove from drafts and add to CC draft with preserved course info
     const sentResultIds = sentResults.map(result => result._id);
     
-    // Filter out sent results from drafts
+    // Remove from lecturer drafts
     const updatedDraftsList = resultDraftsList.filter((item: any) => 
       !sentResultIds.includes(item.resultId)
     );
@@ -636,7 +634,7 @@ export class ResultManagementComponent implements OnInit {
       !(item.status === 'DRAFT' && sentResultIds.includes(item.resultId))
     );
     
-    // Add sent results to DRAFT status for Course Coordinator with sentToCC flag
+    // Add sent results to course coordinator drafts with sentToCC flag
     const ccDraftResults = sentResults.map(result => ({
       resultId: result._id,
       courseCode: result.course?.courseCode || (result as any).courseCode,
@@ -644,8 +642,8 @@ export class ResultManagementComponent implements OnInit {
       session: result.session,
       level: result.level,
       semester: result.semester,
-      department: this.getDepartmentName(result.department),
-      faculty: this.getFacultyName(result.faculty),
+      department: result.department?.name || 'Unknown Department',
+      faculty: result.faculty || 'Unknown Faculty',
       status: 'DRAFT',
       timestamp: new Date().toISOString(),
       lastModified: new Date().toISOString(),
@@ -660,9 +658,6 @@ export class ResultManagementComponent implements OnInit {
     
     // Update localStorage
     const updatedManagementList = [...filteredManagementList, ...ccDraftResults];
-    
-    console.log('Updated management list:', updatedManagementList);
-    console.log('Updated drafts list:', updatedDraftsList);
     
     localStorage.setItem('result_management_list', JSON.stringify(updatedManagementList));
     localStorage.setItem('result_drafts_list', JSON.stringify(updatedDraftsList));
@@ -833,72 +828,15 @@ export class ResultManagementComponent implements OnInit {
   }
 
   private refreshToolbarNotifications() {
-    // Find toolbar component and refresh its notifications
-    const toolbar = document.querySelector('app-tool-bar');
-    if (toolbar) {
-      // Dispatch custom event to refresh notifications
-      const event = new CustomEvent('refreshNotifications');
-      toolbar.dispatchEvent(event);
-    }
+    // Dispatch custom event to refresh notifications
+    const event = new CustomEvent('refreshNotifications');
+    document.dispatchEvent(event);
+    
+    // Also trigger a manual refresh after a short delay
+    setTimeout(() => {
+      this.loadNotifications();
+    }, 1000);
   }
 
-  private getDepartmentName(department: any): string {
-    if (!department) return 'Unknown Department';
-    
-    // If department is an object with name property
-    if (typeof department === 'object' && department.name) {
-      return department.name;
-    }
-    
-    // If department is a string (ObjectId), map known IDs
-    if (typeof department === 'string') {
-      const departmentMap: { [key: string]: string } = {
-        '68ac815a7a30dc0ea703d56d': 'Accounting',
-        '68ac815a7a30dc0ea703d56e': 'Business Administration',
-        '68ac815a7a30dc0ea703d56f': 'Economics',
-        '68ac815a7a30dc0ea703d570': 'Finance',
-        '68ac815a7a30dc0ea703d571': 'Marketing',
-        '68ac815a7a30dc0ea703d572': 'Computer Science',
-        '68ac815a7a30dc0ea703d573': 'Mathematics',
-        '68ac815a7a30dc0ea703d574': 'Physics',
-        '68ac815a7a30dc0ea703d575': 'Chemistry',
-        '68ac815a7a30dc0ea703d576': 'Biology',
-        '68ac815a7a30dc0ea703d577': 'English',
-        '68ac815a7a30dc0ea703d578': 'History',
-        '68ac815a7a30dc0ea703d579': 'Political Science',
-        '68ac815a7a30dc0ea703d580': 'Sociology'
-      };
-      
-      return departmentMap[department] || department.substring(0, 8) + '...';
-    }
-    
-    return 'Unknown Department';
-  }
 
-  private getFacultyName(faculty: any): string {
-    if (!faculty) return 'Unknown Faculty';
-    
-    // If faculty is an object with name property
-    if (typeof faculty === 'object' && faculty.name) {
-      return faculty.name;
-    }
-    
-    // If faculty is a string (ObjectId), map known IDs
-    if (typeof faculty === 'string') {
-      const facultyMap: { [key: string]: string } = {
-        '68ac80d77a30dc0ea703d55e': 'Management Sciences',
-        '68ac80d77a30dc0ea703d55f': 'Engineering',
-        '68ac80d77a30dc0ea703d560': 'Sciences',
-        '68ac80d77a30dc0ea703d561': 'Arts',
-        '68ac80d77a30dc0ea703d562': 'Social Sciences',
-        '68ac80d77a30dc0ea703d563': 'Education',
-        '68ac80d77a30dc0ea703d564': 'Law',
-        '68ac80d77a30dc0ea703d565': 'Medicine'
-      };
-      
-      return facultyMap[faculty] || faculty.substring(0, 8) + '...';
-    }
-    
-    return 'Unknown Faculty';
-  }
 }

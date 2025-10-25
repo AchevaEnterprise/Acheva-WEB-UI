@@ -356,15 +356,18 @@ export class ResultUploadComponent implements OnInit {
           console.log('getResult response:', resp);
           if (resp.status && resp.data) {
             const { analytics, course, session, level } = resp.data as {
-              course: { courseTitle: string };
+              course: { courseTitle: string; courseCode: string };
               session: string;
               level: string;
               analytics: Record<string, number>;
               department: IDepartment;
             };
 
+            // Use courseCode if available, otherwise extract from courseTitle
+            const displayCourseCode = course?.courseCode || this.extractCourseCode(course?.courseTitle || '');
+            
             this.courseForm.patchValue({
-              course: course?.courseTitle || 'Unknown Course',
+              course: `${displayCourseCode} - ${course?.courseTitle || 'Unknown Course'}`,
               session: session || 'Unknown Session',
               level: level || 'Unknown Level',
             });
@@ -1371,14 +1374,19 @@ export class ResultUploadComponent implements OnInit {
     
     console.log('Transferring segments to Result Management:', completedSegments);
 
+    const courseValue = this.courseForm.get('course')?.value || 'Unknown Course';
+    // Extract course title and code from the combined format "CODE - TITLE"
+    const [courseCode, ...titleParts] = courseValue.split(' - ');
+    const courseTitle = titleParts.join(' - ') || courseValue;
+    
     const completeResultData: any = {
       resultId: this.resultId,
       courseDetails: {
-        courseTitle: this.courseForm.get('course')?.value || 'Unknown Course',
-        courseCode: this.extractCourseCode(this.courseForm.get('course')?.value || ''),
+        courseTitle: courseTitle,
+        courseCode: courseCode || this.extractCourseCode(courseValue),
         session: this.courseForm.get('session')?.value || 'Unknown Session',
         level: this.courseForm.get('level')?.value || 'Unknown Level',
-        units: this.extractUnitsFromCourse(this.courseForm.get('course')?.value || ''),
+        units: this.extractUnitsFromCourse(courseValue),
       },
       analytics: {
         chartData: this.analyticsChartData(),

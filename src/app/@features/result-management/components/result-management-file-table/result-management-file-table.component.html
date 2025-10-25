@@ -70,28 +70,28 @@
           <ng-container matColumnDef="courseCode">
             <th mat-header-cell *matHeaderCellDef>COURSE CODE</th>
             <td mat-cell *matCellDef="let element">
-              {{ element.course?.courseCode || element.courseCode || 'MATH101' }}
+              {{ element.course?.courseCode }}
             </td>
           </ng-container>
 
           <ng-container matColumnDef="courseTitle">
             <th mat-header-cell *matHeaderCellDef>COURSE TITLE</th>
             <td mat-cell *matCellDef="let element">
-              {{ element.course?.courseTitle || element.courseTitle || 'Unknown Course' }}
+              {{ element.course?.courseTitle ||'N/A'}}
             </td>
           </ng-container>
 
           <ng-container matColumnDef="semester">
             <th mat-header-cell *matHeaderCellDef>SEMESTER</th>
             <td mat-cell *matCellDef="let element">
-              {{ element.semester || '1st Semester' }}
+              {{ element.semester }}
             </td>
           </ng-container>
 
           <ng-container matColumnDef="department">
             <th mat-header-cell *matHeaderCellDef>DEPARTMENT</th>
             <td mat-cell *matCellDef="let element">
-              {{ getDepartmentName(element) }}
+              {{ element.department?.name || 'Unknown Department' }}
             </td>
           </ng-container>
 
@@ -112,14 +112,14 @@
           <ng-container matColumnDef="createdAt">
             <th mat-header-cell *matHeaderCellDef>CREATED DATE</th>
             <td mat-cell *matCellDef="let element">
-              {{ getFormattedDate(element.createdAt, 'dd-MM-yyyy') }}
+              {{ element.createdAt | date: 'MMM d, YYYY h:mm a' }}
             </td>
           </ng-container>
 
           <ng-container matColumnDef="updatedAt">
             <th mat-header-cell *matHeaderCellDef>UPDATED DATE</th>
             <td mat-cell *matCellDef="let element">
-              {{ getFormattedDate(element.updatedAt, 'dd-MM-yyyy') }}
+              {{ element.updatedAt | date: 'MMM d, YYYY h:mm a' }}
             </td>
           </ng-container>
 
@@ -163,70 +163,143 @@
             >
               <div
                 class="table-element-detail-wrapper"
-                [class.table-element-detail-wrapper-expanded]="isExpanded(element)"
+                [class.table-element-detail-wrapper-expanded]="
+                  isExpanded(element)
+                "
               >
                 <div class="w-full overflow-auto p-4">
                   <div class="grid grid-cols-2 gap-4">
                     <div>
-                      <p class="font-semibold text-gray-600 mb-2">Course Details</p>
-                      <p class="mb-1"><strong>Code:</strong> {{ element.course?.courseCode || element.courseCode || 'N/A' }}</p>
-                      <p class="mb-1"><strong>Title:</strong> {{ element.course?.courseTitle || element.courseTitle || 'Unknown Course' }}</p>
-                      <p class="mb-1"><strong>Session:</strong> {{ element.session || 'Unknown Session' }}</p>
-                      <p class="mb-1"><strong>Level:</strong> {{ element.level || 'Unknown Level' }}</p>
-                      <p class="mb-1"><strong>Semester:</strong> {{ element.semester || '1st Semester' }}</p>
+                      <p class="font-semibold text-gray-600 mb-2">
+                        Course Details
+                      </p>
+                      <p class="mb-1">
+                        <strong>Code:</strong>
+                        {{
+                          element.course?.courseCode ||'N/A'
+                        }}
+                      </p>
+                      <p class="mb-1">
+                        <strong>Title:</strong>
+                        {{
+                          element.course?.courseTitle ||
+                            element.courseTitle ||
+                            'Unknown Course'
+                        }}
+                      </p>
+                      <p class="mb-1">
+                        <strong>Session:</strong>
+                        {{ element.session || 'Unknown Session' }}
+                      </p>
+                      <p class="mb-1">
+                        <strong>Level:</strong>
+                        {{ element.level || 'Unknown Level' }}
+                      </p>
+                      <p class="mb-1">
+                        <strong>Semester:</strong>
+                        {{ element.semester || '1st Semester' }}
+                      </p>
                     </div>
                     <div>
-                      <p class="font-semibold text-gray-600 mb-2">Additional Info</p>
-                      <p class="mb-1"><strong>Lecturer:</strong> 
-                        <span class="text-blue-600">{{ getLecturerName(element) }}</span>
+                      <p class="font-semibold text-gray-600 mb-2">
+                        Additional Info
                       </p>
-                      <p class="mb-1"><strong>Department:</strong> 
-                        <span class="text-green-600">{{ getDepartmentName(element) }}</span>
+                      <p class="mb-1">
+                        <strong>Lecturer:</strong>
+                        <span class="text-blue-600">{{
+                          getLecturerName(element)
+                        }}</span>
                       </p>
-                      <p class="mb-1"><strong>Faculty:</strong> 
-                        <span class="text-purple-600">{{ getFacultyName(element) }}</span>
+                      <p class="mb-1">
+                        <strong>Department:</strong>
+                        <span class="text-green-600">{{
+                          element.department?.name || 'Unknown Department'
+                        }}</span>
                       </p>
-                      <p class="mb-1"><strong>Status:</strong> 
-                        <span class="px-2 py-1 rounded text-xs" [ngClass]="getStatusClass(element.status)">{{ element.status || 'DRAFT' }}</span>
+                      <p class="mb-1">
+                        <strong>Faculty:</strong>
+                        <span class="text-purple-600">{{
+                          getFacultyName(element)
+                        }}</span>
                       </p>
-                      <p class="mb-1"><strong>Uploaded By:</strong> 
-                        <span class="text-gray-700">{{ getUploadedBy(element) }}</span>
+                      <p class="mb-1">
+                        <strong>Status:</strong>
+                        <span
+                          class="px-2 py-1 rounded text-xs"
+                          [ngClass]="getStatusClass(element.status)"
+                          >{{ element.status || 'DRAFT' }}</span
+                        >
+                      </p>
+                      <p class="mb-1">
+                        <strong>Uploaded By:</strong>
+                        <span class="text-gray-700">{{
+                          getUploadedBy(element)
+                        }}</span>
                       </p>
                       @if (element.isDraft) {
-                        <p class="mb-1"><strong>Completion:</strong> 
-                          <span class="text-orange-600">{{ element.completionPercentage || 0 }}% ({{ element.studentsWithGrades || 0 }}/{{ element.studentCount || 0 }} students)</span>
+                        <p class="mb-1">
+                          <strong>Completion:</strong>
+                          <span class="text-orange-600"
+                            >{{ element.completionPercentage || 0 }}% ({{
+                              element.studentsWithGrades || 0
+                            }}/{{ element.studentCount || 0 }} students)</span
+                          >
                         </p>
                       }
                     </div>
                   </div>
                   <div class="mt-4">
                     <p class="font-semibold text-gray-600 mb-2">Timestamps</p>
-                    <p class="mb-1"><strong>Created:</strong> 
-                      <span class="text-blue-500">{{ getFormattedDate(element.createdAt) }}</span>
+                    <p class="mb-1">
+                      <strong>Created:</strong>
+                      <span class="text-blue-500">{{
+                        getFormattedDate(element.createdAt)
+                      }}</span>
                     </p>
-                    <p class="mb-1"><strong>Last Updated:</strong> 
-                      <span class="text-green-500">{{ getFormattedDate(element.updatedAt) }}</span>
+                    <p class="mb-1">
+                      <strong>Last Updated:</strong>
+                      <span class="text-green-500">{{
+                        getFormattedDate(element.updatedAt)
+                      }}</span>
                     </p>
                     @if (element.isDraft) {
-                      <p class="mb-1"><strong>Draft Status:</strong> <span class="text-orange-600">Unsaved Changes</span></p>
+                      <p class="mb-1">
+                        <strong>Draft Status:</strong>
+                        <span class="text-orange-600">Unsaved Changes</span>
+                      </p>
                     }
                     @if (getTimeSinceUpdate(element.updatedAt)) {
-                      <p class="mb-1"><strong>Last Activity:</strong> 
-                        <span class="text-gray-500 text-sm">{{ getTimeSinceUpdate(element.updatedAt) }}</span>
+                      <p class="mb-1">
+                        <strong>Last Activity:</strong>
+                        <span class="text-gray-500 text-sm">{{
+                          getTimeSinceUpdate(element.updatedAt)
+                        }}</span>
                       </p>
                     }
                   </div>
                   <div class="mt-4 flex gap-2">
-                    <button 
+                    <button
                       class="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
-                      (click)="viewResult(element)">
-                      <app-svg svgWidth="1rem" svgHeight="1rem" src="icons/general/pen-icon.svg" class="inline mr-1"></app-svg>
+                      (click)="viewResult(element)"
+                    >
+                      <app-svg
+                        svgWidth="1rem"
+                        svgHeight="1rem"
+                        src="icons/general/pen-icon.svg"
+                        class="inline mr-1"
+                      ></app-svg>
                       Edit Result
                     </button>
-                    <button 
+                    <button
                       class="px-3 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600"
-                      (click)="makeComment(element)">
-                      <app-svg svgWidth="1rem" svgHeight="1rem" src="icons/general/comment-icon.svg" class="inline mr-1"></app-svg>
+                      (click)="makeComment(element)"
+                    >
+                      <app-svg
+                        svgWidth="1rem"
+                        svgHeight="1rem"
+                        src="icons/general/comment-icon.svg"
+                        class="inline mr-1"
+                      ></app-svg>
                       Comment
                     </button>
                   </div>

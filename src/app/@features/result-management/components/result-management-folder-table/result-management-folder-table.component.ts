@@ -1,6 +1,6 @@
 import { SelectionModel } from '@angular/cdk/collections';
 import { DatePipe, NgClass } from '@angular/common';
-import { Component, effect, input, output, signal } from '@angular/core';
+import { Component, effect, inject, input, output, signal } from '@angular/core';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -8,6 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
+import { forkJoin } from 'rxjs';
 
 import { EmptyStateComponent } from '../../../../@shared/components/empty-state/empty-state.component';
 import { LoaderComponent } from '../../../../@shared/components/loader/loader.component';
@@ -15,6 +16,8 @@ import { PaginatorComponent } from '../../../../@shared/components/paginator/pag
 import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
 import { ICourse } from '../../../courses/models/course.model';
 import { IResult } from '../../models/results.model';
+import { SchoolsService } from '../../../../@core/services/schools.service';
+import { IDepartment, IFaculty } from '../../../../@core/models/school.model';
 
 interface CourseFolder {
   courseCode: string;
@@ -62,12 +65,20 @@ export class ResultManagementFolderTableComponent {
   selection = new SelectionModel<IResult>(true, []);
   folderSelection = new SelectionModel<CourseFolder>(true, []);
   isloadingResults = signal(false);
+  
+  // Cache for departments and faculties
+  private readonly schoolsService = inject(SchoolsService);
+  private departmentCache = new Map<string, IDepartment>();
+  private facultyCache = new Map<string, IFaculty>();
 
   folderDisplayedColumns: string[] = ['select', 'courseCode', 'courseTitle', 'department', 'faculty', 'resultCount'];
   fileDisplayedColumns: string[] = ['courseCode', 'courseTitle', 'session', 'department', 'faculty', 'upload'];
 
   constructor() {
     effect(() => {
+      if (this.results().length > 0) {
+        this.preloadDepartmentAndFacultyData();
+      }
       this.processResultsIntoFolders();
     });
   }
@@ -90,7 +101,7 @@ export class ResultManagementFolderTableComponent {
           courseCode,
           courseTitle,
           department: this.getDepartmentName(result.department),
-          faculty: this.getFacultyName(result.faculty),
+          faculty: this.getFacultyName(result),
           semester: result.semester || '1st Semester',
           resultCount: 0,
           results: []
@@ -194,31 +205,33 @@ export class ResultManagementFolderTableComponent {
            'Unknown Lecturer';
   }
 
-  getFacultyName(faculty: any): string {
-    if (!faculty) return 'Unknown Faculty';
+  getFacultyName(element: IResult): string {
+    const faculty = element.faculty;
     
-    if (typeof faculty === 'object' && faculty.name) {
-      return faculty.name;
+    // If faculty is an object with name property
+    if (typeof faculty === 'object' && faculty && (faculty as any).name) {
+      return (faculty as any).name;
     }
     
+    // If faculty is a string (ObjectId), check cache first
     if (typeof faculty === 'string') {
-      const facultyMap: { [key: string]: string } = {
-        '68ac80d77a30dc0ea703d55e': 'Management Sciences',
-        '68ac80d77a30dc0ea703d55f': 'Engineering',
-        '68ac80d77a30dc0ea703d560': 'Sciences',
-        '68ac80d77a30dc0ea703d561': 'Arts',
-        '68ac80d77a30dc0ea703d562': 'Social Sciences',
-        '68ac80d77a30dc0ea703d563': 'Education',
-        '68ac80d77a30dc0ea703d564': 'Law',
-        '68ac80d77a30dc0ea703d565': 'Medicine'
-      };
-      
-      return facultyMap[faculty] || faculty.substring(0, 8) + '...';
+      const cachedFaculty = this.facultyCache.get(faculty);
+      if (cachedFaculty) {
+        return cachedFaculty.name;
+      }
+    }
+    
+    // Try to get faculty from department if available
+    const department = element.department;
+    if (typeof department === 'object' && department && (department as any).faculty) {
+      const deptFaculty = (department as any).faculty;
+      if (typeof deptFaculty === 'object' && deptFaculty.name) {
+        return deptFaculty.name;
+      }
     }
     
     return 'Unknown Faculty';
   }
-
   getDepartmentName(department: any): string {
     if (!department) return 'Unknown Department';
     
@@ -227,26 +240,72 @@ export class ResultManagementFolderTableComponent {
     }
     
     if (typeof department === 'string') {
-      const departmentMap: { [key: string]: string } = {
-        '68ac815a7a30dc0ea703d56d': 'Accounting',
-        '68ac815a7a30dc0ea703d56e': 'Business Administration', 
-        '68ac815a7a30dc0ea703d56f': 'Economics',
-        '68ac815a7a30dc0ea703d570': 'Finance',
-        '68ac815a7a30dc0ea703d571': 'Marketing',
-        '68ac815a7a30dc0ea703d572': 'Computer Science',
-        '68ac815a7a30dc0ea703d573': 'Mathematics',
-        '68ac815a7a30dc0ea703d574': 'Physics',
-        '68ac815a7a30dc0ea703d575': 'Chemistry',
-        '68ac815a7a30dc0ea703d576': 'Biology',
-        '68ac815a7a30dc0ea703d577': 'English',
-        '68ac815a7a30dc0ea703d578': 'History',
-        '68ac815a7a30dc0ea703d579': 'Political Science',
-        '68ac815a7a30dc0ea703d580': 'Sociology'
-      };
-      
-      return departmentMap[department] || department.substring(0, 8) + '...';
+      const cachedDepartment = this.departmentCache.get(department);
+      if (cachedDepartment) {
+        return cachedDepartment.name;
+      }
     }
     
     return 'Unknown Department';
+  }
+
+  private preloadDepartmentAndFacultyData(): void {
+    const results = this.results();
+    const departmentIds = new Set<string>();
+    const facultyIds = new Set<string>();
+    
+    results.forEach(result => {
+      if (typeof result.department === 'string' && 
+          result.department.match(/^[a-f0-9]{24}$/i) && 
+          !this.departmentCache.has(result.department)) {
+        departmentIds.add(result.department);
+      }
+      if (typeof result.faculty === 'string' && 
+          result.faculty.match(/^[a-f0-9]{24}$/i) && 
+          !this.facultyCache.has(result.faculty)) {
+        facultyIds.add(result.faculty);
+      }
+    });
+    
+    const departmentRequests = Array.from(departmentIds).map(id => 
+      this.schoolsService.getDepartment(id)
+    );
+    const facultyRequests = Array.from(facultyIds).map(id => 
+      this.schoolsService.getFaculty(id)
+    );
+    
+    if (departmentRequests.length > 0) {
+      forkJoin(departmentRequests).subscribe({
+        next: (responses) => {
+          responses.forEach((response, index) => {
+            if (response.status && response.data) {
+              const departmentId = Array.from(departmentIds)[index];
+              this.departmentCache.set(departmentId, response.data as any);
+            }
+          });
+          this.processResultsIntoFolders();
+        },
+        error: (error) => {
+          console.error('Error preloading departments:', error);
+        }
+      });
+    }
+    
+    if (facultyRequests.length > 0) {
+      forkJoin(facultyRequests).subscribe({
+        next: (responses) => {
+          responses.forEach((response, index) => {
+            if (response.status && response.data) {
+              const facultyId = Array.from(facultyIds)[index];
+              this.facultyCache.set(facultyId, response.data as any);
+            }
+          });
+          this.processResultsIntoFolders();
+        },
+        error: (error) => {
+          console.error('Error preloading faculties:', error);
+        }
+      });
+    }
   }
 }

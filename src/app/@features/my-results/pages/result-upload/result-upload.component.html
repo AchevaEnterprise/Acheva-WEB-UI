@@ -143,6 +143,14 @@
     <app-search-input placeholder="Search students" (searchEvent)="onStudentSearch($event)" />
 
     <div class="flex flex-wrap justify-end gap-3 items-center">
+            <app-button
+        label="Save Changes"
+        icon="icons/general/save-btn-icon.svg"
+        class="btn-md"
+        (clickEvent)="saveChanges()"
+        [class.opacity-50]="!canSaveChanges()"
+      />
+
       <app-button
         label="Upload Results"
         type="outline"

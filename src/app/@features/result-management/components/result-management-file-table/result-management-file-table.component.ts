@@ -193,22 +193,22 @@ export class ResultManagementFileTableComponent implements OnInit {
   }
 
   /** Helper methods for data display */
-  getCourseCode(element: IResult): string {
-    console.log('getCourseCode called with element:', element);
-    console.log('element.course:', element.course);
-    console.log('element.course?.courseCode:', element.course?.courseCode);
+  // getCourseCode(element: IResult): string {
+  //   console.log('getCourseCode called with element:', element);
+  //   console.log('element.course:', element.course);
+  //   console.log('element.course?.courseCode:', element.course?.courseCode);
     
-    const courseCode = element.course?.courseCode || this.generateCourseCode(element._id || '');
-    console.log('Final courseCode returned:', courseCode);
+  //   const courseCode = element.course?.courseCode || this.generateCourseCode(element._id || '');
+  //   console.log('Final courseCode returned:', courseCode);
     
-    return courseCode;
-  }
+  //   return courseCode;
+  // }
 
-  private generateCourseCode(id: string): string {
-    const codes = ['MATH101', 'PHY201', 'CSC301', 'ENG102', 'CHM203'];
-    const index = id ? parseInt(id.slice(-1), 16) % codes.length : 0;
-    return codes[index] || 'MATH101';
-  }
+  // private generateCourseCode(id: string): string {
+  //   const codes = ['MATH101', 'PHY201', 'CSC301', 'ENG102', 'CHM203'];
+  //   const index = id ? parseInt(id.slice(-1), 16) % codes.length : 0;
+  //   return codes[index] || 'MATH101';
+  // }
 
   getLecturerName(element: IResult): string {
     return element.lecturer || 
@@ -217,44 +217,45 @@ export class ResultManagementFileTableComponent implements OnInit {
            'Unknown Lecturer';
   }
 
-  getDepartmentName(element: IResult): string {
-    const department = element.department;
+  // getDepartmentName(element: IResult): string {
+  //   const department = element.department;
     
-    // If department is an object with name property
-    if (typeof department === 'object' && department && (department as any).name) {
-      return (department as any).name;
-    }
+  //   // If department is an object with name property
+  //   if (typeof department === 'object' && department && (department as any).name) {
+  //     return (department as any).name;
+  //   }
     
-    // If department is a string (ObjectId), check cache first
-    if (typeof department === 'string') {
-      const cachedDepartment = this.departmentCache.get(department);
-      if (cachedDepartment) {
-        return cachedDepartment.name;
-      }
+  //   // If department is a string (ObjectId), check cache first
+  //   if (typeof department === 'string') {
+  //     const cachedDepartment = this.departmentCache.get(department);
+  //     if (cachedDepartment) {
+  //       return cachedDepartment.name;
+  //     }
       
       // Hardcoded fallback mapping
-      const departmentMap: { [key: string]: string } = {
-        '68ac815a7a30dc0ea703d56d': 'Accounting',
-        '68ac815a7a30dc0ea703d56e': 'Business Administration',
-        '68ac815a7a30dc0ea703d56f': 'Economics',
-        '68ac815a7a30dc0ea703d570': 'Finance',
-        '68ac815a7a30dc0ea703d571': 'Marketing',
-        '68ac815a7a30dc0ea703d572': 'Computer Science',
-        '68ac815a7a30dc0ea703d573': 'Mathematics',
-        '68ac815a7a30dc0ea703d574': 'Physics',
-        '68ac815a7a30dc0ea703d575': 'Chemistry',
-        '68ac815a7a30dc0ea703d576': 'Biology',
-        '68ac815a7a30dc0ea703d577': 'English',
-        '68ac815a7a30dc0ea703d578': 'History',
-        '68ac815a7a30dc0ea703d579': 'Political Science',
-        '68ac815a7a30dc0ea703d580': 'Sociology'
-      };
+  //     const departmentMap: { [key: string]: string } = {
+  //       '68ac815a7a30dc0ea703d56d': 'Accounting',
+  //       '68ac815a7a30dc0ea703d56e': 'Business Administration',
+  //       '68ac815a7a30dc0ea703d56f': 'Economics',
+  //       '68ac815a7a30dc0ea703d570': 'Finance',
+  //       '68ac815a7a30dc0ea703d571': 'Marketing',
+  //       '68ac815a7a30dc0ea703d572': 'Computer Science',
+  //       '68ac815a7a30dc0ea703d573': 'Mathematics',
+  //       '68ac815a7a30dc0ea703d574': 'Physics',
+  //       '68ac815a7a30dc0ea703d575': 'Chemistry',
+  //       '68ac815a7a30dc0ea703d576': 'Biology',
+  //       '68ac815a7a30dc0ea703d577': 'English',
+  //       '68ac815a7a30dc0ea703d578': 'History',
+  //       '68ac815a7a30dc0ea703d579': 'Political Science',
+  //       '68ac815a7a30dc0ea703d580': 'Sociology'
+  //     };
       
-      return departmentMap[department] || department.substring(0, 8) + '...';
-    }
+  //     const mappedName = departmentMap[department];
+  //     return mappedName || 'Unknown Department';
+  //   }
     
-    return 'Unknown Department';
-  }
+  //   return 'Unknown Department';
+  // }
 
   getFacultyName(element: IResult): string {
     const faculty = element.faculty;
@@ -273,7 +274,7 @@ export class ResultManagementFileTableComponent implements OnInit {
       
       // Hardcoded fallback mapping
       const facultyMap: { [key: string]: string } = {
-        '68ac80d77a30dc0ea703d55e': 'Management Sciences',
+        '68ac80d77a30dc0ea703d55e': 'School of Physical',
         '68ac80d77a30dc0ea703d55f': 'Engineering',
         '68ac80d77a30dc0ea703d560': 'Sciences',
         '68ac80d77a30dc0ea703d561': 'Arts',
