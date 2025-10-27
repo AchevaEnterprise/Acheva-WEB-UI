@@ -14,4 +14,18 @@ export class NotificationService {
   getNotifications(): Observable<IAPIResponse<any>> {
     return this.http.get<IAPIResponse<any>>(`${this.notificationUrl}`);
   }
+
+  createNotification(notification: {
+    title: string;
+    message: string;
+    type: string;
+    recipientId: string;
+    data?: any;
+  }): Observable<IAPIResponse<any>> {
+    return this.http.post<IAPIResponse<any>>(`${this.notificationUrl}`, notification);
+  }
+
+  markAsRead(notificationId: string): Observable<IAPIResponse<any>> {
+    return this.http.patch<IAPIResponse<any>>(`${this.notificationUrl}/${notificationId}/read`, {});
+  }
 }

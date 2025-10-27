@@ -92,6 +92,7 @@ export class CourseCoordinatorResultsComponent {
   });
 
   // View child references
+  regularTableResultUploadRef = viewChild<ReferenceTableResultUploadComponent>('regularTableResultUploadRef');
   referenceTableResultUploadRef = viewChild<ReferenceTableResultUploadComponent>('referenceTableResultUploadRef');
   unregisteredTableResultUploadRef = viewChild<ReferenceTableResultUploadComponent>('unregisteredTableResultUploadRef');
 
@@ -528,6 +529,41 @@ export class CourseCoordinatorResultsComponent {
     setTimeout(() => {
       this.updateAnalyticsForSegment(segment);
     }, 50);
+  }
+
+  // CRITICAL FIX: Save changes method for Course Coordinator
+  saveChanges(): void {
+    const activeSegmentValue = this.activeSegment().value as SegmentValue;
+    let tableRef: ReferenceTableResultUploadComponent | undefined;
+    
+    // Get the appropriate table reference
+    switch (activeSegmentValue) {
+      case 'REGULAR':
+        tableRef = this.regularTableResultUploadRef();
+        break;
+      case 'REFERENCE':
+        tableRef = this.referenceTableResultUploadRef();
+        break;
+      case 'UNREGISTERED':
+        tableRef = this.unregisteredTableResultUploadRef();
+        break;
+    }
+    
+    if (tableRef) {
+      // Trigger manual save on the active table
+      tableRef.manualSave();
+      console.log(`Saved changes for ${activeSegmentValue} segment`);
+      
+      // Also update the local students signal with current data
+      const currentData = tableRef.getAllCurrentData();
+      this.students.update((current) => ({
+        ...current,
+        [activeSegmentValue]: currentData,
+      }));
+      
+      // Update analytics
+      this.updateAnalyticsForSegment(activeSegmentValue);
+    }
   }
 
   private mergeWithLocalStorageGrades(segment: SegmentValue, apiStudents: any[]) {

@@ -976,6 +976,11 @@ export class ResultUploadComponent implements OnInit {
 
     // Update save button state
     this.updateSaveButtonState();
+    
+    // CRITICAL FIX: Check for smart auto-save after analytics update
+    setTimeout(() => {
+      this.checkForSmartAutoSave();
+    }, 100);
 
     console.log('Real-time analytics updated:', {
       segment: currentSegment,
@@ -1003,6 +1008,30 @@ export class ResultUploadComponent implements OnInit {
   // ========================================
   private isUpdatingData = false;
   private isLoadingData = false;
+
+  // Check if user has completed filling necessary inputs for a row
+  private hasCompletedRowInputs(student: Partial<IStudentGrade>): boolean {
+    // A row is considered complete if it has at least test, lab, and exam scores
+    const hasTest = student.test !== undefined && student.test !== '-' && student.test !== '';
+    const hasLab = student.lab !== undefined && student.lab !== '-' && student.lab !== '';
+    const hasExam = student.exam !== undefined && student.exam !== '-' && student.exam !== '';
+    
+    return hasTest && hasLab && hasExam;
+  }
+
+  // Smart auto-save: only when user completes necessary inputs
+  private checkForSmartAutoSave() {
+    const currentSegment = this.activeSegment().value as SegmentValue;
+    const currentStudents = this.students()[currentSegment] || [];
+    
+    // Check if user has completed at least one full row
+    const hasCompletedRows = currentStudents.some(student => this.hasCompletedRowInputs(student));
+    
+    if (hasCompletedRows && this.canSaveChanges()) {
+      console.log('Smart auto-save triggered - user completed necessary inputs');
+      this.autoSaveChanges();
+    }
+  }
 
   onTableDataChanged(updatedData: Partial<IStudentGrade>[]) {
     // Prevent infinite loops and ignore changes during data loading
@@ -1032,12 +1061,12 @@ export class ResultUploadComponent implements OnInit {
       clearTimeout(this.debouncedUpdateTimer);
     }
 
-    // Debounce the data update to prevent focus loss during typing
+    // CRITICAL FIX: Increase debounce time to prevent input clearing
     // Always map updatedData to dash before updating
     const mappedData = this.mapStudentsArrayToDash(updatedData);
     this.debouncedUpdateTimer = setTimeout(() => {
       this.performDebouncedUpdate(mappedData, currentSegment);
-    }, 1500); // Wait 1.5 seconds after user stops typing
+    }, 5000); // Wait 5 seconds after user stops typing
   }
 
   private performDebouncedUpdate(
@@ -1077,10 +1106,11 @@ export class ResultUploadComponent implements OnInit {
       clearTimeout(this.autoSaveTimer);
     }
 
-    // Schedule auto-save after 1 minute of inactivity
+    // CRITICAL FIX: Increase auto-save delay to prevent interference
+    // Schedule auto-save after 2 minutes of inactivity
     this.autoSaveTimer = setTimeout(() => {
       this.autoSaveChanges();
-    }, 60);
+    }, 120000); // 2 minutes
   }
 
   private autoSaveChanges() {
@@ -1361,40 +1391,52 @@ export class ResultUploadComponent implements OnInit {
     // Force save current segment data first to ensure all changes are captured
     this.saveToDraft();
     
-    // Collect ALL student data from segments that have any data
-    const completedSegments: any = {};
+    // CRITICAL FIX: Save each segment's data to the correct localStorage keys
     allSegments.forEach(segment => {
       const segmentStudents = this.students()[segment] || [];
       if (segmentStudents.length > 0) {
-        // Include ALL students in the segment, preserving their actual grades
-        completedSegments[segment] = segmentStudents;
-        console.log(`Transferring ${segment} segment with ${segmentStudents.length} students:`, segmentStudents.slice(0, 2));
+        const draftKey = `result_draft_${this.resultId}_${segment}`;
+        const draftData = {
+          resultId: this.resultId,
+          segment: segment,
+          students: segmentStudents,
+          timestamp: new Date().toISOString(),
+          lastModified: new Date().toISOString()
+        };
+        localStorage.setItem(draftKey, JSON.stringify(draftData));
+        console.log(`Saved ${segment} segment with ${segmentStudents.length} students to key: ${draftKey}`);
       }
     });
-    
-    console.log('Transferring segments to Result Management:', completedSegments);
 
     const courseValue = this.courseForm.get('course')?.value || 'Unknown Course';
     // Extract course title and code from the combined format "CODE - TITLE"
     const [courseCode, ...titleParts] = courseValue.split(' - ');
     const courseTitle = titleParts.join(' - ') || courseValue;
     
-    const completeResultData: any = {
+    // Clean up result management list - remove any incomplete entries
+    const resultManagementList = JSON.parse(localStorage.getItem('result_management_list') || '[]');
+    const cleanedList = resultManagementList.filter((r: any) => 
+      r.resultId !== this.resultId
+    );
+
+    // Calculate total students with grades across all segments
+    const allStudentsWithGrades = allSegments.reduce((total, segment) => {
+      const segmentStudents = this.students()[segment] || [];
+      const withGrades = segmentStudents.filter((s: any) => 
+        (s.test !== '-' && s.test !== '' && s.test !== undefined) ||
+        (s.lab !== '-' && s.lab !== '' && s.lab !== undefined) ||
+        (s.exam !== '-' && s.exam !== '' && s.exam !== undefined)
+      );
+      return total + withGrades.length;
+    }, 0);
+
+    // Add the completed result to result management list
+    const resultInfo = {
       resultId: this.resultId,
-      courseDetails: {
-        courseTitle: courseTitle,
-        courseCode: courseCode || this.extractCourseCode(courseValue),
-        session: this.courseForm.get('session')?.value || 'Unknown Session',
-        level: this.courseForm.get('level')?.value || 'Unknown Level',
-        units: this.extractUnitsFromCourse(courseValue),
-      },
-      analytics: {
-        chartData: this.analyticsChartData(),
-        totalStudent: this.totalStudent(),
-        totalStudentPass: this.totalStudentPass(),
-        totalStudentFail: this.totalStudentFail(),
-      },
-      segments: completedSegments,
+      courseTitle: courseTitle,
+      courseCode: courseCode || this.extractCourseCode(courseValue),
+      session: this.courseForm.get('session')?.value || 'Unknown Session',
+      level: this.courseForm.get('level')?.value || 'Unknown Level',
       timestamp: new Date().toISOString(),
       lastModified: new Date().toISOString(),
       status: 'DRAFT',
@@ -1402,76 +1444,39 @@ export class ResultUploadComponent implements OnInit {
       department: currentUser?.department || 'Computer Science',
       faculty: currentUser?.faculty || 'Faculty of Engineering',
       semester: '1st Semester',
-      uploadedBy: currentUser ? `${currentUser.firstname} ${currentUser.lastname}` : 'Unknown User'
-    };
-
-    // Save to result management storage
-    const resultManagementKey = `result_management_${this.resultId}`;
-    localStorage.setItem(resultManagementKey, JSON.stringify(completeResultData));
-
-    // COMPLETE CLEANUP - Remove from my-results drafts FIRST
-    this.clearAllDraftsForResult();
-
-    // Clean up result management list - remove any incomplete entries
-    const resultManagementList = JSON.parse(localStorage.getItem('result_management_list') || '[]');
-    const cleanedList = resultManagementList.filter((r: any) => 
-      r.resultId !== this.resultId
-    );
-
-    // Add only the completed result
-    const resultInfo = {
-      resultId: this.resultId,
-      courseTitle: completeResultData.courseDetails.courseTitle,
-      courseCode: completeResultData.courseDetails.courseCode,
-      session: completeResultData.courseDetails.session,
-      level: completeResultData.courseDetails.level,
-      timestamp: completeResultData.timestamp,
-      lastModified: completeResultData.lastModified,
-      status: 'DRAFT',
-      lecturer: completeResultData.lecturer,
-      department: completeResultData.department,
-      faculty: completeResultData.faculty,
-      semester: completeResultData.semester,
-      uploadedBy: completeResultData.uploadedBy,
+      uploadedBy: currentUser ? `${currentUser.firstname} ${currentUser.lastname}` : 'Unknown User',
       hasCompleteData: true,
       totalStudents: this.totalStudent(),
-      studentsWithGrades: Object.values(completedSegments).flat().filter((s: any) => 
-        (s.test !== '-' && s.test !== '' && s.test !== undefined) ||
-        (s.lab !== '-' && s.lab !== '' && s.lab !== undefined) ||
-        (s.exam !== '-' && s.exam !== '' && s.exam !== undefined)
-      ).length,
-      completionPercentage: 100
+      studentsWithGrades: allStudentsWithGrades,
+      completionPercentage: this.totalStudent() > 0 ? Math.round((allStudentsWithGrades / this.totalStudent()) * 100) : 0
     };
 
     cleanedList.unshift(resultInfo);
     localStorage.setItem('result_management_list', JSON.stringify(cleanedList));
     
-    console.log('Result transferred to Results Management and removed from My Results drafts');
+    // Clean up my-results drafts (but preserve student data)
+    this.clearAllDraftsForResult();
+    
+    console.log('Result transferred to Results Management with preserved student data');
+    console.log('Total students transferred:', this.totalStudent());
+    console.log('Students with grades:', allStudentsWithGrades);
   }
 
   private clearAllDraftsForResult() {
-    const allSegments: SegmentValue[] = ['REGULAR', 'REFERENCE', 'UNREGISTERED'];
+    // CRITICAL FIX: Don't remove the draft keys - they're needed for result management
+    console.log('CLEANING UP MY-RESULTS DRAFTS FOR RESULT:', this.resultId);
     
-    console.log('CLEARING ALL DRAFTS FOR RESULT:', this.resultId);
-    
-    // Remove all segment drafts
-    allSegments.forEach(segment => {
-      const draftKey = `result_draft_${this.resultId}_${segment}`;
-      localStorage.removeItem(draftKey);
-      console.log('Removed draft key:', draftKey);
-    });
-
-    // Remove from my-results draft list completely
+    // Only remove from my-results draft list, keep the actual draft data
     const draftsListData = localStorage.getItem('result_drafts_list');
     if (draftsListData) {
       const draftsList = JSON.parse(draftsListData);
       const originalLength = draftsList.length;
       const updatedList = draftsList.filter((d: any) => d.resultId !== this.resultId);
       localStorage.setItem('result_drafts_list', JSON.stringify(updatedList));
-      console.log(`Removed from drafts list: ${originalLength} -> ${updatedList.length}`);
+      console.log(`Removed from my-results drafts list: ${originalLength} -> ${updatedList.length}`);
     }
 
-    // Clear any other draft-related keys
+    // Clear any other my-results specific keys
     localStorage.removeItem(`course_form_${this.resultId}`);
     localStorage.removeItem(`result_${this.resultId}`);
     
@@ -1480,7 +1485,7 @@ export class ResultUploadComponent implements OnInit {
       detail: { resultId: this.resultId }
     }));
     
-    console.log('All drafts cleared for result:', this.resultId);
+    console.log('My-results drafts cleaned up, but student data preserved for result management');
   }
 
   // Method to check if there are drafts for this result

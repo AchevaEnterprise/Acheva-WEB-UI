@@ -22,7 +22,7 @@ import { IDepartment, IFaculty } from '../../../../@core/models/school.model';
 interface CourseFolder {
   courseCode: string;
   courseTitle: string;
-  department: string;
+  
   faculty: string;
   semester: string;
   resultCount: number;
@@ -65,14 +65,16 @@ export class ResultManagementFolderTableComponent {
   selection = new SelectionModel<IResult>(true, []);
   folderSelection = new SelectionModel<CourseFolder>(true, []);
   isloadingResults = signal(false);
-  
+
   // Cache for departments and faculties
   private readonly schoolsService = inject(SchoolsService);
   private departmentCache = new Map<string, IDepartment>();
   private facultyCache = new Map<string, IFaculty>();
 
-  folderDisplayedColumns: string[] = ['select', 'courseCode', 'courseTitle', 'department', 'faculty', 'resultCount'];
-  fileDisplayedColumns: string[] = ['courseCode', 'courseTitle', 'session', 'department', 'faculty', 'upload'];
+  // To this:
+folderDisplayedColumns: string[] = ['select', 'courseCode', 'courseTitle', 'faculty', 'resultCount'];
+  // To this:
+fileDisplayedColumns: string[] = ['courseCode', 'courseTitle', 'session', 'faculty', 'upload'];
 
   constructor() {
     effect(() => {
@@ -91,27 +93,26 @@ export class ResultManagementFolderTableComponent {
     }
 
     const folderMap = new Map<string, CourseFolder>();
-    
+
     results.forEach((result: IResult) => {
       const courseCode = result.course?.courseCode || 'UNKNOWN';
       const courseTitle = result.course?.courseTitle || 'Unknown Course';
-      
+
       if (!folderMap.has(courseCode)) {
         folderMap.set(courseCode, {
           courseCode,
           courseTitle,
-          department: this.getDepartmentName(result.department),
           faculty: this.getFacultyName(result),
           semester: result.semester || '1st Semester',
           resultCount: 0,
           results: []
         });
       }
-      
+
       const folder = folderMap.get(courseCode)!;
       folder.results.push(result);
       folder.resultCount = folder.results.length;
-      
+
       // Sort results by updatedAt date (most recent first)
       folder.results.sort((a, b) => {
         const dateA = new Date(a.updatedAt || a.createdAt || 0).getTime();
@@ -193,11 +194,11 @@ export class ResultManagementFolderTableComponent {
 
   getFormattedDate(date: any, format: string = 'MMM d, yyyy'): string {
     if (!date) return 'Not Available';
-    
+
     try {
       const dateObj = new Date(date);
       if (isNaN(dateObj.getTime())) return 'Invalid Date';
-      
+
       const datePipe = new DatePipe('en-US');
       return datePipe.transform(dateObj, format) || 'Not Available';
     } catch (error) {
@@ -206,20 +207,20 @@ export class ResultManagementFolderTableComponent {
   }
 
   getLecturerName(result: IResult): string {
-    return result.lecturer || 
-           result.uploadedBy || 
-           (typeof result.createdBy === 'object' ? result.createdBy?.fullName : result.createdBy) || 
-           'Unknown Lecturer';
+    return result.lecturer ||
+      result.uploadedBy ||
+      (typeof result.createdBy === 'object' ? result.createdBy?.fullName : result.createdBy) ||
+      'Unknown Lecturer';
   }
 
   getFacultyName(element: IResult): string {
     const faculty = element.faculty;
-    
+
     // If faculty is an object with name property
     if (typeof faculty === 'object' && faculty && (faculty as any).name) {
       return (faculty as any).name;
     }
-    
+
     // If faculty is a string (ObjectId), check cache first
     if (typeof faculty === 'string') {
       const cachedFaculty = this.facultyCache.get(faculty);
@@ -227,7 +228,7 @@ export class ResultManagementFolderTableComponent {
         return cachedFaculty.name;
       }
     }
-    
+
     // Try to get faculty from department if available
     const department = element.department;
     if (typeof department === 'object' && department && (department as any).faculty) {
@@ -236,51 +237,51 @@ export class ResultManagementFolderTableComponent {
         return deptFaculty.name;
       }
     }
-    
+
     return 'Unknown Faculty';
   }
-  getDepartmentName(department: any): string {
-    if (!department) return 'Unknown Department';
-    
-    if (typeof department === 'object' && department.name) {
-      return department.name;
-    }
-    
-    if (typeof department === 'string') {
-      const cachedDepartment = this.departmentCache.get(department);
-      if (cachedDepartment) {
-        return cachedDepartment.name;
-      }
-    }
-    
-    return 'Unknown Department';
-  }
+  // getDepartmentName(department: any): string {
+  // if (!department) return 'Unknown Department';
+
+  // if (typeof department === 'object' && department.name) {
+  //   return department.name;
+  // }
+
+  // if (typeof department === 'string') {
+  //   const cachedDepartment = this.departmentCache.get(department);
+  //   if (cachedDepartment) {
+  //     return cachedDepartment.name;
+  //   }
+  // }
+
+  // return 'Unknown Department';
+  //}
 
   private preloadDepartmentAndFacultyData(): void {
     const results = this.results();
     const departmentIds = new Set<string>();
     const facultyIds = new Set<string>();
-    
+
     results.forEach(result => {
-      if (typeof result.department === 'string' && 
-          result.department.match(/^[a-f0-9]{24}$/i) && 
-          !this.departmentCache.has(result.department)) {
+      if (typeof result.department === 'string' &&
+        result.department.match(/^[a-f0-9]{24}$/i) &&
+        !this.departmentCache.has(result.department)) {
         departmentIds.add(result.department);
       }
-      if (typeof result.faculty === 'string' && 
-          result.faculty.match(/^[a-f0-9]{24}$/i) && 
-          !this.facultyCache.has(result.faculty)) {
+      if (typeof result.faculty === 'string' &&
+        result.faculty.match(/^[a-f0-9]{24}$/i) &&
+        !this.facultyCache.has(result.faculty)) {
         facultyIds.add(result.faculty);
       }
     });
-    
-    const departmentRequests = Array.from(departmentIds).map(id => 
+
+    const departmentRequests = Array.from(departmentIds).map(id =>
       this.schoolsService.getDepartment(id)
     );
-    const facultyRequests = Array.from(facultyIds).map(id => 
+    const facultyRequests = Array.from(facultyIds).map(id =>
       this.schoolsService.getFaculty(id)
     );
-    
+
     if (departmentRequests.length > 0) {
       forkJoin(departmentRequests).subscribe({
         next: (responses) => {
@@ -297,7 +298,7 @@ export class ResultManagementFolderTableComponent {
         }
       });
     }
-    
+
     if (facultyRequests.length > 0) {
       forkJoin(facultyRequests).subscribe({
         next: (responses) => {

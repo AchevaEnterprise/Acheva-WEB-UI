@@ -162,9 +162,25 @@ export class AuthenticationService {
               STORAGE_KEYS.ACTIVE_ACCOUNT,
               JSON.stringify(this.activeAccount())
             );
+            
+            // Navigate based on new role
+            this.navigateByRole(role);
           }
         })
       );
+  }
+
+  private navigateByRole(role: string) {
+    const roleRoutes: { [key: string]: string } = {
+      'Course Coordinator': '/course-coordinator',
+      'Course Advisor': '/course-advisor',
+      'Lecturer': '/lecturer',
+      'HOD': '/hod',
+      'Dean': '/dean'
+    };
+    
+    const route = roleRoutes[role] || '/dashboard';
+    this.router.navigate([route]);
   }
 
   forgotPassword(email: string): Observable<IAPIResponse<any>> {

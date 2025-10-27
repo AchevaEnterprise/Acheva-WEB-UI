@@ -31,10 +31,10 @@
     Average Grade <span class="text-neutral-800">{{ averageGrade() }}%</span>
   </p>
 
-  <div content>
+  <div content class="!pb-2">
     <app-analytics-chart [data]="analyticsChartData()" />
 
-    <div class="leading-[1.3rem] acva-caption text text-neutral-500 p-4">
+    <div class="leading-[1.3rem] acva-caption text text-neutral-500 px-4 pb-2">
       <p class="flex items-center gap-4 w-full">
         <span class="w-[20%]">Total Students</span>
         <mat-divider class="w-full"></mat-divider>
@@ -73,6 +73,7 @@
         label="Save Changes"
         icon="icons/general/save-btn-icon.svg"
         class="btn-md"
+        (click)="saveChanges()"
       />
       <app-button
         label="Delete File"
@@ -83,13 +84,13 @@
     </div>
   </div>
 
-  <!--<div class="flex items-center justify-between mt-4">
+  <div class="flex items-center justify-between mt-4">
     <app-segment-switcher
       [activeSegment]="activeSegment()"
       [segments]="segments()"
       (switchEvent)="switchSegment($event)"
     />
-  </div>-->
+  </div>
 
   <div class="mt-4">
     @if (loadingData()) {
@@ -127,12 +128,5 @@
   </div>
 </div>
 
-<!-- RESULT STATUS TRACKING -->
-<div class="mt-8">
-  <app-result-status-tracking />
-</div>
 
-<!-- COMMENTS SECTION -->
-<div class="mt-8">
-  <app-comment />
-</div>
+
