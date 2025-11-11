@@ -1,6 +1,8 @@
 import { IDepartment, ISchool } from '../../../@core/models/school.model';
 import { ICourse } from '../../courses/models/course.model';
 
+export type SegmentValue = 'REGULAR' | 'REFERENCE' | 'UNREGISTERED';
+
 export enum ResultStatusEnum {
   DRAFT = 'DRAFT',
   PENDING = 'PENDING',
@@ -9,39 +11,40 @@ export enum ResultStatusEnum {
 }
 
 export interface IResult {
-  _id?: string;
+  _id: string;
+  course: ICourse;
   session: string;
   level: string;
   semester: string;
-  department: IDepartment | any; // Allow flexible department structure
-  school: ISchool | any;
+  department: IDepartment;
+  school: ISchool;
   status: ResultStatusEnum;
   uploadedBy: string;
   isApproved: boolean;
-  comments: any[];
-  createdAt: Date | string; // Allow string dates from localStorage
-  updatedAt: Date | string; // Allow string dates from localStorage
-  course: ICourse | any;
-  // Additional fields for comprehensive data
-  lecturer?: string;
-  faculty?: string;
-  createdBy?: {
-    fullName: string;
-  } | string; // Allow flexible structure
-  // Draft-specific properties
-  isDraft?: boolean;
-  studentCount?: number;
-  studentsWithGrades?: number;
-  completionPercentage?: number;
-  courseDetails?: {
-    courseTitle: string;
-    session: string;
-    level: string;
-    units: number;
+  hasBeenSent: boolean;
+  hasFinalApproval: boolean;
+  currentHandler: string;
+  lastAction: string;
+  previousAction: string;
+  workflowHistory: Array<unknown>;
+  receivingHandler: string;
+  analytics: {
+    total: number;
+    totalPass: number;
+    totalFail: number;
+    A: number;
+    B: number;
+    C: number;
+    D: number;
+    E: number;
+    F: number;
   };
-  segments?: string[];
-  timestamp?: string;
-  lastModified?: string;
+
+  // To be removed
+  isDraft: boolean;
+  completionPercentage: number;
+  studentCount: number;
+  courseDetails: any;
 }
 
 export interface ICreateResult {
@@ -56,6 +59,12 @@ export interface ICreateResult {
 
 export interface IResultQuery {
   status: string;
+}
+
+export interface IPreparedResultQuery {
+  courseId: string;
+  status: string;
+  session: string;
 }
 
 export interface ICreateResultEntry {

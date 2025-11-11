@@ -274,9 +274,6 @@ export class LecturerManagementComponent implements OnInit, OnDestroy {
             this.lecturersData.set(resp.data);
           }
         },
-        error: (error) => {
-          console.error('Error fetching lecturers:', error);
-        },
       });
   }
 
@@ -285,7 +282,6 @@ export class LecturerManagementComponent implements OnInit, OnDestroy {
     if (this.form.valid) {
       // const formData = this.form.value.lecturers as LecturerAssignment[];
       // Here you would typically send the updates to your backend
-      // console.log('Lecturer updates:', formData);
     }
   }
 

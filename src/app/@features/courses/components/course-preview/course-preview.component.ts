@@ -10,4 +10,12 @@ import { Component, computed, input } from '@angular/core';
 export class CoursePreviewComponent {
   courseTemplate = input<any>();
   template = computed(() => this.courseTemplate());
+
+  courseCode = computed(() => {
+    if (typeof this.template().courseCode === 'string') {
+      return this.template().courseCode;
+    } else {
+      return this.template().courseCode?.courseCode;
+    }
+  });
 }

@@ -1,5 +1,5 @@
 <div
-  class="flex flex-col justify-between gap-4 bg-[#D9D9D966] transition-all duration-200 ease-in-out fixed z-10 top-0 w-[5rem] h-[100vh] border-[1px] border-r-[#D2D1D1]"
+  class="flex flex-col justify-between gap-4 bg-[#D9D9D966] transition-all duration-200 ease-in-out fixed z-10 top-0 w-[5rem] h-[100vh] border-r-[1px] border-r-[#D2D1D1]"
   [class.sidenav-expanded]="expanded()"
 >
   <div>
@@ -84,14 +84,9 @@
       <li class="w-full">
         <mat-divider></mat-divider>
         <button
-          (click)="toggleRolePopup()"
+          [matMenuTriggerFor]="roleMenu"
           class="flex items-center justify-between gap-4 border-[1px] border-[#D2D1D1] p-3 rounded-2xl mt-4 cursor-pointer w-full relative"
         >
-          @if (hasCourseCoordinatorRole()) {
-            <div
-              class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"
-            ></div>
-          }
           <div class="flex items-center gap-2">
             <img
               src=""
@@ -103,6 +98,10 @@
             @if (expanded()) {
               Switch Roles
             }
+
+            @if (hasOtherRoles()) {
+              <span class="badge-dot"></span>
+            }
           </div>
 
           @if (expanded()) {
@@ -113,6 +112,26 @@
             ></app-svg>
           }
         </button>
+        <mat-menu #roleMenu="matMenu">
+          @for (role of roles(); track role) {
+            <button
+              mat-menu-item
+              [disabled]="role.disabled"
+              (click)="switchToRole(role.role)"
+            >
+              <span>
+                {{ role.label }}
+                @if (role.role === RoleEnum.LECTURER) {
+                  <small><em>(Default)</em></small>
+                }
+              </span>
+
+              @if (activeRole() === role.role) {
+                <span class="checkmark">✓</span>
+              }
+            </button>
+          }
+        </mat-menu>
       </li>
     </ul>
   </div>
@@ -150,10 +169,9 @@
 </div>
 
 <!-- Custom Role Popup -->
-@if (showRolePopup()) {
+<!-- @if (showRolePopup()) {
   <div class="role-popup-overlay" (click)="closeRolePopup()">
     <div class="role-popup-card" (click)="$event.stopPropagation()">
-      <!-- Course Advisor -->
       <div
         class="role-item"
         [class.disabled]="!isRoleAssigned(RoleEnum.COURSE_ADVISOR)"
@@ -171,7 +189,6 @@
         }
       </div>
 
-      <!-- Course Coordinator -->
       <div
         class="role-item"
         [class.disabled]="!isRoleAssigned(RoleEnum.COURSE_COORDINATOR)"
@@ -189,7 +206,6 @@
         }
       </div>
 
-      <!-- Lecturer -->
       <div
         class="role-item"
         [class.active]="activeAccount()?.role === RoleEnum.LECTURER"
@@ -203,4 +219,4 @@
       </div>
     </div>
   </div>
-}
+} -->

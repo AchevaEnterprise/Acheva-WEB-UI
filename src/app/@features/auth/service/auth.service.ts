@@ -16,6 +16,7 @@ import {
   ILogIn,
   IResetPassword,
   ISignUp,
+  RoleEnum,
 } from '../model/auth.model';
 
 @Injectable({
@@ -127,29 +128,7 @@ export class AuthenticationService {
     );
   }
 
-  switchAccount(accountId: string): Observable<IAPIResponse<IAuthProfile>> {
-    return this.http
-      .post<
-        IAPIResponse<IAuthProfile>
-      >(`${this.authUrl}/lecturers/switch-account`, { accountId })
-      .pipe(
-        tap((res) => {
-          const { accessToken, refreshToken } = res.data;
-
-          this.setToken(accessToken);
-          this.setRefreshToken(refreshToken);
-
-          // Sets the signal state for the active account
-          this.activeAccount.set(res.data);
-          localStorage.setItem(
-            STORAGE_KEYS.ACTIVE_ACCOUNT,
-            JSON.stringify(this.activeAccount())
-          );
-        })
-      );
-  }
-
-  switchRole(role: string): Observable<IAPIResponse<any>> {
+  switchRole(role: RoleEnum): Observable<IAPIResponse<any>> {
     return this.http
       .patch<
         IAPIResponse<any>
@@ -162,25 +141,12 @@ export class AuthenticationService {
               STORAGE_KEYS.ACTIVE_ACCOUNT,
               JSON.stringify(this.activeAccount())
             );
-            
+
             // Navigate based on new role
-            this.navigateByRole(role);
+            // this.router.navigate(['/dashboard']);
           }
         })
       );
-  }
-
-  private navigateByRole(role: string) {
-    const roleRoutes: { [key: string]: string } = {
-      'Course Coordinator': '/course-coordinator',
-      'Course Advisor': '/course-advisor',
-      'Lecturer': '/lecturer',
-      'HOD': '/hod',
-      'Dean': '/dean'
-    };
-    
-    const route = roleRoutes[role] || '/dashboard';
-    this.router.navigate([route]);
   }
 
   forgotPassword(email: string): Observable<IAPIResponse<any>> {

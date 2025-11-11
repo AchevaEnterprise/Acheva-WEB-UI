@@ -1,0 +1,116 @@
+<app-card label="Course Analtyics" [showDivider]="true" dividerClass="!mt-4">
+  <p rightHeaderContent class="acva-para-1 text-neutral-500">
+    Average Grade <span class="text-neutral-800">0.0%</span>
+  </p>
+
+  <div content>
+    <app-analytics-chart [data]="analyticsChartData()" />
+
+    <div class="leading-[1.3rem] acva-caption text text-neutral-500 p-4">
+      <p class="flex items-center gap-4 w-full">
+        <span class="w-[20%]">Total Students</span>
+        <mat-divider class="w-full"></mat-divider>
+        <span>{{ totalStudent() || 0 }}</span>
+      </p>
+      <p class="flex items-center gap-4 w-full">
+        <span class="w-[20%]">Total Pass</span>
+        <mat-divider class="w-full"></mat-divider>
+        <span>{{ totalStudentPass() || 0 }}</span>
+      </p>
+      <p class="flex items-center gap-4 w-full">
+        <span class="w-[20%]">Total Fail</span>
+        <mat-divider class="w-full"></mat-divider>
+        <span>{{ totalStudentFail() || 0 }}</span>
+      </p>
+    </div>
+  </div>
+</app-card>
+
+<mat-divider class="!my-4"></mat-divider>
+
+<div>
+  <h4 class="acva-heading-6 fw-500 mt-4 mb-3">Student Grade</h4>
+
+  <div class="flex gap-3 items-start justify-between">
+    <app-search-input placeholder="Search students" />
+
+    <div class="flex flex-wrap justify-end gap-3 items-center">
+      <app-button
+        *appRoleAccess="[RoleEnum.LECTURER, RoleEnum.COURSE_COORDINATOR]"
+        label="Save Changes"
+        icon="icons/general/save-btn-icon.svg"
+        class="btn-md"
+        (clickEvent)="saveChanges()"
+      />
+
+      <app-button
+        *appRoleAccess="[RoleEnum.HOD, RoleEnum.DEAN]"
+        label="Approve"
+        icon="icons/general/approve-btn-icon.svg"
+        class="btn-md"
+        (clickEvent)="confirmApproval()"
+      />
+
+      <app-button
+        *appRoleAccess="[RoleEnum.HOD, RoleEnum.DEAN]"
+        label="Reject"
+        type="outline"
+        icon="icons/general/reject-btn-icon.svg"
+        class="btn-md btn-error"
+        (clickEvent)="reject()"
+      />
+
+      <app-button
+        *appRoleAccess="[RoleEnum.COURSE_ADVISOR]"
+        label="Publish"
+        class="btn-md"
+      />
+
+      <app-button
+        *appRoleAccess="[RoleEnum.COURSE_ADVISOR]"
+        label="Replace Result"
+        class="btn-md"
+      />
+
+      <app-button
+        *appRoleAccess="[RoleEnum.LECTURER, RoleEnum.COURSE_COORDINATOR]"
+        label="Delete File"
+        type="clear"
+        icon="icons/general/trash-icon.svg"
+        class="btn-md"
+      />
+    </div>
+  </div>
+
+  <app-segment-switcher
+    [activeSegment]="activeSegment()"
+    [segments]="segments()"
+    (switchEvent)="switchSegment($event)"
+  />
+
+  <div class="mt-4">
+    @switch (activeSegment().value) {
+      @case ('REGULAR') {
+        <app-regular-table-result-upload
+          #regularTableResultUploadRef
+          [students]="students()['REGULAR']"
+          (uploadResultEvent)="uploadResult($event)"
+        />
+      }
+      @case ('REFERENCE') {
+        <app-regular-table-result-upload
+          #regularTableResultUploadRef
+          [students]="students()['REFERENCE']"
+          (uploadResultEvent)="uploadResult($event)"
+        />
+      }
+      @case ('UNREGISTERED') {
+        <app-regular-table-result-upload
+          #regularTableResultUploadRef
+          [students]="students()['UNREGISTERED']"
+          (uploadResultEvent)="uploadResult($event)"
+        />
+      }
+    }
+  </div>
+</div>

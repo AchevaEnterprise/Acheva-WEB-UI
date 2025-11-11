@@ -1,12 +1,15 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { Observable, tap } from 'rxjs';
+import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { IAPIResponse } from '../../../@core/models/api-response.model';
-import { NotificationService } from '../../notifications/service/notification.service';
+import {
+  IAPIPaginatedResponse,
+  IAPIResponse,
+} from '../../../@core/models/api-response.model';
 import {
   ICreateResult,
   ICreateResultEntry,
+  IPreparedResultQuery,
   IResult,
   IResultEntriesQuery,
   IResultQuery,
@@ -18,34 +21,84 @@ import {
 })
 export class ResultsService {
   private readonly http = inject(HttpClient);
-  private readonly notificationService = inject(NotificationService);
   private readonly resultsUrl = `${environment.BASE_URL}/results`;
 
-  getResults(query?: IResultQuery): Observable<IAPIResponse<any>> {
+  // RESULT
+  getResults(
+    query?: Partial<IResultQuery>
+  ): Observable<IAPIPaginatedResponse<IResult[]>> {
     let params = new HttpParams();
-    params = params.append('status', query?.status || '');
+    if (query) {
+      if (query.status) {
+        params = params.append('status', query.status);
+      }
+    }
 
-    return this.http.get<IAPIResponse<IResult>>(`${this.resultsUrl}`, {
-      params,
-    });
+    return this.http.get<IAPIPaginatedResponse<IResult[]>>(
+      `${this.resultsUrl}`,
+      {
+        params,
+      }
+    );
   }
 
-  getResult(resultId: string): Observable<IAPIResponse<any>> {
-    return this.http.get<IAPIResponse<any>>(`${this.resultsUrl}/${resultId}`);
+  getResult(resultId: string): Observable<IAPIResponse<IResult>> {
+    return this.http.get<IAPIResponse<IResult>>(
+      `${this.resultsUrl}/${resultId}`
+    );
   }
 
+  getPreparedResults(
+    query?: Partial<IPreparedResultQuery>
+  ): Observable<IAPIResponse<unknown>> {
+    return this.http.get<IAPIResponse<unknown>>(
+      `${this.resultsUrl}/prepared-results`
+    );
+  }
+
+  sendResult(
+    resultId: string,
+    recepientId: string
+  ): Observable<IAPIResponse<unknown>> {
+    return this.http.patch<IAPIResponse<unknown>>(
+      `${this.resultsUrl}/${resultId}/send/${recepientId}`,
+      {}
+    );
+  }
+
+  createResult(result: ICreateResult): Observable<IAPIResponse<IResult>> {
+    return this.http.post<IAPIResponse<IResult>>(`${this.resultsUrl}`, result);
+  }
+
+  updateResult(
+    resultId: string,
+    result: Partial<ICreateResult>
+  ): Observable<IAPIResponse<unknown>> {
+    return this.http.patch<IAPIResponse<unknown>>(
+      `${this.resultsUrl}/${resultId}`,
+      result
+    );
+  }
+
+  // RESULT ENTRIES
   getResultEntries(
     resultId: string,
-    query?: IResultEntriesQuery
-  ): Observable<IAPIResponse<any>> {
+    query?: Partial<IResultEntriesQuery>
+  ): Observable<IAPIResponse<unknown>> {
     let params = new HttpParams();
-    params = params.append('category', query?.category || '');
+    if (query) {
+      if (query.category) {
+        params = params.append('category', query.category);
+      }
+      if (query.fullName) {
+        params = params.append('fullName', query.fullName);
+      }
+      if (query.limit) {
+        params = params.append('limit', query.limit);
+      }
+    }
 
-    if (query?.fullName)
-      params = params.append('fullName', query?.fullName || '');
-    if (query?.limit) params = params.append('limit', query?.limit || '');
-
-    return this.http.get<IAPIResponse<any>>(
+    return this.http.get<IAPIResponse<unknown>>(
       `${this.resultsUrl}/${resultId}/entries`,
       {
         params,
@@ -53,171 +106,94 @@ export class ResultsService {
     );
   }
 
-  sendResult(
-    resultId: string,
-    recepientId: string,
-    courseTitle?: string,
-    senderRole?: string,
-    recipientRole?: string
-  ): Observable<IAPIResponse<any>> {
-    return this.http.patch<IAPIResponse<any>>(
-      `${this.resultsUrl}/${resultId}/send/${recepientId}`,
-      {}
-    ).pipe(
-      tap((response) => {
-        if (response.status) {
-          // Create notification for recipient
-          const notification = {
-            title: 'New Result Received',
-            message: `You have received a new result${courseTitle ? ` for ${courseTitle}` : ''} from ${senderRole || 'colleague'}`,
-            type: 'RESULT_RECEIVED',
-            recipientId: recepientId,
-            data: { resultId, courseTitle, senderRole, recipientRole }
-          };
-          
-          this.notificationService.createNotification(notification).subscribe();
-          
-          // Trigger notification refresh
-          document.dispatchEvent(new CustomEvent('refreshNotifications'));
-        }
-      })
-    );
-  }
-
-  createResult(result: ICreateResult): Observable<IAPIResponse<any>> {
-    return this.http.post<IAPIResponse<any>>(`${this.resultsUrl}`, result);
-  }
-
   createResultEntry(
     resultEntry: ICreateResultEntry
-  ): Observable<IAPIResponse<any>> {
-    return this.http.post<IAPIResponse<any>>(
+  ): Observable<IAPIResponse<unknown>> {
+    return this.http.post<IAPIResponse<unknown>>(
       `${this.resultsUrl}/entries`,
       resultEntry
-    );
-  }
-
-  createBulkResultEntries(
-    entries: ICreateResultEntry[]
-  ): Observable<IAPIResponse<any>> {
-    return this.http.post<IAPIResponse<any>>(
-      `${this.resultsUrl}/entries/bulk`,
-      entries
-    );
-  }
-
-  updateResult(
-    resultId: string,
-    result: Partial<ICreateResult>
-  ): Observable<IAPIResponse<any>> {
-    return this.http.patch<IAPIResponse<any>>(
-      `${this.resultsUrl}/${resultId}`,
-      result
     );
   }
 
   updateResultEntry(
     resultEntryId: string,
     resultEntry: Partial<ICreateResultEntry>
-  ): Observable<IAPIResponse<any>> {
-    return this.http.patch<IAPIResponse<any>>(
+  ): Observable<IAPIResponse<unknown>> {
+    return this.http.patch<IAPIResponse<unknown>>(
       `${this.resultsUrl}/entries/${resultEntryId}`,
       resultEntry
     );
   }
 
+  deleteResultEntry(resultEntryId: string): Observable<IAPIResponse<unknown>> {
+    return this.http.delete<IAPIResponse<unknown>>(
+      `${this.resultsUrl}/${resultEntryId}/entries`
+    );
+  }
+
+  createBulkResultEntries(
+    entries: ICreateResultEntry[]
+  ): Observable<IAPIResponse<unknown>> {
+    return this.http.post<IAPIResponse<unknown>>(
+      `${this.resultsUrl}/entries/bulk`,
+      entries
+    );
+  }
+
   updateBulkResultEntry(
     resultEntries: Partial<IUpdateResultEntry>
-  ): Observable<IAPIResponse<any>> {
-    return this.http.patch<IAPIResponse<any>>(
+  ): Observable<IAPIResponse<unknown>> {
+    return this.http.patch<IAPIResponse<unknown>>(
       `${this.resultsUrl}/entries/bulk`,
       resultEntries
     );
   }
 
-  updateBulkResultEntries(entries: any[]): Observable<IAPIResponse<any>> {
-    return this.http.patch<IAPIResponse<any>>(
-      `${this.resultsUrl}/entries/bulk`,
-      entries
-    );
-  }
-
-  deleteResultEntry(resultEntryId: string): Observable<IAPIResponse<any>> {
-    return this.http.delete<IAPIResponse<any>>(
-      `${this.resultsUrl}/${resultEntryId}/entries`
-    );
-  }
-
   deleteBulkResultEntries(
     resultEntryIds: string[]
-  ): Observable<IAPIResponse<any>> {
-    return this.http.delete<IAPIResponse<any>>(
+  ): Observable<IAPIResponse<unknown>> {
+    return this.http.delete<IAPIResponse<unknown>>(
       `${this.resultsUrl}/entries/bulk`,
       { body: { entryIds: resultEntryIds } }
     );
   }
 
-  // Import Result - Upload CSV/Excel files
   uploadResultFile(
     resultId: string,
     file: File
-  ): Observable<IAPIResponse<any>> {
+  ): Observable<IAPIResponse<unknown>> {
     const formData = new FormData();
     formData.append('file', file);
 
-    return this.http.post<IAPIResponse<any>>(
+    return this.http.post<IAPIResponse<unknown>>(
       `${this.resultsUrl}/entries/import/${resultId}`,
       formData
     );
   }
 
-  // Create single result entry for grid input
-  createSingleResultEntry(entry: {
-    registrationNumber: string;
-    fullName: string;
-    test: number;
-    lab: number;
-    exam: number;
-    total: number;
-    result: string;
-  }): Observable<IAPIResponse<any>> {
-    return this.http.post<IAPIResponse<any>>(
-      `${this.resultsUrl}/entries`,
-      entry
-    );
-  }
-
-  // Create multiple result entries for bulk grid operations
-  createMultipleResultEntries(
-    entries: Array<{
-      registrationNumber: string;
-      fullName: string;
-      test: number;
-      lab: number;
-      exam: number;
-      total: number;
-      result: string;
-    }>
-  ): Observable<IAPIResponse<any>> {
-    return this.http.post<IAPIResponse<any>>(
-      `${this.resultsUrl}/entries/bulk`,
-      entries
-    );
-  }
-
   updateResultEntriesWithAnalytics(
     resultId: string,
-    entries: any[]
-  ): Observable<IAPIResponse<any>> {
-    return this.http.patch<IAPIResponse<any>>(
+    entries: IResult[]
+  ): Observable<IAPIResponse<unknown>> {
+    return this.http.patch<IAPIResponse<unknown>>(
       `${this.resultsUrl}/${resultId}/entries`,
       { entries }
     );
   }
 
-  getResultAnalytics(resultId: string): Observable<IAPIResponse<any>> {
-    return this.http.get<IAPIResponse<any>>(
+  getResultAnalytics(resultId: string): Observable<IAPIResponse<unknown>> {
+    return this.http.get<IAPIResponse<unknown>>(
       `${this.resultsUrl}/${resultId}/analytics`
+    );
+  }
+
+  approveOrRejectResult(
+    resultId: string,
+    action: 'APPROVED' | 'REJECTED',
+    comment?: string
+  ) {
+    return this.http.get<IAPIResponse<unknown>>(
+      `${this.resultsUrl}/${resultId}/approve-or-reject`
     );
   }
 }

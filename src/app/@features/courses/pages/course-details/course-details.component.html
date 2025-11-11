@@ -30,16 +30,7 @@
       <div class="input-style-1 acheva-input w-full">
         <p class="acva-para-2 fw-400 label-text">School</p>
         <mat-form-field [style.width.%]="100" appearance="outline">
-          <mat-select
-            placeholder="Select your school"
-            formControlName="school"
-            (selectionChange)="getFaculties($event)"
-            [compareWith]="compareSchoolFn"
-          >
-            @for (school of schoolsOptions(); track $index) {
-              <mat-option [value]="school">{{ school.name }}</mat-option>
-            }
-          </mat-select>
+          <input matInput type="text" [value]="school()?.name" disabled />
         </mat-form-field>
       </div>
 
@@ -104,28 +95,31 @@
         </mat-form-field>
       </div>
 
-      <!-- Course Code Input with Autocomplete -->
-      <div class="flex items-center gap-3">
-        <div class="input-style-1 acheva-input">
+      <mat-divider class="mb-4!" />
+
+      @if (isNew) {
+        <div class="input-style-1 acheva-input w-full mb-4">
           <p class="acva-para-2 fw-400 label-text">Course Code</p>
-          <app-autocomplete-input
-            [formControl]="courseCodeControl"
-            [items]="courseCodes"
-            [minChars]="2"
-            placeholder="Input Course Codes..."
-            [customError]="invalidCourseCodeError"
-            [showCustomError]="showCourseCodeError"
-            (itemSelected)="onCodeSelected($event)"
-            (textChanged)="onCourseCodeChanged($event)"
-          ></app-autocomplete-input>
+          <app-search-select
+            [options]="courses()"
+            (searchEvent)="findCourseByCourseCode($event)"
+            formControlName="courseCode"
+          />
         </div>
-      </div>
+      } @else {
+        <div class="input-style-1 acheva-input w-full">
+          <p class="acva-para-2 fw-400 label-text">Course Code</p>
+          <mat-form-field [style.width.%]="100" appearance="outline">
+            <input matInput type="text" formControlName="courseCode" />
+          </mat-form-field>
+        </div>
+      }
 
       <!-- Course Title (Auto-filled) -->
       <div class="input-style-1 acheva-input w-full">
         <p class="acva-para-2 fw-400 label-text">Course Title</p>
         <mat-form-field [style.width.%]="100" appearance="outline">
-          <input matInput type="text" formControlName="courseTitle" readonly />
+          <input matInput type="text" formControlName="courseTitle" />
         </mat-form-field>
       </div>
 
@@ -133,39 +127,37 @@
       <div class="input-style-1 acheva-input w-full">
         <p class="acva-para-2 fw-400 label-text">Course Coordinator</p>
         <mat-form-field [style.width.%]="100" appearance="outline">
-          <input
-            matInput
-            type="text"
-            formControlName="courseCordinator"
-            readonly
-          />
+          <input matInput type="text" formControlName="courseCordinator" />
         </mat-form-field>
       </div>
 
       <!-- Course Unit with Controls -->
       <div class="flex items-center gap-3">
         <div class="input-style-1 acheva-input">
-          <p class="acva-para-2 fw-400 label-text">Course Unit</p>
+          <p class="acva-para-2 fw-400 label-text">Course Load</p>
           <mat-form-field [style.width.%]="100" appearance="outline">
             <input matInput type="text" formControlName="courseLoad" readonly />
           </mat-form-field>
         </div>
-        <!-- <app-button
-          type="outline"
-          label="-"
-          class="btn-sm"
-          (clickEvent)="decreaseCourseUnit()"
-        />
-        <app-button
-          label="+"
-          class="btn-sm"
-          (clickEvent)="increaseCourseUnit()"
-        />-->
+
+        @if (isNew) {
+          <app-button
+            type="outline"
+            label="-"
+            class="btn-sm"
+            (clickEvent)="decreaseCourseUnit()"
+          />
+          <app-button
+            label="+"
+            class="btn-sm"
+            (clickEvent)="increaseCourseUnit()"
+          />
+        }
       </div>
     </form>
 
     <!-- Course Preview Section -->
-    <app-course-preview [courseTemplate]="form.getRawValue()" />
+    <app-course-preview [courseTemplate]="getCourseTemplate" />
   </div>
 
   <!-- Action Buttons -->
@@ -174,9 +166,8 @@
     <app-button
       label="Create Result"
       [loading]="isLoading()"
-      [disabled]="form.invalid || isLoading()"
+      [disabled]="form.invalid"
       (clickEvent)="submit()"
-      [style.cursor]="form.invalid || isLoading() ? 'not-allowed' : 'pointer'"
     />
   </div>
 </div>

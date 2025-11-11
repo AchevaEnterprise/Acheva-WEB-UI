@@ -22,6 +22,9 @@ import { AnalyticsChartComponent } from '../../../my-results/components/analytic
 import { ReferenceTableResultUploadComponent } from '../../../my-results/components/reference-table-result-upload/reference-table-result-upload.component';
 import { RegularTableResultUploadComponent } from '../../../my-results/components/regular-table-result-upload/regular-table-result-upload.component';
 
+import { finalize, forkJoin } from 'rxjs';
+import { IStudentGrade } from '../../../courses/models/student-grade.model';
+import { IResult, SegmentValue } from '../../models/results.model';
 import { ResultsService } from '../../services/results.service';
 
 @Component({
@@ -109,232 +112,107 @@ export class ApproveRejectResultComponent implements OnInit {
     course: new FormControl({ value: '', disabled: true }),
     session: new FormControl({ value: '', disabled: true }),
     level: new FormControl({ value: '', disabled: true }),
-    category: new FormControl('regular'),
+    category: new FormControl('REGULAR'),
   });
 
-  students = signal<Record<string, any[]>>({
+  students = signal<Record<SegmentValue, Partial<IStudentGrade>[]>>({
     REGULAR: [],
     REFERENCE: [],
     UNREGISTERED: [],
   });
 
+  loadingResult = signal<boolean>(false);
+
   ngOnInit(): void {
     this.categoryListener();
-    if (this.resultId) this.getResult();
+    this.getResultAndEntries();
   }
 
-  getResultEntries() {
-    console.log(
-      'Getting result entries for segment:',
-      this.activeSegment().value
+  getResultAndEntries() {
+    this.loadingResult.set(true);
+
+    const result$ = this.resultsService.getResult(this.resultId!);
+    const resultEntries$ = this.resultsService.getResultEntries(
+      this.resultId!,
+      { category: this.activeSegment().value }
     );
 
-    // Check if data is already loaded from localStorage
-    const currentStudents = this.students()[this.activeSegment().value];
-    if (currentStudents && currentStudents.length > 0) {
-      console.log('Data already loaded from localStorage, skipping API call');
-      return;
-    }
-
-    this.resultsService
-      .getResultEntries(this.resultId!, {
-        category: this.activeSegment().value,
-      })
+    forkJoin([result$, resultEntries$])
+      .pipe(finalize(() => this.loadingResult.set(false)))
       .subscribe({
-        next: (resp) => {
-          console.log('Result entries response:', resp);
-
-          if (resp.status) {
-            const { entries, studentsWithoutEntries, analytics } =
-              resp.data as {
-                entries: any[];
-                studentsWithoutEntries: any[];
-                analytics?: Record<string, number>;
-              };
-
-            console.log('Entries:', entries);
-            console.log('Students without entries:', studentsWithoutEntries);
-
-            // Process entries with actual data - preserve existing grades and scores
-            const processedEntries = (entries || []).map((student) => {
-              console.log('Processing student entry:', student);
-              return {
-                ...student,
-                test:
-                  student.test !== undefined && student.test !== null
-                    ? student.test
-                    : '-',
-                lab:
-                  student.lab !== undefined && student.lab !== null
-                    ? student.lab
-                    : '-',
-                exam:
-                  student.exam !== undefined && student.exam !== null
-                    ? student.exam
-                    : '-',
-                total:
-                  student.total !== undefined && student.total !== null
-                    ? student.total
-                    : '-',
-                grade: student.grade || '-',
-                status: student.status || '-',
-              };
-            });
-
-            // Process students without entries
-            const processedStudentsWithoutEntries = (
-              studentsWithoutEntries || []
-            ).map((student) => ({
-              ...student,
-              test: '-',
-              lab: '-',
-              exam: '-',
-              total: '-',
-              grade: '-',
-              status: '-',
-            }));
-
-            const allStudents = [
-              ...processedEntries,
-              ...processedStudentsWithoutEntries,
-            ];
-
-            console.log('Final processed students:', allStudents);
-
-            // Update only the current segment data
-            this.students.update((current) => ({
-              ...current,
-              [this.activeSegment().value]: allStudents,
-            }));
-
-            // Update analytics if available
-            if (analytics) {
-              const analyticsData = [
-                analytics['A'] || 0,
-                analytics['B'] || 0,
-                analytics['C'] || 0,
-                analytics['D'] || 0,
-                analytics['E'] || 0,
-                analytics['F'] || 0,
-              ];
-
-              this.analyticsChartData.set(analyticsData);
-              this.totalStudent.set(analytics['total'] || allStudents.length);
-              this.totalStudentPass.set(analytics['totalPass'] || 0);
-              this.totalStudentFail.set(analytics['totalFail'] || 0);
-            }
-          }
-        },
-        error: (error) => {
-          console.error('Error fetching result entries:', error);
+        next: ([result, resultEntries]) => {
+          if (result.status) this.setResultDetails(result.data);
+          if (resultEntries.status)
+            this.setResultEntriesDetails(resultEntries.data);
         },
       });
   }
 
-  getResult() {
-    // Try loading from localStorage first
-    const localStorageKey = `result_management_${this.resultId}`;
-    const localData = localStorage.getItem(localStorageKey);
-    
-    if (localData) {
-      try {
-        const resultData = JSON.parse(localData);
-        console.log('Loading result from localStorage:', resultData);
-        
-        // Set course form data
-        this.courseForm.patchValue({
-          course: resultData.courseDetails.courseTitle,
-          session: resultData.courseDetails.session,
-          level: resultData.courseDetails.level,
-        });
-        
-        // Set analytics data
-        this.analyticsChartData.set(resultData.analytics.chartData || []);
-        this.totalStudent.set(resultData.analytics.totalStudent || 0);
-        this.totalStudentPass.set(resultData.analytics.totalStudentPass || 0);
-        this.totalStudentFail.set(resultData.analytics.totalStudentFail || 0);
-        
-        // Load student data from localStorage
-        this.students.set(resultData.segments || {
-          REGULAR: [],
-          REFERENCE: [],
-          UNREGISTERED: [],
-        });
-        
-        return;
-      } catch (error) {
-        console.error('Error loading from localStorage:', error);
-      }
-    }
-    
-    // Fallback to API if localStorage fails
-    this.resultsService.getResult(this.resultId!).subscribe({
-      next: (resp) => {
-        if (resp.status) {
-          const { analytics, course, session, level } = resp.data as {
-            course: { courseTitle: string };
-            session: string;
-            level: string;
-            analytics: Record<string, number>;
-          };
+  setResultDetails(result: IResult) {
+    const { course, session, level } = result;
 
-          this.courseForm.patchValue({
-            course: course.courseTitle,
-            session: session,
-            level: level,
-          });
+    this.courseForm.patchValue({
+      course: `${course?.courseCode} - ${course?.courseTitle}`,
+      session: session,
+      level: level,
+    });
+  }
 
-          const analyticsData = [
-            analytics['A'] || 0,
-            analytics['B'] || 0,
-            analytics['C'] || 0,
-            analytics['D'] || 0,
-            analytics['E'] || 0,
-            analytics['F'] || 0,
-          ];
+  setResultEntriesDetails(resultEntries: unknown) {
+    const { analytics, totalPass, totalFail, entries, studentsWithoutEntries } =
+      resultEntries as {
+        analytics: Record<string, number>;
+        total: number;
+        totalPass: number;
+        totalFail: number;
+        entries: Partial<IStudentGrade>[];
+        studentsWithoutEntries?: Partial<IStudentGrade>[];
+      };
 
-          this.analyticsChartData.set(analyticsData);
-          this.totalStudent.set(analytics['total'] || 0);
-          this.totalStudentPass.set(analytics['totalPass'] || 0);
-          this.totalStudentFail.set(analytics['totalFail'] || 0);
+    const analyticsData = [
+      analytics['A'] || 0,
+      analytics['B'] || 0,
+      analytics['C'] || 0,
+      analytics['D'] || 0,
+      analytics['E'] || 0,
+      analytics['F'] || 0,
+    ];
 
-          // Load entries for all segments
-          this.getResultEntries();
-        }
-      },
+    const studentResultEntries = [
+      ...entries,
+      ...(studentsWithoutEntries ?? []),
+    ];
+
+    this.analyticsChartData.set(analyticsData);
+    this.totalStudent.set(studentResultEntries.length);
+    this.totalStudentPass.set(totalPass || 0);
+    this.totalStudentFail.set(totalFail || 0);
+
+    // Set student's result entries
+    const activeCategory = this.activeSegment().value as SegmentValue;
+    this.students.update((students) => {
+      students[activeCategory] = studentResultEntries;
+      return students;
     });
   }
 
   categoryListener() {
     this.courseForm.get('category')?.valueChanges.subscribe({
       next: (value) => {
-        this.switchSegment(value as ISegmentSwitcher['value']);
+        const selectedSegment: ISegmentSwitcher = this.segments()?.find(
+          (segment: ISegmentSwitcher) => segment.value === value
+        )!;
+        this.activeSegment.set(selectedSegment);
       },
     });
   }
 
-  switchSegment(switchValue: ISegmentSwitcher['value']) {
-    this.activeSegment.update(
-      () =>
-        this.segments().find(
-          (segment: ISegmentSwitcher) => segment.value === switchValue
-        )!
-    );
-
-    switch (switchValue) {
-      case 'REGULAR': {
-        this.getResultEntries();
-        break;
-      }
-      case 'REFERENCE': {
-        this.getResultEntries();
-        break;
-      }
-      case 'UNREGISTERED': {
-        this.getResultEntries();
-        break;
-      }
-    }
+  switchSegment(value: ISegmentSwitcher['value']): void {
+    const selectedSegment: ISegmentSwitcher = this.segments()?.find(
+      (segment: ISegmentSwitcher) => segment.value === value
+    )!;
+    this.activeSegment.set(selectedSegment);
+    this.getResultAndEntries();
   }
 
   reject() {}

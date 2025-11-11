@@ -1,4 +1,4 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { AppState } from '../@core/store/app.state';
@@ -17,7 +17,7 @@ import { ToolBarComponent } from './tool-bar/tool-bar.component';
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.scss',
 })
-export class LayoutComponent implements OnInit {
+export class LayoutComponent {
   private readonly store = inject(Store<AppState>);
   private readonly authService = inject(AuthenticationService);
 
@@ -26,32 +26,8 @@ export class LayoutComponent implements OnInit {
 
   constructor() {
     this.authService.loadInitialSession();
-
-    // this.store.select(state => state.profile).pipe(take(1)).subscribe(profileState => {
-    //   if (!profileState) {
-    //     const account = this.authService.activeAccount();
-    //     if (account) {
-    //       // Dispatch saveProfile with the activeAccount data but omit tokens
-    //       const { accessToken, refreshToken, ...profileWithoutTokens } = account;
-    //       this.store.dispatch(
-    //         saveProfile({ profile: profileWithoutTokens })
-    //       );
-    //     } else {
-    //       // If no local session, fetch from API
-    //       this.store.dispatch(loadProfile());
-    //     }
-    //   }
-    // });
-  }
-
-  ngOnInit(): void {
-    //Delay API calls to allow proper authentication flow
-    setTimeout(() => {
-      if (this.authService.isAuthenticated) {
-        this.store.dispatch(loadProfile());
-        this.loadLinkedAccounts();
-      }
-    }, 1000);
+    this.store.dispatch(loadProfile());
+    this.loadLinkedAccounts();
   }
 
   loadLinkedAccounts() {
@@ -78,18 +54,4 @@ export class LayoutComponent implements OnInit {
 
     return styleClass;
   });
-
-  switchAccount(accountId: string) {
-    this.authService.switchAccount(accountId).subscribe({
-      next: (response) => {
-        if (response.status) {
-          // Reload the page to refresh the UI with new role
-          window.location.reload();
-        }
-      },
-      error: (error) => {
-        console.error('Failed to switch account:', error);
-      },
-    });
-  }
 }

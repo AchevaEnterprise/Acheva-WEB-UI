@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 
 @Component({
   selector: 'app-status-badge',
@@ -8,5 +8,5 @@ import { Component, input } from '@angular/core';
 })
 export class StatusBadgeComponent {
   status = input<string>();
-  type = input<'pass' | 'fail'>();
+  lowercaseStatus = computed(() => this.status()?.toLocaleLowerCase());
 }

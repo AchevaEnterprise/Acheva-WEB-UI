@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import * as FileSaver from 'file-saver';
 import * as XLSX from 'xlsx';
 
@@ -6,6 +6,16 @@ import * as XLSX from 'xlsx';
   providedIn: 'root',
 })
 export class UtilityService {
+  loadingGlobal = signal<boolean>(false);
+
+  showLoader() {
+    this.loadingGlobal.set(true);
+  }
+
+  hideLoader() {
+    this.loadingGlobal.set(false);
+  }
+
   formatCount(count: number) {
     return count > 10 ? '10+' : count.toString();
   }

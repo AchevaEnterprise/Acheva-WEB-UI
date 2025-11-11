@@ -18,7 +18,6 @@ export interface ICourse {
   courseCordinator?: string;
   courseLoad: number;
   lecturer: string;
-
   assignedTo?: {
     _id: string;
     firstname: string;

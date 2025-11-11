@@ -34,6 +34,7 @@ export interface IAuthProfile {
   faculty: string;
   department: string;
   role: RoleEnum;
+  otherRoles: RoleEnum[];
   accountType: 'LECTURER';
   emailVerified: boolean;
   accessToken: string;
@@ -49,6 +50,7 @@ export interface IAccount {
   department: string;
   email: string;
   role: RoleEnum;
+  otherRoles: RoleEnum[];
 }
 
 export interface IResetPassword {

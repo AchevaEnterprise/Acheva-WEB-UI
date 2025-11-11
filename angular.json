@@ -34,7 +34,8 @@
               }
             ],
             "styles": ["src/styles.scss"],
-            "scripts": []
+            "scripts": [],
+            "allowedCommonJsDependencies": ["file-saver"]
           },
           "configurations": {
             "production": {
@@ -42,7 +43,7 @@
                 {
                   "type": "initial",
                   "maximumWarning": "600kB",
-                  "maximumError": "1MB"
+                  "maximumError": "2MB"
                 },
                 {
                   "type": "anyComponentStyle",

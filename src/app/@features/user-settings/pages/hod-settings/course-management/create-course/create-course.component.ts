@@ -204,13 +204,12 @@ export class CreateCourseComponent {
       this.courseService
         .getCourses()
         .pipe(
-          map((resp) => resp.data.courses),
+          map((resp) => resp.data['courses']),
           finalize(() => this.isloadingCourses.set(false))
         )
         .subscribe({
           next: (courses) => this.courses.set(courses),
           error: (error) => {
-            console.error('Error loading courses:', error);
             this.isloadingCourses.set(false);
           },
         })
@@ -356,8 +355,6 @@ export class CreateCourseComponent {
 
     if (userFaculty) {
       this.form.get('faculty')?.setValue(userFaculty);
-    } else {
-      console.warn('❌ User faculty not found in available faculties list');
     }
   }
 
@@ -370,8 +367,6 @@ export class CreateCourseComponent {
 
     if (userDepartment) {
       this.form.get('department')?.setValue(userDepartment);
-    } else {
-      console.warn('User department not found in available departments list');
     }
   }
 
@@ -446,7 +441,6 @@ export class CreateCourseComponent {
             }
           },
           error: (error) => {
-            console.error('Error creating course:', error);
             this.toast.showNotification(
               'error',
               'Course Creation Failed',

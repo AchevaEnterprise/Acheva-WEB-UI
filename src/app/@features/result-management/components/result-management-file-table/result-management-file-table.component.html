@@ -1,22 +1,35 @@
 <div class="p-4">
   <div class="flex flex-wrap justify-between items-end">
     <div class="flex gap-4">
+      <!-- Faculty Selection -->
       <div class="input-style-1 acheva-input w-[40%]">
         <p class="acva-para-2 fw-400 label-text">Faculty</p>
-
         <mat-form-field [style.width.%]="100" appearance="outline">
-          <mat-select placeholder="Select faculty" formControlName="title">
-            <mat-option [value]="'Science'">Science</mat-option>
+          <mat-select
+            placeholder="Select your faculty"
+            formControlName="faculty"
+            (selectionChange)="getDepartments($event)"
+          >
+            @for (faculty of faculties(); track $index) {
+              <mat-option [value]="faculty">{{ faculty.name }}</mat-option>
+            }
           </mat-select>
         </mat-form-field>
       </div>
 
+      <!-- Department Selection -->
       <div class="input-style-1 acheva-input w-[40%]">
         <p class="acva-para-2 fw-400 label-text">Department</p>
-
         <mat-form-field [style.width.%]="100" appearance="outline">
-          <mat-select placeholder="Select department" formControlName="role">
-            <mat-option [value]="'Science'">Science</mat-option>
+          <mat-select
+            placeholder="Select your department"
+            formControlName="department"
+          >
+            @for (department of departments(); track $index) {
+              <mat-option [value]="department">{{
+                department.name
+              }}</mat-option>
+            }
           </mat-select>
         </mat-form-field>
       </div>
@@ -59,6 +72,7 @@
             <td mat-cell *matCellDef="let row">
               <mat-checkbox
                 (click)="$event.stopPropagation()"
+                (keydown)="$event.stopPropagation()"
                 (change)="$event ? selection.toggle(row) : null"
                 [checked]="selection.isSelected(row)"
                 [aria-label]="checkboxLabel(row)"
@@ -69,63 +83,103 @@
 
           <ng-container matColumnDef="courseCode">
             <th mat-header-cell *matHeaderCellDef>COURSE CODE</th>
-            <td mat-cell *matCellDef="let element">
-              {{ element.course?.courseCode }}
+            <td
+              mat-cell
+              *matCellDef="let result"
+              (click)="viewResult(result)"
+              (keydown)="viewResult(result)"
+            >
+              {{ result.course?.courseCode }}
             </td>
           </ng-container>
 
           <ng-container matColumnDef="courseTitle">
             <th mat-header-cell *matHeaderCellDef>COURSE TITLE</th>
-            <td mat-cell *matCellDef="let element">
-              {{ element.course?.courseTitle ||'N/A'}}
+            <td
+              mat-cell
+              *matCellDef="let result"
+              (click)="viewResult(result)"
+              (keydown)="viewResult(result)"
+            >
+              {{ result.course?.courseTitle || 'N/A' }}
             </td>
           </ng-container>
 
           <ng-container matColumnDef="semester">
             <th mat-header-cell *matHeaderCellDef>SEMESTER</th>
-            <td mat-cell *matCellDef="let element">
-              {{ element.semester }}
+            <td
+              mat-cell
+              *matCellDef="let result"
+              (click)="viewResult(result)"
+              (keydown)="viewResult(result)"
+            >
+              {{ result.semester }}
             </td>
           </ng-container>
 
           <ng-container matColumnDef="department">
             <th mat-header-cell *matHeaderCellDef>DEPARTMENT</th>
-            <td mat-cell *matCellDef="let element">
-              {{ element.department?.name || 'Unknown Department' }}
+            <td
+              mat-cell
+              *matCellDef="let result"
+              (click)="viewResult(result)"
+              (keydown)="viewResult(result)"
+            >
+              {{ result.department?.name || 'Unknown Department' }}
             </td>
           </ng-container>
 
           <ng-container matColumnDef="faculty">
             <th mat-header-cell *matHeaderCellDef>FACULTY</th>
-            <td mat-cell *matCellDef="let element">
-              {{ getFacultyName(element) }}
+            <td
+              mat-cell
+              *matCellDef="let result"
+              (click)="viewResult(result)"
+              (keydown)="viewResult(result)"
+            >
+              {{ result.faculty?.name || '-' }}
             </td>
           </ng-container>
 
           <ng-container matColumnDef="lecturer">
             <th mat-header-cell *matHeaderCellDef>LECTURER</th>
-            <td mat-cell *matCellDef="let element">
-              {{ getLecturerName(element) }}
+            <td
+              mat-cell
+              *matCellDef="let result"
+              (click)="viewResult(result)"
+              (keydown)="viewResult(result)"
+            >
+              {{ result.lecturer }}
             </td>
           </ng-container>
 
           <ng-container matColumnDef="createdAt">
             <th mat-header-cell *matHeaderCellDef>CREATED DATE</th>
-            <td mat-cell *matCellDef="let element">
-              {{ element.createdAt | date: 'MMM d, YYYY h:mm a' }}
+            <td
+              mat-cell
+              *matCellDef="let result"
+              (click)="viewResult(result)"
+              (keydown)="viewResult(result)"
+            >
+              {{ result.createdAt | date: 'MMM d, YYYY h:mm a' }}
             </td>
           </ng-container>
 
           <ng-container matColumnDef="updatedAt">
             <th mat-header-cell *matHeaderCellDef>UPDATED DATE</th>
-            <td mat-cell *matCellDef="let element">
-              {{ element.updatedAt | date: 'MMM d, YYYY h:mm a' }}
+            <td
+              mat-cell
+              *matCellDef="let result"
+              (click)="viewResult(result)"
+              (keydown)="viewResult(result)"
+            >
+              {{ result.updatedAt | date: 'MMM d, YYYY h:mm a' }}
             </td>
           </ng-container>
 
           <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef>ACTIONS</th>
-            <td mat-cell *matCellDef="let element">
+            <td mat-cell *matCellDef="let result">
               <button [matMenuTriggerFor]="menu" class="cursor-pointer">
                 <app-svg
                   svgWidth="3rem"
@@ -134,7 +188,7 @@
                 ></app-svg>
               </button>
               <mat-menu #menu="matMenu">
-                <button mat-menu-item (click)="viewResult(element)">
+                <button mat-menu-item (click)="viewResult(result)">
                   <app-svg
                     svgWidth="1.3rem"
                     svgHeight="1.3rem"
@@ -154,180 +208,21 @@
             </td>
           </ng-container>
 
-          <!-- Expanded Content Column -->
-          <ng-container matColumnDef="expandedDetail">
-            <td
-              mat-cell
-              *matCellDef="let element"
-              [attr.colspan]="displayedColumns.length"
-            >
-              <div
-                class="table-element-detail-wrapper"
-                [class.table-element-detail-wrapper-expanded]="
-                  isExpanded(element)
-                "
-              >
-                <div class="w-full overflow-auto p-4">
-                  <div class="grid grid-cols-2 gap-4">
-                    <div>
-                      <p class="font-semibold text-gray-600 mb-2">
-                        Course Details
-                      </p>
-                      <p class="mb-1">
-                        <strong>Code:</strong>
-                        {{
-                          element.course?.courseCode ||'N/A'
-                        }}
-                      </p>
-                      <p class="mb-1">
-                        <strong>Title:</strong>
-                        {{
-                          element.course?.courseTitle ||
-                            element.courseTitle ||
-                            'Unknown Course'
-                        }}
-                      </p>
-                      <p class="mb-1">
-                        <strong>Session:</strong>
-                        {{ element.session || 'Unknown Session' }}
-                      </p>
-                      <p class="mb-1">
-                        <strong>Level:</strong>
-                        {{ element.level || 'Unknown Level' }}
-                      </p>
-                      <p class="mb-1">
-                        <strong>Semester:</strong>
-                        {{ element.semester || '1st Semester' }}
-                      </p>
-                    </div>
-                    <div>
-                      <p class="font-semibold text-gray-600 mb-2">
-                        Additional Info
-                      </p>
-                      <p class="mb-1">
-                        <strong>Lecturer:</strong>
-                        <span class="text-blue-600">{{
-                          getLecturerName(element)
-                        }}</span>
-                      </p>
-                      <p class="mb-1">
-                        <strong>Department:</strong>
-                        <span class="text-green-600">{{
-                          element.department?.name || 'Unknown Department'
-                        }}</span>
-                      </p>
-                      <p class="mb-1">
-                        <strong>Faculty:</strong>
-                        <span class="text-purple-600">{{
-                          getFacultyName(element)
-                        }}</span>
-                      </p>
-                      <p class="mb-1">
-                        <strong>Status:</strong>
-                        <span
-                          class="px-2 py-1 rounded text-xs"
-                          [ngClass]="getStatusClass(element.status)"
-                          >{{ element.status || 'DRAFT' }}</span
-                        >
-                      </p>
-                      <p class="mb-1">
-                        <strong>Uploaded By:</strong>
-                        <span class="text-gray-700">{{
-                          getUploadedBy(element)
-                        }}</span>
-                      </p>
-                      @if (element.isDraft) {
-                        <p class="mb-1">
-                          <strong>Completion:</strong>
-                          <span class="text-orange-600"
-                            >{{ element.completionPercentage || 0 }}% ({{
-                              element.studentsWithGrades || 0
-                            }}/{{ element.studentCount || 0 }} students)</span
-                          >
-                        </p>
-                      }
-                    </div>
-                  </div>
-                  <div class="mt-4">
-                    <p class="font-semibold text-gray-600 mb-2">Timestamps</p>
-                    <p class="mb-1">
-                      <strong>Created:</strong>
-                      <span class="text-blue-500">{{
-                        getFormattedDate(element.createdAt)
-                      }}</span>
-                    </p>
-                    <p class="mb-1">
-                      <strong>Last Updated:</strong>
-                      <span class="text-green-500">{{
-                        getFormattedDate(element.updatedAt)
-                      }}</span>
-                    </p>
-                    @if (element.isDraft) {
-                      <p class="mb-1">
-                        <strong>Draft Status:</strong>
-                        <span class="text-orange-600">Unsaved Changes</span>
-                      </p>
-                    }
-                    @if (getTimeSinceUpdate(element.updatedAt)) {
-                      <p class="mb-1">
-                        <strong>Last Activity:</strong>
-                        <span class="text-gray-500 text-sm">{{
-                          getTimeSinceUpdate(element.updatedAt)
-                        }}</span>
-                      </p>
-                    }
-                  </div>
-                  <div class="mt-4 flex gap-2">
-                    <button
-                      class="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
-                      (click)="viewResult(element)"
-                    >
-                      <app-svg
-                        svgWidth="1rem"
-                        svgHeight="1rem"
-                        src="icons/general/pen-icon.svg"
-                        class="inline mr-1"
-                      ></app-svg>
-                      Edit Result
-                    </button>
-                    <button
-                      class="px-3 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600"
-                      (click)="makeComment(element)"
-                    >
-                      <app-svg
-                        svgWidth="1rem"
-                        svgHeight="1rem"
-                        src="icons/general/comment-icon.svg"
-                        class="inline mr-1"
-                      ></app-svg>
-                      Comment
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </td>
-          </ng-container>
-
           <tr
             mat-header-row
             *matHeaderRowDef="displayedColumns; sticky: true"
           ></tr>
           <tr
             mat-row
-            *matRowDef="let element; columns: displayedColumns"
-            class="table-element-row cursor-pointer"
-            [class.table-expanded-row]="isExpanded(element)"
-            (click)="onSingleClick(element, $event)"
-            (dblclick)="onDoubleClick(element, $event)"
-          ></tr>
-          <tr
-            mat-row
-            *matRowDef="let row; columns: ['expandedDetail']"
-            class="table-detail-row"
+            *matRowDef="let result; columns: displayedColumns"
+            class="cursor-pointer hover:bg-gray-400"
           ></tr>
         </table>
       </div>
-      <app-paginator />
+      <app-paginator
+        [paginator]="pagination()"
+        (pageEvent)="paginate($event)"
+      />
     } @else {
       <app-empty-state
         iconSrc="images/general/empty-doc.svg"

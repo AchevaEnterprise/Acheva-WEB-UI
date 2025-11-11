@@ -1,11 +1,18 @@
 .mat-column-fullName {
   width: 30%;
 }
-
 .mat-column-test,
 .mat-column-lab,
 .mat-column-exam,
 .mat-column-total,
 .mat-column-grade {
   width: 10%;
+}
+
+.completed {
+  background-color: #e8f5e9;
+}
+
+.not-completed {
+  background-color: red;
 }

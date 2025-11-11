@@ -1,14 +1,18 @@
-import { Component, inject, OnInit, output, signal } from '@angular/core';
+import { Component, computed, inject, output, signal } from '@angular/core';
 import { MatDividerModule } from '@angular/material/divider';
 
+import { MatMenuModule } from '@angular/material/menu';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { finalize } from 'rxjs';
 import { MENU } from '../../@core/constant/menu';
 import { ImageFallbackDirective } from '../../@core/directives/image-fallback.directive';
+import { RoleAccessDirective } from '../../@core/directives/role-access.directive';
 import { IMenu } from '../../@core/models/menu.model';
-import { IAccount, RoleEnum } from '../../@features/auth/model/auth.model';
+import { ToastService } from '../../@core/utility/toast.service';
+import { UtilityService } from '../../@core/utility/utility.service';
+import { RoleEnum } from '../../@features/auth/model/auth.model';
 import { AuthenticationService } from '../../@features/auth/service/auth.service';
 import { SvgComponent } from '../../@shared/components/svg/svg.component';
-import { RoleAccessDirective } from '../../@core/directives/role-access.directive';
 
 @Component({
   selector: 'app-side-bar',
@@ -19,30 +23,67 @@ import { RoleAccessDirective } from '../../@core/directives/role-access.directiv
     MatDividerModule,
     ImageFallbackDirective,
     RoleAccessDirective,
+    MatMenuModule,
+    MatDividerModule,
   ],
   templateUrl: './side-bar.component.html',
   styleUrl: './side-bar.component.scss',
 })
-export class SideBarComponent implements OnInit {
+export class SideBarComponent {
   private readonly authService = inject(AuthenticationService);
   private readonly router = inject(Router);
-
-  ngOnInit() {
-    // Remove immediate API call to prevent auth loop
-  }
-
-  switchAccountEvent = output<string>();
+  private readonly utils = inject(UtilityService);
+  private readonly toast = inject(ToastService);
 
   appMenu = signal<IMenu[]>(MENU);
-  accounts = this.authService.accounts;
   activeAccount = this.authService.activeAccount;
-  linkedAccounts = signal<IAccount[]>([]);
+  activeRole = computed(() => this.activeAccount()?.role);
+
+  hasOtherRoles = computed(() => {
+    const roles = [
+      RoleEnum.COURSE_ADVISOR,
+      RoleEnum.COURSE_COORDINATOR,
+      RoleEnum.LECTURER,
+    ] as const;
+    const otherRoles = this.activeAccount()?.otherRoles ?? [];
+
+    return roles?.some((role) => otherRoles.includes(role));
+  });
+
+  roles = computed(() => {
+    const account = this.activeAccount();
+    const currentRole = account?.role;
+    const otherRoles = account?.otherRoles ?? [];
+
+    return [
+      {
+        label: 'Course Advisor',
+        role: RoleEnum.COURSE_ADVISOR,
+        disabled:
+          currentRole !== RoleEnum.COURSE_ADVISOR &&
+          !otherRoles.includes(RoleEnum.COURSE_ADVISOR),
+      },
+      {
+        label: 'Course Coordinator',
+        role: RoleEnum.COURSE_COORDINATOR,
+        disabled:
+          currentRole !== RoleEnum.COURSE_COORDINATOR &&
+          !otherRoles.includes(RoleEnum.COURSE_COORDINATOR),
+      },
+      {
+        label: 'Lecturer',
+        role: RoleEnum.LECTURER,
+        disabled:
+          currentRole !== RoleEnum.LECTURER &&
+          !otherRoles.includes(RoleEnum.LECTURER),
+      },
+    ];
+  });
 
   RoleEnum = RoleEnum;
 
   expanded = signal<boolean>(window.innerWidth > 768);
-  showRolePopup = signal<boolean>(false);
-  onToggleSideNav = output<{ expanded: boolean }>();
+  toggleSideNav = output<{ expanded: boolean }>();
 
   isActiveRoute(menu: IMenu): boolean {
     return this.router.url.includes(menu.route);
@@ -50,84 +91,38 @@ export class SideBarComponent implements OnInit {
 
   toggleSideBar() {
     this.expanded.update((val) => !val);
-    this.onToggleSideNav.emit({
+    this.toggleSideNav.emit({
       expanded: this.expanded(),
     });
   }
 
-  loadLinkedAccounts() {
-    this.authService.getLinkedAccounts().subscribe({
-      next: (response) => {
-        if (response.status) {
-          this.linkedAccounts.set(response.data);
-        }
-      },
-      error: (error) => {
-        console.error('Failed to load linked accounts:', error);
-      },
-    });
-  }
-
-  getAvailableRoles() {
-    return this.linkedAccounts().filter(
-      (account) => account.role !== this.activeAccount()?.role
-    );
-  }
-
-  hasCourseCoordinatorRole() {
-    const account = this.activeAccount();
-    if (!account) return false;
-    return (
-      account.role === RoleEnum.COURSE_COORDINATOR ||
-      (account as any).otherRoles?.includes(RoleEnum.COURSE_COORDINATOR)
-    );
-  }
-
-  isRoleAssigned(role: RoleEnum) {
-    const account = this.activeAccount();
-    if (!account) return false;
-
-    // Lecturer is always assigned
-    if (role === RoleEnum.LECTURER) return true;
-
-    // Check if it's the current role or in otherRoles
-    return account.role === role || (account as any).otherRoles?.includes(role);
-  }
-
   switchToRole(role: RoleEnum) {
-    this.authService.switchRole(role).subscribe({
-      next: (response) => {
-        if (response.status) {
-          this.closeRolePopup();
-          window.location.reload();
-        }
-      },
-      error: (error) => {
-        console.error('Failed to switch role:', error);
-      },
-    });
-  }
+    if (this.activeRole() === role) {
+      this.toast.showNotification(
+        'error',
+        'Active role',
+        `You are already operating as a ${role}`
+      );
 
-  switchAccount(accountId: string) {
-    this.authService.switchAccount(accountId).subscribe({
-      next: (response) => {
-        if (response.status) {
-          this.switchAccountEvent.emit(accountId);
-          this.closeRolePopup();
-        }
-      },
-      error: (error) => {
-        console.error('Failed to switch account:', error);
-      },
-    });
-  }
+      return;
+    }
 
-  toggleRolePopup() {
-    this.showRolePopup.update((val) => !val);
-  }
+    this.utils.showLoader();
 
-  closeRolePopup() {
-    this.showRolePopup.set(false);
+    this.authService
+      .switchRole(role)
+      .pipe(finalize(() => this.utils.hideLoader()))
+      .subscribe({
+        next: (response) => {
+          if (response.status) {
+            this.toast.showNotification(
+              'success',
+              'Role Switched',
+              `You are operating as a ${role}`
+            );
+          }
+        },
+      });
   }
 
   logout() {

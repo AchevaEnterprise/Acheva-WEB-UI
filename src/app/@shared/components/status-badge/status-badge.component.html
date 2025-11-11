@@ -1,3 +1,6 @@
-<p [class.pass]="type() === 'pass'" [class.fail]="type() === 'fail'">
+<p
+  [class.pass]="lowercaseStatus() === 'pass'"
+  [class.fail]="lowercaseStatus() === 'fail'"
+>
   {{ status() }}
 </p>

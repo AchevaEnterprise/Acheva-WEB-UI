@@ -3,6 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { IAPIResponse } from '../../../@core/models/api-response.model';
+import { INotification } from '../models/notification.model';
 
 @Injectable({
   providedIn: 'root',
@@ -11,8 +12,10 @@ export class NotificationService {
   private readonly http = inject(HttpClient);
   private readonly notificationUrl = `${environment.BASE_URL}/notifications`;
 
-  getNotifications(): Observable<IAPIResponse<any>> {
-    return this.http.get<IAPIResponse<any>>(`${this.notificationUrl}`);
+  getNotifications(): Observable<IAPIResponse<INotification[]>> {
+    return this.http.get<IAPIResponse<INotification[]>>(
+      `${this.notificationUrl}`
+    );
   }
 
   createNotification(notification: {
@@ -22,10 +25,16 @@ export class NotificationService {
     recipientId: string;
     data?: any;
   }): Observable<IAPIResponse<any>> {
-    return this.http.post<IAPIResponse<any>>(`${this.notificationUrl}`, notification);
+    return this.http.post<IAPIResponse<any>>(
+      `${this.notificationUrl}`,
+      notification
+    );
   }
 
   markAsRead(notificationId: string): Observable<IAPIResponse<any>> {
-    return this.http.patch<IAPIResponse<any>>(`${this.notificationUrl}/${notificationId}/read`, {});
+    return this.http.patch<IAPIResponse<any>>(
+      `${this.notificationUrl}/${notificationId}/read`,
+      {}
+    );
   }
 }

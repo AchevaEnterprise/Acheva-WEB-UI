@@ -9,9 +9,10 @@
             <span class="text-gray-400">></span>
           }
           @if (breadcrumb.link && $index < breadcrumbs().length - 1) {
-            <button 
+            <button
               class="text-blue-600 hover:text-blue-800"
-              (click)="navigateTo(breadcrumb.link)">
+              (click)="navigateTo(breadcrumb.link)"
+            >
               {{ breadcrumb.label }}
             </button>
           } @else {
@@ -38,7 +39,7 @@
 
     <div
       class="flex items-center gap-3 cursor-pointer"
-      [matMenuTriggerFor]="menu"
+      [matMenuTriggerFor]="roleMenu"
     >
       <img
         src=""
@@ -71,10 +72,23 @@
         </span>
       </p>
     </div>
-    <mat-menu #menu="matMenu">
-      @for (account of accounts(); track $index) {
-        <button mat-menu-item (click)="switchAccount(account.id)">
-          {{ account.role }}
+    <mat-menu #roleMenu="matMenu">
+      @for (role of roles(); track role) {
+        <button
+          mat-menu-item
+          [disabled]="role.disabled"
+          (click)="switchToRole(role.role)"
+        >
+          <span>
+            {{ role.label }}
+            @if (role.role === RoleEnum.LECTURER) {
+              <small><em>(Default)</em></small>
+            }
+          </span>
+
+          @if (activeRole() === role.role) {
+            <span class="checkmark">✓</span>
+          }
         </button>
       }
     </mat-menu>

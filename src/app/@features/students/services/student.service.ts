@@ -3,6 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { IAPIResponse } from '../../../@core/models/api-response.model';
+import { IStudent } from '../models/student.model';
 
 @Injectable({
   providedIn: 'root',
@@ -23,10 +24,16 @@ export class StudentService {
     );
   }
 
-  getStudentByRegNo(regNo: string): Observable<IAPIResponse<any>> {
+  getStudentByRegNo(
+    regNo: string,
+    schoolId: string
+  ): Observable<IAPIResponse<IStudent>> {
     let params = new HttpParams();
     params = params.append('registrationNumber', regNo);
-    return this.http.get<IAPIResponse<any>>(`${this.studentUrl}`, { params });
+    params = params.append('school', schoolId);
+    return this.http.get<IAPIResponse<IStudent>>(`${this.studentUrl}`, {
+      params,
+    });
   }
 
   getStudentsBySchool(): Observable<IAPIResponse<any>> {

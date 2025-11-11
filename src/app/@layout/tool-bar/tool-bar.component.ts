@@ -1,16 +1,18 @@
-import { Component, inject, OnInit, output, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { MatBadgeModule } from '@angular/material/badge';
+import { MatDialog } from '@angular/material/dialog';
 import { MatMenuModule } from '@angular/material/menu';
 import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
-import { filter, interval } from 'rxjs';
+import { filter, finalize } from 'rxjs';
 import { ImageFallbackDirective } from '../../@core/directives/image-fallback.directive';
+import { ToastService } from '../../@core/utility/toast.service';
 import { UtilityService } from '../../@core/utility/utility.service';
 import { RoleEnum } from '../../@features/auth/model/auth.model';
 import { AuthenticationService } from '../../@features/auth/service/auth.service';
+import { INotification } from '../../@features/notifications/models/notification.model';
+import { NotificationsComponent } from '../../@features/notifications/notifications.component';
 import { NotificationService } from '../../@features/notifications/service/notification.service';
 import { SvgComponent } from '../../@shared/components/svg/svg.component';
-import { MatDialog } from '@angular/material/dialog';
-import { NotificationsComponent } from '../../@features/notifications/notifications.component';
 
 @Component({
   selector: 'app-tool-bar',
@@ -25,22 +27,52 @@ import { NotificationsComponent } from '../../@features/notifications/notificati
 })
 export class ToolBarComponent implements OnInit {
   private readonly authService = inject(AuthenticationService);
-  private readonly utillityService = inject(UtilityService);
+  private readonly utilityService = inject(UtilityService);
   private readonly notificationService = inject(NotificationService);
+  private readonly toast = inject(ToastService);
   private readonly dialog = inject(MatDialog);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
-  switchAccountEvent = output<string>();
   activeAccount = this.authService.activeAccount;
-  accounts = this.authService.accounts;
+  activeRole = computed(() => this.activeAccount()?.role);
+
+  roles = computed(() => {
+    const account = this.activeAccount();
+    const currentRole = account?.role;
+    const otherRoles = account?.otherRoles ?? [];
+
+    return [
+      {
+        label: 'Course Advisor',
+        role: RoleEnum.COURSE_ADVISOR,
+        disabled:
+          currentRole !== RoleEnum.COURSE_ADVISOR &&
+          !otherRoles.includes(RoleEnum.COURSE_ADVISOR),
+      },
+      {
+        label: 'Course Coordinator',
+        role: RoleEnum.COURSE_COORDINATOR,
+        disabled:
+          currentRole !== RoleEnum.COURSE_COORDINATOR &&
+          !otherRoles.includes(RoleEnum.COURSE_COORDINATOR),
+      },
+      {
+        label: 'Lecturer',
+        role: RoleEnum.LECTURER,
+        disabled:
+          currentRole !== RoleEnum.LECTURER &&
+          !otherRoles.includes(RoleEnum.LECTURER),
+      },
+    ];
+  });
 
   RoleEnum = RoleEnum;
 
   pageTitle = signal<string>('');
-  breadcrumbs = signal<{label: string, link?: string}[]>([]);
-  badgeCount = signal<string>(this.utillityService.formatCount(0));
-  notifications = signal<any[]>([]);
+  breadcrumbs = signal<{ label: string; link?: string }[]>([]);
+  badgeCount = signal<string>(this.utilityService.formatCount(0));
+  notifications = signal<INotification[]>([]);
   unreadCount = signal<number>(0);
 
   constructor() {
@@ -61,18 +93,34 @@ export class ToolBarComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadNotifications();
-    interval(30000).subscribe(() => {
-      this.loadNotifications();
-    });
-    
-    // Listen for custom refresh events
-    document.addEventListener('refreshNotifications', () => {
-      this.loadNotifications();
-    });
   }
 
-  switchAccount(accountId: string) {
-    this.switchAccountEvent.emit(accountId);
+  switchToRole(role: RoleEnum) {
+    if (this.activeRole() === role) {
+      this.toast.showNotification(
+        'error',
+        'Active role',
+        `You are already operating as a ${role}`
+      );
+
+      return;
+    }
+
+    this.utilityService.showLoader();
+    this.authService
+      .switchRole(role)
+      .pipe(finalize(() => this.utilityService.hideLoader()))
+      .subscribe({
+        next: (response) => {
+          if (response.status) {
+            this.toast.showNotification(
+              'success',
+              'Role Switched',
+              `You are operating as a ${role}`
+            );
+          }
+        },
+      });
   }
 
   openNotification() {
@@ -81,7 +129,6 @@ export class ToolBarComponent implements OnInit {
       height: '98%',
       position: { right: '10px' },
     });
-    this.badgeCount.set('');
   }
 
   private loadNotifications() {
@@ -89,21 +136,18 @@ export class ToolBarComponent implements OnInit {
       next: (resp) => {
         if (resp.status && resp.data) {
           this.notifications.set(resp.data);
-          const unreadNotifications = resp.data.filter((n: any) => n.status === 'UNREAD');
+          const unreadNotifications = resp.data.filter(
+            (n: INotification) => n.status === 'UNREAD'
+          );
           const count = unreadNotifications.length;
           this.unreadCount.set(count);
           this.badgeCount.set(count > 0 ? count.toString() : '');
         }
       },
       error: (error) => {
-        console.warn('Failed to load notifications:', error);
         this.badgeCount.set('');
-      }
+      },
     });
-  }
-
-  refreshNotifications() {
-    this.loadNotifications();
   }
 
   navigateTo(link: string) {

@@ -17,7 +17,7 @@ import {
   SegmentSwitcherComponent,
 } from '../../../../../@shared/components/segment-switcher/segment-switcher.component';
 import { SvgComponent } from '../../../../../@shared/components/svg/svg.component';
-import { ICourseQuery } from '../../../../courses/models/course.model';
+import { ICourse, ICourseQuery } from '../../../../courses/models/course.model';
 import { CoursesService } from '../../../../courses/services/courses.service';
 import { UnassignCourseCordinatorComponent } from '../../../../../@shared/components/unassign-course-cordinator/unassign-course-cordinator.component';
 
@@ -87,14 +87,14 @@ export class CourseManagementComponent implements OnInit {
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: (resp) => {
-          if (resp?.data?.courses) {
+          if (resp?.data['courses']) {
             this.dataSource.set(
-              resp.data.courses
+              resp.data['courses']
                 .filter(
-                  (course: any) =>
+                  (course: ICourse) =>
                     course.level === this.activeSegment().label.replace('L', '')
                 )
-                .map((course: any) => ({
+                .map((course: ICourse) => ({
                   ...course,
                   courseCoordinator: course.assignedTo
                     ? `${course.assignedTo.firstname} ${course.assignedTo.lastname}`

@@ -3,7 +3,7 @@
 
   <!-- SEGMENTS -->
   <div class="mt-8">
-    <div class="flex justify-between items-center">
+    <div class="flex justify-between flex-wrap gap-4 items-center">
       <app-segment-switcher
         [activeSegment]="activeSegment()"
         [segments]="segments()"
@@ -11,21 +11,71 @@
       />
 
       <div class="flex gap-2">
-        <app-button
-          *appRoleAccess="[RoleEnum.LECTURER]"
-          [label]="sendingToCC() ? 'Sending...' : 'Send to CC'"
-          [disabled]="sendingToCC()"
-          class="btn-md"
-          matTooltip="Send to Course Cordinator"
-          (clickEvent)="sendToCC()"
-        />
-        <app-button
-          *appRoleAccess="[RoleEnum.COURSE_COORDINATOR]"
-          label="Send to HOD"
-          class="btn-md"
-          matTooltip="Send to Head of Department"
-          (clickEvent)="sendToHOD()"
-        />
+        @if (activeSegment().value === 'DRAFT') {
+          <app-button
+            *appRoleAccess="[RoleEnum.LECTURER]"
+            label="Send to CC"
+            class="btn-md"
+            matTooltip="Send to Course Cordinator"
+            [loading]="sendingToCC()"
+            (clickEvent)="confirmSendToCC()"
+          />
+
+          <app-button
+            *appRoleAccess="[RoleEnum.COURSE_COORDINATOR]"
+            label="Send to HOD"
+            class="btn-md"
+            matTooltip="Send to Head of Department"
+            [loading]="sendingToHOD()"
+            (clickEvent)="confirmSendToHOD()"
+          />
+        }
+
+        @if (activeSegment().value === 'VERIFIED') {
+          <app-button
+            *appRoleAccess="[RoleEnum.HOD]"
+            label="Send to CA"
+            class="btn-md"
+            matTooltip="Send to Course Adviser"
+            [loading]="sendingToCA()"
+            (clickEvent)="confirmSendToCA()"
+          />
+
+          <app-button
+            *appRoleAccess="[RoleEnum.COURSE_ADVISOR]"
+            label="Publish"
+            class="btn-md"
+            [loading]="publishing()"
+            (clickEvent)="publishResult()"
+          />
+        }
+
+        @if (activeSegment().value === 'UNVERIFIED') {
+          <app-button
+            *appRoleAccess="[RoleEnum.HOD]"
+            label="Resend"
+            class="btn-md"
+            [matMenuTriggerFor]="resendMenu"
+          />
+          <mat-menu #resendMenu="matMenu">
+            <button mat-menu-item (click)="resendToCC()">Resend to CC</button>
+            <button mat-menu-item (click)="resendToDean()">
+              Resend to Dean
+            </button>
+          </mat-menu>
+        }
+
+        @if (activeSegment().value === 'IMPORTED') {
+          <app-button
+            *appRoleAccess="[RoleEnum.COURSE_ADVISOR]"
+            label="Import"
+            class="btn-md"
+            type="outline"
+            [loading]="importing()"
+            (clickEvent)="importResult()"
+          />
+        }
+
         <app-button
           [label]="expandView() ? 'Collapse' : 'Expand'"
           type="outline"
@@ -36,7 +86,7 @@
     </div>
 
     <div
-      class="grid grid-cols-[1fr_30%] gap-4 mt-4"
+      class="grid grid-cols-[1fr_30%] gap-4 mt-4 items-start"
       [ngClass]="{
         'grid-cols-1': expandView(),
         'grid-cols-[1fr_30%]': !expandView(),
@@ -48,24 +98,22 @@
         [iconSrc]="segmentCardIconSrc()"
       >
         <ng-container content>
-          <!-- LECTURER VIEW: Regular file table -->
-          <app-result-management-file-table 
-            *appRoleAccess="[RoleEnum.LECTURER]"
+          <app-result-management-file-table
+            *appRoleAccess="[RoleEnum.LECTURER, RoleEnum.HOD]"
             #fileTableRef
             [expand]="expandView()"
             [results]="results()"
-            [status]="activeSegment().value"
+            [pagination]="pagination()"
             (viewResultEvent)="viewResult($event)"
           />
-          
-          <!-- COURSE COORDINATOR VIEW: Folder table -->
-          <app-result-management-folder-table 
+
+          <app-result-management-folder-table
             *appRoleAccess="[RoleEnum.COURSE_COORDINATOR]"
             #folderTableRef
             [expand]="expandView()"
-            [results]="results()"
-            [status]="activeSegment().value"
-            (viewResultEvent)="viewResult($event)"
+            [results]="preparedResults()"
+            [pagination]="pagination()"
+            (viewFolderEvent)="viewFolder($event)"
           />
         </ng-container>
       </app-card>

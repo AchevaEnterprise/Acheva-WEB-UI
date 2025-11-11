@@ -21,14 +21,4 @@ export const routes: Routes = [
         (m) => m.ResultUploadComponent
       ),
   },
-  {
-    path: 'course-coordinator-results',
-    data: {
-      title: 'Course Coordinator Results View',
-    },
-    loadComponent: () =>
-      import('./pages/course-coordinator-results/course-coordinator-results.component').then(
-        (m) => m.CourseCoordinatorResultsComponent
-      ),
-  },
 ];

@@ -1,10 +1,8 @@
-import { DatePipe } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { finalize } from 'rxjs';
 import { ToastService } from '../../../../@core/utility/toast.service';
 import { EmptyStateComponent } from '../../../../@shared/components/empty-state/empty-state.component';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
@@ -32,11 +30,10 @@ import { MyResultListCardComponent } from '../../components/my-result-list-card/
     MatSelectModule,
     MyResultGridCardComponent,
     MyResultListCardComponent,
-    SegmentSwitcherComponent,
     LoaderComponent,
     EmptyStateComponent,
     RouterLink,
-    DatePipe,
+    SegmentSwitcherComponent,
   ],
   templateUrl: './my-results.component.html',
   styleUrl: './my-results.component.scss',
@@ -49,9 +46,7 @@ export class MyResultsComponent implements OnInit {
   private readonly toast = inject(ToastService);
 
   isloadingResults = signal(false);
-  results = signal<any[]>([]);
-  drafts = signal<any[]>([]);
-  allDrafts = signal<any[]>([]);
+  results = signal<IResult[]>([]);
   searchTerm = signal<string>('');
 
   view = signal<'list' | 'grid'>('list');
@@ -64,142 +59,72 @@ export class MyResultsComponent implements OnInit {
       value: 'DRAFT',
       accessRole: [RoleEnum.LECTURER, RoleEnum.COURSE_COORDINATOR],
     },
+    {
+      label: 'Pending',
+      value: 'PENDING',
+      accessRole: [
+        RoleEnum.HOD,
+        RoleEnum.COURSE_COORDINATOR,
+        RoleEnum.LECTURER,
+      ],
+    },
+    {
+      label: 'Unverified',
+      value: 'UNVERIFIED',
+      accessRole: [
+        RoleEnum.DEAN,
+        RoleEnum.HOD,
+        RoleEnum.COURSE_COORDINATOR,
+        RoleEnum.LECTURER,
+      ],
+    },
+    {
+      label: 'Verified',
+      value: 'VERIFIED',
+      accessRole: [
+        RoleEnum.DEAN,
+        RoleEnum.HOD,
+        RoleEnum.COURSE_ADVISOR,
+        RoleEnum.COURSE_COORDINATOR,
+        RoleEnum.LECTURER,
+      ],
+    },
+    {
+      label: 'Published',
+      value: 'PUBLISHED',
+      accessRole: [
+        RoleEnum.DEAN,
+        RoleEnum.HOD,
+        RoleEnum.COURSE_ADVISOR,
+        RoleEnum.COURSE_COORDINATOR,
+        RoleEnum.LECTURER,
+      ],
+    },
+    {
+      label: 'Imported',
+      value: 'IMPORTED',
+      accessRole: [RoleEnum.DEAN, RoleEnum.HOD, RoleEnum.COURSE_ADVISOR],
+    },
   ]);
-  activeSegment = signal<ISegmentSwitcher>({
-    label: 'Drafts',
-    value: 'DRAFT',
-    accessRole: [RoleEnum.LECTURER, RoleEnum.COURSE_COORDINATOR],
-  });
+  activeSegment = signal<ISegmentSwitcher>(this.segments()[0]);
 
   ngOnInit(): void {
     this.getResults();
-    // Refresh drafts when component loads
-    if (this.activeSegment().value === 'DRAFT') {
-      this.loadDrafts();
-    }
-
-    // Listen for when user returns to this page to refresh drafts
-    document.addEventListener('visibilitychange', () => {
-      if (!document.hidden && this.activeSegment().value === 'DRAFT') {
-        console.log('Page became visible, refreshing drafts');
-        this.loadDrafts();
-      }
-    });
-
-    // Listen for result transfer events
-    window.addEventListener('resultTransferred', (e: any) => {
-      console.log('Result transferred, refreshing My Results drafts');
-      this.loadDrafts();
-    });
-
-    // Listen for drafts cleared events
-    window.addEventListener('draftsCleared', (e: any) => {
-      console.log('Drafts cleared, refreshing My Results drafts');
-      this.loadDrafts();
-    });
   }
 
   getResults() {
-    if (this.activeSegment().value === 'DRAFT') {
-      this.loadDrafts();
-      return;
-    }
-
-    this.isloadingResults.set(true);
     this.resultService
       .getResults({
         status: this.activeSegment().value,
       })
-      .pipe(finalize(() => this.isloadingResults.set(false)))
       .subscribe({
         next: (resp) => {
           if (resp.status) {
-            this.results.set(resp.data.result);
+            const { result } = resp.data;
+            this.results.set(result);
           }
         },
       });
-  }
-
-  loadDrafts() {
-    this.isloadingResults.set(true);
-
-    try {
-      const draftsListData = localStorage.getItem('result_drafts_list');
-      console.log('Loading drafts from localStorage:', draftsListData);
-
-      if (!draftsListData) {
-        this.allDrafts.set([]);
-        this.drafts.set([]);
-        this.isloadingResults.set(false);
-        return;
-      }
-
-      const draftsList = JSON.parse(draftsListData);
-      const draftsWithDetails = draftsList
-        .filter((draft: any) => {
-          // EXCLUDE results that have been transferred to Results Management
-          const resultManagementKey = `result_management_${draft.resultId}`;
-          const isInResultManagement = localStorage.getItem(resultManagementKey) !== null;
-          return !isInResultManagement; // Only show drafts that haven't been transferred
-        })
-        .map((draft: any) => {
-          // Get the actual draft data from first available segment
-          let draftData = null;
-
-          for (const segment of draft.segments) {
-            const draftKey = `result_draft_${draft.resultId}_${segment}`;
-            const segmentDraftData = localStorage.getItem(draftKey);
-            if (segmentDraftData) {
-              draftData = JSON.parse(segmentDraftData);
-              break;
-            }
-          }
-
-          if (draftData) {
-            return {
-              _id: draft.resultId,
-              title:
-                draft.courseDetails?.courseTitle ||
-                draftData.courseDetails?.courseTitle ||
-                `Draft - ${draft.resultId}`,
-              status: 'DRAFT',
-              timestamp: draft.timestamp,
-              segments: draft.segments,
-              studentCount:
-                draft.totalStudents ||
-                draftData.totalStudents ||
-                draftData.students?.length ||
-                0,
-              studentsWithGrades:
-                draft.studentsWithGrades || draftData.studentsWithGrades || 0,
-              completionPercentage:
-                draft.completionPercentage ||
-                draftData.completionPercentage ||
-                0,
-              courseDetails: draft.courseDetails ||
-                draftData.courseDetails || {
-                  courseTitle: 'Unknown Course',
-                  session: 'Unknown Session',
-                  level: 'Unknown Level',
-                  units: 3,
-                },
-              isDraft: true,
-            };
-          }
-          return null;
-        })
-        .filter(Boolean);
-
-      console.log('Processed drafts:', draftsWithDetails);
-      this.allDrafts.set(draftsWithDetails);
-      this.filterDrafts();
-    } catch (error) {
-      console.error('Error loading drafts:', error);
-      this.allDrafts.set([]);
-      this.drafts.set([]);
-    }
-
-    this.isloadingResults.set(false);
   }
 
   toggleView() {
@@ -223,20 +148,12 @@ export class MyResultsComponent implements OnInit {
     );
 
     this.getResults();
-
-    // Refresh drafts when switching to DRAFT segment
-    if (switchValue === 'DRAFT') {
-      setTimeout(() => this.loadDrafts(), 100);
-    }
   }
 
   deleteDraft(resultId: string) {
-    const draft = this.drafts().find((d) => d._id === resultId);
-    if (!draft) return;
-
     const dialogData = {
       title: 'Delete Draft Result',
-      message: `Are you sure you want to delete the draft for "${draft.courseDetails?.courseTitle || 'Unknown Course'}"? This action cannot be undone and will permanently remove all saved progress.`,
+      message: `Are you sure you want to delete the draft? This action cannot be undone and will permanently remove all saved progress.`,
       confirmText: 'Delete Draft',
       cancelText: 'Cancel',
       isDangerous: true,
@@ -249,55 +166,18 @@ export class MyResultsComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe((confirmed: boolean) => {
-      if (!confirmed) return;
-
-      // Remove all draft data for this result
-      const segments = ['REGULAR', 'REFERENCE', 'UNREGISTERED'];
-      segments.forEach((segment) => {
-        localStorage.removeItem(`result_draft_${resultId}_${segment}`);
-      });
-
-      // Update drafts list
-      const draftsListData = localStorage.getItem('result_drafts_list');
-      if (draftsListData) {
-        const draftsList = JSON.parse(draftsListData);
-        const updatedList = draftsList.filter(
-          (d: any) => d.resultId !== resultId
+      if (confirmed) {
+        this.toast.showNotification(
+          'success',
+          'Draft Deleted',
+          'Draft result has been deleted successfully'
         );
-        localStorage.setItem('result_drafts_list', JSON.stringify(updatedList));
       }
-
-      // Show success message
-      this.toast.showNotification(
-        'success',
-        'Draft Deleted',
-        'Draft result has been deleted successfully'
-      );
-
-      // Refresh drafts display
-      this.loadDrafts();
     });
-  }
-
-  filterDrafts() {
-    const term = this.searchTerm().toLowerCase();
-    if (!term) {
-      this.drafts.set(this.allDrafts());
-      return;
-    }
-    
-    const filtered = this.allDrafts().filter(draft => 
-      draft.title?.toLowerCase().includes(term) ||
-      draft.courseDetails?.courseTitle?.toLowerCase().includes(term) ||
-      draft.courseDetails?.session?.toLowerCase().includes(term) ||
-      draft.courseDetails?.level?.toLowerCase().includes(term)
-    );
-    this.drafts.set(filtered);
   }
 
   onSearch(searchTerm: string) {
     this.searchTerm.set(searchTerm);
-    this.filterDrafts();
   }
 
   viewResult(result: IResult) {

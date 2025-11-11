@@ -4,6 +4,7 @@
     mat-flat-button
     [disabled]="disabled() || loading()"
     [class]="`${class()} btn-gradient`"
+    [style.cursor]="disabled() || loading() ? 'not-allowed' : 'pointer'"
     (click)="onBtnclick()"
   >
     @if (icon()) {
@@ -24,6 +25,7 @@
     mat-button
     [disabled]="disabled() || loading()"
     [class]="`${class()}`"
+    [style.cursor]="disabled() || loading() ? 'not-allowed' : 'pointer'"
     (click)="onBtnclick()"
   >
     @if (icon()) {
@@ -44,6 +46,7 @@
     mat-stroked-button
     [disabled]="disabled() || loading()"
     [class]="`${class()}`"
+    [style.cursor]="disabled() || loading() ? 'not-allowed' : 'pointer'"
     (click)="onBtnclick()"
   >
     @if (icon()) {

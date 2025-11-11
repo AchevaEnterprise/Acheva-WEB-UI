@@ -1,224 +1,139 @@
-@if (isloadingResults()) {
-  <app-loader />
-} @else {
-  @if (showCourseAnalytics() && selectedResultForAnalytics) {
-    <!-- COURSE ANALYTICS VIEW - Removed embedded component -->
-    <div class="p-4">
-      <button 
-        class="flex items-center gap-2 px-3 py-2 text-blue-600 hover:text-blue-800 transition-colors mb-4"
-        (click)="backFromAnalytics()">
-        <app-svg svgWidth="1rem" svgHeight="1rem" src="icons/general/back-arrow-icon.svg"></app-svg>
-        Back to Results
-      </button>
-      <p class="text-gray-600">Course analytics view has been moved to a dedicated page.</p>
+<div class="p-4">
+  <div class="flex gap-4">
+    <!-- Faculty Selection -->
+    <div class="input-style-1 acheva-input w-[30%]">
+      <p class="acva-para-2 fw-400 label-text">Faculty</p>
+      <mat-form-field [style.width.%]="100" appearance="outline">
+        <mat-select
+          placeholder="Select your faculty"
+          formControlName="faculty"
+          (selectionChange)="getDepartments($event)"
+        >
+          @for (faculty of faculties(); track $index) {
+            <mat-option [value]="faculty">{{ faculty.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
     </div>
+
+    <!-- Department Selection -->
+    <div class="input-style-1 acheva-input w-[30%]">
+      <p class="acva-para-2 fw-400 label-text">Department</p>
+      <mat-form-field [style.width.%]="100" appearance="outline">
+        <mat-select
+          placeholder="Select your department"
+          formControlName="department"
+        >
+          @for (department of departments(); track $index) {
+            <mat-option [value]="department">{{ department.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+  </div>
+
+  @if (isloadingResults()) {
+    <app-loader />
   } @else {
-    <div class="p-4">
-      <div class="flex flex-wrap justify-between items-end">
-        <div class="flex gap-4">
-          <div class="input-style-1 acheva-input w-[40%]">
-            <p class="acva-para-2 fw-400 label-text">Faculty</p>
-            <mat-form-field [style.width.%]="100" appearance="outline">
-              <mat-select placeholder="Select faculty">
-                <mat-option value="Engineering">Engineering</mat-option>
-                <mat-option value="Science">Science</mat-option>
-              </mat-select>
-            </mat-form-field>
-          </div>
-
-          
-        </div>
-
-        <div class="input-style-1 acheva-input w-[20%]">
-          <mat-form-field [style.width.%]="100" appearance="outline">
-            <span matPrefix>
-              <app-svg
-                svgWidth="1.3rem"
-                svgHeight="1.3rem"
-                src="icons/general/filter-icon.svg"
-              ></app-svg>
-            </span>
-            <mat-select placeholder="Filter">
-              <mat-option value="all">All</mat-option>
-            </mat-select>
-          </mat-form-field>
-        </div>
-      </div>
-
-      @if (showDetailedView() && selectedFolderForDetails) {
-      <!-- DETAILED RESULTS VIEW -->
-      <div class="mb-4">
-        <button 
-          class="flex items-center gap-2 px-3 py-2 text-blue-600 hover:text-blue-800 transition-colors"
-          (click)="backToFolderView()">
-          <app-svg svgWidth="1rem" svgHeight="1rem" src="icons/general/back-arrow-icon.svg"></app-svg>
-          Back to Folders
-        </button>
-        <h4 class="font-semibold text-gray-700 mt-2 text-lg">{{ selectedFolderForDetails.courseCode }} - {{ selectedFolderForDetails.courseTitle }}</h4>
-        <p class="text-sm text-gray-500 mt-1">{{ selectedFolderForDetails.resultCount }} result(s) found</p>
-      </div>
-      
-      <div class="w-full overflow-auto bg-white rounded-lg shadow-sm">
-        <table mat-table [dataSource]="selectedFolderForDetails.results" class="w-full">
-          <!-- Course Code Column -->
-          <ng-container matColumnDef="courseCode">
-            <th mat-header-cell *matHeaderCellDef class="bg-gray-50 font-semibold text-gray-700 py-4">COURSE CODE</th>
-            <td mat-cell *matCellDef="let result" class="py-3 cursor-pointer hover:bg-blue-50 transition-colors" (click)="viewResultDetails(result)">
-              <span class="font-medium text-blue-600">{{ result.course?.courseCode || result.courseCode }}</span>
-            </td>
-          </ng-container>
-
-          <!-- Course Title Column -->
-          <ng-container matColumnDef="courseTitle">
-            <th mat-header-cell *matHeaderCellDef class="bg-gray-50 font-semibold text-gray-700 py-4">COURSE TITLE</th>
-            <td mat-cell *matCellDef="let result" class="py-3 cursor-pointer hover:bg-blue-50 transition-colors" (click)="viewResultDetails(result)">
-              <span class="text-gray-800">{{ result.course?.courseTitle || result.courseTitle }}</span>
-            </td>
-          </ng-container>
-
-          <!-- Session Column -->
-          <ng-container matColumnDef="session">
-            <th mat-header-cell *matHeaderCellDef class="bg-gray-50 font-semibold text-gray-700 py-4">SESSION</th>
-            <td mat-cell *matCellDef="let result" class="py-3 cursor-pointer hover:bg-blue-50 transition-colors" (click)="viewResultDetails(result)">
-              <span class="text-gray-600">{{ result.session || '2024/2025' }}</span>
-            </td>
-          </ng-container>
-
-          <!-- Department Column 
-          <ng-container matColumnDef="department">
-            <th mat-header-cell *matHeaderCellDef class="bg-gray-50 font-semibold text-gray-700 py-4">DEPARTMENT</th>
-            <td mat-cell *matCellDef="let result" class="py-3 cursor-pointer hover:bg-blue-50 transition-colors" (click)="viewResultDetails(result)">
-              <span class="text-gray-600">{{ getDepartmentName(result) }}</span>
-            </td>
-          </ng-container>-->
-
-          <!-- Faculty Column -->
-          <ng-container matColumnDef="faculty">
-            <th mat-header-cell *matHeaderCellDef class="bg-gray-50 font-semibold text-gray-700 py-4">FACULTY</th>
-            <td mat-cell *matCellDef="let result" class="py-3 cursor-pointer hover:bg-blue-50 transition-colors" (click)="viewResultDetails(result)">
-              <span class="text-gray-600">{{ getFacultyName(result) }}</span>
-            </td>
-          </ng-container>
-
-          <!-- Upload Column -->
-          <ng-container matColumnDef="upload">
-            <th mat-header-cell *matHeaderCellDef class="bg-gray-50 font-semibold text-gray-700 py-4">UPLOAD</th>
-            <td mat-cell *matCellDef="let result" class="py-3 cursor-pointer hover:bg-blue-50 transition-colors" (click)="viewResultDetails(result)">
-              <span class="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full">{{ getFormattedDate(result.createdAt, 'dd-MM') }}</span>
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="fileDisplayedColumns; sticky: true" class="border-b"></tr>
-          <tr mat-row *matRowDef="let row; columns: fileDisplayedColumns" class="border-b border-gray-100 hover:bg-gray-50 transition-colors"></tr>
-        </table>
-      </div>
-      
-      <!-- Pagination -->
-      <div class="mt-4 flex justify-between items-center">
-        <p class="text-sm text-gray-500">Showing 1 to {{ selectedFolderForDetails.resultCount }} of {{ selectedFolderForDetails.resultCount }} students</p>
-        <div class="flex items-center gap-2">
-          <button class="px-3 py-1 text-sm border rounded hover:bg-gray-50" disabled>
-            <app-svg svgWidth="1rem" svgHeight="1rem" src="icons/general/back-arrow-icon.svg"></app-svg>
-          </button>
-          <span class="px-3 py-1 text-sm bg-blue-500 text-white rounded">1</span>
-          <button class="px-3 py-1 text-sm border rounded hover:bg-gray-50" disabled>
-            <app-svg svgWidth="1rem" svgHeight="1rem" src="icons/general/arrow-right-icon.svg"></app-svg>
-          </button>
-        </div>
-      </div>
-    } @else if (folderDataSource().length > 0) {
-      <!-- FOLDER VIEW -->
+    @if (results().length > 0) {
       <div class="w-full overflow-auto">
-        <table mat-table [dataSource]="folderDataSource()" multiTemplateDataRows>
+        <table mat-table [dataSource]="results()" multiTemplateDataRows>
           <!-- Checkbox Column -->
           <ng-container matColumnDef="select">
             <th mat-header-cell *matHeaderCellDef>
               <mat-checkbox
                 (change)="$event ? toggleAllRows() : null"
-                [checked]="folderSelection.hasValue() && isAllSelected()"
-                [indeterminate]="folderSelection.hasValue() && !isAllSelected()"
+                [checked]="selection.hasValue() && isAllSelected()"
+                [indeterminate]="selection.hasValue() && !isAllSelected()"
                 [aria-label]="checkboxLabel()"
-              ></mat-checkbox>
+              >
+              </mat-checkbox>
             </th>
-            <td mat-cell *matCellDef="let folder">
+            <td mat-cell *matCellDef="let row">
               <mat-checkbox
                 (click)="$event.stopPropagation()"
-                (change)="$event ? folderSelection.toggle(folder) : null; updateMainSelection()"
-                [checked]="isFolderSelected(folder)"
-                [aria-label]="checkboxLabel(folder)"
-              ></mat-checkbox>
+                (keydown)="$event.stopPropagation()"
+                (change)="$event ? selection.toggle(row) : null"
+                [checked]="selection.isSelected(row)"
+                [aria-label]="checkboxLabel(row)"
+              >
+              </mat-checkbox>
             </td>
           </ng-container>
 
-          <!-- Course Code Column with Folder Icon -->
           <ng-container matColumnDef="courseCode">
             <th mat-header-cell *matHeaderCellDef>COURSE CODE</th>
-            <td mat-cell *matCellDef="let folder" class="cursor-pointer">
+            <td
+              mat-cell
+              *matCellDef="let folder"
+              class="cursor-pointer"
+              (click)="openFolder(folder)"
+              (keydown)="openFolder(folder)"
+            >
               <span class="flex items-center gap-2">
                 <app-svg
                   svgWidth="1.3rem"
                   svgHeight="1.3rem"
                   src="icons/general/folder-icon.svg"
                 ></app-svg>
-                {{ folder.courseCode }}
+                {{ folder.course.courseCode }}
               </span>
             </td>
           </ng-container>
 
-          <!-- Course Title Column -->
           <ng-container matColumnDef="courseTitle">
             <th mat-header-cell *matHeaderCellDef>COURSE TITLE</th>
-            <td mat-cell *matCellDef="let folder" class="cursor-pointer">
-              {{ folder.courseTitle }}
+            <td
+              mat-cell
+              *matCellDef="let folder"
+              class="cursor-pointer"
+              (click)="openFolder(folder)"
+              (keydown)="openFolder(folder)"
+            >
+              {{ folder.course.courseTitle }}
             </td>
           </ng-container>
 
-          <!-- Department Column 
-          <ng-container matColumnDef="department">
-            <th mat-header-cell *matHeaderCellDef>DEPARTMENT</th>
-            <td mat-cell *matCellDef="let folder" class="cursor-pointer">
-              {{ folder.department }}
-            </td>
-          </ng-container>-->
-
-          <!-- Faculty Column -->
           <ng-container matColumnDef="faculty">
             <th mat-header-cell *matHeaderCellDef>FACULTY</th>
-            <td mat-cell *matCellDef="let folder" class="cursor-pointer">
-              {{ folder.faculty }}
+            <td
+              mat-cell
+              *matCellDef="let folder"
+              class="cursor-pointer"
+              (click)="openFolder(folder)"
+              (keydown)="openFolder(folder)"
+            >
+              {{ folder.faculty.name || '-' }}
             </td>
           </ng-container>
 
-          <!-- Result Count Column -->
-          <ng-container matColumnDef="resultCount">
-            <th mat-header-cell *matHeaderCellDef>RESULTS</th>
+          <ng-container matColumnDef="session">
+            <th mat-header-cell *matHeaderCellDef>SESSION</th>
             <td mat-cell *matCellDef="let folder" class="cursor-pointer">
-              <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm">
-                {{ folder.resultCount }}
-              </span>
+              {{ folder.session }}
             </td>
           </ng-container>
 
-
-
-          <!-- Table Rows -->
-          <tr mat-header-row *matHeaderRowDef="folderDisplayedColumns; sticky: true"></tr>
+          <tr
+            mat-header-row
+            *matHeaderRowDef="displayedColumns; sticky: true"
+          ></tr>
           <tr
             mat-row
-            *matRowDef="let folder; columns: folderDisplayedColumns"
-            class="cursor-pointer hover:bg-gray-50"
-            (click)="onSingleClick(folder, $event)"
-            (dblclick)="onDoubleClick(folder, $event)"
+            *matRowDef="let folder; columns: displayedColumns"
+            class="cursor-pointer hover:bg-gray-400"
           ></tr>
         </table>
       </div>
-        <app-paginator />
-      } @else {
-        <app-empty-state
-          iconSrc="images/general/empty-doc.svg"
-          description="No results found, create a course and input results to fill this page"
-        />
-      }
-    </div>
+      <app-paginator
+        [paginator]="pagination()"
+        (pageEvent)="paginate($event)"
+      />
+    } @else {
+      <app-empty-state
+        iconSrc="images/general/empty-doc.svg"
+        description="No results found, create a course and input results to fill this page"
+      />
+    }
   }
-}
+</div>

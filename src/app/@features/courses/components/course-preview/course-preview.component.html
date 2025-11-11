@@ -19,12 +19,12 @@
   </div>
   <div class="mb-4">
     <p class="acva-para-1 text-neutral-500">Course Code</p>
-    <p class="acva-para-2">{{ template()?.courseCode ?? '-' }}</p>
+    <p class="acva-para-2">{{ courseCode() ?? '-' }}</p>
   </div>
   <div class="mb-4">
     <p class="acva-para-1 text-neutral-500">Course Coordinator</p>
     <p class="acva-para-2">
-      {{ template()?.courseCordinator ?? '-' | titlecase }}
+      {{ template()?.courseCordinator || '-' | titlecase }}
     </p>
   </div>
   <div class="mb-4">
