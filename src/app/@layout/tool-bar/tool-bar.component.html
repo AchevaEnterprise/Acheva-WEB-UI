@@ -73,24 +73,32 @@
       </p>
     </div>
     <mat-menu #roleMenu="matMenu">
-      @for (role of roles(); track role) {
-        <button
-          mat-menu-item
-          [disabled]="role.disabled"
-          (click)="switchToRole(role.role)"
-        >
-          <span>
-            {{ role.label }}
-            @if (role.role === RoleEnum.LECTURER) {
-              <small><em>(Default)</em></small>
-            }
-          </span>
+      <div
+        *appRoleAccess="[
+          RoleEnum.COURSE_ADVISOR,
+          RoleEnum.COURSE_COORDINATOR,
+          RoleEnum.LECTURER,
+        ]"
+      >
+        @for (role of roles(); track role) {
+          <button
+            mat-menu-item
+            [disabled]="role.disabled"
+            (click)="switchToRole(role.role)"
+          >
+            <span>
+              {{ role.label }}
+              @if (role.role === RoleEnum.LECTURER) {
+                <small><em>(Default)</em></small>
+              }
+            </span>
 
-          @if (activeRole() === role.role) {
-            <span class="checkmark">✓</span>
-          }
-        </button>
-      }
+            @if (activeRole() === role.role) {
+              <span class="checkmark">✓</span>
+            }
+          </button>
+        }
+      </div>
     </mat-menu>
   </div>
 </div>

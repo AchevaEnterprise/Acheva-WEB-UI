@@ -5,6 +5,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 import { filter, finalize } from 'rxjs';
 import { ImageFallbackDirective } from '../../@core/directives/image-fallback.directive';
+import { RoleAccessDirective } from '../../@core/directives/role-access.directive';
 import { ToastService } from '../../@core/utility/toast.service';
 import { UtilityService } from '../../@core/utility/utility.service';
 import { RoleEnum } from '../../@features/auth/model/auth.model';
@@ -21,6 +22,7 @@ import { SvgComponent } from '../../@shared/components/svg/svg.component';
     ImageFallbackDirective,
     MatBadgeModule,
     MatMenuModule,
+    RoleAccessDirective,
   ],
   templateUrl: './tool-bar.component.html',
   styleUrl: './tool-bar.component.scss',

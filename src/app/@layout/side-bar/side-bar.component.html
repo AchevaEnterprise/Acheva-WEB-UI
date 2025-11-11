@@ -81,7 +81,14 @@
       }
 
       <!-- Switch Account Button -->
-      <li class="w-full">
+      <li
+        class="w-full"
+        *appRoleAccess="[
+          RoleEnum.COURSE_ADVISOR,
+          RoleEnum.COURSE_COORDINATOR,
+          RoleEnum.LECTURER,
+        ]"
+      >
         <mat-divider></mat-divider>
         <button
           [matMenuTriggerFor]="roleMenu"
