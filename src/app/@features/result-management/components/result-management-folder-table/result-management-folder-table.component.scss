@@ -32,11 +32,13 @@ tr.table-expanded-row {
 }
 
 // Folder icon styling
+
 .folder-icon {
   color: #3b82f6;
 }
 
 // Result count badge
+
 .result-count-badge {
   background: linear-gradient(135deg, #3b82f6, #1d4ed8);
   color: white;
@@ -47,6 +49,7 @@ tr.table-expanded-row {
 }
 
 // Expanded content styling
+
 .expanded-content {
   background: linear-gradient(135deg, #f8fafc, #f1f5f9);
   border-left: 4px solid #3b82f6;
@@ -55,6 +58,7 @@ tr.table-expanded-row {
 }
 
 // Individual result row hover
+
 .result-row:hover {
   background: #e0f2fe;
   transform: translateX(2px);
