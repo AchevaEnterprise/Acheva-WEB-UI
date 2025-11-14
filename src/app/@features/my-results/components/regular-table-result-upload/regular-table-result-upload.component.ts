@@ -19,6 +19,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatTableModule } from '@angular/material/table';
 import { debounceTime, Subject } from 'rxjs';
 import { EmptyStateComponent } from '../../../../@shared/components/empty-state/empty-state.component';
+import { LoaderComponent } from '../../../../@shared/components/loader/loader.component';
 import { StatusBadgeComponent } from '../../../../@shared/components/status-badge/status-badge.component';
 import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
 import { IStudentGrade } from '../../../courses/models/student-grade.model';
@@ -33,6 +34,7 @@ import { IStudentGrade } from '../../../courses/models/student-grade.model';
     EmptyStateComponent,
     MatMenuModule,
     SvgComponent,
+    LoaderComponent,
   ],
   templateUrl: './regular-table-result-upload.component.html',
   styleUrl: './regular-table-result-upload.component.scss',
@@ -42,6 +44,7 @@ export class RegularTableResultUploadComponent {
   private readonly fb = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
 
+  loading = input<boolean>(false);
   students = input<Partial<IStudentGrade>[]>([]);
   uploadResultEvent = output<Partial<IStudentGrade>>();
 

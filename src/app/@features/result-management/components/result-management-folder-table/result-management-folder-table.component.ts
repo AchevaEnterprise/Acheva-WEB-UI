@@ -60,6 +60,7 @@ export class ResultManagementFolderTableComponent implements OnInit {
   private readonly store = inject(Store<AppState>);
   private readonly destroyRef = inject(DestroyRef);
 
+  loading = input<boolean>(false);
   expand = input<boolean>(false);
   results = input<IResult[]>([]);
   pagination = input<IPaginator>();
@@ -67,7 +68,6 @@ export class ResultManagementFolderTableComponent implements OnInit {
   viewFolderEvent = output<IResult>();
   pageEvent = output<PageEvent>();
 
-  isloadingResults = signal(false);
   faculties = signal<IFaculty[]>([]);
   departments = signal<IDepartment[]>([]);
 

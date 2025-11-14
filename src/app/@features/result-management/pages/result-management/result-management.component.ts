@@ -1,6 +1,7 @@
 import { NgClass } from '@angular/common';
 import { Component, inject, OnInit, signal, viewChild } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ActivatedRoute, Router } from '@angular/router';
 import { finalize, forkJoin } from 'rxjs';
@@ -10,19 +11,20 @@ import { ToastService } from '../../../../@core/utility/toast.service';
 import { CardComponent } from '../../../../@shared/components/card/card.component';
 import { ConfirmationComponent } from '../../../../@shared/components/confirmation/confirmation.component';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
+import { CommentComponent } from '../../../../@shared/components/forms/comment/comment.component';
 import {
   ISegmentSwitcher,
   SegmentSwitcherComponent,
 } from '../../../../@shared/components/segment-switcher/segment-switcher.component';
 import { RoleEnum } from '../../../auth/model/auth.model';
 import { AuthenticationService } from '../../../auth/service/auth.service';
-import { CommentComponent } from '../../components/comment/comment.component';
+import { ResendToCourseCoordinatorComponent } from '../../components/resend-to-course-coordinator/resend-to-course-coordinator.component';
+import { ResendToDeanComponent } from '../../components/resend-to-dean/resend-to-dean.component';
 import { ResultManagementFileTableComponent } from '../../components/result-management-file-table/result-management-file-table.component';
 import { ResultManagementFolderTableComponent } from '../../components/result-management-folder-table/result-management-folder-table.component';
 import { ResultStatusTrackingComponent } from '../../components/result-status-tracking/result-status-tracking.component';
 import { IResult } from '../../models/results.model';
 import { ResultsService } from '../../services/results.service';
-import { MatMenuModule } from '@angular/material/menu';
 
 @Component({
   selector: 'app-result-management',
@@ -66,6 +68,7 @@ export class ResultManagementComponent implements OnInit {
     total: 0,
   });
 
+  loadingResults = signal<boolean>(false);
   sendingToCC = signal<boolean>(false);
   sendingToHOD = signal<boolean>(false);
   sendingToCA = signal<boolean>(false);
@@ -144,10 +147,13 @@ export class ResultManagementComponent implements OnInit {
   }
 
   getResults() {
+    this.loadingResults.set(true);
+
     this.resultService
       .getResults({
         status: this.activeSegment().value,
       })
+      .pipe(finalize(() => this.loadingResults.set(false)))
       .subscribe({
         next: (resp) => {
           if (resp.status) {
@@ -167,10 +173,13 @@ export class ResultManagementComponent implements OnInit {
   }
 
   getPreparedResults() {
+    this.loadingResults.set(true);
+
     this.resultService
       .getPreparedResults({
         status: this.activeSegment().value,
       })
+      .pipe(finalize(() => this.loadingResults.set(false)))
       .subscribe({
         next: (resp) => {
           if (resp.status) {
@@ -231,27 +240,22 @@ export class ResultManagementComponent implements OnInit {
   }
 
   confirmSendToCC() {
-    let selectedResults: IResult[] = [];
+    const selectedResults: IResult[] = this.fileTableRef()?.selection.selected!;
 
-    const fileTable = this.fileTableRef();
-    if (fileTable) selectedResults = fileTable.selection.selected;
-
-    if (selectedResults.length < 1) {
+    if (!selectedResults || selectedResults.length < 1) {
       this.toast.showNotification(
         'error',
-        'Missing Selections',
-        'No result has been checked/selected to submit'
+        'No Result(s) Selected',
+        'You have not selected any result(s) to be sent'
       );
       return;
     }
-
-    const message = `You're about to send ${selectedResults.length} results to the Course Coordinator. This action is irreversible, Are you sure you want to continue?`;
 
     this.dialog
       .open(ConfirmationComponent, {
         width: '600px',
         data: {
-          message: message,
+          message: `You're about to send ${selectedResults.length} results to the Course Coordinator. This action is irreversible, Are you sure you want to continue?`,
         },
       })
       .afterClosed()
@@ -283,64 +287,153 @@ export class ResultManagementComponent implements OnInit {
   }
 
   confirmSendToHOD() {
-    let selectedResults: IResult[] = [];
+    const selectedFolders = this.folderTableRef()?.selection.selected;
 
-    const folderTable = this.folderTableRef();
-    if (folderTable) selectedResults = folderTable.selection.selected;
-
-    if (selectedResults.length < 1) {
+    if (!selectedFolders || selectedFolders.length < 1) {
       this.toast.showNotification(
         'error',
-        'Missing Selections',
-        'No result has been checked/selected to submit'
+        'No Result(s) Selected',
+        'You have not selected any result(s) to be sent'
       );
       return;
     }
-
-    const message = `You're about to send ${selectedResults.length} results to the Head of Department. This action is irreversible, Are you sure you want to continue?`;
 
     this.dialog
       .open(ConfirmationComponent, {
         width: '600px',
         data: {
-          message: message,
+          message: `You're about to send ${selectedFolders.length} results to their various Head of Departments. This action is irreversible, Are you sure you want to continue?`,
         },
       })
       .afterClosed()
       .subscribe({
         next: (confirmed: boolean) => {
-          if (confirmed) this.sendToHOD(selectedResults);
+          if (confirmed) this.sendToHOD(selectedFolders);
         },
       });
   }
 
-  sendToHOD(selectedResults: IResult[]) {
+  sendToHOD(selectedFolders: IResult[]) {
     this.sendingToHOD.set(true);
 
-    const resultRequest$ = selectedResults?.map((result) =>
-      this.resultService.sendResult(result._id, result.receivingHandler)
+    const courseIds: Array<string> = selectedFolders.map(
+      (folder: IResult) => folder.course._id!
     );
 
-    forkJoin(resultRequest$)
+    this.resultService
+      .sendBulkResult(RoleEnum.HOD, courseIds)
       .pipe(finalize(() => this.sendingToHOD.set(false)))
       .subscribe({
         next: (resp) => {
           this.toast.showNotification(
             'success',
             'Result Sent',
-            'Result has been sent to the Head of Department'
+            'Result has been sent to the Course Advisor'
           );
         },
       });
   }
 
-  confirmSendToCA() {}
+  confirmSendToCA() {
+    const selectedResults = this.fileTableRef()?.selection.selected;
+
+    if (!selectedResults || selectedResults.length < 1) {
+      this.toast.showNotification(
+        'error',
+        'No Result(s) Selected',
+        'You have not selected any result(s) to be sent'
+      );
+      return;
+    }
+
+    this.dialog
+      .open(ConfirmationComponent, {
+        width: '600px',
+        data: {
+          message: `You're about to send ${selectedResults.length} results to their various Head of Departments. This action is irreversible, Are you sure you want to continue?`,
+        },
+      })
+      .afterClosed()
+      .subscribe({
+        next: (confirmed: boolean) => {
+          if (confirmed) this.sendToCA(selectedResults);
+        },
+      });
+  }
+
+  sendToCA(selectedResults: IResult[]) {
+    this.sendingToCA.set(true);
+
+    const resultRequest$ = selectedResults?.map((result) =>
+      this.resultService.sendResult(result._id, result.receivingHandler)
+    );
+
+    forkJoin(resultRequest$)
+      .pipe(finalize(() => this.sendingToCA.set(false)))
+      .subscribe({
+        next: (resp) => {
+          this.toast.showNotification(
+            'success',
+            'Result Sent',
+            'Result has been sent to the Course Advisor'
+          );
+        },
+      });
+  }
 
   publishResult() {}
 
   importResult() {}
 
+  confirmResendToCC() {
+    const selectedResults: IResult[] = this.fileTableRef()?.selection.selected!;
+
+    if (!selectedResults || selectedResults.length < 1) {
+      this.toast.showNotification(
+        'error',
+        'No Result(s) Selected',
+        'You have not selected any result(s) to be sent'
+      );
+      return;
+    }
+
+    this.dialog
+      .open(ResendToCourseCoordinatorComponent, {
+        width: '600px',
+      })
+      .afterClosed()
+      .subscribe({
+        next: (confirmed: boolean) => {
+          if (confirmed) this.resendToCC();
+        },
+      });
+  }
+
   resendToCC() {}
+
+  confirmResendToDean() {
+    const selectedResults: IResult[] = this.fileTableRef()?.selection.selected!;
+
+    if (!selectedResults || selectedResults.length < 1) {
+      this.toast.showNotification(
+        'error',
+        'No Result(s) Selected',
+        'You have not selected any result(s) to be sent'
+      );
+      return;
+    }
+
+    this.dialog
+      .open(ResendToDeanComponent, {
+        width: '600px',
+      })
+      .afterClosed()
+      .subscribe({
+        next: (confirmed: boolean) => {
+          if (confirmed) this.resendToDean();
+        },
+      });
+  }
 
   resendToDean() {}
 

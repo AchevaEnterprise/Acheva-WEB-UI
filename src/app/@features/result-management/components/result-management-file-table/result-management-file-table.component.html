@@ -52,7 +52,7 @@
     </div>
   </div>
 
-  @if (isloadingResults()) {
+  @if (loading()) {
     <app-loader />
   } @else {
     @if (dataSource().length > 0) {

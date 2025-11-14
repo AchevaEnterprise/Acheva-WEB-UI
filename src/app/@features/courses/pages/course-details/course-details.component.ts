@@ -87,6 +87,9 @@ export class CourseDetailsComponent implements OnInit {
   courses = signal<{ label: string; value: ICourse }[]>([]);
 
   sessionOptions = signal<string[]>(this.utilsService.generateSchoolSessions());
+  admissionYearOptions = signal<string[]>(
+    this.utilsService.generateAdmissionYear()
+  );
   levelOptions = signal<{ label: string; value: string }[]>([
     { label: '100 Level', value: LevelsEnum.YEAR_ONE },
     { label: '200 Level', value: LevelsEnum.YEAR_TWO },
@@ -106,6 +109,7 @@ export class CourseDetailsComponent implements OnInit {
   form = new FormGroup({
     session: new FormControl<string>('', Validators.required),
     semester: new FormControl<string>('', Validators.required),
+    admissionYear: new FormControl<string>('', Validators.required),
     courseTitle: new FormControl<string>('', Validators.required),
     courseCode: new FormControl<ICourse | string>('', Validators.required),
     courseCordinator: new FormControl<string>('', Validators.required),
@@ -321,11 +325,13 @@ export class CourseDetailsComponent implements OnInit {
 
   submit(): void {
     this.isLoading.set(true);
-    const { session, semester, department, level } = this.form.getRawValue();
+    const { session, admissionYear, semester, department, level } =
+      this.form.getRawValue();
 
     const payload: ICreateResult = {
       course: this.courseId,
       session: session || '',
+      admissionYear: admissionYear || '',
       level: level || '',
       semester: semester || '',
       school: this.school()?._id!,

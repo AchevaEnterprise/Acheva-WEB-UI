@@ -6,6 +6,7 @@ import {
   IAPIPaginatedResponse,
   IAPIResponse,
 } from '../../../@core/models/api-response.model';
+import { RoleEnum } from '../../auth/model/auth.model';
 import {
   ICreateResult,
   ICreateResultEntry,
@@ -13,6 +14,7 @@ import {
   IResult,
   IResultEntriesQuery,
   IResultQuery,
+  ISendSelectedResult,
   IUpdateResultEntry,
 } from '../models/results.model';
 
@@ -63,6 +65,25 @@ export class ResultsService {
     return this.http.patch<IAPIResponse<unknown>>(
       `${this.resultsUrl}/${resultId}/send/${recepientId}`,
       {}
+    );
+  }
+
+  sendSelectedResult(
+    payload: ISendSelectedResult[]
+  ): Observable<IAPIResponse<unknown>> {
+    return this.http.post<IAPIResponse<unknown>>(
+      `${this.resultsUrl}/selected`,
+      payload
+    );
+  }
+
+  sendBulkResult(
+    role: RoleEnum,
+    courseIds: Array<string>
+  ): Observable<IAPIResponse<unknown>> {
+    return this.http.post<IAPIResponse<unknown>>(
+      `${this.resultsUrl}/bulk/many`,
+      { role, courseIds }
     );
   }
 
@@ -192,8 +213,12 @@ export class ResultsService {
     action: 'APPROVED' | 'REJECTED',
     comment?: string
   ) {
-    return this.http.get<IAPIResponse<unknown>>(
-      `${this.resultsUrl}/${resultId}/approve-or-reject`
+    return this.http.patch<IAPIResponse<unknown>>(
+      `${this.resultsUrl}/${resultId}/approve-or-reject`,
+      {
+        action,
+        comment,
+      }
     );
   }
 }

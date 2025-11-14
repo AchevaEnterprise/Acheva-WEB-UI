@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, viewChild } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -14,7 +14,7 @@ import { SearchInputComponent } from '../../../../@shared/components/forms/searc
 import { RoleEnum } from '../../../auth/model/auth.model';
 import { AnalyticsChartComponent } from '../../../my-results/components/analytics-chart/analytics-chart.component';
 import { ResultManagementFileTableComponent } from '../../components/result-management-file-table/result-management-file-table.component';
-import { IResult } from '../../models/results.model';
+import { IResult, ISendSelectedResult } from '../../models/results.model';
 import { ResultsService } from '../../services/results.service';
 
 @Component({
@@ -58,6 +58,9 @@ export class ViewResultsComponent implements OnInit {
   loadingResult = signal<boolean>(false);
   sendingToHOD = signal<boolean>(false);
   RoleEnum = RoleEnum;
+
+  resultTableRef =
+    viewChild<ResultManagementFileTableComponent>('resultTableRef');
 
   ngOnInit(): void {
     this.getResultAndAnalytics();
@@ -134,6 +137,17 @@ export class ViewResultsComponent implements OnInit {
   }
 
   confirmSendToHOD() {
+    const selectedResults = this.resultTableRef()?.selection.selected;
+
+    if (!selectedResults || selectedResults.length < 1) {
+      this.toast.showNotification(
+        'error',
+        'No Result(s) Selected',
+        'You have not selected any result(s) to be sent'
+      );
+      return;
+    }
+
     this.dialog
       .open(ConfirmationComponent, {
         width: '600px',
@@ -144,17 +158,21 @@ export class ViewResultsComponent implements OnInit {
       .afterClosed()
       .subscribe({
         next: (confirm: boolean) => {
-          if (confirm) this.sendToHOD();
+          if (confirm) this.sendToHOD(selectedResults);
         },
       });
   }
 
-  private sendToHOD() {
+  private sendToHOD(results: IResult[]) {
     this.sendingToHOD.set(true);
 
-    const hodId: string = this.results()[0]?.receivingHandler;
+    const payload: ISendSelectedResult[] = results.map((result) => ({
+      resultId: this.resultId,
+      recepient: result.receivingHandler,
+    }));
+
     this.resultsService
-      .sendResult(this.resultId, hodId)
+      .sendSelectedResult(payload)
       .pipe(finalize(() => this.sendingToHOD.set(false)))
       .subscribe({
         next: (resp) => {

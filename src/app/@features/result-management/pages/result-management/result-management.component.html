@@ -58,8 +58,10 @@
             [matMenuTriggerFor]="resendMenu"
           />
           <mat-menu #resendMenu="matMenu">
-            <button mat-menu-item (click)="resendToCC()">Resend to CC</button>
-            <button mat-menu-item (click)="resendToDean()">
+            <button mat-menu-item (click)="confirmResendToCC()">
+              Resend to CC
+            </button>
+            <button mat-menu-item (click)="confirmResendToDean()">
               Resend to Dean
             </button>
           </mat-menu>
@@ -99,9 +101,14 @@
       >
         <ng-container content>
           <app-result-management-file-table
-            *appRoleAccess="[RoleEnum.LECTURER, RoleEnum.HOD]"
+            *appRoleAccess="[
+              RoleEnum.LECTURER,
+              RoleEnum.HOD,
+              RoleEnum.COURSE_ADVISOR,
+            ]"
             #fileTableRef
             [expand]="expandView()"
+            [loading]="loadingResults()"
             [results]="results()"
             [pagination]="pagination()"
             (viewResultEvent)="viewResult($event)"
@@ -111,6 +118,7 @@
             *appRoleAccess="[RoleEnum.COURSE_COORDINATOR]"
             #folderTableRef
             [expand]="expandView()"
+            [loading]="loadingResults()"
             [results]="preparedResults()"
             [pagination]="pagination()"
             (viewFolderEvent)="viewFolder($event)"

@@ -10,6 +10,7 @@ import { CardComponent } from '../../../../@shared/components/card/card.componen
 import { ConfirmationComponent } from '../../../../@shared/components/confirmation/confirmation.component';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
 import { SearchInputComponent } from '../../../../@shared/components/forms/search-input/search-input.component';
+import { RejectReasonComponent } from '../../../../@shared/components/reject-reason/reject-reason.component';
 import {
   ISegmentSwitcher,
   SegmentSwitcherComponent,
@@ -217,7 +218,7 @@ export class EditResultsComponent implements OnInit {
   }
 
   confirmApproval() {
-    const message = `You're about to send this vetted result to the HOD. This action is irreversible. Are you sure you want to continue?`;
+    const message = `You're about to send this vetted result to the Dean. This action is irreversible. Are you sure you want to continue?`;
 
     this.dialog
       .open(ConfirmationComponent, {
@@ -250,9 +251,22 @@ export class EditResultsComponent implements OnInit {
       });
   }
 
-  reject() {
+  confirmReject() {
+    this.dialog
+      .open(RejectReasonComponent, {
+        width: '600px',
+      })
+      .afterClosed()
+      .subscribe({
+        next: (comment: string) => {
+          if (comment) this.reject(comment);
+        },
+      });
+  }
+
+  reject(reason: string) {
     this.resultsService
-      .approveOrRejectResult(this.resultId, 'REJECTED', '')
+      .approveOrRejectResult(this.resultId, 'REJECTED', reason)
       .subscribe({
         next: (resp) => {
           if (resp.status) {

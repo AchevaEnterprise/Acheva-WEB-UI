@@ -26,6 +26,22 @@
         </mat-form-field>
       </div>
 
+      <div class="input-style-1 acheva-input w-full">
+        <p class="acva-para-2 fw-400 label-text">Admission Year</p>
+        <mat-form-field [style.width.%]="100" appearance="outline">
+          <mat-select
+            placeholder="Select your admission year"
+            formControlName="admissionYear"
+          >
+            @for (admissionYear of admissionYearOptions(); track $index) {
+              <mat-option [value]="admissionYear">{{
+                admissionYear
+              }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
+
       <!-- School Selection -->
       <div class="input-style-1 acheva-input w-full">
         <p class="acva-para-2 fw-400 label-text">School</p>

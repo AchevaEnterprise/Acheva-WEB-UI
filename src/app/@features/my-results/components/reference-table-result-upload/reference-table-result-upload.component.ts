@@ -21,6 +21,7 @@ import { MatTableModule } from '@angular/material/table';
 import { debounceTime, finalize, Subject } from 'rxjs';
 import { EmptyStateComponent } from '../../../../@shared/components/empty-state/empty-state.component';
 import { SearchSelectComponent } from '../../../../@shared/components/forms/search-select/search-select.component';
+import { LoaderComponent } from '../../../../@shared/components/loader/loader.component';
 import { StatusBadgeComponent } from '../../../../@shared/components/status-badge/status-badge.component';
 import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
 import { AuthenticationService } from '../../../auth/service/auth.service';
@@ -38,6 +39,7 @@ import { StudentService } from '../../../students/services/student.service';
     MatMenuModule,
     SvgComponent,
     SearchSelectComponent,
+    LoaderComponent,
   ],
   templateUrl: './reference-table-result-upload.component.html',
   styleUrl: './reference-table-result-upload.component.scss',
@@ -49,6 +51,7 @@ export class ReferenceTableResultUploadComponent {
   private readonly fb = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
 
+  loading = input<boolean>(false);
   students = input<Partial<IStudentGrade>[]>([]);
   uploadResultEvent = output<Partial<IStudentGrade>>();
 

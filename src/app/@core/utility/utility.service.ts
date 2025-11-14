@@ -53,6 +53,19 @@ export class UtilityService {
     return sessions.reverse();
   }
 
+  generateAdmissionYear() {
+    const currentYear = new Date().getFullYear();
+    const startYear = 2000;
+    const admissionYear = [];
+
+    for (let year = startYear; year <= currentYear; year++) {
+      const session = `${year}`;
+      admissionYear.push(session);
+    }
+
+    return admissionYear.reverse();
+  }
+
   convertExcelToJson(
     file: File
   ): Promise<{ columns: string[]; records: any[] }> {

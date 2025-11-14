@@ -39,12 +39,6 @@ export interface IResult {
     E: number;
     F: number;
   };
-
-  // To be removed
-  isDraft: boolean;
-  completionPercentage: number;
-  studentCount: number;
-  courseDetails: any;
 }
 
 export interface ICreateResult {
@@ -53,6 +47,7 @@ export interface ICreateResult {
   session: string;
   level: string;
   semester: string;
+  admissionYear: string;
   school: string;
   status: ResultStatusEnum;
 }
@@ -86,4 +81,9 @@ export interface IResultEntriesQuery {
   category?: string;
   fullName?: string;
   limit?: string;
+}
+
+export interface ISendSelectedResult {
+  resultId: string;
+  recepient: string;
 }

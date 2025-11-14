@@ -57,7 +57,7 @@
         type="outline"
         icon="icons/general/reject-btn-icon.svg"
         class="btn-md btn-error"
-        (clickEvent)="reject()"
+        (clickEvent)="confirmReject()"
       />
 
       <app-button
@@ -93,6 +93,7 @@
       @case ('REGULAR') {
         <app-regular-table-result-upload
           #regularTableResultUploadRef
+          [loading]="loadingResult()"
           [students]="students()['REGULAR']"
           (uploadResultEvent)="uploadResult($event)"
         />
@@ -100,6 +101,7 @@
       @case ('REFERENCE') {
         <app-regular-table-result-upload
           #regularTableResultUploadRef
+          [loading]="loadingResult()"
           [students]="students()['REFERENCE']"
           (uploadResultEvent)="uploadResult($event)"
         />
@@ -107,6 +109,7 @@
       @case ('UNREGISTERED') {
         <app-regular-table-result-upload
           #regularTableResultUploadRef
+          [loading]="loadingResult()"
           [students]="students()['UNREGISTERED']"
           (uploadResultEvent)="uploadResult($event)"
         />

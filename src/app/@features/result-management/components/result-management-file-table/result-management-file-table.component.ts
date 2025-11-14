@@ -58,11 +58,10 @@ export class ResultManagementFileTableComponent implements OnInit {
   private readonly store = inject(Store<AppState>);
   private readonly destroyRef = inject(DestroyRef);
 
-  isloadingResults = signal(false);
-
   faculties = signal<IFaculty[]>([]);
   departments = signal<IDepartment[]>([]);
 
+  loading = input<boolean>(false);
   expand = input<boolean>(false);
   results = input<IResult[]>([]);
   pagination = input<IPaginator>();
@@ -114,7 +113,7 @@ export class ResultManagementFileTableComponent implements OnInit {
         );
       }
 
-      if (this.results().length > 0) this.dataSource.set(this.results());
+      if (this.results()) this.dataSource.set(this.results());
     });
   }
 
