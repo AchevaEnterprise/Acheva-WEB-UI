@@ -48,10 +48,11 @@
         class="w-8 h-8 aspect-square object-cover rounded-full"
       />
 
-      <p>
-        {{ activeAccount()?.firstname }} {{ activeAccount()?.lastname }}
-        <br />
-        <span class="text-neutral-300 text-sm">
+      <div>
+        <p class="font-medium">
+          {{ activeAccount()?.firstname }} {{ activeAccount()?.lastname }}
+        </p>
+        <p class="text-neutral-500 text-sm">
           @switch (activeAccount()?.role) {
             @case (RoleEnum.COURSE_ADVISOR) {
               Course Advisor
@@ -69,8 +70,11 @@
               Lecturer
             }
           }
-        </span>
-      </p>
+        </p>
+        <!-- <p class="text-neutral-500 text-sm">
+          {{ activeAccount()?.department }}
+        </p> -->
+      </div>
     </div>
     <mat-menu #roleMenu="matMenu">
       <div

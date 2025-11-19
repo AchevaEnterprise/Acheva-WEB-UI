@@ -35,9 +35,9 @@
   @if (loading()) {
     <app-loader />
   } @else {
-    @if (results().length > 0) {
+    @if (courses().length > 0) {
       <div class="w-full overflow-auto">
-        <table mat-table [dataSource]="results()" multiTemplateDataRows>
+        <table mat-table [dataSource]="courses()" multiTemplateDataRows>
           <!-- Checkbox Column -->
           <ng-container matColumnDef="select">
             <th mat-header-cell *matHeaderCellDef>
@@ -76,7 +76,7 @@
                   svgHeight="1.3rem"
                   src="icons/general/folder-icon.svg"
                 ></app-svg>
-                {{ folder.course.courseCode }}
+                {{ folder.courseCode }}
               </span>
             </td>
           </ng-container>
@@ -90,7 +90,7 @@
               (click)="openFolder(folder)"
               (keydown)="openFolder(folder)"
             >
-              {{ folder.course.courseTitle }}
+              {{ folder.courseTitle }}
             </td>
           </ng-container>
 
@@ -107,10 +107,10 @@
             </td>
           </ng-container>
 
-          <ng-container matColumnDef="session">
-            <th mat-header-cell *matHeaderCellDef>SESSION</th>
+          <ng-container matColumnDef="semester">
+            <th mat-header-cell *matHeaderCellDef>SEMESTER</th>
             <td mat-cell *matCellDef="let folder" class="cursor-pointer">
-              {{ folder.session }}
+              {{ folder.semester }}
             </td>
           </ng-container>
 

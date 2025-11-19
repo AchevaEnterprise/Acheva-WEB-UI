@@ -86,7 +86,7 @@
     </mat-radio-group>
   </div>
 
-  <app-card label="Course Analtyics" [showDivider]="true" dividerClass="!mt-4">
+  <app-card label="Result Analtyics" [showDivider]="true" dividerClass="!mt-4">
     <p rightHeaderContent class="acva-para-1 text-neutral-500">
       Average Grade <span class="text-neutral-800">0.0%</span>
     </p>
@@ -132,6 +132,7 @@
         label="Save Changes"
         icon="icons/general/save-btn-icon.svg"
         class="btn-md"
+        [disabled]="!resultEntryCompleted()"
         (clickEvent)="saveChanges()"
       />
 

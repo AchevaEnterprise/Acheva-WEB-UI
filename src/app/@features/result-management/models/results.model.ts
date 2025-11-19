@@ -54,6 +54,7 @@ export interface ICreateResult {
 
 export interface IResultQuery {
   status: string;
+  course: string;
 }
 
 export interface IPreparedResultQuery {

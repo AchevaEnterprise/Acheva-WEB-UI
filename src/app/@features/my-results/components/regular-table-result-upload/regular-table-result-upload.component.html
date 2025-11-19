@@ -35,17 +35,21 @@
               class="text-center"
               [formGroupName]="i"
             >
-              <input
-                type="number"
-                min="0"
-                max="100"
-                class="border border-neutral-300 rounded-[8px] p-2 my-4 w-full bg-white"
-                [class.border-red-500]="
-                  row.get('test').invalid && row.get('test').touched
-                "
-                formControlName="test"
-                (input)="onControlInput(i, 'test')"
-              />
+              @if (row.get('test').disabled) {
+                {{ row.getRawValue().test }}
+              } @else {
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  class="border border-neutral-300 rounded-[8px] p-2 my-4 w-full bg-white"
+                  [class.border-red-500]="
+                    row.get('test').invalid && row.get('test').touched
+                  "
+                  formControlName="test"
+                  (input)="onControlInput(i, 'test')"
+                />
+              }
             </td>
           </ng-container>
 
@@ -56,17 +60,21 @@
               *matCellDef="let row; let i = index"
               [formGroupName]="i"
             >
-              <input
-                type="number"
-                min="0"
-                max="100"
-                class="border border-neutral-300 rounded-[8px] p-2 w-full bg-white"
-                [class.border-red-500]="
-                  row.get('lab').invalid && row.get('lab').touched
-                "
-                formControlName="lab"
-                (input)="onControlInput(i, 'lab')"
-              />
+              @if (row.get('lab').disabled) {
+                {{ row.getRawValue().lab }}
+              } @else {
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  class="border border-neutral-300 rounded-[8px] p-2 w-full bg-white"
+                  [class.border-red-500]="
+                    row.get('lab').invalid && row.get('lab').touched
+                  "
+                  formControlName="lab"
+                  (input)="onControlInput(i, 'lab')"
+                />
+              }
             </td>
           </ng-container>
 
@@ -77,17 +85,21 @@
               *matCellDef="let row; let i = index"
               [formGroupName]="i"
             >
-              <input
-                type="number"
-                min="0"
-                max="100"
-                class="border border-neutral-300 rounded-[8px] p-2 w-full bg-white"
-                [class.border-red-500]="
-                  row.get('exam').invalid && row.get('exam').touched
-                "
-                formControlName="exam"
-                (input)="onControlInput(i, 'exam')"
-              />
+              @if (row.get('exam').disabled) {
+                {{ row.getRawValue().exam }}
+              } @else {
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  class="border border-neutral-300 rounded-[8px] p-2 w-full bg-white"
+                  [class.border-red-500]="
+                    row.get('exam').invalid && row.get('exam').touched
+                  "
+                  formControlName="exam"
+                  (input)="onControlInput(i, 'exam')"
+                />
+              }
             </td>
           </ng-container>
 

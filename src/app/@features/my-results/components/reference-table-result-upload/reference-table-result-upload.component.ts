@@ -11,6 +11,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   FormArray,
   FormBuilder,
+  FormControl,
   FormGroup,
   ReactiveFormsModule,
   Validators,
@@ -24,6 +25,7 @@ import { SearchSelectComponent } from '../../../../@shared/components/forms/sear
 import { LoaderComponent } from '../../../../@shared/components/loader/loader.component';
 import { StatusBadgeComponent } from '../../../../@shared/components/status-badge/status-badge.component';
 import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
+import { RoleEnum } from '../../../auth/model/auth.model';
 import { AuthenticationService } from '../../../auth/service/auth.service';
 import { IStudentGrade } from '../../../courses/models/student-grade.model';
 import { StudentService } from '../../../students/services/student.service';
@@ -50,6 +52,8 @@ export class ReferenceTableResultUploadComponent {
   private readonly studentService = inject(StudentService);
   private readonly fb = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly userRole = this.authService.activeAccount()
+    ?.role as RoleEnum;
 
   loading = input<boolean>(false);
   students = input<Partial<IStudentGrade>[]>([]);
@@ -116,12 +120,22 @@ export class ReferenceTableResultUploadComponent {
       Validators.max(100),
     ];
 
+    const isDisabled = ![
+      RoleEnum.COURSE_COORDINATOR,
+      RoleEnum.LECTURER,
+    ].includes(this.userRole);
+
+    const createNumberControl = (value: number | undefined) =>
+      new FormControl({ value, disabled: isDisabled }, numberValidator);
+
     return this.fb.group({
       registrationNumber: [student.registrationNumber, Validators.required],
       fullName: [student.fullName, Validators.required],
-      test: [student.test, numberValidator],
-      lab: [student.lab, numberValidator],
-      exam: [student.exam, numberValidator],
+
+      test: createNumberControl(student.test),
+      lab: createNumberControl(student.lab),
+      exam: createNumberControl(student.exam),
+
       total: [student.total, numberValidator],
       grade: [student.grade],
       status: [student.status],
@@ -208,7 +222,7 @@ export class ReferenceTableResultUploadComponent {
   searchStudentsByRegNo(regNo: string) {
     this.searchingStudent.set(true);
 
-    const schoolId = this.authService.activeAccount()?.school;
+    const schoolId = this.authService.activeAccount()?.school._id;
     this.studentService
       .getStudentByRegNo(regNo, schoolId!)
       .pipe(finalize(() => this.searchingStudent.set(false)))

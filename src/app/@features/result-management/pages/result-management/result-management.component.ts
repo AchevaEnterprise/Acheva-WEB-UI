@@ -18,6 +18,8 @@ import {
 } from '../../../../@shared/components/segment-switcher/segment-switcher.component';
 import { RoleEnum } from '../../../auth/model/auth.model';
 import { AuthenticationService } from '../../../auth/service/auth.service';
+import { ICourse } from '../../../courses/models/course.model';
+import { CoursesService } from '../../../courses/services/courses.service';
 import { ResendToCourseCoordinatorComponent } from '../../components/resend-to-course-coordinator/resend-to-course-coordinator.component';
 import { ResendToDeanComponent } from '../../components/resend-to-dean/resend-to-dean.component';
 import { ResultManagementFileTableComponent } from '../../components/result-management-file-table/result-management-file-table.component';
@@ -50,6 +52,7 @@ export class ResultManagementComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly resultService = inject(ResultsService);
+  private readonly courseService = inject(CoursesService);
   private readonly authService = inject(AuthenticationService);
   private readonly toast = inject(ToastService);
 
@@ -60,7 +63,7 @@ export class ResultManagementComponent implements OnInit {
     viewChild<ResultManagementFolderTableComponent>('folderTableRef');
 
   results = signal<IResult[]>([]);
-  preparedResults = signal<IResult[]>([]);
+  courses = signal<ICourse[]>([]);
 
   pagination = signal<IPaginator>({
     page: 1,
@@ -141,8 +144,7 @@ export class ResultManagementComponent implements OnInit {
   RoleEnum = RoleEnum;
 
   ngOnInit(): void {
-    if (this.currentRole() === RoleEnum.COURSE_COORDINATOR)
-      this.getPreparedResults();
+    if (this.currentRole() === RoleEnum.COURSE_COORDINATOR) this.getCourses();
     else this.getResults();
   }
 
@@ -172,25 +174,16 @@ export class ResultManagementComponent implements OnInit {
       });
   }
 
-  getPreparedResults() {
+  getCourses() {
     this.loadingResults.set(true);
 
-    this.resultService
-      .getPreparedResults({
-        status: this.activeSegment().value,
-      })
+    this.courseService
+      .getCourses()
       .pipe(finalize(() => this.loadingResults.set(false)))
       .subscribe({
         next: (resp) => {
           if (resp.status) {
-            const response = resp.data as {
-              count: number;
-              filters: object;
-              message: string;
-              results: Array<IResult>;
-            };
-
-            this.preparedResults.set(response.results);
+            this.courses.set(resp.data['courses']);
           }
         },
       });
@@ -313,11 +306,11 @@ export class ResultManagementComponent implements OnInit {
       });
   }
 
-  sendToHOD(selectedFolders: IResult[]) {
+  sendToHOD(selectedFolders: ICourse[]) {
     this.sendingToHOD.set(true);
 
     const courseIds: Array<string> = selectedFolders.map(
-      (folder: IResult) => folder.course._id!
+      (folder: ICourse) => folder._id!
     );
 
     this.resultService
@@ -440,25 +433,18 @@ export class ResultManagementComponent implements OnInit {
   viewResult(result: IResult) {
     const { _id, status } = result;
 
-    if (this.currentRole() === RoleEnum.LECTURER) {
-      this.router.navigate(['/my-result/upload-result'], {
-        queryParams: { resultId: _id },
-      });
-      return;
-    }
-
     this.router.navigate(['edit-results'], {
       relativeTo: this.route,
       queryParams: { resultId: _id, status },
     });
   }
 
-  viewFolder(result: IResult) {
-    const { _id, status } = result;
+  viewFolder(result: ICourse) {
+    const { _id } = result;
 
     this.router.navigate(['view-results'], {
       relativeTo: this.route,
-      queryParams: { resultId: _id, status },
+      queryParams: { courseId: _id },
     });
   }
 }

@@ -10,6 +10,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   FormArray,
   FormBuilder,
+  FormControl,
   FormGroup,
   ReactiveFormsModule,
   Validators,
@@ -17,11 +18,14 @@ import {
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTableModule } from '@angular/material/table';
+import { ActivatedRoute } from '@angular/router';
 import { debounceTime, Subject } from 'rxjs';
 import { EmptyStateComponent } from '../../../../@shared/components/empty-state/empty-state.component';
 import { LoaderComponent } from '../../../../@shared/components/loader/loader.component';
 import { StatusBadgeComponent } from '../../../../@shared/components/status-badge/status-badge.component';
 import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
+import { RoleEnum } from '../../../auth/model/auth.model';
+import { AuthenticationService } from '../../../auth/service/auth.service';
 import { IStudentGrade } from '../../../courses/models/student-grade.model';
 
 @Component({
@@ -43,10 +47,16 @@ import { IStudentGrade } from '../../../courses/models/student-grade.model';
 export class RegularTableResultUploadComponent {
   private readonly fb = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly route = inject(ActivatedRoute);
+  private readonly authService = inject(AuthenticationService);
+  private readonly userRole = this.authService.activeAccount()
+    ?.role as RoleEnum;
 
   loading = input<boolean>(false);
   students = input<Partial<IStudentGrade>[]>([]);
   uploadResultEvent = output<Partial<IStudentGrade>>();
+
+  readonly status: string = this.route.snapshot.queryParamMap.get('status')!;
 
   readonly displayedColumns = [
     'registrationNumber',
@@ -73,8 +83,8 @@ export class RegularTableResultUploadComponent {
 
   constructor() {
     effect(() => {
-      const list = this.students();
-      if (list?.length) this.initializeFormRows(list);
+      const students = this.students();
+      if (students?.length > 0) this.initializeFormRows(students);
     });
 
     this.inputSubject
@@ -90,7 +100,13 @@ export class RegularTableResultUploadComponent {
     this.completedRows.clear();
     this.rows.clear();
 
-    for (const student of students) {
+    const sortedStudents = students?.sort((a, b) => {
+      const nameA = a.fullName ?? '';
+      const nameB = b.fullName ?? '';
+      return nameA.localeCompare(nameB);
+    });
+
+    for (const student of sortedStudents) {
       this.rows.push(this.buildStudentRow(student));
     }
 
@@ -104,12 +120,25 @@ export class RegularTableResultUploadComponent {
       Validators.max(100),
     ];
 
+    const isDisabled =
+      ![RoleEnum.COURSE_COORDINATOR, RoleEnum.LECTURER].includes(
+        this.userRole
+      ) &&
+      ['PENDING', 'UNVERIFIED', 'VERIFIED', 'PUBLISHED', 'IMPORTED'].includes(
+        this.status
+      );
+
+    const createNumberControl = (value: number | undefined) =>
+      new FormControl({ value, disabled: isDisabled }, numberValidator);
+
     return this.fb.group({
       registrationNumber: [student.registrationNumber, Validators.required],
       fullName: [student.fullName, Validators.required],
-      test: [student.test, numberValidator],
-      lab: [student.lab, numberValidator],
-      exam: [student.exam, numberValidator],
+
+      test: createNumberControl(student.test),
+      lab: createNumberControl(student.lab),
+      exam: createNumberControl(student.exam),
+
       total: [student.total, numberValidator],
       grade: [student.grade],
       status: [student.status],
@@ -118,10 +147,7 @@ export class RegularTableResultUploadComponent {
 
   onControlInput(index: number, controlName: string): void {
     const row = this.rows.at(index);
-    if (!row) return;
-
-    const ctrl = row.get(controlName);
-    if (!ctrl) return;
+    const ctrl = row.get(controlName)!;
 
     if (ctrl.invalid && (ctrl.dirty || ctrl.touched)) {
       ctrl.reset();
@@ -136,17 +162,7 @@ export class RegularTableResultUploadComponent {
 
   handleRowInput(index: number): void {
     const row = this.rows.at(index);
-    if (!row) return;
-
     const controls = ['test', 'lab', 'exam'] as const;
-
-    for (const name of controls) {
-      const ctrl = row.get(name);
-      if (ctrl && ctrl.invalid && ctrl.touched) {
-        ctrl.reset();
-        return;
-      }
-    }
 
     const { test, lab, exam } = row.value as IStudentGrade;
     const total = (test ?? 0) + (lab ?? 0) + (exam ?? 0);
@@ -157,9 +173,7 @@ export class RegularTableResultUploadComponent {
       }
       row.get('total')?.reset();
       return;
-    }
-
-    row.get('total')?.setValue(total);
+    } else row.get('total')?.setValue(total);
 
     if (row.valid) {
       const prevValue = this.lastEmittedRows.get(index);
@@ -182,7 +196,6 @@ export class RegularTableResultUploadComponent {
 
   clearEntry(index: number): void {
     const row = this.rows.at(index);
-    if (!row) return;
 
     const controls = ['test', 'lab', 'exam', 'total', 'grade', 'status'];
     for (const ctrl of controls) {

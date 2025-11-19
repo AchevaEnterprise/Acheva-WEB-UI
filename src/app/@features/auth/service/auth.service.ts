@@ -3,7 +3,7 @@ import { inject, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { JwtHelperService } from '@auth0/angular-jwt';
 import { Store } from '@ngrx/store';
-import { Observable, of, tap } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { IAPIResponse } from '../../../@core/models/api-response.model';
 import { STORAGE_KEYS } from '../../../@core/models/storage.model';
@@ -64,22 +64,16 @@ export class AuthenticationService {
       >(`${this.authUrl}/lecturers/signin`, payload)
       .pipe(
         tap((resp) => {
-          const { accessToken, refreshToken } = resp.data;
+          const { accessToken, refreshToken, ...rest } = resp.data;
 
           this.setToken(accessToken);
           this.setRefreshToken(refreshToken);
 
           // Sets the signal state for the active account
-          this.activeAccount.set(resp.data);
+          this.activeAccount.set(rest);
           localStorage.setItem(
             STORAGE_KEYS.ACTIVE_ACCOUNT,
             JSON.stringify(this.activeAccount())
-          );
-
-          this.store.dispatch(
-            saveProfile({
-              profile: resp.data,
-            })
           );
         })
       );
@@ -94,20 +88,12 @@ export class AuthenticationService {
 
   public getProfile() {
     const userId = this.activeAccount()?.id;
-    if (!userId) {
-      return of({
-        status: false,
-        message: 'User ID not found',
-        data: null,
-      } as IAPIResponse<any>);
-    }
-
     return this.http
-      .get<IAPIResponse<any>>(`${this.baseUrl}/lecturers/${userId}`)
+      .get<IAPIResponse<IAuthProfile>>(`${this.baseUrl}/lecturers/${userId}`)
       .pipe(
         tap((resp) => {
           if (resp.status) {
-            this.activeAccount.set(resp.data as IAccount);
+            this.activeAccount.set(resp.data);
             localStorage.setItem(
               STORAGE_KEYS.ACTIVE_ACCOUNT,
               JSON.stringify(this.activeAccount())
@@ -126,6 +112,36 @@ export class AuthenticationService {
     return this.http.get<IAPIResponse<IAccount[]>>(
       `${this.authUrl}/lecturers/linked-accounts`
     );
+  }
+
+  switchAccount(accountId: string): Observable<IAPIResponse<IAuthProfile>> {
+    return this.http
+      .post<
+        IAPIResponse<IAuthProfile>
+      >(`${this.authUrl}/lecturers/switch-account`, { accountId })
+      .pipe(
+        tap((res) => {
+          if (res.status) {
+            const { accessToken, refreshToken } = res.data;
+
+            this.setToken(accessToken);
+            this.setRefreshToken(refreshToken);
+
+            // Sets the signal state for the active account
+            this.activeAccount.set(res.data);
+            localStorage.setItem(
+              STORAGE_KEYS.ACTIVE_ACCOUNT,
+              JSON.stringify(this.activeAccount())
+            );
+
+            this.store.dispatch(
+              saveProfile({
+                profile: res.data,
+              })
+            );
+          }
+        })
+      );
   }
 
   switchRole(role: RoleEnum): Observable<IAPIResponse<any>> {

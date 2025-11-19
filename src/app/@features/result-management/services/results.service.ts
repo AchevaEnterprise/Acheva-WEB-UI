@@ -34,6 +34,9 @@ export class ResultsService {
       if (query.status) {
         params = params.append('status', query.status);
       }
+      if (query.course) {
+        params = params.append('course', query.course);
+      }
     }
 
     return this.http.get<IAPIPaginatedResponse<IResult[]>>(

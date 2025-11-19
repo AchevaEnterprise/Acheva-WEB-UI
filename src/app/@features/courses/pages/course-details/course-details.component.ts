@@ -133,7 +133,7 @@ export class CourseDetailsComponent implements OnInit {
   loadUserSchool() {
     const { school } = this.authService.activeAccount()!;
 
-    this.schoolService.getSchoolById(school).subscribe({
+    this.schoolService.getSchoolById(school._id).subscribe({
       next: (resp) => {
         const { _id } = resp.data;
         this.school.set(resp.data);
@@ -324,10 +324,26 @@ export class CourseDetailsComponent implements OnInit {
   }
 
   submit(): void {
-    this.isLoading.set(true);
-    const { session, admissionYear, semester, department, level } =
-      this.form.getRawValue();
+    const {
+      session,
+      admissionYear,
+      semester,
+      department,
+      level,
+      faculty,
+      courseCordinator,
+    } = this.form.getRawValue();
 
+    if (!courseCordinator || !faculty || !department) {
+      this.toast.showNotification(
+        'error',
+        'Invalid Result Details',
+        'Ensure all fields are filled'
+      );
+      return;
+    }
+
+    this.isLoading.set(true);
     const payload: ICreateResult = {
       course: this.courseId,
       session: session || '',
@@ -335,7 +351,7 @@ export class CourseDetailsComponent implements OnInit {
       level: level || '',
       semester: semester || '',
       school: this.school()?._id!,
-      department: department?._id!,
+      department: department?._id,
       status: ResultStatusEnum.PENDING,
     };
 

@@ -4,6 +4,8 @@ import { of } from 'rxjs';
 import { catchError, filter, map, mergeMap } from 'rxjs/operators';
 import { IAuthProfile } from '../../../@features/auth/model/auth.model';
 import { AuthenticationService } from '../../../@features/auth/service/auth.service';
+import { SchoolsService } from '../../services/schools.service';
+import { saveSchoolsError } from '../school/school.action';
 import {
   loadLecturerSchool,
   loadProfile,
@@ -14,8 +16,6 @@ import {
   saveProfileErrorLinkedAccounts,
   saveProfileLinkedAccounts,
 } from './profile.action';
-import { SchoolsService } from '../../services/schools.service';
-import { saveSchoolsError } from '../school/school.action';
 
 @Injectable()
 export class ProfileEffects {
@@ -46,7 +46,7 @@ export class ProfileEffects {
     return this.actions$.pipe(
       ofType(saveProfile), // ← Listen to the action
       filter(({ profile }) => !!profile?.school),
-      map(({ profile }) => loadLecturerSchool({ schoolId: profile.school! }))
+      map(({ profile }) => loadLecturerSchool({ schoolId: profile.school._id }))
     );
   });
 

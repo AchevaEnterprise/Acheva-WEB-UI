@@ -38,6 +38,7 @@ import {
   schoolsSelector,
 } from '../../../../../../@core/store/school/school.selector';
 import { ToastService } from '../../../../../../@core/utility/toast.service';
+import { AutocompleteInputComponent } from '../../../../../../@shared/components/forms/autocomplete-input/autocomplete-input.component';
 import { ButtonComponent } from '../../../../../../@shared/components/forms/button/button.component';
 import { AuthenticationService } from '../../../../../auth/service/auth.service';
 import {
@@ -46,7 +47,6 @@ import {
 } from '../../../../../courses/models/course.model';
 import { CoursesService } from '../../../../../courses/services/courses.service';
 import { CoursePreviewComponent } from '../../../../components/course-preview/course-preview.component';
-import { AutocompleteInputComponent } from '../../../../../../@shared/components/forms/autocomplete-input/autocomplete-input.component';
 
 @Component({
   selector: 'app-create-course',
@@ -77,13 +77,13 @@ export class CreateCourseComponent {
   // DATA
   // ========================================
   private readonly userSchoolId =
-    this.authService.activeAccount()?.school || '';
+    this.authService.activeAccount()?.school._id || '';
 
   private readonly userFacultyId =
-    this.authService.activeAccount()?.faculty || '';
+    this.authService.activeAccount()?.faculty._id || '';
 
   private readonly userDepartmentId =
-    this.authService.activeAccount()?.department || '';
+    this.authService.activeAccount()?.department._id || '';
 
   courses = signal<ICourse[]>([]);
   invalidCourseCodeError: string | null = null;
@@ -444,7 +444,8 @@ export class CreateCourseComponent {
             this.toast.showNotification(
               'error',
               'Course Creation Failed',
-              'An error occurred while creating the course'
+              error.error.message ||
+                'An error occurred while creating the course'
             );
           },
         })

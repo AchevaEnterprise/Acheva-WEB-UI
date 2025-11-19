@@ -120,6 +120,7 @@ export class ResultUploadComponent implements OnInit {
 
   loadingResult = signal<boolean>(false);
   uploadingResult = signal<boolean>(false);
+  resultEntryCompleted = signal<boolean>(false);
 
   students = signal<Record<SegmentValue, Partial<IStudentGrade>[]>>({
     REGULAR: [],
@@ -194,6 +195,9 @@ export class ResultUploadComponent implements OnInit {
       ...(studentsWithoutEntries ?? []),
     ];
 
+    if (studentsWithoutEntries && studentsWithoutEntries.length < 1)
+      this.resultEntryCompleted.set(true);
+
     this.analyticsChartData.set(analyticsData);
     this.totalStudent.set(studentResultEntries.length);
     this.totalStudentPass.set(totalPass || 0);
@@ -260,8 +264,12 @@ export class ResultUploadComponent implements OnInit {
       .pipe(finalize(() => this.uploadingResult.set(false)))
       .subscribe({
         next: (resp) => {
-          if (!resp.status)
+          if (!resp.status) {
             this.toast.showNotification('error', 'Upload Error', resp.message);
+            return;
+          }
+
+          this.getResultAndEntries();
         },
       });
   }

@@ -10,6 +10,7 @@ import { CardComponent } from '../../../../@shared/components/card/card.componen
 import { ConfirmationComponent } from '../../../../@shared/components/confirmation/confirmation.component';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
 import { SearchInputComponent } from '../../../../@shared/components/forms/search-input/search-input.component';
+import { LoaderComponent } from '../../../../@shared/components/loader/loader.component';
 import { RejectReasonComponent } from '../../../../@shared/components/reject-reason/reject-reason.component';
 import {
   ISegmentSwitcher,
@@ -38,6 +39,7 @@ import { ResultsService } from '../../services/results.service';
     CardComponent,
     ButtonComponent,
     RoleAccessDirective,
+    LoaderComponent,
   ],
   templateUrl: './edit-results.component.html',
   styleUrl: './edit-results.component.scss',
@@ -60,6 +62,8 @@ export class EditResultsComponent implements OnInit {
 
   loadingResult = signal<boolean>(false);
   uploadingResult = signal<boolean>(false);
+  approvingResult = signal<boolean>(false);
+  rejectingResult = signal<boolean>(false);
 
   segments = signal<ISegmentSwitcher[]>([
     {
@@ -180,7 +184,7 @@ export class EditResultsComponent implements OnInit {
   uploadResult(result: Partial<IStudentGrade>) {
     this.uploadingResult.set(true);
 
-    const { registrationNumber, fullName, test, lab, exam, total } = result!;
+    const { registrationNumber, fullName, test, lab, exam, total } = result;
     const resultEntry: ICreateResultEntry = {
       registrationNumber: registrationNumber!,
       fullName: fullName!,
@@ -196,8 +200,12 @@ export class EditResultsComponent implements OnInit {
       .pipe(finalize(() => this.uploadingResult.set(false)))
       .subscribe({
         next: (resp) => {
-          if (!resp.status)
+          if (!resp.status) {
             this.toast.showNotification('error', 'Upload Error', resp.message);
+            return;
+          }
+
+          this.getResultEntries();
         },
       });
   }
@@ -236,8 +244,11 @@ export class EditResultsComponent implements OnInit {
   }
 
   approve() {
+    this.approvingResult.set(true);
+
     this.resultsService
       .approveOrRejectResult(this.resultId, 'APPROVED')
+      .pipe(finalize(() => this.approvingResult.set(false)))
       .subscribe({
         next: (resp) => {
           if (resp.status) {
@@ -247,6 +258,13 @@ export class EditResultsComponent implements OnInit {
               `Result submission has been approved`
             );
           }
+        },
+        error: (error) => {
+          this.toast.showNotification(
+            'error',
+            'Error Occured',
+            error.error.message
+          );
         },
       });
   }
@@ -265,8 +283,11 @@ export class EditResultsComponent implements OnInit {
   }
 
   reject(reason: string) {
+    this.rejectingResult.set(true);
+
     this.resultsService
       .approveOrRejectResult(this.resultId, 'REJECTED', reason)
+      .pipe(finalize(() => this.rejectingResult.set(false)))
       .subscribe({
         next: (resp) => {
           if (resp.status) {
@@ -276,6 +297,13 @@ export class EditResultsComponent implements OnInit {
               `Result submission has been rejected`
             );
           }
+        },
+        error: (error) => {
+          this.toast.showNotification(
+            'error',
+            'Error Occured',
+            error.error.message
+          );
         },
       });
   }

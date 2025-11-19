@@ -1,3 +1,9 @@
+import {
+  IDepartment,
+  IFaculty,
+  ISchool,
+} from '../../../@core/models/school.model';
+
 export interface ILogIn {
   email: string;
   password: string;
@@ -30,9 +36,9 @@ export interface IAuthProfile {
   firstname: string;
   lastname: string;
   email: string;
-  school: string;
-  faculty: string;
-  department: string;
+  school: ISchool;
+  faculty: IFaculty;
+  department: IDepartment;
   role: RoleEnum;
   otherRoles: RoleEnum[];
   accountType: 'LECTURER';
@@ -45,9 +51,9 @@ export interface IAccount {
   id: string;
   firstname: string;
   lastname: string;
-  school: string;
-  faculty: string;
-  department: string;
+  school: ISchool;
+  faculty: IFaculty;
+  department: IDepartment;
   email: string;
   role: RoleEnum;
   otherRoles: RoleEnum[];

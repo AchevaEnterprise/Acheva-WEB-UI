@@ -33,6 +33,7 @@ import { EmptyStateComponent } from '../../../../@shared/components/empty-state/
 import { LoaderComponent } from '../../../../@shared/components/loader/loader.component';
 import { PaginatorComponent } from '../../../../@shared/components/paginator/paginator.component';
 import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
+import { RoleEnum } from '../../../auth/model/auth.model';
 import { AuthenticationService } from '../../../auth/service/auth.service';
 import { IResult } from '../../models/results.model';
 
@@ -56,10 +57,13 @@ import { IResult } from '../../models/results.model';
 export class ResultManagementFileTableComponent implements OnInit {
   private readonly authService = inject(AuthenticationService);
   private readonly store = inject(Store<AppState>);
+  // private readonly toast = inject(ToastService);
   private readonly destroyRef = inject(DestroyRef);
 
   faculties = signal<IFaculty[]>([]);
   departments = signal<IDepartment[]>([]);
+
+  userRole = this.authService.activeAccount()?.role as RoleEnum;
 
   loading = input<boolean>(false);
   expand = input<boolean>(false);
@@ -124,7 +128,7 @@ export class ResultManagementFileTableComponent implements OnInit {
   loadUserSchool() {
     const currentUser = this.authService.activeAccount();
     if (currentUser) {
-      const schoolId = currentUser.school;
+      const schoolId = currentUser.school._id;
       this.getFaculties(schoolId);
     }
   }
@@ -180,6 +184,14 @@ export class ResultManagementFileTableComponent implements OnInit {
   }
 
   viewResult(result: IResult) {
+    // if (this.userRole === RoleEnum.LECTURER && result.hasBeenSent) {
+    //   this.toast.showNotification(
+    //     'error',
+    //     'Result Sent',
+    //     'Result has been sent, you cannot edit'
+    //   );
+    //   return;
+    // }
     this.viewResultEvent.emit(result);
   }
 

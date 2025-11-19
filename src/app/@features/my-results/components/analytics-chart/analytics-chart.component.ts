@@ -11,24 +11,23 @@ export class AnalyticsChartComponent {
   data = input<number[]>([]);
 
   chartOptions = computed<Highcharts.Options>(() => {
-    const data = this.data();
+    const data = [...this.data()];
 
-    if (!data) return {};
+    const colorMap = [
+      '#2793FF',
+      '#2793FF',
+      '#4BA5FF',
+      '#4BA5FF',
+      '#E57692',
+      '#D8315B',
+    ];
 
-    const dataSeries = data.map((value, index) => {
-      let color = '#D8315B';
-      if (index === 0 || index === 1) {
-        color = '#2793FF';
-      } else if (index === 2 || index === 3) {
-        color = '#4BA5FF';
-      } else if (index === 4) {
-        color = '#E57692';
-      }
-      return {
-        y: value,
-        color,
-      };
-    });
+    const dataSeries = data.map((value, index) => ({
+      y: value,
+      color: colorMap[index] ?? '#D8315B',
+    }));
+
+    // console.log('Series: ', dataSeries);
 
     return {
       chart: {
@@ -68,11 +67,12 @@ export class AnalyticsChartComponent {
       accessibility: {
         enabled: false,
       },
+
       series: [
         {
           type: 'bar',
           name: 'Results',
-          data: dataSeries,
+          data: [...dataSeries],
         },
       ],
     };

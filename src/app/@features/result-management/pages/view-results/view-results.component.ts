@@ -39,9 +39,9 @@ export class ViewResultsComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
-  readonly resultId: string =
-    this.route.snapshot.queryParamMap.get('resultId')!;
-  readonly status: string = this.route.snapshot.queryParamMap.get('status')!;
+  readonly courseId: string =
+    this.route.snapshot.queryParamMap.get('courseId')!;
+  // readonly status: string = this.route.snapshot.queryParamMap.get('status')!;
 
   results = signal<IResult[]>([]);
   analyticsChartData = signal<number[]>([0, 0, 0, 0, 0, 0]);
@@ -70,7 +70,7 @@ export class ViewResultsComponent implements OnInit {
     this.loadingResult.set(true);
 
     const result$ = this.resultsService.getResults({
-      status: this.status,
+      course: this.courseId,
     });
     // const analytics$ = this.resultsService.getResultAnalytics(this.resultId);
 
@@ -130,9 +130,11 @@ export class ViewResultsComponent implements OnInit {
       });
   }
 
-  editResult() {
+  editResult(result: IResult) {
+    const { _id } = result;
+
     this.router.navigate(['/result-management/edit-results'], {
-      queryParams: { resultId: this.resultId },
+      queryParams: { resultId: _id },
     });
   }
 
@@ -152,7 +154,7 @@ export class ViewResultsComponent implements OnInit {
       .open(ConfirmationComponent, {
         width: '600px',
         data: {
-          message: `You're about to send this result to the Head of Department. This action is irreversible, Are you sure you want to continue?`,
+          message: `You're about to send this ${selectedResults.length} result(s) to the Head of Department. This action is irreversible, Are you sure you want to continue?`,
         },
       })
       .afterClosed()
@@ -167,7 +169,7 @@ export class ViewResultsComponent implements OnInit {
     this.sendingToHOD.set(true);
 
     const payload: ISendSelectedResult[] = results.map((result) => ({
-      resultId: this.resultId,
+      resultId: result._id,
       recepient: result.receivingHandler,
     }));
 

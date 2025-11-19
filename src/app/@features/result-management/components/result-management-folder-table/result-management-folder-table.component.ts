@@ -34,7 +34,7 @@ import { LoaderComponent } from '../../../../@shared/components/loader/loader.co
 import { PaginatorComponent } from '../../../../@shared/components/paginator/paginator.component';
 import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
 import { AuthenticationService } from '../../../auth/service/auth.service';
-import { IResult } from '../../models/results.model';
+import { ICourse } from '../../../courses/models/course.model';
 
 @Component({
   selector: 'app-result-management-folder-table',
@@ -62,22 +62,23 @@ export class ResultManagementFolderTableComponent implements OnInit {
 
   loading = input<boolean>(false);
   expand = input<boolean>(false);
-  results = input<IResult[]>([]);
+  courses = input<ICourse[]>([]);
   pagination = input<IPaginator>();
 
-  viewFolderEvent = output<IResult>();
+  viewFolderEvent = output<ICourse>();
   pageEvent = output<PageEvent>();
 
   faculties = signal<IFaculty[]>([]);
   departments = signal<IDepartment[]>([]);
 
-  selection = new SelectionModel<IResult>(true, []);
+  selection = new SelectionModel<ICourse>(true, []);
 
   displayedColumns: string[] = [
     'select',
     'courseCode',
     'courseTitle',
-    'session',
+    'faculty',
+    'semester',
   ];
 
   ngOnInit(): void {
@@ -87,7 +88,7 @@ export class ResultManagementFolderTableComponent implements OnInit {
   loadUserSchool() {
     const currentUser = this.authService.activeAccount();
     if (currentUser) {
-      const schoolId = currentUser.school;
+      const schoolId = currentUser.school._id;
       this.getFaculties(schoolId);
     }
   }
@@ -119,7 +120,7 @@ export class ResultManagementFolderTableComponent implements OnInit {
 
   isAllSelected() {
     const numSelected = this.selection.selected.length;
-    const numRows = this.results().length;
+    const numRows = this.courses().length;
     return numSelected === numRows;
   }
 
@@ -130,19 +131,19 @@ export class ResultManagementFolderTableComponent implements OnInit {
       return;
     }
 
-    this.selection.select(...this.results());
+    this.selection.select(...this.courses());
   }
 
   /** The label for the checkbox on the passed row */
-  checkboxLabel(row?: IResult): string {
+  checkboxLabel(row?: ICourse): string {
     if (!row) {
       return `${this.isAllSelected() ? 'deselect' : 'select'} all`;
     }
     return `${this.selection.isSelected(row) ? 'deselect' : 'select'} row ${row._id}`;
   }
 
-  openFolder(result: IResult) {
-    this.viewFolderEvent.emit(result);
+  openFolder(course: ICourse) {
+    this.viewFolderEvent.emit(course);
   }
 
   paginate(page: PageEvent) {
