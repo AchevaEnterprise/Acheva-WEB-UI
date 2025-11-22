@@ -159,7 +159,7 @@ export class AuthenticationService {
             );
 
             // Navigate based on new role
-            // this.router.navigate(['/dashboard']);
+            location.reload();
           }
         })
       );

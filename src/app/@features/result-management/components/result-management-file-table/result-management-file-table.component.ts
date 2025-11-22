@@ -96,6 +96,8 @@ export class ResultManagementFileTableComponent implements OnInit {
     'actions',
   ];
 
+  RoleEnum = RoleEnum;
+
   constructor() {
     effect(() => {
       // Reset displayed columns to base columns

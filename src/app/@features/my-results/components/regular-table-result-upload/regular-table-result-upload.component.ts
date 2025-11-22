@@ -167,6 +167,7 @@ export class RegularTableResultUploadComponent {
     const { test, lab, exam } = row.value as IStudentGrade;
     const total = (test ?? 0) + (lab ?? 0) + (exam ?? 0);
 
+    // Set total
     if (total > 100) {
       for (const name of controls) {
         row.get(name)?.reset();
@@ -174,6 +175,26 @@ export class RegularTableResultUploadComponent {
       row.get('total')?.reset();
       return;
     } else row.get('total')?.setValue(total);
+
+    // Set Grade
+    if (total >= 70) {
+      row.get('grade')?.setValue('A');
+    } else if (total >= 60) {
+      row.get('grade')?.setValue('B');
+    } else if (total >= 50) {
+      row.get('grade')?.setValue('C');
+    } else if (total >= 45) {
+      row.get('grade')?.setValue('D');
+    } else if (total >= 40) {
+      row.get('grade')?.setValue('E');
+    } else {
+      row.get('grade')?.setValue('F');
+    }
+
+    // Set Status
+    if (total >= 30) {
+      row.get('status')?.setValue('PASS');
+    } else row.get('status')?.setValue('FAIL');
 
     if (row.valid) {
       const prevValue = this.lastEmittedRows.get(index);

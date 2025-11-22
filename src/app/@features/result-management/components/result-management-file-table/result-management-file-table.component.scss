@@ -33,3 +33,10 @@
   min-height: 48px;
   border-bottom: 1px solid #e0e0e0;
 }
+
+.disabled {
+  pointer-events: none;
+  background-color: grey;
+  touch-action: none;
+  cursor: not-allowed;
+}
