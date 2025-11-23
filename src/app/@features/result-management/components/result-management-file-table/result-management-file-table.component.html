@@ -217,7 +217,7 @@
             *matRowDef="let result; columns: displayedColumns"
             class="cursor-pointer hover:bg-gray-400"
             [class.disabled]="
-              userRole === RoleEnum.LECTURER && result.result.hasBeenSent
+              userRole === RoleEnum.LECTURER && result.hasBeenSent
             "
           ></tr>
         </table>

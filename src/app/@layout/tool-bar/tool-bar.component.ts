@@ -1,7 +1,7 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatDialog } from '@angular/material/dialog';
-import { MatMenuModule } from '@angular/material/menu';
+import { MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
 import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 import { filter, finalize } from 'rxjs';
 import { ImageFallbackDirective } from '../../@core/directives/image-fallback.directive';
@@ -46,18 +46,16 @@ export class ToolBarComponent implements OnInit {
 
     return [
       {
-        label: 'Course Advisor',
-        role: RoleEnum.COURSE_ADVISOR,
+        label: 'Dean',
+        role: RoleEnum.DEAN,
         disabled:
-          currentRole !== RoleEnum.COURSE_ADVISOR &&
-          !otherRoles.includes(RoleEnum.COURSE_ADVISOR),
+          currentRole !== RoleEnum.DEAN && !otherRoles.includes(RoleEnum.DEAN),
       },
       {
-        label: 'Course Coordinator',
-        role: RoleEnum.COURSE_COORDINATOR,
+        label: 'HOD',
+        role: RoleEnum.HOD,
         disabled:
-          currentRole !== RoleEnum.COURSE_COORDINATOR &&
-          !otherRoles.includes(RoleEnum.COURSE_COORDINATOR),
+          currentRole !== RoleEnum.HOD && !otherRoles.includes(RoleEnum.HOD),
       },
       {
         label: 'Lecturer',
@@ -97,7 +95,22 @@ export class ToolBarComponent implements OnInit {
     this.loadNotifications();
   }
 
-  switchToRole(role: RoleEnum) {
+  beforeOpen(trigger: MatMenuTrigger) {
+    const account = this.activeAccount();
+    const currentRole = account?.role;
+    const otherRoles = account?.otherRoles ?? [];
+
+    const allowed =
+      currentRole === RoleEnum.DEAN ||
+      currentRole === RoleEnum.HOD ||
+      otherRoles.some((r) => r === RoleEnum.HOD || r === RoleEnum.DEAN);
+
+    if (!allowed) return;
+
+    trigger.openMenu();
+  }
+
+  switchAccount(role: RoleEnum) {
     if (this.activeRole() === role) {
       this.toast.showNotification(
         'error',
@@ -110,14 +123,14 @@ export class ToolBarComponent implements OnInit {
 
     this.utilityService.showLoader();
     this.authService
-      .switchRole(role)
+      .switchAccount(role)
       .pipe(finalize(() => this.utilityService.hideLoader()))
       .subscribe({
         next: (response) => {
           if (response.status) {
             this.toast.showNotification(
               'success',
-              'Role Switched',
+              'Account Switched Successfully',
               `You are operating as a ${role}`
             );
           }

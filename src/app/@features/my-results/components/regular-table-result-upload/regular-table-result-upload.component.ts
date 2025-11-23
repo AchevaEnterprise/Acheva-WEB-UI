@@ -1,12 +1,4 @@
-import {
-  Component,
-  DestroyRef,
-  effect,
-  inject,
-  input,
-  output,
-} from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Component, effect, inject, input, output } from '@angular/core';
 import {
   FormArray,
   FormBuilder,
@@ -23,7 +15,6 @@ import { debounceTime, Subject } from 'rxjs';
 import { EmptyStateComponent } from '../../../../@shared/components/empty-state/empty-state.component';
 import { LoaderComponent } from '../../../../@shared/components/loader/loader.component';
 import { StatusBadgeComponent } from '../../../../@shared/components/status-badge/status-badge.component';
-import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
 import { RoleEnum } from '../../../auth/model/auth.model';
 import { AuthenticationService } from '../../../auth/service/auth.service';
 import { IStudentGrade } from '../../../courses/models/student-grade.model';
@@ -37,7 +28,6 @@ import { IStudentGrade } from '../../../courses/models/student-grade.model';
     StatusBadgeComponent,
     EmptyStateComponent,
     MatMenuModule,
-    SvgComponent,
     LoaderComponent,
   ],
   templateUrl: './regular-table-result-upload.component.html',
@@ -46,7 +36,7 @@ import { IStudentGrade } from '../../../courses/models/student-grade.model';
 })
 export class RegularTableResultUploadComponent {
   private readonly fb = inject(FormBuilder);
-  private readonly destroyRef = inject(DestroyRef);
+  // private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
   private readonly authService = inject(AuthenticationService);
   private readonly userRole = this.authService.activeAccount()
@@ -67,7 +57,7 @@ export class RegularTableResultUploadComponent {
     'total',
     'grade',
     'status',
-    'action',
+    // 'action',
   ];
 
   form = this.fb.group({
@@ -88,7 +78,7 @@ export class RegularTableResultUploadComponent {
     });
 
     this.inputSubject
-      .pipe(debounceTime(800), takeUntilDestroyed(this.destroyRef))
+      .pipe(debounceTime(400))
       .subscribe(({ index }) => this.handleRowInput(index));
   }
 
@@ -123,10 +113,7 @@ export class RegularTableResultUploadComponent {
     const isDisabled =
       ![RoleEnum.COURSE_COORDINATOR, RoleEnum.LECTURER].includes(
         this.userRole
-      ) &&
-      ['PENDING', 'UNVERIFIED', 'VERIFIED', 'PUBLISHED', 'IMPORTED'].includes(
-        this.status
-      );
+      ) || this.status !== 'DRAFT';
 
     const createNumberControl = (value: number | undefined) =>
       new FormControl({ value, disabled: isDisabled }, numberValidator);
@@ -157,7 +144,8 @@ export class RegularTableResultUploadComponent {
       return;
     }
 
-    this.inputSubject.next({ index, control: controlName });
+    // this.inputSubject.next({ index, control: controlName });
+    this.handleRowInput(index);
   }
 
   handleRowInput(index: number): void {
@@ -192,9 +180,9 @@ export class RegularTableResultUploadComponent {
     }
 
     // Set Status
-    if (total >= 30) {
-      row.get('status')?.setValue('PASS');
-    } else row.get('status')?.setValue('FAIL');
+    if (total <= 30) {
+      row.get('status')?.setValue('FAIL');
+    } else row.get('status')?.setValue('PASS');
 
     if (row.valid) {
       const prevValue = this.lastEmittedRows.get(index);

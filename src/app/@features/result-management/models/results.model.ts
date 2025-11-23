@@ -21,6 +21,12 @@ export interface IResult {
   status: ResultStatusEnum;
   uploadedBy: string;
   isApproved: boolean;
+  roles: {
+    COURSE_ADVISOR: string;
+    COURSE_COORDINATOR: string;
+    DEAN: string;
+    HOD: string;
+  };
   hasBeenSent: boolean;
   hasFinalApproval: boolean;
   currentHandler: string;

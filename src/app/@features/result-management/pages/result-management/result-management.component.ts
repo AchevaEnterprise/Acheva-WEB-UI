@@ -263,7 +263,7 @@ export class ResultManagementComponent implements OnInit {
     this.sendingToCC.set(true);
 
     const resultRequest$ = selectedResults?.map((result) =>
-      this.resultService.sendResult(result._id, result.receivingHandler)
+      this.resultService.sendResult(result._id, result.roles.COURSE_COORDINATOR)
     );
 
     forkJoin(resultRequest$)
@@ -275,6 +275,7 @@ export class ResultManagementComponent implements OnInit {
             'Result Sent',
             'Result has been sent to the Course Cordinator'
           );
+          this.getResults();
         },
       });
   }
@@ -343,7 +344,7 @@ export class ResultManagementComponent implements OnInit {
       .open(ConfirmationComponent, {
         width: '600px',
         data: {
-          message: `You're about to send ${selectedResults.length} results to their various Head of Departments. This action is irreversible, Are you sure you want to continue?`,
+          message: `You're about to send ${selectedResults.length} results to the Course Advisor. This action is irreversible, Are you sure you want to continue?`,
         },
       })
       .afterClosed()
@@ -358,7 +359,7 @@ export class ResultManagementComponent implements OnInit {
     this.sendingToCA.set(true);
 
     const resultRequest$ = selectedResults?.map((result) =>
-      this.resultService.sendResult(result._id, result.receivingHandler)
+      this.resultService.sendResult(result._id, result.roles.COURSE_ADVISOR)
     );
 
     forkJoin(resultRequest$)

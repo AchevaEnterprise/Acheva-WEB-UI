@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, signal } from '@angular/core';
 import { HighchartsChartComponent } from 'highcharts-angular';
 
 @Component({
@@ -9,6 +9,7 @@ import { HighchartsChartComponent } from 'highcharts-angular';
 })
 export class AnalyticsChartComponent {
   data = input<number[]>([]);
+  updateFlag = signal(false);
 
   chartOptions = computed<Highcharts.Options>(() => {
     const data = [...this.data()];
@@ -27,7 +28,8 @@ export class AnalyticsChartComponent {
       color: colorMap[index] ?? '#D8315B',
     }));
 
-    // console.log('Series: ', dataSeries);
+    // toggle flag so Highcharts refreshes:
+    // this.updateFlag.update((v) => !v);
 
     return {
       chart: {
@@ -44,6 +46,7 @@ export class AnalyticsChartComponent {
       yAxis: {
         min: 0,
         title: undefined,
+        allowDecimals: false,
         labels: {
           overflow: 'justify',
         },
@@ -67,12 +70,11 @@ export class AnalyticsChartComponent {
       accessibility: {
         enabled: false,
       },
-
       series: [
         {
           type: 'bar',
           name: 'Results',
-          data: [...dataSeries],
+          data: dataSeries,
         },
       ],
     };

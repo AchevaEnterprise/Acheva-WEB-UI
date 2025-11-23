@@ -170,7 +170,7 @@ export class ViewResultsComponent implements OnInit {
 
     const payload: ISendSelectedResult[] = results.map((result) => ({
       resultId: result._id,
-      recepient: result.receivingHandler,
+      recepient: result.roles.HOD,
     }));
 
     this.resultsService

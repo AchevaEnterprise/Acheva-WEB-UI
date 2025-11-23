@@ -21,14 +21,14 @@
             (clickEvent)="confirmSendToCC()"
           />
 
-          <app-button
+          <!-- <app-button
             *appRoleAccess="[RoleEnum.COURSE_COORDINATOR]"
             label="Send to HOD"
             class="btn-md"
             matTooltip="Send to Head of Department"
             [loading]="sendingToHOD()"
             (clickEvent)="confirmSendToHOD()"
-          />
+          /> -->
         }
 
         @if (activeSegment().value === 'VERIFIED') {

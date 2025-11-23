@@ -39,7 +39,10 @@
 
     <div
       class="flex items-center gap-3 cursor-pointer"
+      #menuTrigger="matMenuTrigger"
       [matMenuTriggerFor]="roleMenu"
+      (click)="beforeOpen(menuTrigger)"
+      (keydown)="beforeOpen(menuTrigger)"
     >
       <img
         src=""
@@ -76,18 +79,12 @@
       </div>
     </div>
     <mat-menu #roleMenu="matMenu">
-      <div
-        *appRoleAccess="[
-          RoleEnum.COURSE_ADVISOR,
-          RoleEnum.COURSE_COORDINATOR,
-          RoleEnum.LECTURER,
-        ]"
-      >
+      <div *appRoleAccess="[RoleEnum.DEAN, RoleEnum.HOD, RoleEnum.LECTURER]">
         @for (role of roles(); track role) {
           <button
             mat-menu-item
             [disabled]="role.disabled"
-            (click)="switchToRole(role.role)"
+            (click)="switchAccount(role.role)"
           >
             <span>
               {{ role.label }}
