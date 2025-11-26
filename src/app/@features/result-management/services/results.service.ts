@@ -63,20 +63,30 @@ export class ResultsService {
 
   sendResult(
     resultId: string,
-    recepientId: string
+    recepientId: string,
+    role: RoleEnum
   ): Observable<IAPIResponse<unknown>> {
+    let params = new HttpParams();
+    params = params.append('role', role);
+
     return this.http.patch<IAPIResponse<unknown>>(
       `${this.resultsUrl}/${resultId}/send/${recepientId}`,
-      {}
+      {},
+      { params }
     );
   }
 
   sendSelectedResult(
-    payload: ISendSelectedResult[]
+    payload: ISendSelectedResult[],
+    role: RoleEnum
   ): Observable<IAPIResponse<unknown>> {
+    let params = new HttpParams();
+    params = params.append('role', role);
+
     return this.http.post<IAPIResponse<unknown>>(
       `${this.resultsUrl}/selected`,
-      payload
+      payload,
+      { params }
     );
   }
 

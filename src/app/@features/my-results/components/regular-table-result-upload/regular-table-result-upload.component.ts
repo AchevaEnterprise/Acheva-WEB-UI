@@ -1,4 +1,12 @@
-import { Component, effect, inject, input, output } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  effect,
+  inject,
+  input,
+  output,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   FormArray,
   FormBuilder,
@@ -13,7 +21,6 @@ import { MatTableModule } from '@angular/material/table';
 import { ActivatedRoute } from '@angular/router';
 import { debounceTime, Subject } from 'rxjs';
 import { EmptyStateComponent } from '../../../../@shared/components/empty-state/empty-state.component';
-import { LoaderComponent } from '../../../../@shared/components/loader/loader.component';
 import { StatusBadgeComponent } from '../../../../@shared/components/status-badge/status-badge.component';
 import { RoleEnum } from '../../../auth/model/auth.model';
 import { AuthenticationService } from '../../../auth/service/auth.service';
@@ -28,7 +35,6 @@ import { IStudentGrade } from '../../../courses/models/student-grade.model';
     StatusBadgeComponent,
     EmptyStateComponent,
     MatMenuModule,
-    LoaderComponent,
   ],
   templateUrl: './regular-table-result-upload.component.html',
   styleUrl: './regular-table-result-upload.component.scss',
@@ -36,13 +42,12 @@ import { IStudentGrade } from '../../../courses/models/student-grade.model';
 })
 export class RegularTableResultUploadComponent {
   private readonly fb = inject(FormBuilder);
-  // private readonly destroyRef = inject(DestroyRef);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
   private readonly authService = inject(AuthenticationService);
   private readonly userRole = this.authService.activeAccount()
     ?.role as RoleEnum;
 
-  loading = input<boolean>(false);
   students = input<Partial<IStudentGrade>[]>([]);
   uploadResultEvent = output<Partial<IStudentGrade>>();
 
@@ -57,7 +62,6 @@ export class RegularTableResultUploadComponent {
     'total',
     'grade',
     'status',
-    // 'action',
   ];
 
   form = this.fb.group({
@@ -69,16 +73,16 @@ export class RegularTableResultUploadComponent {
     control?: string;
   }>();
   readonly completedRows = new Set<number>();
-  private readonly lastEmittedRows = new Map<number, Partial<IStudentGrade>>();
 
   constructor() {
     effect(() => {
       const students = this.students();
-      if (students?.length > 0) this.initializeFormRows(students);
+      if (students?.length > 0 && this.rows.length === 0)
+        this.initializeFormRows(students);
     });
 
     this.inputSubject
-      .pipe(debounceTime(400))
+      .pipe(debounceTime(800), takeUntilDestroyed(this.destroyRef))
       .subscribe(({ index }) => this.handleRowInput(index));
   }
 
@@ -110,10 +114,12 @@ export class RegularTableResultUploadComponent {
       Validators.max(100),
     ];
 
+    // disabled when user is not a lecturer or a course-cordinator
+    // and when staus is not draft, if there is a status
     const isDisabled =
       ![RoleEnum.COURSE_COORDINATOR, RoleEnum.LECTURER].includes(
         this.userRole
-      ) || this.status !== 'DRAFT';
+      ) && this.status !== 'DRAFT';
 
     const createNumberControl = (value: number | undefined) =>
       new FormControl({ value, disabled: isDisabled }, numberValidator);
@@ -134,7 +140,9 @@ export class RegularTableResultUploadComponent {
 
   onControlInput(index: number, controlName: string): void {
     const row = this.rows.at(index);
-    const ctrl = row.get(controlName)!;
+
+    const ctrl = row.get(controlName);
+    if (!ctrl) return;
 
     if (ctrl.invalid && (ctrl.dirty || ctrl.touched)) {
       ctrl.reset();
@@ -144,62 +152,39 @@ export class RegularTableResultUploadComponent {
       return;
     }
 
-    // this.inputSubject.next({ index, control: controlName });
-    this.handleRowInput(index);
+    this.inputSubject.next({ index, control: controlName });
   }
 
   handleRowInput(index: number): void {
     const row = this.rows.at(index);
     const controls = ['test', 'lab', 'exam'] as const;
 
-    const { test, lab, exam } = row.value as IStudentGrade;
+    const { test, lab, exam } = row.getRawValue() as IStudentGrade;
     const total = (test ?? 0) + (lab ?? 0) + (exam ?? 0);
 
-    // Set total
     if (total > 100) {
-      for (const name of controls) {
-        row.get(name)?.reset();
-      }
+      for (const name of controls) row.get(name)?.reset();
       row.get('total')?.reset();
       return;
-    } else row.get('total')?.setValue(total);
-
-    // Set Grade
-    if (total >= 70) {
-      row.get('grade')?.setValue('A');
-    } else if (total >= 60) {
-      row.get('grade')?.setValue('B');
-    } else if (total >= 50) {
-      row.get('grade')?.setValue('C');
-    } else if (total >= 45) {
-      row.get('grade')?.setValue('D');
-    } else if (total >= 40) {
-      row.get('grade')?.setValue('E');
-    } else {
-      row.get('grade')?.setValue('F');
     }
 
-    // Set Status
-    if (total <= 30) {
-      row.get('status')?.setValue('FAIL');
-    } else row.get('status')?.setValue('PASS');
+    row.get('total')?.setValue(total);
 
     if (row.valid) {
-      const prevValue = this.lastEmittedRows.get(index);
-      const currentValue = row.value as IStudentGrade;
+      // Grade
+      if (total >= 70) row.get('grade')?.setValue('A');
+      else if (total >= 60) row.get('grade')?.setValue('B');
+      else if (total >= 50) row.get('grade')?.setValue('C');
+      else if (total >= 45) row.get('grade')?.setValue('D');
+      else if (total >= 40) row.get('grade')?.setValue('E');
+      else row.get('grade')?.setValue('F');
 
-      const hasChanged =
-        !prevValue ||
-        JSON.stringify(prevValue) !== JSON.stringify(currentValue);
+      // Status
+      if (total <= 30) row.get('status')?.setValue('FAIL');
+      else row.get('status')?.setValue('PASS');
 
-      if (hasChanged) {
-        this.uploadResultEvent.emit(currentValue);
-        this.lastEmittedRows.set(index, currentValue);
-        this.completedRows.add(index);
-      }
-
-      row.markAsPristine();
-      row.updateValueAndValidity();
+      this.completedRows.add(index);
+      this.uploadResultEvent.emit(row.getRawValue());
     }
   }
 

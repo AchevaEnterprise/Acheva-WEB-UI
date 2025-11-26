@@ -92,5 +92,5 @@ export interface IResultEntriesQuery {
 
 export interface ISendSelectedResult {
   resultId: string;
-  recepient: string;
+  recipient: string;
 }

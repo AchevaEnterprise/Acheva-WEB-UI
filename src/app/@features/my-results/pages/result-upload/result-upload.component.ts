@@ -248,7 +248,7 @@ export class ResultUploadComponent implements OnInit {
   uploadResult(result: Partial<IStudentGrade>) {
     this.uploadingResult.set(true);
 
-    const { registrationNumber, fullName, test, lab, exam, total } = result!;
+    const { registrationNumber, fullName, test, lab, exam, total } = result;
     const resultEntry: ICreateResultEntry = {
       registrationNumber: registrationNumber!,
       fullName: fullName!,

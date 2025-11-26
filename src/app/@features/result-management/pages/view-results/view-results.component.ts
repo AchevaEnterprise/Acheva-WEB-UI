@@ -41,7 +41,7 @@ export class ViewResultsComponent implements OnInit {
 
   readonly courseId: string =
     this.route.snapshot.queryParamMap.get('courseId')!;
-  // readonly status: string = this.route.snapshot.queryParamMap.get('status')!;
+  readonly status: string = this.route.snapshot.queryParamMap.get('status')!;
 
   results = signal<IResult[]>([]);
   analyticsChartData = signal<number[]>([0, 0, 0, 0, 0, 0]);
@@ -71,6 +71,7 @@ export class ViewResultsComponent implements OnInit {
 
     const result$ = this.resultsService.getResults({
       course: this.courseId,
+      status: this.status,
     });
     // const analytics$ = this.resultsService.getResultAnalytics(this.resultId);
 
@@ -170,11 +171,11 @@ export class ViewResultsComponent implements OnInit {
 
     const payload: ISendSelectedResult[] = results.map((result) => ({
       resultId: result._id,
-      recepient: result.roles.HOD,
+      recipient: result.roles.HOD,
     }));
 
     this.resultsService
-      .sendSelectedResult(payload)
+      .sendSelectedResult(payload, RoleEnum.HOD)
       .pipe(finalize(() => this.sendingToHOD.set(false)))
       .subscribe({
         next: (resp) => {
@@ -184,6 +185,8 @@ export class ViewResultsComponent implements OnInit {
               'Result Sent',
               'Result has been sent to the Head of Department(HOD)'
             );
+
+            this.getResultAndAnalytics();
           }
         },
       });

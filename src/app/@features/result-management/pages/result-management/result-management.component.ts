@@ -4,7 +4,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ActivatedRoute, Router } from '@angular/router';
-import { finalize, forkJoin } from 'rxjs';
+import { finalize } from 'rxjs';
 import { RoleAccessDirective } from '../../../../@core/directives/role-access.directive';
 import { IPaginator } from '../../../../@core/models/paginator.model';
 import { ToastService } from '../../../../@core/utility/toast.service';
@@ -25,7 +25,7 @@ import { ResendToDeanComponent } from '../../components/resend-to-dean/resend-to
 import { ResultManagementFileTableComponent } from '../../components/result-management-file-table/result-management-file-table.component';
 import { ResultManagementFolderTableComponent } from '../../components/result-management-folder-table/result-management-folder-table.component';
 import { ResultStatusTrackingComponent } from '../../components/result-status-tracking/result-status-tracking.component';
-import { IResult } from '../../models/results.model';
+import { IResult, ISendSelectedResult } from '../../models/results.model';
 import { ResultsService } from '../../services/results.service';
 
 @Component({
@@ -134,7 +134,11 @@ export class ResultManagementComponent implements OnInit {
   activeSegment = signal<ISegmentSwitcher>(
     this.currentRole() === RoleEnum.HOD
       ? this.segments()[1]
-      : this.segments()[0]
+      : this.currentRole() === RoleEnum.DEAN
+        ? this.segments()[2]
+        : this.currentRole() === RoleEnum.COURSE_ADVISOR
+          ? this.segments()[3]
+          : this.segments()[0]
   );
   segmentCardLabel = signal<string>('Access your recent drafts from here');
   segmentCardIconSrc = signal<string>('icons/general/draft-icon.svg');
@@ -262,20 +266,24 @@ export class ResultManagementComponent implements OnInit {
   private sendToCC(selectedResults: IResult[]) {
     this.sendingToCC.set(true);
 
-    const resultRequest$ = selectedResults?.map((result) =>
-      this.resultService.sendResult(result._id, result.roles.COURSE_COORDINATOR)
-    );
+    const payload: ISendSelectedResult[] = selectedResults.map((result) => ({
+      resultId: result._id,
+      recipient: result.roles.COURSE_COORDINATOR,
+    }));
 
-    forkJoin(resultRequest$)
+    this.resultService
+      .sendSelectedResult(payload, RoleEnum.COURSE_COORDINATOR)
       .pipe(finalize(() => this.sendingToCC.set(false)))
       .subscribe({
         next: (resp) => {
-          this.toast.showNotification(
-            'success',
-            'Result Sent',
-            'Result has been sent to the Course Cordinator'
-          );
-          this.getResults();
+          if (resp.status) {
+            this.toast.showNotification(
+              'success',
+              'Result Sent',
+              'Result has been sent to the Course Cordinator'
+            );
+            this.getResults();
+          }
         },
       });
   }
@@ -358,19 +366,25 @@ export class ResultManagementComponent implements OnInit {
   sendToCA(selectedResults: IResult[]) {
     this.sendingToCA.set(true);
 
-    const resultRequest$ = selectedResults?.map((result) =>
-      this.resultService.sendResult(result._id, result.roles.COURSE_ADVISOR)
-    );
+    const payload: ISendSelectedResult[] = selectedResults.map((result) => ({
+      resultId: result._id,
+      recipient: result.roles.COURSE_ADVISOR,
+    }));
 
-    forkJoin(resultRequest$)
+    this.resultService
+      .sendSelectedResult(payload, RoleEnum.COURSE_ADVISOR)
       .pipe(finalize(() => this.sendingToCA.set(false)))
       .subscribe({
         next: (resp) => {
-          this.toast.showNotification(
-            'success',
-            'Result Sent',
-            'Result has been sent to the Course Advisor'
-          );
+          if (resp.status) {
+            this.toast.showNotification(
+              'success',
+              'Result Sent',
+              'Result has been sent to the Course Advisor'
+            );
+
+            this.getResults();
+          }
         },
       });
   }
@@ -440,12 +454,12 @@ export class ResultManagementComponent implements OnInit {
     });
   }
 
-  viewFolder(result: ICourse) {
-    const { _id } = result;
+  viewFolder(course: ICourse) {
+    const { _id } = course;
 
     this.router.navigate(['view-results'], {
       relativeTo: this.route,
-      queryParams: { courseId: _id },
+      queryParams: { courseId: _id, status: this.activeSegment().value },
     });
   }
 }

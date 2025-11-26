@@ -105,6 +105,10 @@ export const errorHandlerInterceptor: HttpInterceptorFn = (req, next) => {
         );
       }
 
+      if (error.status === HttpStatusCode.BadRequest) {
+        toast.showNotification('error', 'Error Occured', error.error.message);
+      }
+
       if (error.status === HttpStatusCode.NotFound) {
         toast.showNotification(
           'error',

@@ -167,33 +167,45 @@ export class ResultManagementFileTableComponent implements OnInit {
     return numSelected === numRows;
   }
 
-  /** Selects all rows if they are not all selected; otherwise clear selection. */
+  //** Check if a result row is disabled */
+  isRowDisabled(result: IResult): boolean {
+    return this.userRole === RoleEnum.LECTURER && result.hasBeenSent;
+  }
+
+  /** Whether the number of selected enabled elements matches the total number of enabled rows. */
+  isAllEnabledSelected() {
+    const enabledResults = this.dataSource().filter(
+      (r) => !this.isRowDisabled(r)
+    );
+    const numSelected = this.selection.selected.filter(
+      (r) => !this.isRowDisabled(r)
+    ).length;
+    return numSelected === enabledResults.length && enabledResults.length > 0;
+  }
+
+  /** Selects all enabled rows if they are not all selected; otherwise clear selection. */
   toggleAllRows() {
-    if (this.isAllSelected()) {
+    if (this.isAllEnabledSelected()) {
       this.selection.clear();
       return;
     }
 
-    this.selection.select(...this.results());
+    const enabledResults = this.dataSource().filter(
+      (r) => !this.isRowDisabled(r)
+    );
+    this.selection.select(...enabledResults);
   }
 
   /** The label for the checkbox on the passed row */
   checkboxLabel(row?: IResult): string {
     if (!row) {
-      return `${this.isAllSelected() ? 'deselect' : 'select'} all`;
+      return `${this.isAllEnabledSelected() ? 'deselect' : 'select'} all`;
     }
     return `${this.selection.isSelected(row) ? 'deselect' : 'select'} row ${row._id}`;
   }
 
   viewResult(result: IResult) {
-    // if (this.userRole === RoleEnum.LECTURER && result.hasBeenSent) {
-    //   this.toast.showNotification(
-    //     'error',
-    //     'Result Sent',
-    //     'Result has been sent, you cannot edit'
-    //   );
-    //   return;
-    // }
+    if (this.userRole === RoleEnum.LECTURER && result.hasBeenSent) return;
     this.viewResultEvent.emit(result);
   }
 

@@ -19,6 +19,7 @@ import {
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTableModule } from '@angular/material/table';
+import { ActivatedRoute } from '@angular/router';
 import { debounceTime, finalize, Subject } from 'rxjs';
 import { EmptyStateComponent } from '../../../../@shared/components/empty-state/empty-state.component';
 import { SearchSelectComponent } from '../../../../@shared/components/forms/search-select/search-select.component';
@@ -52,12 +53,16 @@ export class ReferenceTableResultUploadComponent {
   private readonly studentService = inject(StudentService);
   private readonly fb = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
+
+  private readonly route = inject(ActivatedRoute);
   private readonly userRole = this.authService.activeAccount()
     ?.role as RoleEnum;
 
   loading = input<boolean>(false);
   students = input<Partial<IStudentGrade>[]>([]);
   uploadResultEvent = output<Partial<IStudentGrade>>();
+
+  readonly status: string = this.route.snapshot.queryParamMap.get('status')!;
 
   readonly displayedColumns = [
     'registrationNumber',
@@ -80,7 +85,6 @@ export class ReferenceTableResultUploadComponent {
     control?: string;
   }>();
   readonly completedRows = new Set<number>();
-  private readonly lastEmittedRows = new Map<number, Partial<IStudentGrade>>();
 
   filterdStudentRegNumber = signal<
     { label: string; value: { registrationNumber: string; fullName: string } }[]
@@ -89,8 +93,11 @@ export class ReferenceTableResultUploadComponent {
 
   constructor() {
     effect(() => {
-      const list = this.students();
-      if (list?.length) this.initializeFormRows(list);
+      effect(() => {
+        const students = this.students();
+        if (students?.length > 0 && this.rows.length === 0)
+          this.initializeFormRows(students);
+      });
     });
 
     this.inputSubject
@@ -120,10 +127,12 @@ export class ReferenceTableResultUploadComponent {
       Validators.max(100),
     ];
 
-    const isDisabled = ![
-      RoleEnum.COURSE_COORDINATOR,
-      RoleEnum.LECTURER,
-    ].includes(this.userRole);
+    // disabled when user is not a lecturer or a course-cordinator
+    // and when staus is not draft, if there is a status
+    const isDisabled =
+      ![RoleEnum.COURSE_COORDINATOR, RoleEnum.LECTURER].includes(
+        this.userRole
+      ) && this.status !== 'DRAFT';
 
     const createNumberControl = (value: number | undefined) =>
       new FormControl({ value, disabled: isDisabled }, numberValidator);
@@ -163,54 +172,32 @@ export class ReferenceTableResultUploadComponent {
     const row = this.rows.at(index);
     const controls = ['test', 'lab', 'exam'] as const;
 
-    const { test, lab, exam } = row.value as IStudentGrade;
+    const { test, lab, exam } = row.getRawValue() as IStudentGrade;
     const total = (test ?? 0) + (lab ?? 0) + (exam ?? 0);
 
-    // Set total
     if (total > 100) {
-      for (const name of controls) {
-        row.get(name)?.reset();
-      }
+      for (const name of controls) row.get(name)?.reset();
       row.get('total')?.reset();
       return;
-    } else row.get('total')?.setValue(total);
-
-    // Set Grade
-    if (total >= 70) {
-      row.get('grade')?.setValue('A');
-    } else if (total >= 60) {
-      row.get('grade')?.setValue('B');
-    } else if (total >= 50) {
-      row.get('grade')?.setValue('C');
-    } else if (total >= 45) {
-      row.get('grade')?.setValue('D');
-    } else if (total >= 40) {
-      row.get('grade')?.setValue('E');
-    } else {
-      row.get('grade')?.setValue('F');
     }
 
-    // Set Status
-    if (total >= 30) {
-      row.get('status')?.setValue('PASS');
-    } else row.get('status')?.setValue('FAIL');
+    row.get('total')?.setValue(total);
 
     if (row.valid) {
-      const prevValue = this.lastEmittedRows.get(index);
-      const currentValue = row.value as IStudentGrade;
+      // Grade
+      if (total >= 70) row.get('grade')?.setValue('A');
+      else if (total >= 60) row.get('grade')?.setValue('B');
+      else if (total >= 50) row.get('grade')?.setValue('C');
+      else if (total >= 45) row.get('grade')?.setValue('D');
+      else if (total >= 40) row.get('grade')?.setValue('E');
+      else row.get('grade')?.setValue('F');
 
-      const hasChanged =
-        !prevValue ||
-        JSON.stringify(prevValue) !== JSON.stringify(currentValue);
+      // Status
+      if (total <= 30) row.get('status')?.setValue('FAIL');
+      else row.get('status')?.setValue('PASS');
 
-      if (hasChanged) {
-        this.uploadResultEvent.emit(currentValue);
-        this.lastEmittedRows.set(index, currentValue);
-        this.completedRows.add(index);
-      }
-
-      row.markAsPristine();
-      row.updateValueAndValidity();
+      this.completedRows.add(index);
+      this.uploadResultEvent.emit(row.getRawValue());
     }
   }
 

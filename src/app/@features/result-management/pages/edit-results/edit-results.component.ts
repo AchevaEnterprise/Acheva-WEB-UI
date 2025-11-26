@@ -3,7 +3,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ActivatedRoute, Router } from '@angular/router';
-import { finalize } from 'rxjs';
+import { finalize, forkJoin } from 'rxjs';
 import { RoleAccessDirective } from '../../../../@core/directives/role-access.directive';
 import { ToastService } from '../../../../@core/utility/toast.service';
 import { CardComponent } from '../../../../@shared/components/card/card.component';
@@ -17,6 +17,7 @@ import {
   SegmentSwitcherComponent,
 } from '../../../../@shared/components/segment-switcher/segment-switcher.component';
 import { RoleEnum } from '../../../auth/model/auth.model';
+import { AuthenticationService } from '../../../auth/service/auth.service';
 import { IStudentGrade } from '../../../courses/models/student-grade.model';
 import { AnalyticsChartComponent } from '../../../my-results/components/analytics-chart/analytics-chart.component';
 import { RegularTableResultUploadComponent } from '../../../my-results/components/regular-table-result-upload/regular-table-result-upload.component';
@@ -45,6 +46,7 @@ import { ResultsService } from '../../services/results.service';
   styleUrl: './edit-results.component.scss',
 })
 export class EditResultsComponent implements OnInit {
+  private readonly authService = inject(AuthenticationService);
   private readonly resultsService = inject(ResultsService);
   private readonly dialog = inject(MatDialog);
   private readonly toast = inject(ToastService);
@@ -103,6 +105,7 @@ export class EditResultsComponent implements OnInit {
 
   activeSegment = signal<ISegmentSwitcher>(this.segments()[0]);
 
+  result = signal<IResult | null>(null);
   students = signal<Record<SegmentValue, Partial<IStudentGrade>[]>>({
     REGULAR: [],
     REFERENCE: [],
@@ -112,65 +115,64 @@ export class EditResultsComponent implements OnInit {
   RoleEnum = RoleEnum;
 
   ngOnInit(): void {
-    this.getResultEntries();
+    this.getResultAndEntries();
   }
 
-  getResultEntries() {
+  getResultAndEntries() {
     this.loadingResult.set(true);
 
-    this.resultsService
-      .getResultEntries(this.resultId, {
-        category: this.activeSegment().value,
-      })
+    const result$ = this.resultsService.getResult(this.resultId);
+    const resultEntries$ = this.resultsService.getResultEntries(this.resultId, {
+      category: this.activeSegment().value,
+    });
+
+    forkJoin([result$, resultEntries$])
       .pipe(finalize(() => this.loadingResult.set(false)))
       .subscribe({
-        next: (resp) => {
-          if (resp.status) {
-            const resultEntries = resp.data;
-
-            const {
-              analytics,
-              totalPass,
-              totalFail,
-              entries,
-              studentsWithoutEntries,
-            } = resultEntries as {
-              analytics: Record<string, number>;
-              total: number;
-              totalPass: number;
-              totalFail: number;
-              entries: Partial<IStudentGrade>[];
-              studentsWithoutEntries?: Partial<IStudentGrade>[];
-            };
-
-            const analyticsData = [
-              analytics['A'] || 0,
-              analytics['B'] || 0,
-              analytics['C'] || 0,
-              analytics['D'] || 0,
-              analytics['E'] || 0,
-              analytics['F'] || 0,
-            ];
-
-            const studentResultEntries = [
-              ...entries,
-              ...(studentsWithoutEntries ?? []),
-            ];
-
-            this.analyticsChartData.set(analyticsData);
-            this.totalStudent.set(studentResultEntries.length);
-            this.totalStudentPass.set(totalPass || 0);
-            this.totalStudentFail.set(totalFail || 0);
-
-            // Set student's result entries
-            const activeCategory = this.activeSegment().value as SegmentValue;
-            this.students.update((students) => {
-              students[activeCategory] = studentResultEntries;
-              return students;
-            });
-          }
+        next: ([result, resultEntries]) => {
+          if (result.status) this.result.set(result.data);
+          if (resultEntries.status)
+            this.setResultEntriesDetails(resultEntries.data);
         },
       });
+  }
+
+  setResultEntriesDetails(resultEntries: unknown) {
+    const { analytics, totalPass, totalFail, entries, studentsWithoutEntries } =
+      resultEntries as {
+        analytics: Record<string, number>;
+        total: number;
+        totalPass: number;
+        totalFail: number;
+        entries: Partial<IStudentGrade>[];
+        studentsWithoutEntries?: Partial<IStudentGrade>[];
+      };
+
+    const analyticsData = [
+      analytics['A'] || 0,
+      analytics['B'] || 0,
+      analytics['C'] || 0,
+      analytics['D'] || 0,
+      analytics['E'] || 0,
+      analytics['F'] || 0,
+    ];
+
+    const studentResultEntries = [
+      ...entries,
+      ...(studentsWithoutEntries ?? []),
+    ];
+
+    this.analyticsChartData.set(analyticsData);
+    this.totalStudent.set(studentResultEntries.length);
+    this.totalStudentPass.set(totalPass || 0);
+    this.totalStudentFail.set(totalFail || 0);
+
+    // Set student's result entries
+    const activeCategory = this.activeSegment().value as SegmentValue;
+    this.students.update((students) => {
+      students[activeCategory] = studentResultEntries;
+      return students;
+    });
   }
 
   switchSegment(value: ISegmentSwitcher['value']): void {
@@ -178,7 +180,7 @@ export class EditResultsComponent implements OnInit {
       (segment: ISegmentSwitcher) => segment.value === value
     )!;
     this.activeSegment.set(selectedSegment);
-    this.getResultEntries();
+    this.getResultAndEntries();
   }
 
   uploadResult(result: Partial<IStudentGrade>) {
@@ -205,7 +207,7 @@ export class EditResultsComponent implements OnInit {
             return;
           }
 
-          this.getResultEntries();
+          this.getResultAndEntries();
         },
       });
   }
@@ -245,17 +247,28 @@ export class EditResultsComponent implements OnInit {
 
   approve() {
     this.approvingResult.set(true);
+    const { roles } = this.result() as IResult;
+    const user = this.authService.activeAccount()!;
 
-    this.resultsService
-      .approveOrRejectResult(this.resultId, 'APPROVED')
+    const approveRequest$ = this.resultsService.approveOrRejectResult(
+      this.resultId,
+      'APPROVED'
+    );
+    const sendResultRequest$ = this.resultsService.sendResult(
+      this.resultId,
+      user.role === RoleEnum.HOD ? roles.DEAN : roles.HOD,
+      user.role === RoleEnum.HOD ? RoleEnum.DEAN : RoleEnum.HOD
+    );
+
+    forkJoin([approveRequest$, sendResultRequest$])
       .pipe(finalize(() => this.approvingResult.set(false)))
       .subscribe({
-        next: (resp) => {
-          if (resp.status) {
+        next: ([approvalResp, sentResultResp]) => {
+          if (approvalResp.status && sentResultResp.status) {
             this.toast.showNotification(
               'success',
-              'Result Approved',
-              `Result submission has been approved`
+              'Result Approved & Sent',
+              `Result has been sent and approved successfully`
             );
           }
         },
@@ -284,17 +297,31 @@ export class EditResultsComponent implements OnInit {
 
   reject(reason: string) {
     this.rejectingResult.set(true);
+    const { roles } = this.result() as IResult;
+    const user = this.authService.activeAccount()!;
 
-    this.resultsService
-      .approveOrRejectResult(this.resultId, 'REJECTED', reason)
+    const rejectRequest$ = this.resultsService.approveOrRejectResult(
+      this.resultId,
+      'REJECTED',
+      reason
+    );
+
+    // If HOD rejects goes to Course Coordinator if Dean rejects it goes to HOD
+    const sendToCCRequest$ = this.resultsService.sendResult(
+      this.resultId,
+      user.role === RoleEnum.HOD ? roles.COURSE_COORDINATOR : roles.HOD,
+      user.role === RoleEnum.HOD ? RoleEnum.COURSE_COORDINATOR : RoleEnum.HOD
+    );
+
+    forkJoin([rejectRequest$, sendToCCRequest$])
       .pipe(finalize(() => this.rejectingResult.set(false)))
       .subscribe({
-        next: (resp) => {
-          if (resp.status) {
+        next: ([rejectResp, sentResultResp]) => {
+          if (rejectResp.status && sentResultResp.status) {
             this.toast.showNotification(
               'success',
               'Result Rejected',
-              `Result submission has been rejected`
+              `Result has been sent and rejected successfully`
             );
           }
         },

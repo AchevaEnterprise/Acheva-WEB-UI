@@ -180,7 +180,6 @@
       @case ('REGULAR') {
         <app-regular-table-result-upload
           #regularTableResultUploadRef
-          [loading]="loadingResult()"
           [students]="students()['REGULAR']"
           (uploadResultEvent)="uploadResult($event)"
         />
@@ -188,7 +187,6 @@
       @case ('REFERENCE') {
         <app-reference-table-result-upload
           #referenceTableResultUploadRef
-          [loading]="loadingResult()"
           [students]="students()['REFERENCE']"
           (uploadResultEvent)="uploadResult($event)"
         />
