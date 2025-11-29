@@ -28,7 +28,7 @@ import { StatusBadgeComponent } from '../../../../@shared/components/status-badg
 import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
 import { RoleEnum } from '../../../auth/model/auth.model';
 import { AuthenticationService } from '../../../auth/service/auth.service';
-import { IStudentGrade } from '../../../courses/models/student-grade.model';
+import { IStudentGrade } from '../../../students/models/student.model';
 import { StudentService } from '../../../students/services/student.service';
 
 @Component({
@@ -220,9 +220,8 @@ export class ReferenceTableResultUploadComponent {
   searchStudentsByRegNo(regNo: string) {
     this.searchingStudent.set(true);
 
-    const schoolId = this.authService.activeAccount()?.school._id;
     this.studentService
-      .getStudentByRegNo(regNo, schoolId!)
+      .getStudentByRegNo(regNo)
       .pipe(finalize(() => this.searchingStudent.set(false)))
       .subscribe({
         next: (resp) => {

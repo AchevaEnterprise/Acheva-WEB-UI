@@ -4,7 +4,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ActivatedRoute, Router } from '@angular/router';
-import { finalize } from 'rxjs';
+import { finalize, forkJoin } from 'rxjs';
 import { RoleAccessDirective } from '../../../../@core/directives/role-access.directive';
 import { IPaginator } from '../../../../@core/models/paginator.model';
 import { ToastService } from '../../../../@core/utility/toast.service';
@@ -56,7 +56,7 @@ export class ResultManagementComponent implements OnInit {
   private readonly authService = inject(AuthenticationService);
   private readonly toast = inject(ToastService);
 
-  currentRole = signal<RoleEnum>(this.authService.activeAccount()!.role);
+  currentRole = signal<RoleEnum>(this.authService.activeAccount()?.role!);
 
   fileTableRef = viewChild<ResultManagementFileTableComponent>('fileTableRef');
   folderTableRef =
@@ -76,7 +76,6 @@ export class ResultManagementComponent implements OnInit {
   sendingToHOD = signal<boolean>(false);
   sendingToCA = signal<boolean>(false);
   publishing = signal<boolean>(false);
-  importing = signal<boolean>(false);
 
   segments = signal<ISegmentSwitcher[]>([
     {
@@ -236,6 +235,10 @@ export class ResultManagementComponent implements OnInit {
     this.getResults();
   }
 
+  confirmSendResult(role: RoleEnum[]) {
+    // const
+  }
+
   confirmSendToCC() {
     const selectedResults: IResult[] = this.fileTableRef()?.selection.selected!;
 
@@ -389,9 +392,64 @@ export class ResultManagementComponent implements OnInit {
       });
   }
 
-  publishResult() {}
+  confirmPublishResult() {
+    const selectedResults = this.fileTableRef()?.selection.selected;
 
-  importResult() {}
+    if (!selectedResults || selectedResults.length < 1) {
+      this.toast.showNotification(
+        'error',
+        'No Result(s) Selected',
+        'You have not selected any result(s) to be published'
+      );
+      return;
+    }
+
+    this.dialog
+      .open(ConfirmationComponent, {
+        width: '600px',
+        data: {
+          message: `You're about to publish ${selectedResults.length} results. This action is irreversible, Are you sure you want to continue?`,
+        },
+      })
+      .afterClosed()
+      .subscribe({
+        next: (confirmed: boolean) => {
+          if (confirmed) this.publishResult(selectedResults);
+        },
+      });
+  }
+
+  publishResult(selectedResults: IResult[]) {
+    this.publishing.set(true);
+
+    const publishResultRequests$ = selectedResults?.map((result: IResult) =>
+      this.resultService.publishResult(result._id)
+    );
+
+    forkJoin(publishResultRequests$)
+      .pipe(finalize(() => this.publishing.set(false)))
+      .subscribe({
+        next: (resp) => {
+          if (resp) {
+            this.toast.showNotification(
+              'success',
+              'Result Published',
+              'Result has been published successfully'
+            );
+
+            this.getResults();
+          }
+        },
+      });
+  }
+
+  importResult() {
+    this.router.navigate(['/courses/details'], {
+      queryParams: {
+        new: true,
+      },
+    });
+  }
 
   confirmResendToCC() {
     const selectedResults: IResult[] = this.fileTableRef()?.selection.selected!;

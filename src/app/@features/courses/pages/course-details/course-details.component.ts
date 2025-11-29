@@ -133,7 +133,7 @@ export class CourseDetailsComponent implements OnInit {
   loadUserSchool() {
     const { school } = this.authService.activeAccount()!;
 
-    this.schoolService.getSchoolById(school._id).subscribe({
+    this.schoolService.getSchoolById(school!._id).subscribe({
       next: (resp) => {
         const { _id } = resp.data;
         this.school.set(resp.data);

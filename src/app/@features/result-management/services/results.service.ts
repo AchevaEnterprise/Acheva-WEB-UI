@@ -234,4 +234,11 @@ export class ResultsService {
       }
     );
   }
+
+  publishResult(resultId: string) {
+    return this.http.patch<IAPIResponse<unknown>>(
+      `${this.resultsUrl}/${resultId}/publish`,
+      {}
+    );
+  }
 }

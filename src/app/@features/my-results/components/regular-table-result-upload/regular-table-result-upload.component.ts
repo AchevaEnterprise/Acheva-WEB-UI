@@ -24,7 +24,7 @@ import { EmptyStateComponent } from '../../../../@shared/components/empty-state/
 import { StatusBadgeComponent } from '../../../../@shared/components/status-badge/status-badge.component';
 import { RoleEnum } from '../../../auth/model/auth.model';
 import { AuthenticationService } from '../../../auth/service/auth.service';
-import { IStudentGrade } from '../../../courses/models/student-grade.model';
+import { IStudentGrade } from '../../../students/models/student.model';
 
 @Component({
   selector: 'app-regular-table-result-upload',

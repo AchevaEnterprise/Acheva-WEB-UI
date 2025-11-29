@@ -11,3 +11,50 @@ export interface IStudent {
   accountType: 'STUDENT';
   emailVerified: boolean;
 }
+
+export interface IStudentGrade {
+  _id?: string;
+  registrationNumber: string;
+  fullName: string;
+  test: number;
+  lab: number;
+  exam: number;
+  total: number;
+  grade: string;
+  status: string;
+}
+
+export interface IStudentQuery {
+  school: string;
+  department: string;
+  level: string;
+}
+
+export interface IStudentPerformance {
+  _id: string;
+  courseCode: string;
+  total: number;
+}
+
+interface StudentResultType {
+  _id: string;
+  test: number;
+  lab: number;
+  exam: number;
+  total: number;
+  grade: string;
+  status: string;
+  courseLoad: number;
+  courseCode: string;
+}
+
+export interface IStudentResult {
+  gpa: number;
+  results: StudentResultType;
+}
+
+export interface IStudentAnalytics {
+  results: number;
+  departmentalDues: number;
+  hasPaidDues: boolean;
+}

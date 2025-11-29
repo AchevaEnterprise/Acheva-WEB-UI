@@ -27,7 +27,7 @@
     <app-loader />
   } @else {
     @if (paginatedLecturers().length > 0) {
-      <div class="w-full overflow-auto">
+      <div class="w-full overflow-auto max-h-[50vh]">
         <table mat-table [dataSource]="paginatedLecturers()">
           <ng-container matColumnDef="name">
             <th mat-header-cell *matHeaderCellDef>NAME</th>

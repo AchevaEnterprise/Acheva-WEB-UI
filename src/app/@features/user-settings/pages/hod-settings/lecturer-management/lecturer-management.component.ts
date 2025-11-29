@@ -76,7 +76,7 @@ export class LecturerManagementComponent implements OnInit, OnDestroy {
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly destroy$ = new Subject<void>();
 
-  userDepartmentId = this.authService.activeAccount()?.department._id;
+  userDepartmentId = this.authService.activeAccount()?.department!._id;
 
   // Form and table management
   form: FormGroup;

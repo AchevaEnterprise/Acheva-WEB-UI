@@ -43,7 +43,7 @@ export class AssignCourseCoordinatorComponent implements OnInit {
   });
 
   lecturers = signal<{ label: string; value: string }[]>([]);
-  userDepartmentId = this.authService.activeAccount()?.department._id;
+  userDepartmentId = this.authService.activeAccount()?.department!._id;
 
   ngOnInit(): void {
     this.getLecturers();

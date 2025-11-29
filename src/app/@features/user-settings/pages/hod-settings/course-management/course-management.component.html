@@ -45,7 +45,7 @@
       <app-loader />
     } @else {
       @if (dataSource().length > 0) {
-        <div class="w-full overflow-auto">
+        <div class="w-full overflow-auto max-h-[50vh]">
           <table mat-table [dataSource]="dataSource()">
             <ng-container matColumnDef="courseTitle">
               <th mat-header-cell *matHeaderCellDef>COURSE TITLE</th>

@@ -48,8 +48,8 @@ export class RoleAccessDirective {
     if (!account || (account && !account.role)) return;
 
     const hasAccess =
-      this.allowedRoles.includes(account.role) &&
-      this.rolesToMatch.includes(account.role);
+      this.allowedRoles.includes(account.role!) &&
+      this.rolesToMatch.includes(account.role!);
 
     if (hasAccess) {
       this.viewContainer.createEmbeddedView(this.templateRef);

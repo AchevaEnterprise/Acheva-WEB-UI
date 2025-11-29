@@ -31,8 +31,8 @@ export class AuthenticationService {
   private readonly authUrl = `${environment.BASE_URL}/auth`;
   private readonly baseUrl = `${environment.BASE_URL}`;
 
-  accounts = signal<IAccount[]>([]);
-  activeAccount = signal<IAccount | null>(null);
+  accounts = signal<Partial<IAccount>[]>([]);
+  activeAccount = signal<Partial<IAccount> | null>(null);
 
   setToken(token: string) {
     localStorage.setItem(STORAGE_KEYS.TOKEN, token);
@@ -122,13 +122,13 @@ export class AuthenticationService {
       .pipe(
         tap((res) => {
           if (res.status) {
-            const { accessToken, refreshToken } = res.data;
+            const { accessToken, refreshToken, ...rest } = res.data;
 
             this.setToken(accessToken);
             this.setRefreshToken(refreshToken);
 
             // Sets the signal state for the active account
-            this.activeAccount.set(res.data);
+            this.activeAccount.set(rest);
             localStorage.setItem(
               STORAGE_KEYS.ACTIVE_ACCOUNT,
               JSON.stringify(this.activeAccount())

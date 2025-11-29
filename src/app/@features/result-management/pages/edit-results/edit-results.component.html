@@ -36,14 +36,6 @@
 
     <div class="flex flex-wrap justify-end gap-3 items-center">
       <app-button
-        *appRoleAccess="[RoleEnum.LECTURER, RoleEnum.COURSE_COORDINATOR]"
-        label="Save Changes"
-        icon="icons/general/save-btn-icon.svg"
-        class="btn-md"
-        (clickEvent)="saveChanges()"
-      />
-
-      <app-button
         *appRoleAccess="[RoleEnum.HOD, RoleEnum.DEAN]"
         label="Approve"
         icon="icons/general/approve-btn-icon.svg"
@@ -66,20 +58,8 @@
         *appRoleAccess="[RoleEnum.COURSE_ADVISOR]"
         label="Publish"
         class="btn-md"
-      />
-
-      <app-button
-        *appRoleAccess="[RoleEnum.COURSE_ADVISOR]"
-        label="Replace Result"
-        class="btn-md"
-      />
-
-      <app-button
-        *appRoleAccess="[RoleEnum.LECTURER, RoleEnum.COURSE_COORDINATOR]"
-        label="Delete File"
-        type="clear"
-        icon="icons/general/trash-icon.svg"
-        class="btn-md"
+        [loading]="publishingResult()"
+        (clickEvent)="confirmPublish()"
       />
     </div>
   </div>

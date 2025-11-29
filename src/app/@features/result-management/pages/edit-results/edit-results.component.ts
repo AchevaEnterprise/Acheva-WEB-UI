@@ -2,7 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { finalize, forkJoin } from 'rxjs';
 import { RoleAccessDirective } from '../../../../@core/directives/role-access.directive';
 import { ToastService } from '../../../../@core/utility/toast.service';
@@ -18,9 +18,9 @@ import {
 } from '../../../../@shared/components/segment-switcher/segment-switcher.component';
 import { RoleEnum } from '../../../auth/model/auth.model';
 import { AuthenticationService } from '../../../auth/service/auth.service';
-import { IStudentGrade } from '../../../courses/models/student-grade.model';
 import { AnalyticsChartComponent } from '../../../my-results/components/analytics-chart/analytics-chart.component';
 import { RegularTableResultUploadComponent } from '../../../my-results/components/regular-table-result-upload/regular-table-result-upload.component';
+import { IStudentGrade } from '../../../students/models/student.model';
 import {
   ICreateResultEntry,
   IResult,
@@ -51,7 +51,6 @@ export class EditResultsComponent implements OnInit {
   private readonly dialog = inject(MatDialog);
   private readonly toast = inject(ToastService);
   private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
 
   readonly resultId: string =
     this.route.snapshot.queryParamMap.get('resultId')!;
@@ -66,6 +65,7 @@ export class EditResultsComponent implements OnInit {
   uploadingResult = signal<boolean>(false);
   approvingResult = signal<boolean>(false);
   rejectingResult = signal<boolean>(false);
+  publishingResult = signal<boolean>(false);
 
   segments = signal<ISegmentSwitcher[]>([
     {
@@ -212,21 +212,6 @@ export class EditResultsComponent implements OnInit {
       });
   }
 
-  saveChanges() {
-    const dialogRef = this.dialog.open(ConfirmationComponent, {
-      width: '600px',
-      data: {
-        message:
-          'Are you sure you want to save these changes?  if you save these changes, You can now send to the course coordinator.',
-        subTitle: 'Kindly confirm this action',
-      },
-    });
-
-    dialogRef.afterClosed().subscribe((confirmed: boolean) => {
-      if (confirmed) this.router.navigate(['/result-management']);
-    });
-  }
-
   confirmApproval() {
     const message = `You're about to send this vetted result to the Dean. This action is irreversible. Are you sure you want to continue?`;
 
@@ -322,6 +307,50 @@ export class EditResultsComponent implements OnInit {
               'success',
               'Result Rejected',
               `Result has been sent and rejected successfully`
+            );
+          }
+        },
+        error: (error) => {
+          this.toast.showNotification(
+            'error',
+            'Error Occured',
+            error.error.message
+          );
+        },
+      });
+  }
+
+  confirmPublish() {
+    const message = `You're about to send this vetted result to the Dean. This action is irreversible. Are you sure you want to continue?`;
+
+    this.dialog
+      .open(ConfirmationComponent, {
+        width: '600px',
+        data: {
+          message: message,
+        },
+      })
+      .afterClosed()
+      .subscribe({
+        next: (confirmed: boolean) => {
+          if (confirmed) this.publishResult();
+        },
+      });
+  }
+
+  publishResult() {
+    this.publishingResult.set(true);
+
+    this.resultsService
+      .publishResult(this.resultId)
+      .pipe(finalize(() => this.publishingResult.set(false)))
+      .subscribe({
+        next: (resp) => {
+          if (resp.status) {
+            this.toast.showNotification(
+              'success',
+              'Result Published',
+              `Result has been published successfully`
             );
           }
         },

@@ -56,7 +56,7 @@
     <app-loader />
   } @else {
     @if (dataSource().length > 0) {
-      <div class="w-full overflow-auto">
+      <div class="w-full overflow-auto max-h-[50vh]">
         <table mat-table [dataSource]="dataSource()" multiTemplateDataRows>
           <!-- Checkbox Column -->
           <ng-container matColumnDef="select">

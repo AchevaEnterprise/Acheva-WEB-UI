@@ -77,13 +77,13 @@ export class CreateCourseComponent {
   // DATA
   // ========================================
   private readonly userSchoolId =
-    this.authService.activeAccount()?.school._id || '';
+    this.authService.activeAccount()?.school!._id || '';
 
   private readonly userFacultyId =
-    this.authService.activeAccount()?.faculty._id || '';
+    this.authService.activeAccount()?.faculty!._id || '';
 
   private readonly userDepartmentId =
-    this.authService.activeAccount()?.department._id || '';
+    this.authService.activeAccount()?.department!._id || '';
 
   courses = signal<ICourse[]>([]);
   invalidCourseCodeError: string | null = null;

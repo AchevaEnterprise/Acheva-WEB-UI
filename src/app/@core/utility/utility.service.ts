@@ -2,6 +2,11 @@ import { Injectable, signal } from '@angular/core';
 import * as FileSaver from 'file-saver';
 import * as XLSX from 'xlsx';
 
+interface ExcelJsonResult {
+  columns: string[];
+  records: Record<string, unknown>[];
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -66,35 +71,53 @@ export class UtilityService {
     return admissionYear.reverse();
   }
 
-  convertExcelToJson(
-    file: File
-  ): Promise<{ columns: string[]; records: any[] }> {
+  private toCamelCase(str: string): string {
+    return str
+      .replace(/[_-]+/g, ' ')
+      .replace(/\s+(\w)/g, (_, c: string) => c.toUpperCase())
+      .replace(/\s+/g, '')
+      .replace(/^\w/, (c: string) => c.toLowerCase());
+  }
+
+  convertExcelToJson(file: File): Promise<ExcelJsonResult> {
     return new Promise((resolve, reject) => {
-      const reader: FileReader = new FileReader();
+      const reader = new FileReader();
+
       reader.onload = (e: ProgressEvent<FileReader>) => {
-        const data: string =
-          e.target && typeof e.target.result === 'string'
-            ? (e.target.result as string)
-            : '';
-        const workbook: XLSX.WorkBook = XLSX.read(data, {
-          type: 'binary',
-        });
+        const result = e.target?.result;
 
-        // Read first sheet
-        const sheetName: string = workbook.SheetNames[0];
-        const worksheet: XLSX.WorkSheet = workbook.Sheets[sheetName];
+        if (typeof result !== 'string') {
+          reject(new Error('Invalid file format'));
+          return;
+        }
 
-        // Convert to JSON
-        const jsonData: any[] = XLSX.utils.sheet_to_json(worksheet, {
-          raw: true,
-        });
+        const workbook = XLSX.read(result, { type: 'binary' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+
+        const jsonData = XLSX.utils.sheet_to_json<Record<string, unknown>>(
+          worksheet,
+          { raw: true }
+        );
 
         if (jsonData.length > 0) {
-          const columns = Object.keys(jsonData[0]);
-          const records = jsonData;
+          const records = jsonData.map((row) => {
+            const transformed: Record<string, unknown> = {};
+
+            for (const key of Object.keys(row)) {
+              const camelKey = this.toCamelCase(key);
+              transformed[camelKey] = row[key];
+            }
+
+            return transformed;
+          });
+
+          const columns = Object.keys(records[0]);
+
           resolve({ columns, records });
         }
       };
+
       reader.onerror = (error) => reject(error);
       reader.readAsBinaryString(file);
     });

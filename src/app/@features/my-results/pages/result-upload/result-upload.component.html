@@ -134,14 +134,38 @@
         class="btn-md"
         [disabled]="!resultEntryCompleted()"
         (clickEvent)="saveChanges()"
+        *appRoleAccess="[RoleEnum.LECTURER]"
       />
 
       <app-button
-        label="Upload Results"
-        type="outline"
+        *appRoleAccess="[RoleEnum.COURSE_ADVISOR]"
+        label="Publish"
         class="btn-md"
-        (clickEvent)="uploadResultDocument()"
+        [loading]="publishing()"
+        (clickEvent)="confirmPublish()"
       />
+
+      @if (!isUploaded()) {
+        <app-button
+          label="Upload Results"
+          type="outline"
+          class="btn-md"
+          [loading]="uploading()"
+          (clickEvent)="uploadResultDocument()"
+          *appRoleAccess="[RoleEnum.LECTURER, RoleEnum.COURSE_ADVISOR]"
+        />
+      }
+
+      @if (isUploaded()) {
+        <app-button
+          label="Replace Results"
+          type="outline"
+          class="btn-md"
+          icon="icons/general/replace-file-icon.svg"
+          (clickEvent)="replaceResultDocument()"
+          *appRoleAccess="[RoleEnum.LECTURER, RoleEnum.COURSE_ADVISOR]"
+        />
+      }
 
       <app-button
         label="Delete File"

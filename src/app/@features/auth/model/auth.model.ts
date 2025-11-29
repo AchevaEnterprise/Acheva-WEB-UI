@@ -51,12 +51,21 @@ export interface IAccount {
   id: string;
   firstname: string;
   lastname: string;
+  middlename: string;
   school: ISchool;
   faculty: IFaculty;
   department: IDepartment;
   email: string;
   role: RoleEnum;
   otherRoles: RoleEnum[];
+
+  // Added
+  titles: string[];
+  accessLevel: string;
+  accountType: string;
+  assignedLevel: string;
+  assignedLevelAdmissionYear: string;
+  masterUserId: string;
 }
 
 export interface IResetPassword {

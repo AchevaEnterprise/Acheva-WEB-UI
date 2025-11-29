@@ -1,5 +1,5 @@
 @if (students().length > 0) {
-  <form [formGroup]="form" class="w-full overflow-auto">
+  <form [formGroup]="form" class="w-full overflow-auto max-h-[50vh]">
     <div formArrayName="rows">
       <table mat-table [dataSource]="rows.controls">
         <ng-container matColumnDef="registrationNumber">

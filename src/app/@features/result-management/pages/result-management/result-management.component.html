@@ -46,7 +46,7 @@
             label="Publish"
             class="btn-md"
             [loading]="publishing()"
-            (clickEvent)="publishResult()"
+            (clickEvent)="confirmPublishResult()"
           />
         }
 
@@ -73,7 +73,6 @@
             label="Import"
             class="btn-md"
             type="outline"
-            [loading]="importing()"
             (clickEvent)="importResult()"
           />
         }
