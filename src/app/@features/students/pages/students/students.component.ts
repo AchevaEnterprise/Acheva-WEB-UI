@@ -6,12 +6,18 @@ import { SearchInputComponent } from '../../../../@shared/components/forms/searc
 import { AuthenticationService } from '../../../auth/service/auth.service';
 import { IStudent } from '../../models/student.model';
 import { StudentService } from '../../services/student.service';
-import { LoaderComponent } from "../../../../@shared/components/loader/loader.component";
-import { EmptyStateComponent } from "../../../../@shared/components/empty-state/empty-state.component";
+import { LoaderComponent } from '../../../../@shared/components/loader/loader.component';
+import { EmptyStateComponent } from '../../../../@shared/components/empty-state/empty-state.component';
 
 @Component({
   selector: 'app-students',
-  imports: [SearchInputComponent, ButtonComponent, MatTableModule, LoaderComponent, EmptyStateComponent],
+  imports: [
+    SearchInputComponent,
+    ButtonComponent,
+    MatTableModule,
+    LoaderComponent,
+    EmptyStateComponent,
+  ],
   templateUrl: './students.component.html',
   styleUrl: './students.component.scss',
 })
