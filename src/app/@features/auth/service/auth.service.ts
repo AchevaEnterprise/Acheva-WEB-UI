@@ -157,9 +157,6 @@ export class AuthenticationService {
               STORAGE_KEYS.ACTIVE_ACCOUNT,
               JSON.stringify(this.activeAccount())
             );
-
-            // Navigate based on new role
-            location.reload();
           }
         })
       );

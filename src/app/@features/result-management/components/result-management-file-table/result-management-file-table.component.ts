@@ -136,6 +136,8 @@ export class ResultManagementFileTableComponent implements OnInit {
   }
 
   getFaculties(schoolId: string): void {
+    if (!schoolId) return;
+
     this.store.dispatch(loadFaculties({ schoolId }));
     this.store
       .select(facultiesSelector)

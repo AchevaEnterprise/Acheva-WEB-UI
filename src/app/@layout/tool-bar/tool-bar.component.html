@@ -54,6 +54,11 @@
       <div>
         <p class="font-medium">
           {{ activeAccount()?.firstname }} {{ activeAccount()?.lastname }}
+          <span
+            *appRoleAccess="[RoleEnum.COURSE_ADVISOR]"
+            class="px-[5px] py-[2px] rounded-[8px] bg-blue-400 text-white text-[0.75rem]"
+            >{{ activeAccount()?.assignedLevel }} LVL</span
+          >
         </p>
         <p class="text-neutral-500 text-sm">
           @switch (activeAccount()?.role) {

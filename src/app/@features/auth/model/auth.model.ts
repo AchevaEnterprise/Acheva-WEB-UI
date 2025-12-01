@@ -47,22 +47,11 @@ export interface IAuthProfile {
   refreshToken: string;
 }
 
-export interface IAccount {
-  id: string;
-  firstname: string;
-  lastname: string;
+export interface IAccount
+  extends Omit<IAuthProfile, 'accessToken' | 'refreshToken'> {
   middlename: string;
-  school: ISchool;
-  faculty: IFaculty;
-  department: IDepartment;
-  email: string;
-  role: RoleEnum;
-  otherRoles: RoleEnum[];
-
-  // Added
   titles: string[];
   accessLevel: string;
-  accountType: string;
   assignedLevel: string;
   assignedLevelAdmissionYear: string;
   masterUserId: string;

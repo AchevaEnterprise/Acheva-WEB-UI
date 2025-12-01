@@ -55,6 +55,7 @@
             *appRoleAccess="[RoleEnum.HOD]"
             label="Resend"
             class="btn-md"
+            [loading]="resending()"
             [matMenuTriggerFor]="resendMenu"
           />
           <mat-menu #resendMenu="matMenu">

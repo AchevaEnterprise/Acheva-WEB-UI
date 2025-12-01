@@ -120,6 +120,8 @@ export class SideBarComponent {
               'Role Switched',
               `You are operating as a ${role}`
             );
+
+            setTimeout(() => location.reload(), 1500);
           }
         },
       });

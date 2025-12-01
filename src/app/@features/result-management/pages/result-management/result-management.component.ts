@@ -75,6 +75,7 @@ export class ResultManagementComponent implements OnInit {
   sendingToCC = signal<boolean>(false);
   sendingToHOD = signal<boolean>(false);
   sendingToCA = signal<boolean>(false);
+  resending = signal<boolean>(false);
   publishing = signal<boolean>(false);
 
   segments = signal<ISegmentSwitcher[]>([
@@ -470,12 +471,10 @@ export class ResultManagementComponent implements OnInit {
       .afterClosed()
       .subscribe({
         next: (confirmed: boolean) => {
-          if (confirmed) this.resendToCC();
+          if (confirmed) this.sendToCC(selectedResults);
         },
       });
   }
-
-  resendToCC() {}
 
   confirmResendToDean() {
     const selectedResults: IResult[] = this.fileTableRef()?.selection.selected!;
@@ -496,12 +495,36 @@ export class ResultManagementComponent implements OnInit {
       .afterClosed()
       .subscribe({
         next: (confirmed: boolean) => {
-          if (confirmed) this.resendToDean();
+          if (confirmed) this.resendToDean(selectedResults);
         },
       });
   }
 
-  resendToDean() {}
+  resendToDean(selectedResults: IResult[]) {
+    this.resending.set(true);
+
+    const payload: ISendSelectedResult[] = selectedResults.map((result) => ({
+      resultId: result._id,
+      recipient: result.roles.DEAN,
+    }));
+
+    this.resultService
+      .sendSelectedResult(payload, RoleEnum.DEAN)
+      .pipe(finalize(() => this.resending.set(false)))
+      .subscribe({
+        next: (resp) => {
+          if (resp.status) {
+            this.toast.showNotification(
+              'success',
+              'Result Sent',
+              'Result has been re-sent to the Dean'
+            );
+
+            this.getResults();
+          }
+        },
+      });
+  }
 
   viewResult(result: IResult) {
     const { _id, status } = result;
