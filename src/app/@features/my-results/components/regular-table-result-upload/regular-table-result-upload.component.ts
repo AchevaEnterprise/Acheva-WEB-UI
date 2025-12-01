@@ -1,3 +1,4 @@
+import { TitleCasePipe } from '@angular/common';
 import {
   Component,
   DestroyRef,
@@ -5,6 +6,7 @@ import {
   inject,
   input,
   output,
+  signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
@@ -39,20 +41,24 @@ import { IStudentGrade } from '../../../students/models/student.model';
   templateUrl: './regular-table-result-upload.component.html',
   styleUrl: './regular-table-result-upload.component.scss',
   exportAs: 'regularTableResultUploadRef',
+  providers: [TitleCasePipe],
 })
 export class RegularTableResultUploadComponent {
   private readonly fb = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
+  private readonly titlecasePipe = inject(TitleCasePipe);
   private readonly authService = inject(AuthenticationService);
   private readonly userRole = this.authService.activeAccount()
     ?.role as RoleEnum;
 
   students = input<Partial<IStudentGrade>[]>([]);
+  refreshTable = input<boolean>(false);
   uploadResultEvent = output<Partial<IStudentGrade>>();
 
   readonly status: string = this.route.snapshot.queryParamMap.get('status')!;
 
+  dataSource = signal<FormGroup[]>([]);
   readonly displayedColumns = [
     'registrationNumber',
     'fullName',
@@ -77,8 +83,14 @@ export class RegularTableResultUploadComponent {
   constructor() {
     effect(() => {
       const students = this.students();
-      if (students?.length > 0 && this.rows.length === 0)
+      const refresh = this.refreshTable();
+
+      if (refresh) {
         this.initializeFormRows(students);
+      } else if (students?.length > 0 && this.rows.length === 0) {
+        console.warn('Initializing rows for the first time');
+        this.initializeFormRows(students);
+      }
     });
 
     this.inputSubject
@@ -94,17 +106,18 @@ export class RegularTableResultUploadComponent {
     this.completedRows.clear();
     this.rows.clear();
 
-    const sortedStudents = students?.sort((a, b) => {
-      const nameA = a.fullName ?? '';
-      const nameB = b.fullName ?? '';
-      return nameA.localeCompare(nameB);
-    });
+    const sortedStudents = [...students].sort((a, b) =>
+      (a.fullName ?? '').localeCompare(b.fullName ?? '')
+    );
 
-    for (const student of sortedStudents) {
-      this.rows.push(this.buildStudentRow(student));
+    for (const stu of sortedStudents) {
+      this.rows.push(this.buildStudentRow(stu));
     }
 
     this.rows.markAsPristine();
+
+    // Update the table datasource so Material detects changes
+    this.dataSource.set([...this.rows.controls]);
   }
 
   private buildStudentRow(student: Partial<IStudentGrade>): FormGroup {
@@ -126,7 +139,10 @@ export class RegularTableResultUploadComponent {
 
     return this.fb.group({
       registrationNumber: [student.registrationNumber, Validators.required],
-      fullName: [student.fullName, Validators.required],
+      fullName: [
+        this.titlecasePipe.transform(student.fullName),
+        Validators.required,
+      ],
 
       test: createNumberControl(student.test),
       lab: createNumberControl(student.lab),

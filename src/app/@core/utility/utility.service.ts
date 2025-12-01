@@ -2,11 +2,6 @@ import { Injectable, signal } from '@angular/core';
 import * as FileSaver from 'file-saver';
 import * as XLSX from 'xlsx';
 
-interface ExcelJsonResult {
-  columns: string[];
-  records: Record<string, unknown>[];
-}
-
 @Injectable({
   providedIn: 'root',
 })
@@ -71,55 +66,37 @@ export class UtilityService {
     return admissionYear.reverse();
   }
 
-  private toCamelCase(str: string): string {
-    return str
-      .replace(/[_-]+/g, ' ')
-      .replace(/\s+(\w)/g, (_, c: string) => c.toUpperCase())
-      .replace(/\s+/g, '')
-      .replace(/^\w/, (c: string) => c.toLowerCase());
-  }
-
-  convertExcelToJson(file: File): Promise<ExcelJsonResult> {
+  convertExcelToJson<T = Record<string, unknown>>(
+    file: File
+  ): Promise<{ columns: string[]; records: T[] }> {
     return new Promise((resolve, reject) => {
+      const worker = new Worker(
+        new URL('../workers/excel.worker', import.meta.url)
+      );
+
       const reader = new FileReader();
-
-      reader.onload = (e: ProgressEvent<FileReader>) => {
-        const result = e.target?.result;
-
-        if (typeof result !== 'string') {
-          reject(new Error('Invalid file format'));
+      reader.onload = (e) => {
+        const binary = e.target?.result;
+        if (typeof binary !== 'string') {
+          reject(new Error('Invalid file data'));
           return;
         }
 
-        const workbook = XLSX.read(result, { type: 'binary' });
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-
-        const jsonData = XLSX.utils.sheet_to_json<Record<string, unknown>>(
-          worksheet,
-          { raw: true }
-        );
-
-        if (jsonData.length > 0) {
-          const records = jsonData.map((row) => {
-            const transformed: Record<string, unknown> = {};
-
-            for (const key of Object.keys(row)) {
-              const camelKey = this.toCamelCase(key);
-              transformed[camelKey] = row[key];
-            }
-
-            return transformed;
-          });
-
-          const columns = Object.keys(records[0]);
-
-          resolve({ columns, records });
-        }
+        worker.postMessage({ binary });
       };
 
-      reader.onerror = (error) => reject(error);
       reader.readAsBinaryString(file);
+
+      worker.onmessage = ({ data }) => {
+        if (data.error) reject(data.error);
+        else resolve(data);
+        worker.terminate();
+      };
+
+      worker.onerror = (err) => {
+        reject(err.message);
+        worker.terminate();
+      };
     });
   }
 }

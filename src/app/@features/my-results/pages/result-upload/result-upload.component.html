@@ -204,6 +204,7 @@
       @case ('REGULAR') {
         <app-regular-table-result-upload
           #regularTableResultUploadRef
+          [refreshTable]="isUploaded()"
           [students]="students()['REGULAR']"
           (uploadResultEvent)="uploadResult($event)"
         />

@@ -313,6 +313,8 @@ export class ResultUploadComponent implements OnInit {
               'Result Published',
               'Result has been published successfully'
             );
+            this.isUploaded.set(false);
+            this.getResultAndEntries();
           }
         },
       });
@@ -344,14 +346,14 @@ export class ResultUploadComponent implements OnInit {
             this.isUploaded.set(true);
 
             const records = studentRecords.map((record) => ({
-              fullName: record['name'],
-              registrationNumber: record['registrationNumber'],
-              test: 0,
-              lab: 0,
-              exam: 0,
-              total: 0,
-              grade: 'F',
-              status: 'FAIL',
+              fullName: record['names'],
+              registrationNumber: record['regNo'],
+              test: record['test'] || 0,
+              lab: record['lab'] || 0,
+              exam: record['exam'] || 0,
+              total: record['total'],
+              grade: record['grade'],
+              status: record['rmk1'],
             }));
 
             const activeCategory = this.activeSegment().value as SegmentValue;
@@ -359,6 +361,12 @@ export class ResultUploadComponent implements OnInit {
               students[activeCategory] = records as IStudentGrade[];
               return students;
             });
+
+            this.toast.showNotification(
+              'success',
+              'Upload Successful',
+              'Result document has been uploaded successfully'
+            );
           }
         },
       });
@@ -390,14 +398,14 @@ export class ResultUploadComponent implements OnInit {
             this.isUploaded.set(true);
 
             const records = studentRecords.map((record) => ({
-              fullName: record['name'],
-              registrationNumber: record['registrationNumber'],
-              test: 0,
-              lab: 0,
-              exam: 0,
-              total: 0,
-              grade: 'F',
-              status: 'FAIL',
+              fullName: record['names'],
+              registrationNumber: record['regNo'],
+              test: record['test'] || 0,
+              lab: record['lab'] || 0,
+              exam: record['exam'] || 0,
+              total: record['total'],
+              grade: record['grade'],
+              status: record['rmk1'],
             }));
 
             const activeCategory = this.activeSegment().value as SegmentValue;
@@ -405,6 +413,12 @@ export class ResultUploadComponent implements OnInit {
               students[activeCategory] = records as IStudentGrade[];
               return students;
             });
+
+            this.toast.showNotification(
+              'success',
+              'Upload Successful',
+              'Result document has been replaced successfully'
+            );
           }
         },
       });

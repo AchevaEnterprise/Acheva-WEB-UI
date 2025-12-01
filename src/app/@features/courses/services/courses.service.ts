@@ -19,9 +19,14 @@ export class CoursesService {
     query?: Partial<ICourseQuery>
   ): Observable<IAPIPaginatedResponse<ICourse[]>> {
     let params = new HttpParams();
-    params = params.append('courseCode', query?.courseCode || '');
-    params = params.append('courseTitle', query?.courseTitle || '');
-    params = params.append('level', query?.level || '');
+
+    if (query) {
+      if (query.courseCode)
+        params = params.append('courseCode', query.courseCode);
+      if (query.courseTitle)
+        params = params.append('courseTitle', query.courseTitle);
+      if (query.level) params = params.append('level', query.level);
+    }
 
     return this.http.get<IAPIPaginatedResponse<ICourse[]>>(
       `${this.coursesUrl}`,

@@ -193,17 +193,9 @@ export class CourseDetailsComponent implements OnInit {
       .get('courseCode')
       ?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (result: string | ICourse | null) => {
-          if (!result) return;
-
-          const courseCode =
-            typeof result === 'string' ? result : result.courseCode;
-
-          const selectedCourse = this.courses().find(
-            (course) => course.value.courseCode === courseCode
-          )?.value;
-
-          const { courseTitle, courseLoad, assignedTo } = selectedCourse!;
+        next: (selectedCourse: ICourse | string | null) => {
+          const { courseTitle, courseLoad, assignedTo, _id } =
+            selectedCourse! as ICourse;
 
           const courseCordinator = assignedTo
             ? `${assignedTo?.firstname} ${assignedTo?.lastname}`
@@ -216,7 +208,7 @@ export class CourseDetailsComponent implements OnInit {
           });
 
           this.router.navigate([], {
-            queryParams: { courseId: selectedCourse?._id },
+            queryParams: { courseId: _id },
             queryParamsHandling: 'merge',
           });
         },
@@ -332,6 +324,7 @@ export class CourseDetailsComponent implements OnInit {
       level,
       faculty,
       courseCordinator,
+      courseCode,
     } = this.form.getRawValue();
 
     if (!courseCordinator || !faculty || !department) {
@@ -345,7 +338,7 @@ export class CourseDetailsComponent implements OnInit {
 
     this.isLoading.set(true);
     const payload: ICreateResult = {
-      course: this.courseId,
+      course: (courseCode as ICourse)?._id!,
       session: session || '',
       admissionYear: admissionYear || '',
       level: level || '',

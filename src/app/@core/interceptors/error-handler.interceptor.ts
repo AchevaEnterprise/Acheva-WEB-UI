@@ -122,7 +122,8 @@ export const errorHandlerInterceptor: HttpInterceptorFn = (req, next) => {
         toast.showNotification(
           'error',
           'Internal Server Error',
-          'An error occurred while processing your request. Please try again later.'
+          error.error.message ||
+            'An error occurred while processing your request. Please try again later.'
         );
       }
 
