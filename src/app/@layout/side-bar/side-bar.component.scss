@@ -1,27 +1,29 @@
-.sidenav-expanded {
-  width: 16.5625rem;
-}
+:host {
+  .sidenav-expanded {
+    width: 16.5625rem;
+  }
 
-::ng-deep.mat-mdc-menu-item-text {
-  justify-content: space-between;
-  font-size: 0.98rem !important;
-}
+  ::ng-deep.mat-mdc-menu-item-text {
+    justify-content: space-between;
+    font-size: 0.98rem !important;
+  }
 
-::ng-deep.mat-mdc-menu-panel {
-  min-width: 14rem !important;
-  max-width: 20rem !important;
-}
+  ::ng-deep.mat-mdc-menu-panel {
+    min-width: 14rem !important;
+    max-width: 20rem !important;
+  }
 
-.checkmark {
-  color: #22c55e;
-  font-size: 16px;
-  font-weight: 600;
-}
+  .checkmark {
+    color: #22c55e;
+    font-size: 16px;
+    font-weight: 600;
+  }
 
-.badge-dot {
-  width: 8px;
-  height: 8px;
-  background: #ef4444;
-  border-radius: 50%;
-  display: inline-block;
+  .badge-dot {
+    width: 8px;
+    height: 8px;
+    background: #ef4444;
+    border-radius: 50%;
+    display: inline-block;
+  }
 }

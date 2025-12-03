@@ -79,7 +79,9 @@
                 [checked]="selection.isSelected(result)"
                 [aria-label]="checkboxLabel(result)"
                 [disabled]="
-                  userRole === RoleEnum.LECTURER && result.hasBeenSent
+                  (userRole === RoleEnum.LECTURER && result.hasBeenSent) ||
+                  (userRole === RoleEnum.COURSE_COORDINATOR &&
+                    !result.hasBeenSent)
                 "
               >
               </mat-checkbox>
@@ -91,8 +93,9 @@
             <td
               mat-cell
               *matCellDef="let result"
-              (click)="viewResult(result)"
-              (keydown)="viewResult(result)"
+              (click)="trackResult(result)"
+              (keydown)="trackResult(result)"
+              (dblclick)="viewResult(result)"
             >
               {{ result.course?.courseCode }}
             </td>
@@ -103,8 +106,9 @@
             <td
               mat-cell
               *matCellDef="let result"
-              (click)="viewResult(result)"
-              (keydown)="viewResult(result)"
+              (click)="trackResult(result)"
+              (keydown)="trackResult(result)"
+              (dblclick)="viewResult(result)"
             >
               {{ result.course?.courseTitle || 'N/A' }}
             </td>
@@ -115,8 +119,9 @@
             <td
               mat-cell
               *matCellDef="let result"
-              (click)="viewResult(result)"
-              (keydown)="viewResult(result)"
+              (click)="trackResult(result)"
+              (keydown)="trackResult(result)"
+              (dblclick)="viewResult(result)"
             >
               {{ result.semester }}
             </td>
@@ -127,8 +132,9 @@
             <td
               mat-cell
               *matCellDef="let result"
-              (click)="viewResult(result)"
-              (keydown)="viewResult(result)"
+              (click)="trackResult(result)"
+              (keydown)="trackResult(result)"
+              (dblclick)="viewResult(result)"
             >
               {{ result.department?.name || 'Unknown Department' }}
             </td>
@@ -139,8 +145,9 @@
             <td
               mat-cell
               *matCellDef="let result"
-              (click)="viewResult(result)"
-              (keydown)="viewResult(result)"
+              (click)="trackResult(result)"
+              (keydown)="trackResult(result)"
+              (dblclick)="viewResult(result)"
             >
               {{ result.faculty?.name || '-' }}
             </td>
@@ -151,8 +158,9 @@
             <td
               mat-cell
               *matCellDef="let result"
-              (click)="viewResult(result)"
-              (keydown)="viewResult(result)"
+              (click)="trackResult(result)"
+              (keydown)="trackResult(result)"
+              (dblclick)="viewResult(result)"
             >
               {{ result.lecturer }}
             </td>
@@ -163,8 +171,9 @@
             <td
               mat-cell
               *matCellDef="let result"
-              (click)="viewResult(result)"
-              (keydown)="viewResult(result)"
+              (click)="trackResult(result)"
+              (keydown)="trackResult(result)"
+              (dblclick)="viewResult(result)"
             >
               {{ result.createdAt | date: 'MMM d, YYYY h:mm a' }}
             </td>
@@ -175,14 +184,15 @@
             <td
               mat-cell
               *matCellDef="let result"
-              (click)="viewResult(result)"
-              (keydown)="viewResult(result)"
+              (click)="trackResult(result)"
+              (keydown)="trackResult(result)"
+              (dblclick)="viewResult(result)"
             >
               {{ result.updatedAt | date: 'MMM d, YYYY h:mm a' }}
             </td>
           </ng-container>
 
-          <ng-container matColumnDef="actions">
+          <!-- <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef>ACTIONS</th>
             <td mat-cell *matCellDef="let result">
               <button [matMenuTriggerFor]="menu" class="cursor-pointer">
@@ -193,7 +203,7 @@
                 ></app-svg>
               </button>
               <mat-menu #menu="matMenu">
-                <button mat-menu-item (click)="viewResult(result)">
+                <button mat-menu-item (dblclick)="viewResult(result)">
                   <app-svg
                     svgWidth="1.3rem"
                     svgHeight="1.3rem"
@@ -211,7 +221,7 @@
                 </button>
               </mat-menu>
             </td>
-          </ng-container>
+          </ng-container> -->
 
           <tr
             mat-header-row
@@ -222,7 +232,8 @@
             *matRowDef="let result; columns: displayedColumns"
             class="cursor-pointer hover:bg-gray-400"
             [class.disabled]="
-              userRole === RoleEnum.LECTURER && result.hasBeenSent
+              (userRole === RoleEnum.LECTURER && result.hasBeenSent) ||
+              (userRole === RoleEnum.COURSE_COORDINATOR && !result.hasBeenSent)
             "
           ></tr>
         </table>

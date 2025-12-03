@@ -1,41 +1,47 @@
-import { Component, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
+import { Component, computed, input } from '@angular/core';
 import { SvgComponent } from '../../../../../@shared/components/svg/svg.component';
+
+const STATUS_FLOW = [
+  'DRAFT',
+  'PENDING',
+  'UNVERIFIED',
+  'VERIFIED',
+  'PUBLISHED',
+  'IMPORTED',
+] as const;
+type Status = (typeof STATUS_FLOW)[number];
 
 @Component({
   selector: 'app-time-line',
   imports: [SvgComponent],
   templateUrl: './time-line.component.html',
   styleUrl: './time-line.component.scss',
+  providers: [DatePipe],
 })
 export class TimeLineComponent {
-  timelines = signal([
-    {
-      status: 'Drafts',
-      time: 'Today at 10:45 AM',
-      activeIcon: 'icons/general/active-draft-timeline-icon.svg',
-      inactiveIcon: 'icons/general/inactive-draft-timeline-icon.svg',
-      active: true,
-    },
-    {
-      status: 'HOD Review',
-      time: 'Pending',
-      activeIcon: 'icons/general/active-hod-review-icon.svg',
-      inactiveIcon: 'icons/general/inactive-hod-review-icon.svg',
-      active: false,
-    },
-    {
-      status: 'Dean Approval',
-      time: 'Pending',
-      activeIcon: 'icons/general/active-dean-approval-icon.svg',
-      inactiveIcon: 'icons/general/inactive-dean-approval-icon.svg',
-      active: false,
-    },
-    {
-      status: 'Published',
-      time: 'Pending',
-      activeIcon: 'icons/general/active-published-timeline-icon.svg',
-      inactiveIcon: 'icons/general/inactive-published-timeline-icon.svg',
-      active: false,
-    },
-  ]);
+  status = input<string | undefined>();
+  timelines = computed(() => {
+    const current = this.status() as Status | undefined;
+    const currentIndex = current ? STATUS_FLOW.indexOf(current) : -1;
+
+    const steps = [
+      { label: 'Drafts', icon: 'draft-timeline-icon' },
+      { label: 'HOD Review', icon: 'hod-review-icon' },
+      { label: 'Dean Approval', icon: 'dean-approval-icon' },
+      { label: 'Published', icon: 'published-timeline-icon' },
+    ];
+
+    return steps.map((step, index) => {
+      const active = index <= currentIndex;
+
+      return {
+        status: step.label,
+        time: active ? 'Completed' : 'Pending',
+        activeIcon: `icons/general/active-${step.icon}.svg`,
+        inactiveIcon: `icons/general/inactive-${step.icon}.svg`,
+        active,
+      };
+    });
+  });
 }

@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, input, output, signal } from '@angular/core';
 import {
   ControlValueAccessor,
   NG_VALUE_ACCESSOR,
@@ -6,10 +6,17 @@ import {
 } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { IResult } from '../../../../@features/result-management/models/results.model';
+import { ButtonComponent } from '../button/button.component';
 
 @Component({
   selector: 'app-comment',
-  imports: [ReactiveFormsModule, MatFormFieldModule, MatInputModule],
+  imports: [
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    ButtonComponent,
+  ],
   templateUrl: './comment.component.html',
   styleUrl: './comment.component.scss',
   providers: [
@@ -21,6 +28,10 @@ import { MatInputModule } from '@angular/material/input';
   ],
 })
 export class CommentComponent implements ControlValueAccessor {
+  result = input<IResult | null>();
+  showSubmitBtn = input<boolean>(false);
+  submitEvent = output<string>();
+
   value = signal<string>('');
   private onChange: (value: string) => void = () => {};
   private onTouched: () => void = () => {};
@@ -50,5 +61,9 @@ export class CommentComponent implements ControlValueAccessor {
 
   onBlur(): void {
     this.onTouched();
+  }
+
+  submit() {
+    this.submitEvent.emit(this.value());
   }
 }

@@ -183,14 +183,6 @@
       (switchEvent)="switchSegment($event)"
     />
 
-    @if (uploadingResult()) {
-      <p
-        class="flex gap-2 items text-blue-600 px-3 py-1 text-sm bg-blue-100 rounded-[50px]"
-      >
-        <app-loader /> Saving result...
-      </p>
-    }
-
     <a
       href="template/results-template.xlsx"
       class="underline text-blue-500"

@@ -79,7 +79,7 @@
         }
 
         <app-button
-          [label]="expandView() ? 'Collapse' : 'Expand'"
+          [label]="expandView() ? 'Expand' : 'Collapse'"
           type="outline"
           class="btn-md"
           (clickEvent)="toggleView()"
@@ -88,7 +88,7 @@
     </div>
 
     <div
-      class="grid grid-cols-[1fr_30%] gap-4 mt-4 items-start"
+      class="grid lg:grid-cols-[1fr_30%] sm:grid-cols-1 gap-4 mt-4 items-start"
       [ngClass]="{
         'grid-cols-1': expandView(),
         'grid-cols-[1fr_30%]': !expandView(),
@@ -113,6 +113,7 @@
             [results]="results()"
             [pagination]="pagination()"
             (viewResultEvent)="viewResult($event)"
+            (trackResultEvent)="trackResult($event)"
           />
 
           <app-result-management-folder-table
@@ -130,8 +131,12 @@
       <!-- RESULT STATUS TRACKING & COMMENT-->
       @if (!expandView()) {
         <div class="flex flex-col gap-4">
-          <app-result-status-tracking />
-          <app-comment />
+          <app-result-status-tracking [result]="result()" />
+          <app-comment
+            [showSubmitBtn]="true"
+            [result]="result()"
+            (submitEvent)="sendComment($event)"
+          />
         </div>
       }
     </div>

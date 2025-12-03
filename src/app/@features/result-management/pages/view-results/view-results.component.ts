@@ -72,6 +72,7 @@ export class ViewResultsComponent implements OnInit {
     const result$ = this.resultsService.getResults({
       course: this.courseId,
       status: this.status,
+      hasBeenSent: true,
     });
     // const analytics$ = this.resultsService.getResultAnalytics(this.resultId);
 
@@ -135,7 +136,7 @@ export class ViewResultsComponent implements OnInit {
     const { _id } = result;
 
     this.router.navigate(['/result-management/edit-results'], {
-      queryParams: { resultId: _id },
+      queryParams: { resultId: _id, status: this.status },
     });
   }
 

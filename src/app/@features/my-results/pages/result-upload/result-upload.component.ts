@@ -22,7 +22,6 @@ import {
 import { RoleAccessDirective } from '../../../../@core/directives/role-access.directive';
 import { UtilityService } from '../../../../@core/utility/utility.service';
 import { ConfirmationComponent } from '../../../../@shared/components/confirmation/confirmation.component';
-import { LoaderComponent } from '../../../../@shared/components/loader/loader.component';
 import { UploadResultDialogComponent } from '../../../../@shared/components/upload-result-dialog/upload-result-dialog.component';
 import { RoleEnum } from '../../../auth/model/auth.model';
 import {
@@ -55,7 +54,6 @@ import { RegularTableResultUploadComponent } from '../../components/regular-tabl
     MatDialogModule,
     RegularTableResultUploadComponent,
     ReferenceTableResultUploadComponent,
-    LoaderComponent,
     RoleAccessDirective,
   ],
   templateUrl: './result-upload.component.html',
@@ -124,7 +122,6 @@ export class ResultUploadComponent implements OnInit {
   totalStudentFail = signal<number>(0);
 
   loadingResult = signal<boolean>(false);
-  uploadingResult = signal<boolean>(false);
   resultEntryCompleted = signal<boolean>(false);
 
   students = signal<Record<SegmentValue, Partial<IStudentGrade>[]>>({
@@ -256,8 +253,6 @@ export class ResultUploadComponent implements OnInit {
   }
 
   uploadResult(result: Partial<IStudentGrade>) {
-    this.uploadingResult.set(true);
-
     const { registrationNumber, fullName, test, lab, exam, total } = result;
     const resultEntry: ICreateResultEntry = {
       registrationNumber: registrationNumber!,
@@ -269,19 +264,16 @@ export class ResultUploadComponent implements OnInit {
       result: this.resultId!,
     };
 
-    this.resultsService
-      .createResultEntry(resultEntry)
-      .pipe(finalize(() => this.uploadingResult.set(false)))
-      .subscribe({
-        next: (resp) => {
-          if (!resp.status) {
-            this.toast.showNotification('error', 'Upload Error', resp.message);
-            return;
-          }
+    this.resultsService.createResultEntry(resultEntry).subscribe({
+      next: (resp) => {
+        if (!resp.status) {
+          this.toast.showNotification('error', 'Upload Error', resp.message);
+          return;
+        }
 
-          this.getResultAndEntries();
-        },
-      });
+        this.getResultAndEntries();
+      },
+    });
   }
 
   confirmPublish() {

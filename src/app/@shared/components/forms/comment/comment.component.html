@@ -15,4 +15,12 @@
       ></textarea>
     </mat-form-field>
   </div>
+
+  @if (showSubmitBtn()) {
+    <app-button
+      label="Submit"
+      class="btn-md w-full mb-4"
+      (clickEvent)="submit()"
+    />
+  }
 </div>

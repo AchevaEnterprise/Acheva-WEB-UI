@@ -71,6 +71,7 @@ export class ResultManagementFileTableComponent implements OnInit {
   pagination = input<IPaginator>();
 
   viewResultEvent = output<IResult>();
+  trackResultEvent = output<IResult>();
   pageEvent = output<PageEvent>();
 
   displayedColumns: string[] = [
@@ -93,7 +94,7 @@ export class ResultManagementFileTableComponent implements OnInit {
     'lecturer',
     'createdAt',
     'updatedAt',
-    'actions',
+    // 'actions',
   ];
 
   RoleEnum = RoleEnum;
@@ -114,8 +115,8 @@ export class ResultManagementFileTableComponent implements OnInit {
         this.displayedColumns.push(
           'lecturer',
           'createdAt',
-          'updatedAt',
-          'actions'
+          'updatedAt'
+          // 'actions'
         );
       }
 
@@ -209,6 +210,10 @@ export class ResultManagementFileTableComponent implements OnInit {
   viewResult(result: IResult) {
     if (this.userRole === RoleEnum.LECTURER && result.hasBeenSent) return;
     this.viewResultEvent.emit(result);
+  }
+
+  trackResult(result: IResult) {
+    this.trackResultEvent.emit(result);
   }
 
   paginate(page: PageEvent) {

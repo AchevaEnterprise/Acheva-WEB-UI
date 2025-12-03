@@ -45,6 +45,7 @@ export interface IResult {
     E: number;
     F: number;
   };
+  updatedAt?: Date;
 }
 
 export interface ICreateResult {
@@ -61,6 +62,7 @@ export interface ICreateResult {
 export interface IResultQuery {
   status: string;
   course: string;
+  hasBeenSent: boolean;
 }
 
 export interface IPreparedResultQuery {

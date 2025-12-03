@@ -42,10 +42,10 @@ import {
   ICreateResult,
   ResultStatusEnum,
 } from '../../../result-management/models/results.model';
-import { ResultsService } from '../../../result-management/services/results.service';
 import { CoursePreviewComponent } from '../../components/course-preview/course-preview.component';
 import { ICourse, ICourseQuery } from '../../models/course.model';
 import { CoursesService } from '../../services/courses.service';
+import { ResultsService } from '../../../result-management/services/results.service';
 
 @Component({
   selector: 'app-course-details',
@@ -338,7 +338,7 @@ export class CourseDetailsComponent implements OnInit {
 
     this.isLoading.set(true);
     const payload: ICreateResult = {
-      course: (courseCode as ICourse)?._id!,
+      course: this.courseId || (courseCode as ICourse)?._id!,
       session: session || '',
       admissionYear: admissionYear || '',
       level: level || '',

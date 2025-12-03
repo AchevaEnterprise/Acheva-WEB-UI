@@ -62,6 +62,7 @@ export class ResultManagementComponent implements OnInit {
   folderTableRef =
     viewChild<ResultManagementFolderTableComponent>('folderTableRef');
 
+  result = signal<IResult | null>(null);
   results = signal<IResult[]>([]);
   courses = signal<ICourse[]>([]);
 
@@ -535,6 +536,10 @@ export class ResultManagementComponent implements OnInit {
     });
   }
 
+  trackResult(result: IResult) {
+    this.result.set(result);
+  }
+
   viewFolder(course: ICourse) {
     const { _id } = course;
 
@@ -543,4 +548,6 @@ export class ResultManagementComponent implements OnInit {
       queryParams: { courseId: _id, status: this.activeSegment().value },
     });
   }
+
+  sendComment(comment: string) {}
 }
