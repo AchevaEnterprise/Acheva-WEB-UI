@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import {
@@ -24,7 +24,7 @@ import { SvgComponent } from '../svg/svg.component';
   templateUrl: './toast.component.html',
   styleUrl: './toast.component.scss',
 })
-export class ToastComponent {
+export class ToastComponent implements OnInit {
   snackBarRef = inject(MatSnackBarRef);
   progress = signal<number>(0);
 

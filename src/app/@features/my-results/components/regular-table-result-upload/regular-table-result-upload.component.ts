@@ -203,20 +203,4 @@ export class RegularTableResultUploadComponent {
       this.uploadResultEvent.emit(row.getRawValue());
     }
   }
-
-  clearEntry(index: number): void {
-    const row = this.rows.at(index);
-
-    const controls = ['test', 'lab', 'exam', 'total', 'grade', 'status'];
-    for (const ctrl of controls) {
-      const control = row.get(ctrl);
-      if (control) {
-        control.reset();
-        control.markAsPristine();
-        control.updateValueAndValidity();
-      }
-    }
-
-    this.completedRows.delete(index);
-  }
 }

@@ -23,9 +23,7 @@ import { ActivatedRoute } from '@angular/router';
 import { debounceTime, finalize, Subject } from 'rxjs';
 import { EmptyStateComponent } from '../../../../@shared/components/empty-state/empty-state.component';
 import { SearchSelectComponent } from '../../../../@shared/components/forms/search-select/search-select.component';
-import { LoaderComponent } from '../../../../@shared/components/loader/loader.component';
 import { StatusBadgeComponent } from '../../../../@shared/components/status-badge/status-badge.component';
-import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
 import { RoleEnum } from '../../../auth/model/auth.model';
 import { AuthenticationService } from '../../../auth/service/auth.service';
 import { IStudentGrade } from '../../../students/models/student.model';
@@ -40,9 +38,7 @@ import { StudentService } from '../../../students/services/student.service';
     StatusBadgeComponent,
     EmptyStateComponent,
     MatMenuModule,
-    SvgComponent,
     SearchSelectComponent,
-    LoaderComponent,
   ],
   templateUrl: './reference-table-result-upload.component.html',
   styleUrl: './reference-table-result-upload.component.scss',
@@ -58,12 +54,13 @@ export class ReferenceTableResultUploadComponent {
   private readonly userRole = this.authService.activeAccount()
     ?.role as RoleEnum;
 
-  loading = input<boolean>(false);
   students = input<Partial<IStudentGrade>[]>([]);
+  refreshTable = input<boolean>(false);
   uploadResultEvent = output<Partial<IStudentGrade>>();
 
   readonly status: string = this.route.snapshot.queryParamMap.get('status')!;
 
+  dataSource = signal<FormGroup[]>([]);
   readonly displayedColumns = [
     'registrationNumber',
     'fullName',
@@ -73,7 +70,6 @@ export class ReferenceTableResultUploadComponent {
     'total',
     'grade',
     'status',
-    'action',
   ];
 
   form = this.fb.group({
@@ -93,11 +89,15 @@ export class ReferenceTableResultUploadComponent {
 
   constructor() {
     effect(() => {
-      effect(() => {
-        const students = this.students();
-        if (students?.length > 0 && this.rows.length === 0)
-          this.initializeFormRows(students);
-      });
+      const students = this.students();
+      const refresh = this.refreshTable();
+
+      if (refresh) {
+        this.initializeFormRows(students);
+      } else if (students?.length > 0 && this.rows.length === 0) {
+        console.warn('Initializing rows for the first time');
+        this.initializeFormRows(students);
+      }
     });
 
     this.inputSubject
@@ -113,11 +113,18 @@ export class ReferenceTableResultUploadComponent {
     this.completedRows.clear();
     this.rows.clear();
 
-    for (const student of students) {
-      this.rows.push(this.buildStudentRow(student));
+    const sortedStudents = [...students].sort((a, b) =>
+      (a.fullName ?? '').localeCompare(b.fullName ?? '')
+    );
+
+    for (const stu of sortedStudents) {
+      this.rows.push(this.buildStudentRow(stu));
     }
 
     this.rows.markAsPristine();
+
+    // Update the table datasource so Material detects changes
+    this.dataSource.set([...this.rows.controls]);
   }
 
   private buildStudentRow(student: Partial<IStudentGrade>): FormGroup {
@@ -201,22 +208,6 @@ export class ReferenceTableResultUploadComponent {
     }
   }
 
-  clearEntry(index: number): void {
-    const row = this.rows.at(index);
-
-    const controls = ['test', 'lab', 'exam', 'total', 'grade', 'status'];
-    for (const ctrl of controls) {
-      const control = row.get(ctrl);
-      if (control) {
-        control.reset();
-        control.markAsPristine();
-        control.updateValueAndValidity();
-      }
-    }
-
-    this.completedRows.delete(index);
-  }
-
   searchStudentsByRegNo(regNo: string) {
     this.searchingStudent.set(true);
 
@@ -232,6 +223,7 @@ export class ReferenceTableResultUploadComponent {
               label: registrationNumber,
               value: { registrationNumber, fullName },
             };
+
             this.filterdStudentRegNumber.set([studentMap]);
           }
         },
@@ -245,6 +237,7 @@ export class ReferenceTableResultUploadComponent {
       registrationNumber: string;
       fullName: string;
     };
+
     row.get('fullName')?.setValue(fullName);
   }
 }
