@@ -1,25 +1,15 @@
 import { DatePipe } from '@angular/common';
 import {
+  ChangeDetectorRef,
   Component,
+  computed,
+  effect,
   inject,
+  OnDestroy,
   OnInit,
   signal,
-  computed,
-  OnDestroy,
-  ChangeDetectorRef,
-  effect,
   untracked,
 } from '@angular/core';
-import { MatDialog } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { MatTableModule } from '@angular/material/table';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { PageEvent } from '@angular/material/paginator';
 import {
   FormArray,
   FormBuilder,
@@ -28,9 +18,21 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatDialog } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { PageEvent } from '@angular/material/paginator';
+import { MatSelectModule } from '@angular/material/select';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatTableModule } from '@angular/material/table';
 import { finalize, Subject, takeUntil } from 'rxjs';
 
+import { IPaginator } from '../../../../../@core/models/paginator.model';
 import { AssignCourseAdvisorComponent } from '../../../../../@shared/components/assign-course-advisor/assign-course-advisor.component';
+import { BackButtonComponent } from '../../../../../@shared/components/back-button/back-button.component';
 import { EmptyStateComponent } from '../../../../../@shared/components/empty-state/empty-state.component';
 import { ButtonComponent } from '../../../../../@shared/components/forms/button/button.component';
 import { SearchInputComponent } from '../../../../../@shared/components/forms/search-input/search-input.component';
@@ -40,9 +42,8 @@ import { StatusBadgeComponent } from '../../../../../@shared/components/status-b
 import { SvgComponent } from '../../../../../@shared/components/svg/svg.component';
 import { UnassignCourseAdvisorComponent } from '../../../../../@shared/components/unassign-course-advisor/unassign-course-advisor.component';
 import { AuthenticationService } from '../../../../auth/service/auth.service';
-import { LecturerAssignment } from '../../../models/lecturer.model';
+import { ILecturer } from '../../../models/lecturer.model';
 import { LecturersService } from '../../../service/lecturer.service';
-import { IPaginator } from '../../../../../@core/models/paginator.model';
 
 @Component({
   selector: 'app-lecturer-management',
@@ -64,6 +65,7 @@ import { IPaginator } from '../../../../../@core/models/paginator.model';
     SvgComponent,
     LoaderComponent,
     EmptyStateComponent,
+    BackButtonComponent,
   ],
   templateUrl: './lecturer-management.component.html',
   styleUrl: './lecturer-management.component.scss',
@@ -101,7 +103,7 @@ export class LecturerManagementComponent implements OnInit, OnDestroy {
   ];
 
   // Data and loading states
-  lecturersData = signal<LecturerAssignment[]>([]);
+  lecturersData = signal<ILecturer[]>([]);
   loading = signal<boolean>(false);
   searchQuery = signal<string>('');
   filterValue = signal<string>('');
@@ -159,7 +161,7 @@ export class LecturerManagementComponent implements OnInit, OnDestroy {
     this.formArrayVersion();
 
     let lecturers = this.lecturersArray.controls.map(
-      (control) => control.value as LecturerAssignment
+      (control) => control.value as ILecturer
     );
 
     // Apply search filter
@@ -208,7 +210,7 @@ export class LecturerManagementComponent implements OnInit, OnDestroy {
   }
 
   // Form management methods
-  private updateFormWithLecturers(lecturers: LecturerAssignment[]): void {
+  private updateFormWithLecturers(lecturers: ILecturer[]): void {
     // Clear existing form array
     while (this.lecturersArray.length !== 0) {
       this.lecturersArray.removeAt(0);
@@ -223,7 +225,7 @@ export class LecturerManagementComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
-  private createLecturerFormGroup(lecturer: LecturerAssignment): FormGroup {
+  private createLecturerFormGroup(lecturer: ILecturer): FormGroup {
     const group = this.fb.group({
       _id: [lecturer._id],
       firstname: [lecturer.firstname || '', Validators.required],
@@ -242,7 +244,7 @@ export class LecturerManagementComponent implements OnInit, OnDestroy {
     const errors: string[] = [];
 
     this.lecturersArray.controls.forEach((control) => {
-      const lecturer: LecturerAssignment = control.value as LecturerAssignment;
+      const lecturer = control.value as ILecturer;
       const lecturerName = `${lecturer.firstname} ${lecturer.lastname}`;
 
       if (control.get('firstname')?.errors?.['required']) {
@@ -329,7 +331,7 @@ export class LecturerManagementComponent implements OnInit, OnDestroy {
     return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
   }
 
-  isAssigned(lecturer: LecturerAssignment): boolean {
+  isAssigned(lecturer: ILecturer): boolean {
     return !!(lecturer.assignedLevel && lecturer.assignedLevel !== 'NONE');
   }
 
@@ -413,8 +415,8 @@ export class LecturerManagementComponent implements OnInit, OnDestroy {
     // For quick assignment, you might want to show a level selector
     // For now, we'll just open the assignment dialog
     const actualIndex = this.currentPage() * this.pageSize() + index;
-    const lecturerData: LecturerAssignment = this.lecturersArray.at(actualIndex)
-      ?.value as LecturerAssignment;
+    const lecturerData = this.lecturersArray.at(actualIndex)
+      ?.value as ILecturer;
     if (lecturerData) {
       this.confirmAssignAsCourseAdvisor(lecturerData);
     }
@@ -430,7 +432,7 @@ export class LecturerManagementComponent implements OnInit, OnDestroy {
     }
   }
 
-  confirmAssignAsCourseAdvisor(lecturer: LecturerAssignment): void {
+  confirmAssignAsCourseAdvisor(lecturer: ILecturer): void {
     this.dialog
       .open(AssignCourseAdvisorComponent, {
         width: '40%',
@@ -447,7 +449,7 @@ export class LecturerManagementComponent implements OnInit, OnDestroy {
       });
   }
 
-  confirmUnassignAsCourseAdvisor(lecturer: LecturerAssignment): void {
+  confirmUnassignAsCourseAdvisor(lecturer: ILecturer): void {
     this.dialog
       .open(UnassignCourseAdvisorComponent, {
         width: '40%',
@@ -464,9 +466,9 @@ export class LecturerManagementComponent implements OnInit, OnDestroy {
   }
 
   // Bulk operations
-  getSelectedLecturers(): LecturerAssignment[] {
+  getSelectedLecturers(): ILecturer[] {
     return Array.from(this.selectedIndices())
-      .map((i) => this.lecturersArray.at(i)?.value as LecturerAssignment)
+      .map((i) => this.lecturersArray.at(i)?.value as ILecturer)
       .filter((v) => !!v);
   }
 

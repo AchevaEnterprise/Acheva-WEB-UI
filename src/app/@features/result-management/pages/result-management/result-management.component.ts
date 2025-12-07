@@ -78,6 +78,7 @@ export class ResultManagementComponent implements OnInit {
   sendingToCA = signal<boolean>(false);
   resending = signal<boolean>(false);
   publishing = signal<boolean>(false);
+  refreshComments = signal<boolean>(false);
 
   segments = signal<ISegmentSwitcher[]>([
     {
@@ -549,5 +550,21 @@ export class ResultManagementComponent implements OnInit {
     });
   }
 
-  sendComment(comment: string) {}
+  sendComment(record: { resultId: string; comment: string }) {
+    this.refreshComments.set(false);
+
+    const { resultId, comment } = record;
+    this.resultService.sendResultComment(resultId, comment).subscribe({
+      next: (resp) => {
+        if (resp.status)
+          this.toast.showNotification(
+            'success',
+            'Comment Submitted',
+            'Comment has been submitted for this result'
+          );
+
+        this.refreshComments.set(true);
+      },
+    });
+  }
 }

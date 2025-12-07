@@ -35,8 +35,31 @@
 }
 
 .disabled {
-  // pointer-events: none;
   color: #8f8f8f;
   touch-action: none;
   cursor: not-allowed;
+}
+
+.selected {
+  background-color: #e1f0ff;
+}
+
+.rejected {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    background-color: #faecec;
+  }
+  50% {
+    background-color: #fdd6d6;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rejected {
+    animation: none;
+  }
 }

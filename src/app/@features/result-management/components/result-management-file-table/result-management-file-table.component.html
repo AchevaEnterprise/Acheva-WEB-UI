@@ -192,37 +192,6 @@
             </td>
           </ng-container>
 
-          <!-- <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef>ACTIONS</th>
-            <td mat-cell *matCellDef="let result">
-              <button [matMenuTriggerFor]="menu" class="cursor-pointer">
-                <app-svg
-                  svgWidth="3rem"
-                  svgHeight="3rem"
-                  src="icons/general/option-icon.svg"
-                ></app-svg>
-              </button>
-              <mat-menu #menu="matMenu">
-                <button mat-menu-item (dblclick)="viewResult(result)">
-                  <app-svg
-                    svgWidth="1.3rem"
-                    svgHeight="1.3rem"
-                    src="icons/general/pen-icon.svg"
-                  ></app-svg>
-                  <span>Edit</span>
-                </button>
-                <button mat-menu-item>
-                  <app-svg
-                    svgWidth="1.3rem"
-                    svgHeight="1.3rem"
-                    src="icons/general/comment-icon.svg"
-                  ></app-svg>
-                  <span>Make a comment</span>
-                </button>
-              </mat-menu>
-            </td>
-          </ng-container> -->
-
           <tr
             mat-header-row
             *matHeaderRowDef="displayedColumns; sticky: true"
@@ -231,6 +200,8 @@
             mat-row
             *matRowDef="let result; columns: displayedColumns"
             class="cursor-pointer hover:bg-gray-400"
+            [class.selected]="selectedResultId() === result._id"
+            [class.rejected]="result.isApproved === false"
             [class.disabled]="
               (userRole === RoleEnum.LECTURER && result.hasBeenSent) ||
               (userRole === RoleEnum.COURSE_COORDINATOR && !result.hasBeenSent)

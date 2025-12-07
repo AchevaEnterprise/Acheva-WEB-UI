@@ -6,6 +6,7 @@ import {
   effect,
   inject,
   input,
+  OnDestroy,
   OnInit,
   output,
   signal,
@@ -54,7 +55,7 @@ import { IResult } from '../../models/results.model';
   templateUrl: './result-management-file-table.component.html',
   styleUrl: './result-management-file-table.component.scss',
 })
-export class ResultManagementFileTableComponent implements OnInit {
+export class ResultManagementFileTableComponent implements OnInit, OnDestroy {
   private readonly authService = inject(AuthenticationService);
   private readonly store = inject(Store<AppState>);
   // private readonly toast = inject(ToastService);
@@ -62,6 +63,7 @@ export class ResultManagementFileTableComponent implements OnInit {
 
   faculties = signal<IFaculty[]>([]);
   departments = signal<IDepartment[]>([]);
+  selectedResultId = signal<string | null>(null);
 
   userRole = this.authService.activeAccount()?.role as RoleEnum;
 
@@ -213,6 +215,7 @@ export class ResultManagementFileTableComponent implements OnInit {
   }
 
   trackResult(result: IResult) {
+    this.selectedResultId.set(result._id);
     this.trackResultEvent.emit(result);
   }
 
@@ -223,5 +226,9 @@ export class ResultManagementFileTableComponent implements OnInit {
   makeComment(element: IResult): void {
     // Placeholder for comment functionality
     // This would typically open a comment dialog or navigate to comment section
+  }
+
+  ngOnDestroy(): void {
+    this.selectedResultId.set(null);
   }
 }

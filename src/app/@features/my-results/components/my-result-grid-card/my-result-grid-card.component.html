@@ -40,12 +40,14 @@
     <!-- Progress bar -->
     <div class="w-full">
       <div class="flex justify-between items-center mb-2">
-        <span class="acva-caption text-[#6B7280]">0% done</span>
+        <span class="acva-caption text-[#6B7280]"
+          >{{ result()?.progress }}% done</span
+        >
       </div>
       <div class="w-full bg-[#E5E7EB] rounded-full h-3">
         <div
           class="h-3 bg-[#2793FF] rounded-full transition-all duration-300"
-          [style.width.%]="0"
+          [style.width.%]="result()?.progress"
         ></div>
       </div>
     </div>

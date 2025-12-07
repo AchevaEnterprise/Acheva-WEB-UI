@@ -88,7 +88,7 @@
     </div>
 
     <div
-      class="grid lg:grid-cols-[1fr_30%] sm:grid-cols-1 gap-4 mt-4 items-start"
+      class="grid grid-cols-[1fr_30%] gap-4 mt-4 items-start"
       [ngClass]="{
         'grid-cols-1': expandView(),
         'grid-cols-[1fr_30%]': !expandView(),
@@ -133,8 +133,9 @@
         <div class="flex flex-col gap-4">
           <app-result-status-tracking [result]="result()" />
           <app-comment
+            [refresh]="refreshComments()"
             [showSubmitBtn]="true"
-            [result]="result()"
+            [resultId]="result()?._id"
             (submitEvent)="sendComment($event)"
           />
         </div>

@@ -78,14 +78,6 @@ export class CreateAccountComponent implements OnInit, OnDestroy {
       label: 'HOD',
       value: RoleEnum.HOD,
     },
-    // {
-    //   label: 'Course Advisor',
-    //   value: RoleEnum.COURSE_ADVISOR,
-    // },
-    // {
-    //   label: 'Course Coordinator',
-    //   value: RoleEnum.COURSE_COORDINATOR,
-    // },
     {
       label: 'Lecturer',
       value: RoleEnum.LECTURER,

@@ -1,18 +1,6 @@
-export interface ILecturer {
-  _id: string;
-  titles: string[];
-  firstname: string;
-  masterUserId: string;
-  lastname: string;
-  email: string;
-  faculty: string;
-  department: string;
-  school: string;
-  role: string;
-  accountType: 'LECTURER';
-}
+import { RoleEnum } from '../../auth/model/auth.model';
 
-export interface LecturerAssignment {
+export interface ILecturer {
   _id: string;
   titles: string[];
   firstname: string;
@@ -22,7 +10,8 @@ export interface LecturerAssignment {
   faculty: string;
   department: string;
   school: string;
-  role: 'HOD' | 'LECTURER' | 'DEAN' | string;
-  accountType: 'LECTURER' | 'ADMIN' | string;
-  assignedLevel: 'NONE' | '100' | '200' | '300' | '400' | '500' | string;
+  role: RoleEnum;
+  accessLevel: string;
+  accountType: 'LECTURER';
+  assignedLevel: string;
 }

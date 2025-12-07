@@ -42,10 +42,11 @@ import {
   ICreateResult,
   ResultStatusEnum,
 } from '../../../result-management/models/results.model';
+import { ResultsService } from '../../../result-management/services/results.service';
 import { CoursePreviewComponent } from '../../components/course-preview/course-preview.component';
 import { ICourse, ICourseQuery } from '../../models/course.model';
 import { CoursesService } from '../../services/courses.service';
-import { ResultsService } from '../../../result-management/services/results.service';
+import { BackButtonComponent } from "../../../../@shared/components/back-button/back-button.component";
 
 @Component({
   selector: 'app-course-details',
@@ -60,7 +61,8 @@ import { ResultsService } from '../../../result-management/services/results.serv
     ButtonComponent,
     MatDivider,
     SearchSelectComponent,
-  ],
+    BackButtonComponent
+],
   templateUrl: './course-details.component.html',
   styleUrl: './course-details.component.scss',
 })
@@ -82,6 +84,7 @@ export class CourseDetailsComponent implements OnInit {
   readonly destroyRef = inject(DestroyRef);
 
   isLoading = signal<boolean>(false);
+  searchingCourseCodes = signal<boolean>(false);
 
   school = signal<ISchool | null>(null);
   courses = signal<{ label: string; value: ICourse }[]>([]);
@@ -164,13 +167,15 @@ export class CourseDetailsComponent implements OnInit {
   }
 
   getCourseCodes(params?: Partial<ICourseQuery>) {
+    this.searchingCourseCodes.set(true);
     this.courseService
       .getCourses(params)
       .pipe(
         map((res) => {
           const courses = res.data['courses'];
           return courses;
-        })
+        }),
+        finalize(() => this.searchingCourseCodes.set(false))
       )
       .subscribe({
         next: (courses: ICourse[]) => {

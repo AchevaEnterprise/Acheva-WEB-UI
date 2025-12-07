@@ -16,6 +16,7 @@ import { AnalyticsChartComponent } from '../../../my-results/components/analytic
 import { ResultManagementFileTableComponent } from '../../components/result-management-file-table/result-management-file-table.component';
 import { IResult, ISendSelectedResult } from '../../models/results.model';
 import { ResultsService } from '../../services/results.service';
+import { BackButtonComponent } from "../../../../@shared/components/back-button/back-button.component";
 
 @Component({
   selector: 'app-view-results',
@@ -28,7 +29,8 @@ import { ResultsService } from '../../services/results.service';
     CardComponent,
     RoleAccessDirective,
     ButtonComponent,
-  ],
+    BackButtonComponent
+],
   templateUrl: './view-results.component.html',
   styleUrl: './view-results.component.scss',
 })

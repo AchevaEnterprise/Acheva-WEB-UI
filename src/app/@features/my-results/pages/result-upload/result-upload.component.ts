@@ -24,6 +24,7 @@ import { UtilityService } from '../../../../@core/utility/utility.service';
 import { ConfirmationComponent } from '../../../../@shared/components/confirmation/confirmation.component';
 import { UploadResultDialogComponent } from '../../../../@shared/components/upload-result-dialog/upload-result-dialog.component';
 import { RoleEnum } from '../../../auth/model/auth.model';
+import { AuthenticationService } from '../../../auth/service/auth.service';
 import {
   ICreateResultEntry,
   IResult,
@@ -34,6 +35,7 @@ import { IStudentGrade } from '../../../students/models/student.model';
 import { AnalyticsChartComponent } from '../../components/analytics-chart/analytics-chart.component';
 import { ReferenceTableResultUploadComponent } from '../../components/reference-table-result-upload/reference-table-result-upload.component';
 import { RegularTableResultUploadComponent } from '../../components/regular-table-result-upload/regular-table-result-upload.component';
+import { BackButtonComponent } from "../../../../@shared/components/back-button/back-button.component";
 
 @Component({
   selector: 'app-result-upload',
@@ -55,11 +57,13 @@ import { RegularTableResultUploadComponent } from '../../components/regular-tabl
     RegularTableResultUploadComponent,
     ReferenceTableResultUploadComponent,
     RoleAccessDirective,
-  ],
+    BackButtonComponent
+],
   templateUrl: './result-upload.component.html',
   styleUrl: './result-upload.component.scss',
 })
 export class ResultUploadComponent implements OnInit {
+  private readonly authService = inject(AuthenticationService);
   private readonly resultsService = inject(ResultsService);
   private readonly utilsService = inject(UtilityService);
   private readonly toast = inject(ToastService);
@@ -68,6 +72,7 @@ export class ResultUploadComponent implements OnInit {
   private readonly router = inject(Router);
 
   readonly resultId = this.route.snapshot.queryParamMap.get('resultId');
+  readonly userRole = this.authService.activeAccount()?.role as RoleEnum;
 
   referenceTableResultUploadRef =
     viewChild<ReferenceTableResultUploadComponent>(
@@ -123,6 +128,8 @@ export class ResultUploadComponent implements OnInit {
 
   loadingResult = signal<boolean>(false);
   resultEntryCompleted = signal<boolean>(false);
+
+  searchStudentValue = signal<string | null>(null);
 
   students = signal<Record<SegmentValue, Partial<IStudentGrade>[]>>({
     REGULAR: [],
@@ -326,6 +333,20 @@ export class ResultUploadComponent implements OnInit {
       });
   }
 
+  importResultDocument() {
+    this.dialog
+      .open(UploadResultDialogComponent, {
+        width: '600px',
+      })
+      .afterClosed()
+      .subscribe({
+        next: async (file: File) => {
+          const students = await this.utilsService.convertExcelToJson(file);
+          if (file) this.importResult(file, students.records);
+        },
+      });
+  }
+
   importResult(file: File, studentRecords: Record<string, unknown>[]) {
     this.uploading.set(true);
 
@@ -416,5 +437,7 @@ export class ResultUploadComponent implements OnInit {
       });
   }
 
-  onStudentSearch(value: string) {}
+  onStudentSearch(value: string) {
+    this.searchStudentValue.set(value);
+  }
 }

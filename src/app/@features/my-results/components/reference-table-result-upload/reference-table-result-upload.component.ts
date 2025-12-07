@@ -49,18 +49,21 @@ export class ReferenceTableResultUploadComponent {
   private readonly studentService = inject(StudentService);
   private readonly fb = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
-
   private readonly route = inject(ActivatedRoute);
+
   private readonly userRole = this.authService.activeAccount()
     ?.role as RoleEnum;
 
   students = input<Partial<IStudentGrade>[]>([]);
+  searchValue = input<string | null>(null);
   refreshTable = input<boolean>(false);
+
   uploadResultEvent = output<Partial<IStudentGrade>>();
 
-  readonly status: string = this.route.snapshot.queryParamMap.get('status')!;
-
+  allRows = signal<FormGroup[]>([]);
   dataSource = signal<FormGroup[]>([]);
+
+  readonly status: string = this.route.snapshot.queryParamMap.get('status')!;
   readonly displayedColumns = [
     'registrationNumber',
     'fullName',
@@ -100,6 +103,28 @@ export class ReferenceTableResultUploadComponent {
       }
     });
 
+    // Search Implementation
+    effect(() => {
+      const term = (this.searchValue() ?? '').trim().toLowerCase();
+      const rows = this.allRows();
+
+      if (!term) {
+        this.dataSource.set(rows);
+        return;
+      }
+
+      const filtered = rows.filter((row) => {
+        const { registrationNumber, fullName } =
+          row.getRawValue() as Partial<IStudentGrade>;
+        return (
+          registrationNumber?.toLowerCase().includes(term) ||
+          fullName?.toLowerCase().includes(term)
+        );
+      });
+
+      this.dataSource.set(filtered);
+    });
+
     this.inputSubject
       .pipe(debounceTime(800), takeUntilDestroyed(this.destroyRef))
       .subscribe(({ index }) => this.handleRowInput(index));
@@ -123,7 +148,7 @@ export class ReferenceTableResultUploadComponent {
 
     this.rows.markAsPristine();
 
-    // Update the table datasource so Material detects changes
+    this.allRows.set([...this.rows.controls]);
     this.dataSource.set([...this.rows.controls]);
   }
 
@@ -200,7 +225,7 @@ export class ReferenceTableResultUploadComponent {
       else row.get('grade')?.setValue('F');
 
       // Status
-      if (total <= 30) row.get('status')?.setValue('FAIL');
+      if (total <= 39) row.get('status')?.setValue('FAIL');
       else row.get('status')?.setValue('PASS');
 
       this.completedRows.add(index);

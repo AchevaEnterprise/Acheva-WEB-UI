@@ -1,3 +1,7 @@
+<header class="mb-4">
+  <app-back-button />
+</header>
+
 <!-- ANALTYICS -->
 <div
   class="grid lg:grid-cols-[60%_1fr] md:grid-cols-2 sm:grid-cols-1 gap-4 p-4 border-[1px] border-neutral-300 rounded-[8px]"
@@ -147,7 +151,9 @@
 
       @if (!isUploaded()) {
         <app-button
-          label="Upload Results"
+          [label]="
+            userRole === RoleEnum.LECTURER ? 'Upload Results' : 'Import Results'
+          "
           type="outline"
           class="btn-md"
           [loading]="uploading()"
@@ -156,23 +162,12 @@
         />
       }
 
-      @if (isUploaded()) {
-        <app-button
-          label="Replace Results"
-          type="outline"
-          class="btn-md"
-          icon="icons/general/replace-file-icon.svg"
-          (clickEvent)="replaceResultDocument()"
-          *appRoleAccess="[RoleEnum.LECTURER, RoleEnum.COURSE_ADVISOR]"
-        />
-      }
-
-      <app-button
+      <!-- <app-button
         label="Delete File"
         type="clear"
         icon="icons/general/trash-icon.svg"
         class="btn-md"
-      />
+      /> -->
     </div>
   </div>
 
@@ -211,7 +206,6 @@
       @case ('UNREGISTERED') {
         <app-reference-table-result-upload
           #unregisteredTableResultUploadRef
-          [loading]="loadingResult()"
           [students]="students()['UNREGISTERED']"
           (uploadResultEvent)="uploadResult($event)"
         />

@@ -20,6 +20,7 @@ import { SvgComponent } from '../../../../../@shared/components/svg/svg.componen
 import { ICourse, ICourseQuery } from '../../../../courses/models/course.model';
 import { CoursesService } from '../../../../courses/services/courses.service';
 import { UnassignCourseCordinatorComponent } from '../../../../../@shared/components/unassign-course-cordinator/unassign-course-cordinator.component';
+import { BackButtonComponent } from "../../../../../@shared/components/back-button/back-button.component";
 
 @Component({
   selector: 'app-course-management',
@@ -34,7 +35,8 @@ import { UnassignCourseCordinatorComponent } from '../../../../../@shared/compon
     MatSelectModule,
     EmptyStateComponent,
     LoaderComponent,
-  ],
+    BackButtonComponent
+],
   templateUrl: './course-management.component.html',
   styleUrl: './course-management.component.scss',
 })

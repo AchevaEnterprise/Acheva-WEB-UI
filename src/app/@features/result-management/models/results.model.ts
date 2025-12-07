@@ -1,4 +1,5 @@
 import { IDepartment, ISchool } from '../../../@core/models/school.model';
+import { RoleEnum } from '../../auth/model/auth.model';
 import { ICourse } from '../../courses/models/course.model';
 
 export type SegmentValue = 'REGULAR' | 'REFERENCE' | 'UNREGISTERED';
@@ -45,6 +46,7 @@ export interface IResult {
     E: number;
     F: number;
   };
+  progress?: number;
   updatedAt?: Date;
 }
 
@@ -95,4 +97,19 @@ export interface IResultEntriesQuery {
 export interface ISendSelectedResult {
   resultId: string;
   recipient: string;
+}
+
+export interface IResultComment {
+  _id: string;
+  result: string;
+  lecturer: {
+    _id: string;
+    firstname: string;
+    lastname: string;
+    role: RoleEnum;
+    accessLevel: string;
+  };
+  comment: string;
+  createdAt: Date;
+  updatedAt: Date;
 }

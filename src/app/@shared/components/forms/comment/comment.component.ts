@@ -1,4 +1,16 @@
-import { Component, input, output, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
+import {
+  afterNextRender,
+  Component,
+  effect,
+  ElementRef,
+  inject,
+  input,
+  output,
+  signal,
+  viewChild,
+} from '@angular/core';
+import { rxResource } from '@angular/core/rxjs-interop';
 import {
   ControlValueAccessor,
   NG_VALUE_ACCESSOR,
@@ -6,7 +18,10 @@ import {
 } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { IResult } from '../../../../@features/result-management/models/results.model';
+import { of } from 'rxjs';
+import { ResultsService } from '../../../../@features/result-management/services/results.service';
+import { EmptyStateComponent } from '../../empty-state/empty-state.component';
+import { LoaderComponent } from '../../loader/loader.component';
 import { ButtonComponent } from '../button/button.component';
 
 @Component({
@@ -16,6 +31,9 @@ import { ButtonComponent } from '../button/button.component';
     MatFormFieldModule,
     MatInputModule,
     ButtonComponent,
+    LoaderComponent,
+    EmptyStateComponent,
+    DatePipe,
   ],
   templateUrl: './comment.component.html',
   styleUrl: './comment.component.scss',
@@ -28,14 +46,47 @@ import { ButtonComponent } from '../button/button.component';
   ],
 })
 export class CommentComponent implements ControlValueAccessor {
-  result = input<IResult | null>();
+  private readonly resultService = inject(ResultsService);
+
+  resultId = input<string>();
+  refresh = input<boolean>();
   showSubmitBtn = input<boolean>(false);
-  submitEvent = output<string>();
+  submitEvent = output<{ resultId: string; comment: string }>();
 
   value = signal<string>('');
   private onChange: (value: string) => void = () => {};
   private onTouched: () => void = () => {};
   disabled = false;
+
+  comments = rxResource({
+    request: () => this.resultId(),
+    loader: ({ request }) =>
+      request ? this.resultService.getResultComments(request) : of(undefined),
+  });
+
+  commentContainer = viewChild<ElementRef>('commentTray');
+
+  constructor() {
+    effect(() => {
+      const refresh = this.refresh();
+
+      if (refresh) {
+        this.comments.reload();
+
+        afterNextRender(() => {
+          const elRef = this.commentContainer();
+          const el = elRef?.nativeElement as HTMLElement | undefined;
+
+          if (!el) return;
+
+          el.scrollTo({
+            top: el.scrollHeight,
+            behavior: 'smooth',
+          });
+        });
+      }
+    });
+  }
 
   writeValue(obj: any): void {
     this.value.set(obj ?? '');
@@ -63,7 +114,12 @@ export class CommentComponent implements ControlValueAccessor {
     this.onTouched();
   }
 
-  submit() {
-    this.submitEvent.emit(this.value());
+  submit(commentInputRef: HTMLTextAreaElement) {
+    this.submitEvent.emit({
+      resultId: this.resultId()!,
+      comment: this.value(),
+    });
+
+    commentInputRef.value = '';
   }
 }

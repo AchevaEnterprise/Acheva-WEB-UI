@@ -12,6 +12,7 @@ import {
   ICreateResultEntry,
   IPreparedResultQuery,
   IResult,
+  IResultComment,
   IResultEntriesQuery,
   IResultQuery,
   ISendSelectedResult,
@@ -61,6 +62,21 @@ export class ResultsService {
   ): Observable<IAPIResponse<unknown>> {
     return this.http.get<IAPIResponse<unknown>>(
       `${this.resultsUrl}/prepared-results`
+    );
+  }
+
+  getResultComments(
+    resultId: string
+  ): Observable<IAPIResponse<IResultComment[]>> {
+    return this.http.get<IAPIResponse<IResultComment[]>>(
+      `${this.resultsUrl}/${resultId}/comments`
+    );
+  }
+
+  sendResultComment(resultId: string, comment: string) {
+    return this.http.post<IAPIResponse<unknown>>(
+      `${this.resultsUrl}/${resultId}/comments`,
+      { comment }
     );
   }
 
