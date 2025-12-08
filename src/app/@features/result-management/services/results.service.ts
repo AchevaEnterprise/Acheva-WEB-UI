@@ -15,6 +15,7 @@ import {
   IResultComment,
   IResultEntriesQuery,
   IResultQuery,
+  IResultStatusCount,
   ISendSelectedResult,
   IUpdateResultEntry,
 } from '../models/results.model';
@@ -237,6 +238,31 @@ export class ResultsService {
   getResultAnalytics(resultId: string): Observable<IAPIResponse<unknown>> {
     return this.http.get<IAPIResponse<unknown>>(
       `${this.resultsUrl}/${resultId}/analytics`
+    );
+  }
+
+  getResultStatusCounts(): Observable<IAPIResponse<IResultStatusCount>> {
+    return this.http.get<IAPIResponse<IResultStatusCount>>(
+      `${this.resultsUrl}/status-counts`
+    );
+  }
+
+  getCourseResultsAnalytics(query: {
+    courseId: string;
+    session: string;
+  }): Observable<IAPIResponse<unknown>> {
+    let params = new HttpParams();
+    if (query) {
+      if (query.courseId) {
+        params = params.append('courseId', query.courseId);
+      }
+      if (query.session) {
+        params = params.append('session', query.session);
+      }
+    }
+    return this.http.get<IAPIResponse<unknown>>(
+      `${this.resultsUrl}/total-analytics`,
+      { params }
     );
   }
 

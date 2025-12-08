@@ -113,3 +113,30 @@ export interface IResultComment {
   createdAt: Date;
   updatedAt: Date;
 }
+
+type ResultStatus =
+  | 'DRAFT'
+  | 'PENDING'
+  | 'UNVERIFIED'
+  | 'VERIFIED'
+  | 'PUBLISHED'
+  | 'IMPORTED';
+
+export interface IResultStatusCount {
+  role: RoleEnum;
+  allowedStatuses: ResultStatus[];
+  statusCounts: {
+    DRAFT: number;
+    PENDING: number;
+    UNVERIFIED: number;
+    VERIFIED: number;
+    PUBLISHED: number;
+    IMPORTED: number;
+  };
+  summary: {
+    total: number;
+    pendingAction: number;
+    currentlyWithMe: number;
+    sentByMe: number;
+  };
+}

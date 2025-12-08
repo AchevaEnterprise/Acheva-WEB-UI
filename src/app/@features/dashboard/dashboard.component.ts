@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, inject, model, signal } from '@angular/core';
+import { Component, inject, model, OnInit, signal } from '@angular/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatFormFieldModule, MatPrefix } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -21,6 +21,7 @@ import { SvgComponent } from '../../@shared/components/svg/svg.component';
 import { RoleEnum } from '../auth/model/auth.model';
 import { AuthenticationService } from '../auth/service/auth.service';
 import { ICourse } from '../courses/models/course.model';
+import { ResultsService } from '../result-management/services/results.service';
 import {
   ActivityComponent,
   IActivity,
@@ -55,8 +56,10 @@ import { ChartComponent } from './components/chart/chart.component';
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
 })
-export class DashboardComponent {
+export class DashboardComponent implements OnInit {
   private readonly authService = inject(AuthenticationService);
+  private readonly resultService = inject(ResultsService);
+
   analtyics = signal<IAnalytics[]>([
     {
       label: 'Drafts',
@@ -265,5 +268,44 @@ export class DashboardComponent {
       //   break;
       // }
     }
+  }
+
+  ngOnInit(): void {
+    this.getDashboardAnalytics();
+  }
+
+  getDashboardAnalytics() {
+    this.resultService.getResultStatusCounts().subscribe({
+      next: (resp) => {
+        if (resp.status) {
+          const { statusCounts } = resp.data;
+
+          this.analtyics.update((analytics: IAnalytics[]) => {
+            for (const stats of analytics) {
+              if (stats.label.toLowerCase().includes('draft')) {
+                stats.count = statusCounts.DRAFT;
+              }
+              if (stats.label.toLowerCase().includes('pending')) {
+                stats.count = statusCounts.PENDING;
+              }
+              if (stats.label.toLowerCase().includes('unverified')) {
+                stats.count = statusCounts.UNVERIFIED;
+              }
+              if (stats.label.toLowerCase().includes('verified')) {
+                stats.count = statusCounts.VERIFIED;
+              }
+              if (stats.label.toLowerCase().includes('published')) {
+                stats.count = statusCounts.PENDING;
+              }
+              if (stats.label.toLowerCase().includes('imported')) {
+                stats.count = statusCounts.IMPORTED;
+              }
+            }
+
+            return analytics;
+          });
+        }
+      },
+    });
   }
 }

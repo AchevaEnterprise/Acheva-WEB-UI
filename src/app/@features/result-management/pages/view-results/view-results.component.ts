@@ -7,6 +7,7 @@ import { finalize, forkJoin } from 'rxjs';
 import { RoleAccessDirective } from '../../../../@core/directives/role-access.directive';
 import { IPaginator } from '../../../../@core/models/paginator.model';
 import { ToastService } from '../../../../@core/utility/toast.service';
+import { BackButtonComponent } from '../../../../@shared/components/back-button/back-button.component';
 import { CardComponent } from '../../../../@shared/components/card/card.component';
 import { ConfirmationComponent } from '../../../../@shared/components/confirmation/confirmation.component';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
@@ -16,7 +17,6 @@ import { AnalyticsChartComponent } from '../../../my-results/components/analytic
 import { ResultManagementFileTableComponent } from '../../components/result-management-file-table/result-management-file-table.component';
 import { IResult, ISendSelectedResult } from '../../models/results.model';
 import { ResultsService } from '../../services/results.service';
-import { BackButtonComponent } from "../../../../@shared/components/back-button/back-button.component";
 
 @Component({
   selector: 'app-view-results',
@@ -29,8 +29,8 @@ import { BackButtonComponent } from "../../../../@shared/components/back-button/
     CardComponent,
     RoleAccessDirective,
     ButtonComponent,
-    BackButtonComponent
-],
+    BackButtonComponent,
+  ],
   templateUrl: './view-results.component.html',
   styleUrl: './view-results.component.scss',
 })
@@ -43,6 +43,7 @@ export class ViewResultsComponent implements OnInit {
 
   readonly courseId: string =
     this.route.snapshot.queryParamMap.get('courseId')!;
+  readonly session: string = this.route.snapshot.queryParamMap.get('session')!;
   readonly status: string = this.route.snapshot.queryParamMap.get('status')!;
 
   results = signal<IResult[]>([]);
@@ -76,12 +77,15 @@ export class ViewResultsComponent implements OnInit {
       status: this.status,
       hasBeenSent: true,
     });
-    // const analytics$ = this.resultsService.getResultAnalytics(this.resultId);
+    const analytics$ = this.resultsService.getCourseResultsAnalytics({
+      courseId: this.courseId,
+      session: this.session,
+    });
 
-    forkJoin([result$])
+    forkJoin([result$, analytics$])
       .pipe(finalize(() => this.loadingResult.set(false)))
       .subscribe({
-        next: ([resultResp]) => {
+        next: ([resultResp, analyticsResp]) => {
           if (resultResp.status) {
             const { page, limit, total, result } = resultResp.data;
 
@@ -95,41 +99,34 @@ export class ViewResultsComponent implements OnInit {
             this.results.set(result);
           }
 
-          // if (analyticsResp.status) {
-          //   const {
-          //     analytics,
-          //     totalPass,
-          //     totalFail,
-          //     entries,
-          //     studentsWithoutEntries,
-          //   } = analyticsResp.data as {
-          //     analytics: Record<string, number>;
-          //     total: number;
-          //     totalPass: number;
-          //     totalFail: number;
-          //     entries: Partial<IStudentGrade>[];
-          //     studentsWithoutEntries?: Partial<IStudentGrade>[];
-          //   };
+          if (analyticsResp.status) {
+            const { A, B, C, D, E, F, total, totalPass, totalFail } =
+              analyticsResp.data as {
+                A: number;
+                B: number;
+                C: number;
+                D: number;
+                E: number;
+                F: number;
+                total: number;
+                totalPass: number;
+                totalFail: number;
+              };
 
-          //   const analyticsData = [
-          //     analytics['A'] || 0,
-          //     analytics['B'] || 0,
-          //     analytics['C'] || 0,
-          //     analytics['D'] || 0,
-          //     analytics['E'] || 0,
-          //     analytics['F'] || 0,
-          //   ];
+            const analyticsData = [
+              A || 0,
+              B || 0,
+              C || 0,
+              D || 0,
+              E || 0,
+              F || 0,
+            ];
 
-          //   const studentResultEntries = [
-          //     ...entries,
-          //     ...(studentsWithoutEntries ?? []),
-          //   ];
-
-          //   this.analyticsChartData.set(analyticsData);
-          //   this.totalStudent.set(studentResultEntries.length);
-          //   this.totalStudentPass.set(totalPass || 0);
-          //   this.totalStudentFail.set(totalFail || 0);
-          // }
+            this.analyticsChartData.set(analyticsData);
+            this.totalStudent.set(total);
+            this.totalStudentPass.set(totalPass || 0);
+            this.totalStudentFail.set(totalFail || 0);
+          }
         },
       });
   }

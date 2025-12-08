@@ -46,7 +46,7 @@ import { ResultsService } from '../../../result-management/services/results.serv
 import { CoursePreviewComponent } from '../../components/course-preview/course-preview.component';
 import { ICourse, ICourseQuery } from '../../models/course.model';
 import { CoursesService } from '../../services/courses.service';
-import { BackButtonComponent } from "../../../../@shared/components/back-button/back-button.component";
+import { BackButtonComponent } from '../../../../@shared/components/back-button/back-button.component';
 
 @Component({
   selector: 'app-course-details',
@@ -61,8 +61,8 @@ import { BackButtonComponent } from "../../../../@shared/components/back-button/
     ButtonComponent,
     MatDivider,
     SearchSelectComponent,
-    BackButtonComponent
-],
+    BackButtonComponent,
+  ],
   templateUrl: './course-details.component.html',
   styleUrl: './course-details.component.scss',
 })

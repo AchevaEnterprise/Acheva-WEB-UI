@@ -116,9 +116,9 @@ export class CreateAccountComponent implements OnInit, OnDestroy {
     fullname: new FormControl(null, Validators.required),
     email: new FormControl(null, [Validators.required, Validators.email]),
     school: new FormControl(null, Validators.required),
-    faculty: new FormControl(null, Validators.required),
-    department: new FormControl(null, Validators.required),
-    title: new FormControl(null, Validators.required),
+    faculty: new FormControl(null),
+    department: new FormControl(null),
+    title: new FormControl(null),
     role: new FormControl(null, Validators.required),
     password: new FormControl(null, Validators.required),
     confirm_password: new FormControl(null, Validators.required),
@@ -127,7 +127,10 @@ export class CreateAccountComponent implements OnInit, OnDestroy {
   showPassword = signal<boolean>(false);
   showConfirmPassword = signal<boolean>(false);
 
+  RoleEnum = RoleEnum;
+
   ngOnInit(): void {
+    this.verifyRole();
     this.getSchools();
   }
 
@@ -137,6 +140,36 @@ export class CreateAccountComponent implements OnInit, OnDestroy {
 
   toggleConfirmPasswordVisibility() {
     this.showConfirmPassword.update((val) => !val);
+  }
+
+  verifyRole() {
+    this.form.controls['role'].valueChanges.subscribe({
+      next: (role: RoleEnum) => {
+        if (role === RoleEnum.LECTURER) {
+          this.form.controls['title'].setValidators(Validators.required);
+          this.form.controls['faculty'].setValidators(Validators.required);
+          this.form.controls['department'].setValidators(Validators.required);
+        } else {
+          if (this.form.controls['title'].hasValidator(Validators.required)) {
+            this.form.controls['title'].removeValidators(Validators.required);
+          } else if (
+            this.form.controls['faculty'].hasValidator(Validators.required)
+          ) {
+            this.form.controls['faculty'].removeValidators(Validators.required);
+          } else if (
+            this.form.controls['department'].hasValidator(Validators.required)
+          ) {
+            this.form.controls['department'].removeValidators(
+              Validators.required
+            );
+          }
+        }
+
+        this.form.controls['title'].updateValueAndValidity();
+        this.form.controls['faculty'].updateValueAndValidity();
+        this.form.controls['department'].updateValueAndValidity();
+      },
+    });
   }
 
   getSchools() {

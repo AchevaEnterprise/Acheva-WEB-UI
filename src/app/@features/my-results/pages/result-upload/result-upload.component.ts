@@ -35,7 +35,7 @@ import { IStudentGrade } from '../../../students/models/student.model';
 import { AnalyticsChartComponent } from '../../components/analytics-chart/analytics-chart.component';
 import { ReferenceTableResultUploadComponent } from '../../components/reference-table-result-upload/reference-table-result-upload.component';
 import { RegularTableResultUploadComponent } from '../../components/regular-table-result-upload/regular-table-result-upload.component';
-import { BackButtonComponent } from "../../../../@shared/components/back-button/back-button.component";
+import { BackButtonComponent } from '../../../../@shared/components/back-button/back-button.component';
 
 @Component({
   selector: 'app-result-upload',
@@ -57,8 +57,8 @@ import { BackButtonComponent } from "../../../../@shared/components/back-button/
     RegularTableResultUploadComponent,
     ReferenceTableResultUploadComponent,
     RoleAccessDirective,
-    BackButtonComponent
-],
+    BackButtonComponent,
+  ],
   templateUrl: './result-upload.component.html',
   styleUrl: './result-upload.component.scss',
 })

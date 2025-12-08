@@ -27,7 +27,7 @@ import {
   SegmentValue,
 } from '../../models/results.model';
 import { ResultsService } from '../../services/results.service';
-import { BackButtonComponent } from "../../../../@shared/components/back-button/back-button.component";
+import { BackButtonComponent } from '../../../../@shared/components/back-button/back-button.component';
 
 @Component({
   selector: 'app-edit-results',
@@ -42,8 +42,8 @@ import { BackButtonComponent } from "../../../../@shared/components/back-button/
     ButtonComponent,
     RoleAccessDirective,
     LoaderComponent,
-    BackButtonComponent
-],
+    BackButtonComponent,
+  ],
   templateUrl: './edit-results.component.html',
   styleUrl: './edit-results.component.scss',
 })

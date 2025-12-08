@@ -1,13 +1,15 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import { MatTableModule } from '@angular/material/table';
 import { finalize } from 'rxjs';
+import { EmptyStateComponent } from '../../../../@shared/components/empty-state/empty-state.component';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
 import { SearchInputComponent } from '../../../../@shared/components/forms/search-input/search-input.component';
+import { LoaderComponent } from '../../../../@shared/components/loader/loader.component';
+import { UploadDialogComponent } from '../../../../@shared/components/upload-dialog/upload-dialog.component';
 import { AuthenticationService } from '../../../auth/service/auth.service';
 import { IStudent } from '../../models/student.model';
 import { StudentService } from '../../services/student.service';
-import { LoaderComponent } from '../../../../@shared/components/loader/loader.component';
-import { EmptyStateComponent } from '../../../../@shared/components/empty-state/empty-state.component';
 
 @Component({
   selector: 'app-students',
@@ -24,6 +26,7 @@ import { EmptyStateComponent } from '../../../../@shared/components/empty-state/
 export class StudentsComponent implements OnInit {
   private readonly authService = inject(AuthenticationService);
   private readonly studentService = inject(StudentService);
+  private readonly dialog = inject(MatDialog);
 
   displayedColumns: string[] = ['registrationNumber', 'fullName'];
   dataSource = signal<IStudent[]>([]);
@@ -57,7 +60,20 @@ export class StudentsComponent implements OnInit {
       });
   }
 
-  uploadFile() {}
+  uploadFile() {
+    this.dialog
+      .open(UploadDialogComponent, {
+        width: '600px',
+        data: {
+          title: 'Upload Student List',
+          description: 'Upload students list. Supported formats: .xlsx, .csv',
+        },
+      })
+      .afterClosed()
+      .subscribe({
+        next: (file: File) => {},
+      });
+  }
 
   addStudent() {}
 }

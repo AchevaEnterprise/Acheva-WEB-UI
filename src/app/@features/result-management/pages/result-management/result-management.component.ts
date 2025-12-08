@@ -542,11 +542,15 @@ export class ResultManagementComponent implements OnInit {
   }
 
   viewFolder(course: ICourse) {
-    const { _id } = course;
+    const { _id, session } = course;
 
     this.router.navigate(['view-results'], {
       relativeTo: this.route,
-      queryParams: { courseId: _id, status: this.activeSegment().value },
+      queryParams: {
+        courseId: _id,
+        status: this.activeSegment().value,
+        session,
+      },
     });
   }
 
