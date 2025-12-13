@@ -1,8 +1,9 @@
 #container {
   display: grid;
   place-items: center;
-  height: 100%;
+  min-height: 30vh;
   width: 100%;
+
   img {
     transition: all 2s ease-in-out;
     animation: pulse 2s ease-out infinite;
@@ -13,6 +14,7 @@
     100% {
       transform: scale(1);
     }
+
     50% {
       transform: scale(1.2);
     }

@@ -87,9 +87,10 @@ export class ResultManagementFolderTableComponent implements OnInit {
 
   loadUserSchool() {
     const currentUser = this.authService.activeAccount();
+
     if (currentUser) {
       const schoolId = currentUser.school!._id;
-      this.getFaculties(schoolId);
+      if (schoolId) this.getFaculties(schoolId);
     }
   }
 

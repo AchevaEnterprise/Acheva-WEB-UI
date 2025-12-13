@@ -116,15 +116,28 @@
             (trackResultEvent)="trackResult($event)"
           />
 
-          <app-result-management-folder-table
-            *appRoleAccess="[RoleEnum.COURSE_COORDINATOR]"
-            #folderTableRef
-            [expand]="expandView()"
-            [loading]="loadingResults()"
-            [courses]="courses()"
-            [pagination]="pagination()"
-            (viewFolderEvent)="viewFolder($event)"
-          />
+          <ng-container *appRoleAccess="[RoleEnum.COURSE_COORDINATOR]">
+            @if (activeSegment().value === 'DRAFT') {
+              <app-result-management-folder-table
+                #folderTableRef
+                [expand]="expandView()"
+                [loading]="loadingResults()"
+                [courses]="courses()"
+                [pagination]="pagination()"
+                (viewFolderEvent)="viewFolder($event)"
+              />
+            } @else {
+              <app-result-management-file-table
+                #fileTableRef
+                [expand]="expandView()"
+                [loading]="loadingResults()"
+                [results]="results()"
+                [pagination]="pagination()"
+                (viewResultEvent)="viewResult($event)"
+                (trackResultEvent)="trackResult($event)"
+              />
+            }
+          </ng-container>
         </ng-container>
       </app-card>
 
