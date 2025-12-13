@@ -56,4 +56,13 @@ export class LecturersService {
       }
     );
   }
+
+  importStudentDocument(file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<IAPIResponse<any>>(
+      `${this.lecturerUrl}/students/import`,
+      formData
+    );
+  }
 }

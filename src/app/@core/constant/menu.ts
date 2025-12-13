@@ -32,7 +32,7 @@ export const MENU: IMenu[] = [
   },
   {
     label: 'My Result',
-    active_icon: 'icons/menu/my-result-inactive.svg',
+    active_icon: 'icons/menu/my-result-active.svg',
     inactive_icon: 'icons/menu/my-result-inactive.svg',
     route: 'my-result',
     isActive: true,
@@ -46,7 +46,7 @@ export const MENU: IMenu[] = [
   },
   {
     label: 'Result Management',
-    active_icon: 'icons/menu/result-management-inactive.svg',
+    active_icon: 'icons/menu/result-management-active.svg',
     inactive_icon: 'icons/menu/result-management-inactive.svg',
     route: 'result-management',
     isActive: true,
@@ -60,7 +60,7 @@ export const MENU: IMenu[] = [
   },
   {
     label: 'Students',
-    active_icon: 'icons/menu/students-inactive.svg',
+    active_icon: 'icons/menu/students-active.svg',
     inactive_icon: 'icons/menu/students-inactive.svg',
     route: 'students',
     isActive: true,
@@ -74,7 +74,7 @@ export const MENU: IMenu[] = [
   },
   {
     label: 'History',
-    active_icon: 'icons/menu/history-inactive.svg',
+    active_icon: 'icons/menu/history-active.svg',
     inactive_icon: 'icons/menu/history-inactive.svg',
     route: 'history',
     isActive: true,
@@ -88,7 +88,7 @@ export const MENU: IMenu[] = [
   },
   {
     label: 'Dues Management',
-    active_icon: 'icons/menu/dues-management-inactive.svg',
+    active_icon: 'icons/menu/dues-management-active.svg',
     inactive_icon: 'icons/menu/dues-management-inactive.svg',
     route: 'dues-management',
     isActive: true,
@@ -158,7 +158,7 @@ export const MENU: IMenu[] = [
   },
   {
     label: 'User Settings',
-    active_icon: 'icons/menu/settings-inactive.svg',
+    active_icon: 'icons/menu/settings-active.svg',
     inactive_icon: 'icons/menu/settings-inactive.svg',
     route: 'user-settings',
     isActive: true,

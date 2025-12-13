@@ -35,6 +35,7 @@ import {
 } from '../../../../@core/store/school/school.selector';
 import { ToastService } from '../../../../@core/utility/toast.service';
 import { UtilityService } from '../../../../@core/utility/utility.service';
+import { BackButtonComponent } from '../../../../@shared/components/back-button/back-button.component';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
 import { SearchSelectComponent } from '../../../../@shared/components/forms/search-select/search-select.component';
 import { AuthenticationService } from '../../../auth/service/auth.service';
@@ -46,7 +47,6 @@ import { ResultsService } from '../../../result-management/services/results.serv
 import { CoursePreviewComponent } from '../../components/course-preview/course-preview.component';
 import { ICourse, ICourseQuery } from '../../models/course.model';
 import { CoursesService } from '../../services/courses.service';
-import { BackButtonComponent } from '../../../../@shared/components/back-button/back-button.component';
 
 @Component({
   selector: 'app-course-details',
@@ -350,6 +350,7 @@ export class CourseDetailsComponent implements OnInit {
       semester: semester || '',
       school: this.school()?._id!,
       department: department?._id,
+      faculty: faculty?._id,
       status: ResultStatusEnum.PENDING,
     };
 

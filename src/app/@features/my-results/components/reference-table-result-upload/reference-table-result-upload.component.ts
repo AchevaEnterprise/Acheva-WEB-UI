@@ -225,8 +225,8 @@ export class ReferenceTableResultUploadComponent {
       else row.get('grade')?.setValue('F');
 
       // Status
-      if (total <= 39) row.get('status')?.setValue('FAIL');
-      else row.get('status')?.setValue('PASS');
+      if (total >= 40) row.get('status')?.setValue('PASS');
+      else row.get('status')?.setValue('FAIL');
 
       this.completedRows.add(index);
       this.uploadResultEvent.emit(row.getRawValue());

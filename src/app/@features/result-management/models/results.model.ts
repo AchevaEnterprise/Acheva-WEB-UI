@@ -53,6 +53,7 @@ export interface IResult {
 export interface ICreateResult {
   course: string;
   department: string;
+  faculty: string;
   session: string;
   level: string;
   semester: string;
