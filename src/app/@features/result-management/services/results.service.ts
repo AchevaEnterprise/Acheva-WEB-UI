@@ -10,6 +10,7 @@ import { RoleEnum } from '../../auth/model/auth.model';
 import {
   ICreateResult,
   ICreateResultEntry,
+  IGroupedResult,
   IPreparedResultQuery,
   IResult,
   IResultComment,
@@ -56,6 +57,22 @@ export class ResultsService {
     return this.http.get<IAPIResponse<IResult>>(
       `${this.resultsUrl}/${resultId}`
     );
+  }
+
+  getGroupResults(): Observable<
+    IAPIResponse<{
+      data: IGroupedResult[];
+      message: string;
+      total: number;
+    }>
+  > {
+    return this.http.get<
+      IAPIResponse<{
+        data: IGroupedResult[];
+        message: string;
+        total: number;
+      }>
+    >(`${this.resultsUrl}/sent/grouped`);
   }
 
   getPreparedResults(

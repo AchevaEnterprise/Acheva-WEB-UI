@@ -18,14 +18,16 @@ import {
 } from '../../../../@shared/components/segment-switcher/segment-switcher.component';
 import { RoleEnum } from '../../../auth/model/auth.model';
 import { AuthenticationService } from '../../../auth/service/auth.service';
-import { ICourse } from '../../../courses/models/course.model';
-import { CoursesService } from '../../../courses/services/courses.service';
 import { ResendToCourseCoordinatorComponent } from '../../components/resend-to-course-coordinator/resend-to-course-coordinator.component';
 import { ResendToDeanComponent } from '../../components/resend-to-dean/resend-to-dean.component';
 import { ResultManagementFileTableComponent } from '../../components/result-management-file-table/result-management-file-table.component';
 import { ResultManagementFolderTableComponent } from '../../components/result-management-folder-table/result-management-folder-table.component';
 import { ResultStatusTrackingComponent } from '../../components/result-status-tracking/result-status-tracking.component';
-import { IResult, ISendSelectedResult } from '../../models/results.model';
+import {
+  IGroupedResult,
+  IResult,
+  ISendSelectedResult,
+} from '../../models/results.model';
 import { ResultsService } from '../../services/results.service';
 
 @Component({
@@ -52,7 +54,6 @@ export class ResultManagementComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly resultService = inject(ResultsService);
-  private readonly courseService = inject(CoursesService);
   private readonly authService = inject(AuthenticationService);
   private readonly toast = inject(ToastService);
 
@@ -64,7 +65,7 @@ export class ResultManagementComponent implements OnInit {
 
   result = signal<IResult | null>(null);
   results = signal<IResult[]>([]);
-  courses = signal<ICourse[]>([]);
+  groupedResults = signal<IGroupedResult[]>([]);
 
   pagination = signal<IPaginator>({
     page: 1,
@@ -150,7 +151,8 @@ export class ResultManagementComponent implements OnInit {
   RoleEnum = RoleEnum;
 
   ngOnInit(): void {
-    if (this.currentRole() === RoleEnum.COURSE_COORDINATOR) this.getCourses();
+    if (this.currentRole() === RoleEnum.COURSE_COORDINATOR)
+      this.getGroupedResults();
     else this.getResults();
   }
 
@@ -180,16 +182,16 @@ export class ResultManagementComponent implements OnInit {
       });
   }
 
-  getCourses() {
+  getGroupedResults() {
     this.loadingResults.set(true);
 
-    this.courseService
-      .getCourses()
+    this.resultService
+      .getGroupResults()
       .pipe(finalize(() => this.loadingResults.set(false)))
       .subscribe({
         next: (resp) => {
           if (resp.status) {
-            this.courses.set(resp.data['courses']);
+            this.groupedResults.set(resp.data.data);
           }
         },
       });
@@ -290,54 +292,6 @@ export class ResultManagementComponent implements OnInit {
             );
             this.getResults();
           }
-        },
-      });
-  }
-
-  confirmSendToHOD() {
-    const selectedFolders = this.folderTableRef()?.selection.selected;
-
-    if (!selectedFolders || selectedFolders.length < 1) {
-      this.toast.showNotification(
-        'error',
-        'No Result(s) Selected',
-        'You have not selected any result(s) to be sent'
-      );
-      return;
-    }
-
-    this.dialog
-      .open(ConfirmationComponent, {
-        width: '600px',
-        data: {
-          message: `You're about to send ${selectedFolders.length} results to their various Head of Departments. This action is irreversible, Are you sure you want to continue?`,
-        },
-      })
-      .afterClosed()
-      .subscribe({
-        next: (confirmed: boolean) => {
-          if (confirmed) this.sendToHOD(selectedFolders);
-        },
-      });
-  }
-
-  sendToHOD(selectedFolders: ICourse[]) {
-    this.sendingToHOD.set(true);
-
-    const courseIds: Array<string> = selectedFolders.map(
-      (folder: ICourse) => folder._id!
-    );
-
-    this.resultService
-      .sendBulkResult(RoleEnum.HOD, courseIds)
-      .pipe(finalize(() => this.sendingToHOD.set(false)))
-      .subscribe({
-        next: (resp) => {
-          this.toast.showNotification(
-            'success',
-            'Result Sent',
-            'Result has been sent to the Course Advisor'
-          );
         },
       });
   }
@@ -541,13 +495,13 @@ export class ResultManagementComponent implements OnInit {
     this.result.set(result);
   }
 
-  viewFolder(course: ICourse) {
-    const { _id, session } = course;
+  viewFolder(result: IGroupedResult) {
+    const { course, session } = result;
 
     this.router.navigate(['view-results'], {
       relativeTo: this.route,
       queryParams: {
-        courseId: _id,
+        courseId: course,
         status: this.activeSegment().value,
         session,
       },

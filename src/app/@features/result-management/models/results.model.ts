@@ -1,4 +1,8 @@
-import { IDepartment, ISchool } from '../../../@core/models/school.model';
+import {
+  IDepartment,
+  IFaculty,
+  ISchool,
+} from '../../../@core/models/school.model';
 import { RoleEnum } from '../../auth/model/auth.model';
 import { ICourse } from '../../courses/models/course.model';
 
@@ -48,6 +52,20 @@ export interface IResult {
   };
   progress?: number;
   updatedAt?: Date;
+}
+
+export interface IGroupedResult {
+  course: string;
+  courseCode: string;
+  courseTitle: string;
+  courseLoad: number;
+  session: string;
+  faculty: IFaculty;
+  semester: string;
+  results: IResult[];
+  totalResults: number;
+  approvedCount: number;
+  finalApprovalCount: number;
 }
 
 export interface ICreateResult {

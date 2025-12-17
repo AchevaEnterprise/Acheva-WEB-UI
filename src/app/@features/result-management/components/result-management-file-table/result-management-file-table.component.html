@@ -153,7 +153,7 @@
             </td>
           </ng-container>
 
-          <ng-container matColumnDef="lecturer">
+          <ng-container matColumnDef="uploadedBy">
             <th mat-header-cell *matHeaderCellDef>LECTURER</th>
             <td
               mat-cell
@@ -162,7 +162,7 @@
               (keydown)="trackResult(result)"
               (dblclick)="viewResult(result)"
             >
-              {{ result.lecturer }}
+              {{ result.uploadedBy.firstname }} {{ result.uploadedBy.lastname }}
             </td>
           </ng-container>
 

@@ -53,6 +53,29 @@
         </div>
 
         <div class="input-style-1 acheva-input w-full">
+          <p class="acva-para-2 fw-400 label-text">Account Type</p>
+
+          <mat-form-field [style.width.%]="100" appearance="outline">
+            <span matPrefix mat-icon-button>
+              <app-svg
+                svgWidth="1rem"
+                svgHeight="1rem"
+                src="icons/general/role-icon.svg"
+              ></app-svg>
+            </span>
+
+            <mat-select
+              placeholder="Select your account"
+              formControlName="role"
+            >
+              @for (role of roleOptions(); track $index) {
+                <mat-option [value]="role.value">{{ role.label }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <div class="input-style-1 acheva-input w-full">
           <p class="acva-para-2 fw-400 label-text">Full Name</p>
 
           <mat-form-field [style.width.%]="100" appearance="outline">
@@ -83,29 +106,6 @@
               placeholder="Enter your email address"
               formControlName="email"
             />
-          </mat-form-field>
-        </div>
-
-        <div class="input-style-1 acheva-input w-full">
-          <p class="acva-para-2 fw-400 label-text">Account Type</p>
-
-          <mat-form-field [style.width.%]="100" appearance="outline">
-            <span matPrefix mat-icon-button>
-              <app-svg
-                svgWidth="1rem"
-                svgHeight="1rem"
-                src="icons/general/role-icon.svg"
-              ></app-svg>
-            </span>
-
-            <mat-select
-              placeholder="Select your account"
-              formControlName="role"
-            >
-              @for (role of roleOptions(); track $index) {
-                <mat-option [value]="role.value">{{ role.label }}</mat-option>
-              }
-            </mat-select>
           </mat-form-field>
         </div>
 

@@ -35,11 +35,11 @@
   @if (loading()) {
     <app-loader />
   } @else {
-    @if (courses().length > 0) {
+    @if (groupedResults().length > 0) {
       <div class="w-full overflow-auto max-h-[50vh]">
-        <table mat-table [dataSource]="courses()" multiTemplateDataRows>
+        <table mat-table [dataSource]="groupedResults()" multiTemplateDataRows>
           <!-- Checkbox Column -->
-          <ng-container matColumnDef="select">
+          <!-- <ng-container matColumnDef="select">
             <th mat-header-cell *matHeaderCellDef>
               <mat-checkbox
                 (change)="$event ? toggleAllRows() : null"
@@ -59,7 +59,7 @@
               >
               </mat-checkbox>
             </td>
-          </ng-container>
+          </ng-container> -->
 
           <ng-container matColumnDef="courseCode">
             <th mat-header-cell *matHeaderCellDef>COURSE CODE</th>

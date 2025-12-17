@@ -1,4 +1,3 @@
-import { SelectionModel } from '@angular/cdk/collections';
 import {
   Component,
   DestroyRef,
@@ -34,7 +33,7 @@ import { LoaderComponent } from '../../../../@shared/components/loader/loader.co
 import { PaginatorComponent } from '../../../../@shared/components/paginator/paginator.component';
 import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
 import { AuthenticationService } from '../../../auth/service/auth.service';
-import { ICourse } from '../../../courses/models/course.model';
+import { IGroupedResult } from '../../models/results.model';
 
 @Component({
   selector: 'app-result-management-folder-table',
@@ -62,19 +61,19 @@ export class ResultManagementFolderTableComponent implements OnInit {
 
   loading = input<boolean>(false);
   expand = input<boolean>(false);
-  courses = input<ICourse[]>([]);
+  groupedResults = input<IGroupedResult[]>([]);
   pagination = input<IPaginator>();
 
-  viewFolderEvent = output<ICourse>();
+  viewFolderEvent = output<IGroupedResult>();
   pageEvent = output<PageEvent>();
 
   faculties = signal<IFaculty[]>([]);
   departments = signal<IDepartment[]>([]);
 
-  selection = new SelectionModel<ICourse>(true, []);
+  // selection = new SelectionModel<IGroupedResult>(true, []);
 
   displayedColumns: string[] = [
-    'select',
+    // 'select',
     'courseCode',
     'courseTitle',
     'faculty',
@@ -119,32 +118,32 @@ export class ResultManagementFolderTableComponent implements OnInit {
       });
   }
 
-  isAllSelected() {
-    const numSelected = this.selection.selected.length;
-    const numRows = this.courses().length;
-    return numSelected === numRows;
-  }
+  // isAllSelected() {
+  //   const numSelected = this.selection.selected.length;
+  //   const numRows = this.groupedResults().length;
+  //   return numSelected === numRows;
+  // }
 
-  /** Selects all rows if they are not all selected; otherwise clear selection. */
-  toggleAllRows() {
-    if (this.isAllSelected()) {
-      this.selection.clear();
-      return;
-    }
+  // /** Selects all rows if they are not all selected; otherwise clear selection. */
+  // toggleAllRows() {
+  //   if (this.isAllSelected()) {
+  //     this.selection.clear();
+  //     return;
+  //   }
 
-    this.selection.select(...this.courses());
-  }
+  //   this.selection.select(...this.groupedResults());
+  // }
 
-  /** The label for the checkbox on the passed row */
-  checkboxLabel(row?: ICourse): string {
-    if (!row) {
-      return `${this.isAllSelected() ? 'deselect' : 'select'} all`;
-    }
-    return `${this.selection.isSelected(row) ? 'deselect' : 'select'} row ${row._id}`;
-  }
+  // /** The label for the checkbox on the passed row */
+  // checkboxLabel(row?: IGroupedResult): string {
+  //   if (!row) {
+  //     return `${this.isAllSelected() ? 'deselect' : 'select'} all`;
+  //   }
+  //   return `${this.selection.isSelected(row) ? 'deselect' : 'select'} row ${row.session}`;
+  // }
 
-  openFolder(course: ICourse) {
-    this.viewFolderEvent.emit(course);
+  openFolder(result: IGroupedResult) {
+    this.viewFolderEvent.emit(result);
   }
 
   paginate(page: PageEvent) {

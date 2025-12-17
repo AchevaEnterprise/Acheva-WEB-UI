@@ -93,7 +93,7 @@ export class ResultManagementFileTableComponent implements OnInit, OnDestroy {
     'semester',
     'department',
     'faculty',
-    'lecturer',
+    'uploadedBy',
     'createdAt',
     'updatedAt',
     // 'actions',
@@ -115,7 +115,7 @@ export class ResultManagementFileTableComponent implements OnInit, OnDestroy {
 
       if (this.expand()) {
         this.displayedColumns.push(
-          'lecturer',
+          'uploadedBy',
           'createdAt',
           'updatedAt'
           // 'actions'
