@@ -113,7 +113,7 @@ export class CreateAccountComponent implements OnInit, OnDestroy {
   private readonly sub: Subscription = new Subscription();
 
   form: FormGroup = new FormGroup({
-    fullname: new FormControl(null, Validators.required),
+    fullname: new FormControl(),
     email: new FormControl(null, [Validators.required, Validators.email]),
     school: new FormControl(null, Validators.required),
     faculty: new FormControl(null),
@@ -146,11 +146,25 @@ export class CreateAccountComponent implements OnInit, OnDestroy {
     this.form.controls['role'].valueChanges.subscribe({
       next: (role: RoleEnum) => {
         if (role === RoleEnum.LECTURER) {
+          this.form.controls['fullname'].setValidators(Validators.required);
           this.form.controls['title'].setValidators(Validators.required);
           this.form.controls['faculty'].setValidators(Validators.required);
           this.form.controls['department'].setValidators(Validators.required);
+        } else if (role === RoleEnum.HOD) {
+          this.form.controls['faculty'].setValidators(Validators.required);
+          this.form.controls['department'].setValidators(Validators.required);
+        } else if (role === RoleEnum.DEAN) {
+          this.form.controls['faculty'].setValidators(Validators.required);
         } else {
-          if (this.form.controls['title'].hasValidator(Validators.required)) {
+          if (
+            this.form.controls['fullname'].hasValidator(Validators.required)
+          ) {
+            this.form.controls['fullname'].removeValidators(
+              Validators.required
+            );
+          } else if (
+            this.form.controls['title'].hasValidator(Validators.required)
+          ) {
             this.form.controls['title'].removeValidators(Validators.required);
           } else if (
             this.form.controls['faculty'].hasValidator(Validators.required)
@@ -165,6 +179,7 @@ export class CreateAccountComponent implements OnInit, OnDestroy {
           }
         }
 
+        this.form.controls['fullname'].updateValueAndValidity();
         this.form.controls['title'].updateValueAndValidity();
         this.form.controls['faculty'].updateValueAndValidity();
         this.form.controls['department'].updateValueAndValidity();

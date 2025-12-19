@@ -75,18 +75,20 @@
           </mat-form-field>
         </div>
 
-        <div class="input-style-1 acheva-input w-full">
-          <p class="acva-para-2 fw-400 label-text">Full Name</p>
+        @if (form.get('role')?.value === RoleEnum.LECTURER) {
+          <div class="input-style-1 acheva-input w-full">
+            <p class="acva-para-2 fw-400 label-text">Full Name</p>
 
-          <mat-form-field [style.width.%]="100" appearance="outline">
-            <input
-              matInput
-              type="text"
-              placeholder="First Name &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Middle Name &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Surname"
-              formControlName="fullname"
-            />
-          </mat-form-field>
-        </div>
+            <mat-form-field [style.width.%]="100" appearance="outline">
+              <input
+                matInput
+                type="text"
+                placeholder="First Name &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Middle Name &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Surname"
+                formControlName="fullname"
+              />
+            </mat-form-field>
+          </div>
+        }
 
         <div class="input-style-1 acheva-input w-full">
           <p class="acva-para-2 fw-400 label-text">School Email</p>
@@ -134,8 +136,14 @@
               </mat-select>
             </mat-form-field>
           </div>
+        }
 
-          <div class="grid grid-cols-2 gap-3 w-full">
+        <div class="grid grid-cols-2 gap-3 w-full">
+          @if (
+            form.get('role')?.value === RoleEnum.LECTURER ||
+            form.get('role')?.value === RoleEnum.HOD ||
+            form.get('role')?.value === RoleEnum.DEAN
+          ) {
             <div class="input-style-1 acheva-input w-full">
               <p class="acva-para-2 fw-400 label-text">Faculty</p>
 
@@ -161,7 +169,12 @@
                 </mat-select>
               </mat-form-field>
             </div>
+          }
 
+          @if (
+            form.get('role')?.value === RoleEnum.LECTURER ||
+            form.get('role')?.value === RoleEnum.HOD
+          ) {
             <div class="input-style-1 acheva-input w-full">
               <p class="acva-para-2 fw-400 label-text">Department</p>
 
@@ -186,8 +199,8 @@
                 </mat-select>
               </mat-form-field>
             </div>
-          </div>
-        }
+          }
+        </div>
 
         <div class="input-style-1 acheva-input w-full">
           <p class="acva-para-2 fw-400 label-text">Create Password</p>
