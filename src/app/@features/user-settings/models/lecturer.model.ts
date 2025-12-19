@@ -6,6 +6,7 @@ export interface ILecturer {
   firstname: string;
   lastname: string;
   email: string;
+  assignedLevelAdmissionYear: string;
   masterUserId: string | null;
   faculty: string;
   department: string;

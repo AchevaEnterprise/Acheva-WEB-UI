@@ -47,12 +47,14 @@ export class LecturersService {
 
   assignOrUnassignCourseAdvisor(
     lecturerId: string,
-    level: LevelsEnum | 'NONE'
+    level: LevelsEnum | 'NONE',
+    admissionYear?: string
   ): Observable<IAPIResponse<any>> {
     return this.http.patch<IAPIResponse<any>>(
       `${this.lecturerUrl}/assign-course-advisor/${lecturerId}`,
       {
         level,
+        assignedLevelAdmissionYear: admissionYear,
       }
     );
   }
