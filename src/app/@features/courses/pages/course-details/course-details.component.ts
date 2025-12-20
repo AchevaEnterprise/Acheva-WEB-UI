@@ -100,6 +100,8 @@ export class CourseDetailsComponent implements OnInit {
     { label: '400 Level', value: LevelsEnum.YEAR_FOUR },
     { label: '500 Level', value: LevelsEnum.YEAR_FIVE },
     { label: '600 Level', value: LevelsEnum.YEAR_SIX },
+    { label: 'Reference', value: LevelsEnum.REFERENCE },
+    { label: 'Unregistered', value: LevelsEnum.UNREGISTERED },
   ]);
   semesterOptions = signal<{ label: string; value: string }[]>([
     { label: '1st Semester', value: SemesterEnum.FIRST },

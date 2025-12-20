@@ -25,6 +25,8 @@ export enum LevelsEnum {
   YEAR_FIVE = '500',
   YEAR_SIX = '600',
   EXCEPTION = 'EXCEPTION',
+  REFERENCE = 'REFERENCE',
+  UNREGISTERED = 'UNREGISTERED',
 }
 
 export enum SemesterEnum {

@@ -59,6 +59,7 @@ export class AssignCourseAdvisorComponent {
     { label: '400 Level', value: LevelsEnum.YEAR_FOUR },
     { label: '500 Level', value: LevelsEnum.YEAR_FIVE },
     { label: '600 Level', value: LevelsEnum.YEAR_SIX },
+    { label: 'Unregistered', value: LevelsEnum.UNREGISTERED },
   ]);
 
   form = new FormGroup({
