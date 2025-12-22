@@ -495,6 +495,10 @@ export class ResultManagementComponent implements OnInit {
     this.result.set(result);
   }
 
+  deleteResult(result: IResult) {
+    console.warn(result._id);
+  }
+
   viewFolder(result: IGroupedResult) {
     const { course, session } = result;
 

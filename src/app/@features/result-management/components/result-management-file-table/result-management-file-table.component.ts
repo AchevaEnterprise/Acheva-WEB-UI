@@ -31,6 +31,7 @@ import {
   facultiesSelector,
 } from '../../../../@core/store/school/school.selector';
 import { EmptyStateComponent } from '../../../../@shared/components/empty-state/empty-state.component';
+import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
 import { LoaderComponent } from '../../../../@shared/components/loader/loader.component';
 import { PaginatorComponent } from '../../../../@shared/components/paginator/paginator.component';
 import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
@@ -51,6 +52,7 @@ import { IResult } from '../../models/results.model';
     MatMenuModule,
     EmptyStateComponent,
     LoaderComponent,
+    ButtonComponent,
   ],
   templateUrl: './result-management-file-table.component.html',
   styleUrl: './result-management-file-table.component.scss',
@@ -74,6 +76,7 @@ export class ResultManagementFileTableComponent implements OnInit, OnDestroy {
 
   viewResultEvent = output<IResult>();
   trackResultEvent = output<IResult>();
+  deleteResultEvent = output<IResult>();
   pageEvent = output<PageEvent>();
 
   displayedColumns: string[] = [
@@ -86,18 +89,6 @@ export class ResultManagementFileTableComponent implements OnInit, OnDestroy {
   ];
   dataSource = signal<IResult[]>([]);
   selection = new SelectionModel<IResult>(true, []);
-
-  expandedDisplayedColumns: string[] = [
-    'courseCode',
-    'courseTitle',
-    'semester',
-    'department',
-    'faculty',
-    'uploadedBy',
-    'createdAt',
-    'updatedAt',
-    // 'actions',
-  ];
 
   RoleEnum = RoleEnum;
 
@@ -114,12 +105,10 @@ export class ResultManagementFileTableComponent implements OnInit, OnDestroy {
       ];
 
       if (this.expand()) {
-        this.displayedColumns.push(
-          'uploadedBy',
-          'createdAt',
-          'updatedAt'
-          // 'actions'
-        );
+        this.displayedColumns.push('uploadedBy', 'createdAt', 'updatedAt');
+
+        if (this.userRole === RoleEnum.LECTURER)
+          this.displayedColumns.push('actions');
       }
 
       if (this.results()) this.dataSource.set(this.results());
@@ -223,9 +212,8 @@ export class ResultManagementFileTableComponent implements OnInit, OnDestroy {
     this.pageEvent.emit(page);
   }
 
-  makeComment(element: IResult): void {
-    // Placeholder for comment functionality
-    // This would typically open a comment dialog or navigate to comment section
+  deleteResult(result: IResult) {
+    this.deleteResultEvent.emit(result);
   }
 
   ngOnDestroy(): void {

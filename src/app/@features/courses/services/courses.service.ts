@@ -26,6 +26,7 @@ export class CoursesService {
       if (query.courseTitle)
         params = params.append('courseTitle', query.courseTitle);
       if (query.level) params = params.append('level', query.level);
+      if (query.semester) params = params.append('semester', query.semester);
     }
 
     return this.http.get<IAPIPaginatedResponse<ICourse[]>>(

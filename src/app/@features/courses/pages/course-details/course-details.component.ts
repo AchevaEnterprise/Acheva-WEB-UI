@@ -129,6 +129,7 @@ export class CourseDetailsComponent implements OnInit {
     else this.loadUserSchool();
 
     this.configureFormPropertiesToDisableOrEnable();
+    if (this.isNew) this.updateFaultyAndDepartment();
   }
 
   get getCourseTemplate() {
@@ -166,6 +167,17 @@ export class CourseDetailsComponent implements OnInit {
       this.form.get('courseCordinator')?.disable();
       this.form.get('courseLoad')?.disable();
     }
+  }
+
+  updateFaultyAndDepartment() {
+    const { faculty, department } = this.authService.activeAccount()!;
+    this.form.patchValue({
+      faculty: faculty,
+      department: department,
+    });
+
+    this.form.controls['faculty'].disable();
+    this.form.controls['department'].disable();
   }
 
   getCourseCodes(params?: Partial<ICourseQuery>) {

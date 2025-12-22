@@ -19,7 +19,7 @@
     />
   </header>
 
-  <div class="flex justify-between">
+  <div class="flex gap-4 flex-wrap justify-between">
     <app-segment-switcher
       [activeSegment]="activeSegment()"
       [segments]="segments()"
@@ -36,8 +36,16 @@
           ></app-svg>
         </span>
 
-        <mat-select placeholder="Filter">
-          <mat-option [value]="'Science'">Science</mat-option>
+        <mat-select
+          placeholder="Filter Semester"
+          [(ngModel)]="filter.semester"
+          (selectionChange)="filterBySemester($event)"
+        >
+          @for (semester of semesterOptions(); track semester) {
+            <mat-option [value]="semester.value">{{
+              semester.label
+            }}</mat-option>
+          }
         </mat-select>
       </mat-form-field>
     </div>

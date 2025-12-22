@@ -57,7 +57,7 @@
   } @else {
     @if (dataSource().length > 0) {
       <div class="w-full overflow-auto max-h-[50vh]">
-        <table mat-table [dataSource]="dataSource()" multiTemplateDataRows>
+        <table mat-table [dataSource]="dataSource()">
           <!-- Checkbox Column -->
           <ng-container matColumnDef="select">
             <th mat-header-cell *matHeaderCellDef>
@@ -189,6 +189,21 @@
               (dblclick)="viewResult(result)"
             >
               {{ result.updatedAt | date: 'MMM d, YYYY h:mm a' }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>ACTION</th>
+            <td mat-cell *matCellDef="let result">
+              <app-button
+                [disabled]="
+                  result.status !== 'DRAFT' && result.hasBeenSent === true
+                "
+                label="Delete"
+                type="outline"
+                class="btn-sm btn-error"
+                (clickEvent)="deleteResult(result)"
+              />
             </td>
           </ng-container>
 

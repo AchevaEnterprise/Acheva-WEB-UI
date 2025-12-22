@@ -3,6 +3,7 @@ import {
   IFaculty,
   ISchool,
   LevelsEnum,
+  SemesterEnum,
 } from '../../../@core/models/school.model';
 
 export interface ICourse {
@@ -44,6 +45,7 @@ export interface ICourseQuery {
   courseCode: string;
   courseTitle: string;
   level: LevelsEnum;
+  semester: SemesterEnum | string;
 }
 
 export interface ICourseTemplate {
