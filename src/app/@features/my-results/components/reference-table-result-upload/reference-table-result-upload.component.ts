@@ -22,7 +22,6 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatTableModule } from '@angular/material/table';
 import { ActivatedRoute } from '@angular/router';
 import { debounceTime, finalize, Subject } from 'rxjs';
-import { EmptyStateComponent } from '../../../../@shared/components/empty-state/empty-state.component';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
 import { SearchSelectComponent } from '../../../../@shared/components/forms/search-select/search-select.component';
 import { StatusBadgeComponent } from '../../../../@shared/components/status-badge/status-badge.component';
@@ -38,7 +37,6 @@ import { StudentService } from '../../../students/services/student.service';
     MatTableModule,
     MatCheckboxModule,
     StatusBadgeComponent,
-    EmptyStateComponent,
     MatMenuModule,
     SearchSelectComponent,
     ButtonComponent,

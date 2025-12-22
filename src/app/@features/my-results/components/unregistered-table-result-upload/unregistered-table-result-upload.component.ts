@@ -21,7 +21,6 @@ import { MatTableModule } from '@angular/material/table';
 import { ActivatedRoute } from '@angular/router';
 import { Subject, debounceTime, finalize } from 'rxjs';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
-import { SearchSelectComponent } from '../../../../@shared/components/forms/search-select/search-select.component';
 import { StatusBadgeComponent } from '../../../../@shared/components/status-badge/status-badge.component';
 import { RoleEnum } from '../../../auth/model/auth.model';
 import { AuthenticationService } from '../../../auth/service/auth.service';
@@ -31,7 +30,7 @@ import { StudentService } from '../../../students/services/student.service';
 @Component({
   selector: 'app-unregistered-table-result-upload',
   imports: [
-    SearchSelectComponent,
+    // SearchSelectComponent,
     ReactiveFormsModule,
     ButtonComponent,
     MatTableModule,
@@ -246,16 +245,7 @@ export class UnregisteredTableResultUploadComponent {
       else row.get('status')?.setValue('FAIL');
 
       this.completedRows.add(index);
-      const validRow: IStudentGrade = {
-        ...(row.getRawValue() as IStudentGrade),
-        registrationNumber: (
-          row.getRawValue().registrationNumber as {
-            registrationNumber: string;
-            fullName: string;
-          }
-        ).registrationNumber,
-      };
-      this.uploadResultEvent.emit(validRow);
+      this.uploadResultEvent.emit(row.getRawValue());
     }
   }
 
