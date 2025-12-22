@@ -35,9 +35,13 @@ export class StudentService {
     );
   }
 
-  getStudentByRegNo(regNo: string): Observable<IAPIResponse<IStudent>> {
+  getStudentByRegNo(
+    regNo: string,
+    schoolId: string
+  ): Observable<IAPIResponse<IStudent>> {
     let params = new HttpParams();
     params = params.append('registrationNumber', regNo);
+    params = params.append('school', schoolId);
     return this.http.get<IAPIResponse<IStudent>>(`${this.studentUrl}`, {
       params,
     });

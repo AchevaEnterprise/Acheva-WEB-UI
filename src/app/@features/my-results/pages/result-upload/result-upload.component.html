@@ -199,13 +199,15 @@
       @case ('REFERENCE') {
         <app-reference-table-result-upload
           #referenceTableResultUploadRef
+          [refreshTable]="isUploaded()"
           [students]="students()['REFERENCE']"
           (uploadResultEvent)="uploadResult($event)"
         />
       }
       @case ('UNREGISTERED') {
-        <app-reference-table-result-upload
+        <app-unregistered-table-result-upload
           #unregisteredTableResultUploadRef
+          [refreshTable]="isUploaded()"
           [students]="students()['UNREGISTERED']"
           (uploadResultEvent)="uploadResult($event)"
         />

@@ -21,6 +21,7 @@ import {
 
 import { RoleAccessDirective } from '../../../../@core/directives/role-access.directive';
 import { UtilityService } from '../../../../@core/utility/utility.service';
+import { BackButtonComponent } from '../../../../@shared/components/back-button/back-button.component';
 import { ConfirmationComponent } from '../../../../@shared/components/confirmation/confirmation.component';
 import { UploadResultDialogComponent } from '../../../../@shared/components/upload-result-dialog/upload-result-dialog.component';
 import { RoleEnum } from '../../../auth/model/auth.model';
@@ -35,7 +36,7 @@ import { IStudentGrade } from '../../../students/models/student.model';
 import { AnalyticsChartComponent } from '../../components/analytics-chart/analytics-chart.component';
 import { ReferenceTableResultUploadComponent } from '../../components/reference-table-result-upload/reference-table-result-upload.component';
 import { RegularTableResultUploadComponent } from '../../components/regular-table-result-upload/regular-table-result-upload.component';
-import { BackButtonComponent } from '../../../../@shared/components/back-button/back-button.component';
+import { UnregisteredTableResultUploadComponent } from '../../components/unregistered-table-result-upload/unregistered-table-result-upload.component';
 
 @Component({
   selector: 'app-result-upload',
@@ -58,6 +59,7 @@ import { BackButtonComponent } from '../../../../@shared/components/back-button/
     ReferenceTableResultUploadComponent,
     RoleAccessDirective,
     BackButtonComponent,
+    UnregisteredTableResultUploadComponent,
   ],
   templateUrl: './result-upload.component.html',
   styleUrl: './result-upload.component.scss',
@@ -269,6 +271,7 @@ export class ResultUploadComponent implements OnInit {
       exam: exam!,
       total: total!,
       result: this.resultId!,
+      category: this.activeSegment().value,
     };
 
     this.resultsService.createResultEntry(resultEntry).subscribe({

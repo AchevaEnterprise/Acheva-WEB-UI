@@ -17,12 +17,9 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatMenuModule } from '@angular/material/menu';
 import { MatTableModule } from '@angular/material/table';
 import { ActivatedRoute } from '@angular/router';
-import { debounceTime, finalize, Subject } from 'rxjs';
-import { EmptyStateComponent } from '../../../../@shared/components/empty-state/empty-state.component';
+import { Subject, debounceTime, finalize } from 'rxjs';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
 import { SearchSelectComponent } from '../../../../@shared/components/forms/search-select/search-select.component';
 import { StatusBadgeComponent } from '../../../../@shared/components/status-badge/status-badge.component';
@@ -32,23 +29,20 @@ import { IStudentGrade } from '../../../students/models/student.model';
 import { StudentService } from '../../../students/services/student.service';
 
 @Component({
-  selector: 'app-reference-table-result-upload',
+  selector: 'app-unregistered-table-result-upload',
   imports: [
-    ReactiveFormsModule,
-    MatTableModule,
-    MatCheckboxModule,
-    StatusBadgeComponent,
-    EmptyStateComponent,
-    MatMenuModule,
     SearchSelectComponent,
+    ReactiveFormsModule,
     ButtonComponent,
+    MatTableModule,
+    StatusBadgeComponent,
   ],
-  templateUrl: './reference-table-result-upload.component.html',
-  styleUrl: './reference-table-result-upload.component.scss',
-  exportAs: 'referenceTableResultUploadRef',
+  templateUrl: './unregistered-table-result-upload.component.html',
+  styleUrl: './unregistered-table-result-upload.component.scss',
+  exportAs: 'unregisteredTableResultUploadRef',
   providers: [TitleCasePipe],
 })
-export class ReferenceTableResultUploadComponent {
+export class UnregisteredTableResultUploadComponent {
   private readonly authService = inject(AuthenticationService);
   private readonly studentService = inject(StudentService);
   private readonly titlecasePipe = inject(TitleCasePipe);

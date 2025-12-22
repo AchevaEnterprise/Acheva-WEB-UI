@@ -3,6 +3,7 @@ import {
   IFaculty,
   ISchool,
 } from '../../../@core/models/school.model';
+import { ISegmentSwitcher } from '../../../@shared/components/segment-switcher/segment-switcher.component';
 import { RoleEnum } from '../../auth/model/auth.model';
 import { ICourse } from '../../courses/models/course.model';
 
@@ -100,6 +101,7 @@ export interface ICreateResultEntry {
   exam: number;
   total: number;
   result: string;
+  category?: ISegmentSwitcher['value'];
 }
 
 export interface IUpdateResultEntry extends ICreateResultEntry {
