@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import {
   FormControl,
   FormGroup,
@@ -11,12 +11,12 @@ import { MatSelectChange, MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import {
-  Subject,
-  Subscription,
   debounceTime,
   distinctUntilChanged,
   finalize,
   map,
+  Subject,
+  Subscription,
   takeUntil,
 } from 'rxjs';
 import {
@@ -62,7 +62,7 @@ import { CoursePreviewComponent } from '../../../../components/course-preview/co
   templateUrl: './create-course.component.html',
   styleUrl: './create-course.component.scss',
 })
-export class CreateCourseComponent {
+export class CreateCourseComponent implements OnInit, OnDestroy {
   // ========================================
   // DEPENDENCY INJECTION
   // ========================================
@@ -155,12 +155,24 @@ export class CreateCourseComponent {
   ngOnInit(): void {
     this.initializeComponent();
     this.setupCourseCodeListener();
+    this.updateFaultyAndDepartment();
   }
 
   ngOnDestroy(): void {
     this.sub.unsubscribe();
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  updateFaultyAndDepartment() {
+    const { faculty, department } = this.authService.activeAccount()!;
+    this.form.patchValue({
+      faculty: faculty,
+      department: department,
+    });
+
+    this.form.controls['faculty'].disable();
+    this.form.controls['department'].disable();
   }
 
   private setupCourseCodeListener(): void {
