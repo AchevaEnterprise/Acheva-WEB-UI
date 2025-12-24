@@ -259,12 +259,19 @@ export class CreateAccountComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const [firstname, lastname] = fullname.split(' ');
+    let firstName = null;
+    let lastName = null;
+
+    if (fullname) {
+      const [firstname, lastname] = fullname.split(' ');
+      firstName = firstname;
+      lastName = lastname;
+    }
 
     this.isLoading.set(true);
     const payload = {
-      firstname,
-      lastname,
+      firstname: firstName,
+      lastname: lastName,
       email,
       password,
       confirmPassword: confirm_password,
