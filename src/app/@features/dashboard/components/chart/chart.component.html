@@ -1,1 +1,5 @@
-<highcharts-chart [options]="chartOptions" class="w-full h-[30rem] block" />
+<highcharts-chart
+  [(update)]="updateFlag"
+  [options]="chartOptions"
+  class="w-full h-[30rem] block"
+/>

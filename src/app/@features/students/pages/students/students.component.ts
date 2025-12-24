@@ -12,6 +12,7 @@ import { AuthenticationService } from '../../../auth/service/auth.service';
 import { LecturersService } from '../../../user-settings/service/lecturer.service';
 import { IStudent } from '../../models/student.model';
 import { StudentService } from '../../services/student.service';
+import { TitleCasePipe } from '@angular/common';
 
 @Component({
   selector: 'app-students',
@@ -21,6 +22,7 @@ import { StudentService } from '../../services/student.service';
     MatTableModule,
     LoaderComponent,
     EmptyStateComponent,
+    TitleCasePipe,
   ],
   templateUrl: './students.component.html',
   styleUrl: './students.component.scss',
@@ -96,6 +98,8 @@ export class StudentsComponent implements OnInit {
               'Student List Uploaded',
               'Student list has been uploaded successfully'
             );
+
+            this.getStudents();
           }
         },
       });

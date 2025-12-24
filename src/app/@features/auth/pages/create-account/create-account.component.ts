@@ -146,7 +146,10 @@ export class CreateAccountComponent implements OnInit, OnDestroy {
     this.form.controls['role'].valueChanges.subscribe({
       next: (role: RoleEnum) => {
         if (role === RoleEnum.LECTURER) {
-          this.form.controls['fullname'].setValidators(Validators.required);
+          this.form.controls['fullname'].setValidators([
+            Validators.required,
+            Validators.pattern(/[a-zA-Z]+\s[a-zA-Z]+$/),
+          ]);
           this.form.controls['title'].setValidators(Validators.required);
           this.form.controls['faculty'].setValidators(Validators.required);
           this.form.controls['department'].setValidators(Validators.required);
@@ -159,9 +162,10 @@ export class CreateAccountComponent implements OnInit, OnDestroy {
           if (
             this.form.controls['fullname'].hasValidator(Validators.required)
           ) {
-            this.form.controls['fullname'].removeValidators(
-              Validators.required
-            );
+            this.form.controls['fullname'].removeValidators([
+              Validators.required,
+              Validators.pattern(/[a-zA-Z]+\s[a-zA-Z]+$/),
+            ]);
           } else if (
             this.form.controls['title'].hasValidator(Validators.required)
           ) {
@@ -259,19 +263,12 @@ export class CreateAccountComponent implements OnInit, OnDestroy {
       return;
     }
 
-    let firstName = null;
-    let lastName = null;
-
-    if (fullname) {
-      const [firstname, lastname] = fullname.split(' ');
-      firstName = firstname;
-      lastName = lastname;
-    }
+    const [firstname, lastname] = fullname ? fullname.split(' ') : [null, null];
 
     this.isLoading.set(true);
     const payload = {
-      firstname: firstName,
-      lastname: lastName,
+      firstname,
+      lastname,
       email,
       password,
       confirmPassword: confirm_password,

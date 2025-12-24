@@ -1,5 +1,9 @@
 <div class="bg-white border-b border-[#E5E7EB] p-4 rounded-lg mb-3">
-  <div class="flex items-center justify-between w-full gap-8">
+  <div
+    class="flex items-center justify-between w-full gap-8 cursor-pointer"
+    (click)="viewResult()"
+    (keydown)="viewResult()"
+  >
     <!-- Course Title and Code -->
     <div class="flex-1 min-w-0 pr-4">
       <h5 class="acva-para-2 fw-500 text-[#111827] mb-1 truncate">
@@ -47,25 +51,6 @@
       <span class="acva-caption text-[#6B7280] whitespace-nowrap">
         {{ result()?.progress }}% done
       </span>
-    </div>
-
-    <!-- Menu -->
-    <div class="pl-4">
-      <button [matMenuTriggerFor]="menu" class="cursor-pointer">
-        <app-svg
-          svgWidth="3rem"
-          svgHeight="3rem"
-          src="icons/general/option-icon.svg"
-        ></app-svg>
-      </button>
-      <mat-menu #menu="matMenu">
-        <button mat-menu-item (click)="viewResult()">View Result</button>
-        <!-- @if (result()?.isDraft) {
-          <button mat-menu-item (click)="deleteResult()" class="text-red-600">
-            Delete Result
-          </button>
-        } -->
-      </mat-menu>
     </div>
   </div>
 </div>

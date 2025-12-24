@@ -1,5 +1,7 @@
 <div
-  class="bg-white border border-[#E5E7EB] rounded-[8px] w-full h-full shadow-sm"
+  class="bg-white border border-[#E5E7EB] rounded-[8px] w-full h-full shadow-sm cursor-pointer"
+  (click)="viewResult()"
+  (keydown)="viewResult()"
 >
   <div class="p-4">
     <!-- Header with title and status -->
@@ -51,26 +53,5 @@
         ></div>
       </div>
     </div>
-  </div>
-
-  <!-- Footer with menu -->
-  <div
-    class="flex justify-end items-center px-4 py-2 bg-[#F9FAFB] border-t border-[#E5E7EB]"
-  >
-    <button [matMenuTriggerFor]="menu" class="cursor-pointer">
-      <app-svg
-        svgWidth="3rem"
-        svgHeight="3rem"
-        src="icons/general/option-icon.svg"
-      ></app-svg>
-    </button>
-    <mat-menu #menu="matMenu">
-      <button mat-menu-item (click)="viewResult()">View Result</button>
-      <!-- @if (result()?.isDraft) {
-        <button mat-menu-item (click)="deleteResult()" class="text-red-600">
-          Delete Result
-        </button>
-      } -->
-    </mat-menu>
   </div>
 </div>

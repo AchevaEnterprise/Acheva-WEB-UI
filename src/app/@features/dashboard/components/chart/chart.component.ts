@@ -8,6 +8,7 @@ import { HighchartsChartComponent } from 'highcharts-angular';
   styleUrl: './chart.component.scss',
 })
 export class ChartComponent {
+  updateFlag = false;
   chartOptions: Highcharts.Options = {
     chart: {
       type: 'area',

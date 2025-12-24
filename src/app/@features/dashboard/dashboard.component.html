@@ -39,143 +39,53 @@
     (switchEvent)="switchSegment($event)"
   />
 
-  <div class="mt-3">
+  <div class="grid grid-cols-1 mt-4">
     <app-card
       [label]="activeSegment().label"
       [description]="segmentCardLabel()"
       [iconSrc]="segmentCardIconSrc()"
     >
-      <app-search-input rightHeaderContent />
+      <ng-container content>
+        <app-result-management-file-table
+          *appRoleAccess="[
+            RoleEnum.LECTURER,
+            RoleEnum.HOD,
+            RoleEnum.DEAN,
+            RoleEnum.COURSE_ADVISOR,
+          ]"
+          #fileTableRef
+          [expand]="true"
+          [loading]="loadingResults()"
+          [results]="results()"
+          [pagination]="pagination()"
+          (viewResultEvent)="viewResult($event)"
+          (trackResultEvent)="trackResult($event)"
+          (deleteResultEvent)="deleteResult($event)"
+        />
 
-      <div content class="p-4">
-        <div class="flex flex-wrap justify-between items-end">
-          <div class="flex flex-wrap gap-4">
-            <div class="input-style-1 acheva-input">
-              <p class="acva-para-2 fw-400 label-text">Faculty</p>
-
-              <mat-form-field [style.width.%]="100" appearance="outline">
-                <mat-select
-                  placeholder="Select faculty"
-                  formControlName="title"
-                >
-                  <mat-option [value]="'Science'">Science</mat-option>
-                </mat-select>
-              </mat-form-field>
-            </div>
-
-            <div class="input-style-1 acheva-input">
-              <p class="acva-para-2 fw-400 label-text">Department</p>
-
-              <mat-form-field [style.width.%]="100" appearance="outline">
-                <mat-select
-                  placeholder="Select department"
-                  formControlName="role"
-                >
-                  <mat-option [value]="'Science'">Science</mat-option>
-                </mat-select>
-              </mat-form-field>
-            </div>
-          </div>
-
-          <div class="input-style-1 acheva-input">
-            <mat-form-field [style.width.%]="100" appearance="outline">
-              <span matPrefix>
-                <app-svg
-                  svgWidth="1.3rem"
-                  svgHeight="1.3rem"
-                  src="icons/general/filter-icon.svg"
-                ></app-svg>
-              </span>
-
-              <mat-select placeholder="Filter" formControlName="title">
-                <mat-option [value]="'Science'">Science</mat-option>
-              </mat-select>
-            </mat-form-field>
-          </div>
-        </div>
-
-        <!-- <app-empty-state
-          iconSrc="images/general/empty-doc.svg"
-          description="Your drafts is empty, create a course and input results to fill this page"
-        /> -->
-
-        <div class="w-full overflow-auto max-h-[50vh]">
-          <table mat-table [dataSource]="dataSource()">
-            <ng-container matColumnDef="courseCode">
-              <th mat-header-cell *matHeaderCellDef>COURSE CODE</th>
-              <td mat-cell *matCellDef="let element">
-                {{ element.courseCode }}
-              </td>
-            </ng-container>
-
-            <ng-container matColumnDef="courseTitle">
-              <th mat-header-cell *matHeaderCellDef>COURSE TITLE</th>
-              <td mat-cell *matCellDef="let element">
-                {{ element.courseTitle }}
-              </td>
-            </ng-container>
-
-            <ng-container matColumnDef="session">
-              <th mat-header-cell *matHeaderCellDef>SESSION</th>
-              <td mat-cell *matCellDef="let element">{{ element.session }}</td>
-            </ng-container>
-
-            <ng-container matColumnDef="department">
-              <th mat-header-cell *matHeaderCellDef>DEPARTMENT</th>
-              <td mat-cell *matCellDef="let element">
-                {{ element.department }}
-              </td>
-            </ng-container>
-
-            <ng-container matColumnDef="faculty">
-              <th mat-header-cell *matHeaderCellDef>FACULTY</th>
-              <td mat-cell *matCellDef="let element">{{ element.faculty }}</td>
-            </ng-container>
-
-            <ng-container matColumnDef="uploadedDate">
-              <th mat-header-cell *matHeaderCellDef>UPLOADED DATE</th>
-              <td mat-cell *matCellDef="let element">
-                {{ element.uploadedDate | date: 'MMM d, YYYY h:mm a' }}
-              </td>
-            </ng-container>
-
-            <ng-container matColumnDef="sentDate">
-              <th mat-header-cell *matHeaderCellDef>SENT DATE</th>
-              <td mat-cell *matCellDef="let element">
-                {{ element.sentDate | date: 'MMM d, YYYY h:mm a' }}
-              </td>
-            </ng-container>
-
-            <ng-container matColumnDef="modifiedDate">
-              <th mat-header-cell *matHeaderCellDef>MODIFIED DATE</th>
-              <td mat-cell *matCellDef="let element">
-                {{ element.modifiedDate | date: 'MMM d, YYYY h:mm a' }}
-              </td>
-            </ng-container>
-
-            <ng-container matColumnDef="actions">
-              <th mat-header-cell *matHeaderCellDef>ACTIONS</th>
-              <td mat-cell *matCellDef="let element">
-                <button [matMenuTriggerFor]="menu" class="cursor-pointer">
-                  <app-svg
-                    svgWidth="3rem"
-                    svgHeight="3rem"
-                    src="icons/general/option-icon.svg"
-                  ></app-svg>
-                </button>
-                <mat-menu #menu="matMenu">
-                  <button mat-menu-item>Send to HOD</button>
-                  <button mat-menu-item>Preview</button>
-                </mat-menu>
-              </td>
-            </ng-container>
-
-            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-          </table>
-        </div>
-        <app-paginator />
-      </div>
+        <ng-container *appRoleAccess="[RoleEnum.COURSE_COORDINATOR]">
+          @if (activeSegment().value === 'DRAFT') {
+            <app-result-management-folder-table
+              #folderTableRef
+              [expand]="true"
+              [loading]="loadingResults()"
+              [groupedResults]="groupedResults()"
+              [pagination]="pagination()"
+              (viewFolderEvent)="viewFolder($event)"
+            />
+          } @else {
+            <app-result-management-file-table
+              #fileTableRef
+              [expand]="true"
+              [loading]="loadingResults()"
+              [results]="results()"
+              [pagination]="pagination()"
+              (viewResultEvent)="viewResult($event)"
+              (trackResultEvent)="trackResult($event)"
+            />
+          }
+        </ng-container>
+      </ng-container>
     </app-card>
   </div>
 </div>
@@ -218,13 +128,13 @@
       </div>
 
       <div content class="p-4 h-[35vh] overflow-y-auto">
-        @for (activity of activities(); track $index) {
+        <!-- @for (activity of activities(); track $index) {
           <app-activity [activity]="activity" />
-        }
-        <!-- <app-empty-state
+        } -->
+        <app-empty-state
           iconSrc="images/general/empty-disk.svg"
           description="You have no recent activities"
-        /> -->
+        />
       </div>
     </app-card>
 

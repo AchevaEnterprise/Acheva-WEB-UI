@@ -19,8 +19,8 @@ export enum RoleEnum {
 }
 
 export interface ISignUp {
-  firstname?: string | null;
-  lastname?: string | null;
+  firstname: string | null;
+  lastname: string | null;
   email: string;
   password: string;
   confirmPassword: string;
