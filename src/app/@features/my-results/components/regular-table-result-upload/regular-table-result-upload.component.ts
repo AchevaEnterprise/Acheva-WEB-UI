@@ -21,7 +21,16 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTableModule } from '@angular/material/table';
 import { ActivatedRoute } from '@angular/router';
-import { debounceTime, Subject } from 'rxjs';
+import {
+  debounceTime,
+  finalize,
+  interval,
+  Subject,
+  switchMap,
+  take,
+  tap,
+} from 'rxjs';
+import { UtilityService } from '../../../../@core/utility/utility.service';
 import { EmptyStateComponent } from '../../../../@shared/components/empty-state/empty-state.component';
 import { StatusBadgeComponent } from '../../../../@shared/components/status-badge/status-badge.component';
 import { RoleEnum } from '../../../auth/model/auth.model';
@@ -49,6 +58,7 @@ export class RegularTableResultUploadComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly titlecasePipe = inject(TitleCasePipe);
   private readonly authService = inject(AuthenticationService);
+  private readonly utilsService = inject(UtilityService);
 
   private readonly userRole = this.authService.activeAccount()
     ?.role as RoleEnum;
@@ -57,10 +67,14 @@ export class RegularTableResultUploadComponent {
   searchValue = input<string | null>(null);
   refreshTable = input<boolean>(false);
 
-  uploadResultEvent = output<Partial<IStudentGrade>>();
+  hasChangesEvent = output<boolean>();
+  uploadResultEvent = output<IStudentGrade[]>();
 
   allRows = signal<FormGroup[]>([]);
   dataSource = signal<FormGroup[]>([]);
+
+  private readonly COUNTDOWN_SECONDS: number = 5;
+  countdown = signal<number | null>(null);
 
   readonly status: string = this.route.snapshot.queryParamMap.get('status')!;
   readonly displayedColumns = [
@@ -82,6 +96,7 @@ export class RegularTableResultUploadComponent {
     index: number;
     control?: string;
   }>();
+  private readonly typeSubject = new Subject<void>();
   readonly completedRows = new Set<number>();
 
   constructor() {
@@ -119,9 +134,13 @@ export class RegularTableResultUploadComponent {
       this.dataSource.set(filtered);
     });
 
+    this.setupTypingCountdown();
+
     this.inputSubject
-      .pipe(debounceTime(800), takeUntilDestroyed(this.destroyRef))
+      .pipe(debounceTime(300), takeUntilDestroyed(this.destroyRef))
       .subscribe(({ index }) => this.handleRowInput(index));
+
+    this.formListener();
   }
 
   get rows(): FormArray<FormGroup> {
@@ -130,15 +149,15 @@ export class RegularTableResultUploadComponent {
 
   private initializeFormRows(students: Partial<IStudentGrade>[]): void {
     this.completedRows.clear();
-    this.rows.clear();
+    this.rows.clear({ emitEvent: false });
 
     const sortedStudents = [...students].sort((a, b) =>
       (a.fullName ?? '').localeCompare(b.fullName ?? '')
     );
 
-    for (const stu of sortedStudents) {
-      this.rows.push(this.buildStudentRow(stu));
-    }
+    // Temporarily disable emitting for batch add
+    const newRows = sortedStudents.map((stu) => this.buildStudentRow(stu));
+    newRows.forEach((row) => this.rows.push(row, { emitEvent: false }));
 
     this.rows.markAsPristine();
 
@@ -195,6 +214,7 @@ export class RegularTableResultUploadComponent {
     }
 
     this.inputSubject.next({ index, control: controlName });
+    this.typeSubject.next();
   }
 
   handleRowInput(index: number): void {
@@ -225,8 +245,44 @@ export class RegularTableResultUploadComponent {
       if (total >= 40) row.get('status')?.setValue('PASS');
       else row.get('status')?.setValue('FAIL');
 
+      this.hasChangesEvent.emit(true);
       this.completedRows.add(index);
-      this.uploadResultEvent.emit(row.getRawValue());
     }
+  }
+
+  formListener() {
+    this.form.controls['rows'].valueChanges
+      .pipe(
+        debounceTime(this.COUNTDOWN_SECONDS * 1000),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe({
+        next: async (rows: IStudentGrade[]) => {
+          const results = await this.utilsService.cleanUpResult(rows);
+          this.uploadResultEvent.emit(results);
+          this.hasChangesEvent.emit(false);
+        },
+      });
+  }
+
+  private setupTypingCountdown(): void {
+    this.typeSubject
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        switchMap(() => {
+          this.countdown.set(this.COUNTDOWN_SECONDS);
+
+          return interval(1000).pipe(
+            take(this.COUNTDOWN_SECONDS),
+            tap((tick) => {
+              this.countdown.set(this.COUNTDOWN_SECONDS - tick - 1);
+            }),
+            finalize(() => {
+              this.countdown.set(null);
+            })
+          );
+        })
+      )
+      .subscribe();
   }
 }

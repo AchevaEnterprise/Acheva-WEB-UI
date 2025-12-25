@@ -1,4 +1,11 @@
-import { Component, inject, OnInit, signal, viewChild } from '@angular/core';
+import {
+  Component,
+  HostListener,
+  inject,
+  OnInit,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
@@ -20,6 +27,7 @@ import {
 } from '../../../../@shared/components/segment-switcher/segment-switcher.component';
 
 import { RoleAccessDirective } from '../../../../@core/directives/role-access.directive';
+import { CanComponentDeactivate } from '../../../../@core/guards/pending-changes.guard';
 import { UtilityService } from '../../../../@core/utility/utility.service';
 import { BackButtonComponent } from '../../../../@shared/components/back-button/back-button.component';
 import { ConfirmationComponent } from '../../../../@shared/components/confirmation/confirmation.component';
@@ -64,7 +72,7 @@ import { UnregisteredTableResultUploadComponent } from '../../components/unregis
   templateUrl: './result-upload.component.html',
   styleUrl: './result-upload.component.scss',
 })
-export class ResultUploadComponent implements OnInit {
+export class ResultUploadComponent implements OnInit, CanComponentDeactivate {
   private readonly authService = inject(AuthenticationService);
   private readonly resultsService = inject(ResultsService);
   private readonly utilsService = inject(UtilityService);
@@ -150,6 +158,7 @@ export class ResultUploadComponent implements OnInit {
   publishing = signal(false);
   uploading = signal(false);
   isUploaded = signal(false);
+  hasChanges = signal<boolean>(false);
 
   ngOnInit(): void {
     this.categoryListener();
@@ -258,6 +267,24 @@ export class ResultUploadComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((confirmed: boolean) => {
       if (confirmed) this.router.navigate(['/result-management']);
+    });
+  }
+
+  uploadBulkResult(results: IStudentGrade[]) {
+    let resultEntries: ICreateResultEntry[] = [];
+
+    for (const result of results)
+      resultEntries.push({ ...result, result: this.resultId! });
+
+    this.resultsService.createBulkResultEntries(resultEntries).subscribe({
+      next: (resp) => {
+        if (!resp.status) {
+          this.toast.showNotification('error', 'Upload Error', resp.message);
+          return;
+        }
+
+        this.getResultAndEntries();
+      },
     });
   }
 
@@ -442,5 +469,27 @@ export class ResultUploadComponent implements OnInit {
 
   onStudentSearch(value: string) {
     this.searchStudentValue.set(value);
+  }
+
+  updateChanges(hasChanges: boolean) {
+    this.hasChanges.set(hasChanges);
+  }
+
+  canDeactivate(): boolean {
+    if (!this.hasChanges()) {
+      return true;
+    }
+
+    return confirm(
+      'You have unsaved changes. Are you sure you want to leave this page?'
+    );
+  }
+
+  @HostListener('window:beforeunload', ['$event'])
+  beforeUnloadHandler(event: BeforeUnloadEvent): void {
+    if (this.hasChanges()) {
+      event.preventDefault();
+      event.returnValue = '';
+    }
   }
 }

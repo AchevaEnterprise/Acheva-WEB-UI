@@ -1,6 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import * as FileSaver from 'file-saver';
 import * as XLSX from 'xlsx';
+import { IStudentGrade } from '../../@features/students/models/student.model';
 
 @Injectable({
   providedIn: 'root',
@@ -86,6 +87,27 @@ export class UtilityService {
       };
 
       reader.readAsBinaryString(file);
+
+      worker.onmessage = ({ data }) => {
+        if (data.error) reject(data.error);
+        else resolve(data);
+        worker.terminate();
+      };
+
+      worker.onerror = (err) => {
+        reject(err.message);
+        worker.terminate();
+      };
+    });
+  }
+
+  cleanUpResult(results: IStudentGrade[]): Promise<IStudentGrade[]> {
+    return new Promise((resolve, reject) => {
+      const worker = new Worker(
+        new URL('../workers/result.worker', import.meta.url)
+      );
+
+      worker.postMessage(results);
 
       worker.onmessage = ({ data }) => {
         if (data.error) reject(data.error);

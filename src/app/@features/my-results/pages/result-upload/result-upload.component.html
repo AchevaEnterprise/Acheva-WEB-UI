@@ -193,7 +193,8 @@
           #regularTableResultUploadRef
           [refreshTable]="isUploaded()"
           [students]="students()['REGULAR']"
-          (uploadResultEvent)="uploadResult($event)"
+          (hasChangesEvent)="updateChanges($event)"
+          (uploadResultEvent)="uploadBulkResult($event)"
         />
       }
       @case ('REFERENCE') {

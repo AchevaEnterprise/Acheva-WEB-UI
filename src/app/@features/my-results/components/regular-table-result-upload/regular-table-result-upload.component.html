@@ -1,4 +1,12 @@
 @if (students().length > 0) {
+  @if (countdown() !== null) {
+    <p
+      class="text-center text-blue-500 px-3 bg-blue-200 rounded-full w-fit mx-auto mb-2"
+    >
+      Saving in {{ countdown() }}s...
+    </p>
+  }
+
   <form [formGroup]="form" class="w-full overflow-auto max-h-[50vh]">
     <div formArrayName="rows">
       <table mat-table [dataSource]="dataSource()">
