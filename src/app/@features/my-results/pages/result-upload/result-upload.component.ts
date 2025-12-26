@@ -158,6 +158,7 @@ export class ResultUploadComponent implements OnInit, CanComponentDeactivate {
   publishing = signal(false);
   uploading = signal(false);
   isUploaded = signal(false);
+  tableExpanded = signal<boolean>(false);
   hasChanges = signal<boolean>(false);
 
   ngOnInit(): void {
@@ -465,6 +466,10 @@ export class ResultUploadComponent implements OnInit, CanComponentDeactivate {
           }
         },
       });
+  }
+
+  toggleTableView() {
+    this.tableExpanded.set(!this.tableExpanded());
   }
 
   onStudentSearch(value: string) {

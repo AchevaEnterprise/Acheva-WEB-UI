@@ -1,125 +1,143 @@
-<header class="mb-4">
+<header class="mb-4 flex gap-4 justify-between">
   <app-back-button />
+
+  <app-button
+    [label]="tableExpanded() ? 'Collapse Table' : 'Expand Table'"
+    class="btn-sm"
+    type="clear"
+    (clickEvent)="toggleTableView()"
+  />
 </header>
 
-<!-- ANALTYICS -->
-<div
-  class="grid lg:grid-cols-[60%_1fr] md:grid-cols-2 sm:grid-cols-1 gap-4 p-4 border-[1px] border-neutral-300 rounded-[8px]"
->
-  <!-- FORM -->
-  <div [formGroup]="courseForm">
-    <div class="input-style-1 acheva-input w-full">
-      <p class="acva-para-2 fw-400 label-text">Course</p>
-
-      <mat-form-field [style.width.%]="100" appearance="outline">
-        <input matInput type="text" placeholder="" formControlName="course" />
-      </mat-form-field>
-    </div>
-
-    <div class="grid grid-cols-2 gap-4">
+@if (!tableExpanded()) {
+  <!-- ANALTYICS -->
+  <div
+    class="grid lg:grid-cols-[60%_1fr] md:grid-cols-2 sm:grid-cols-1 gap-4 p-4 border-[1px] border-neutral-300 rounded-[8px]"
+  >
+    <!-- FORM -->
+    <div [formGroup]="courseForm">
       <div class="input-style-1 acheva-input w-full">
-        <p class="acva-para-2 fw-400 label-text">Session</p>
+        <p class="acva-para-2 fw-400 label-text">Course</p>
 
         <mat-form-field [style.width.%]="100" appearance="outline">
-          <input
-            matInput
-            type="text"
-            placeholder=""
-            formControlName="session"
-          />
+          <input matInput type="text" placeholder="" formControlName="course" />
         </mat-form-field>
       </div>
 
-      <div class="input-style-1 acheva-input w-full">
-        <p class="acva-para-2 fw-400 label-text">Level</p>
+      <div class="grid grid-cols-2 gap-4">
+        <div class="input-style-1 acheva-input w-full">
+          <p class="acva-para-2 fw-400 label-text">Session</p>
 
-        <mat-form-field [style.width.%]="100" appearance="outline">
-          <input matInput type="text" placeholder="" formControlName="level" />
-        </mat-form-field>
+          <mat-form-field [style.width.%]="100" appearance="outline">
+            <input
+              matInput
+              type="text"
+              placeholder=""
+              formControlName="session"
+            />
+          </mat-form-field>
+        </div>
+
+        <div class="input-style-1 acheva-input w-full">
+          <p class="acva-para-2 fw-400 label-text">Level</p>
+
+          <mat-form-field [style.width.%]="100" appearance="outline">
+            <input
+              matInput
+              type="text"
+              placeholder=""
+              formControlName="level"
+            />
+          </mat-form-field>
+        </div>
       </div>
+
+      <header class="mt-4 mb-3">
+        <h4 class="acva-heading-6 fw-500">Student Category</h4>
+        <p class="acva-para-1 text-neutral-500">
+          Select which type of students this course will be available for.
+        </p>
+      </header>
+
+      <!-- STUDENT CATEGORY -->
+      <mat-radio-group
+        formControlName="category"
+        aria-label="Select Student Category"
+        class="grid gap-2 lg:grid-cols-3 md:grid-cols-2 lg:grid-cols-1"
+      >
+        <div
+          class="flex items-start border-[1px] border-neutral-300 p-4 rounded-[8px]"
+        >
+          <mat-radio-button value="REGULAR"> </mat-radio-button>
+          <div>
+            <h4 class="fw-400 acva-para-1">Regular Students</h4>
+            <p class="acva-caption text-neutral-500">
+              Students taking the course for the first time
+            </p>
+          </div>
+        </div>
+
+        <div
+          class="flex items-start border-[1px] border-neutral-300 p-4 rounded-[8px]"
+        >
+          <mat-radio-button value="REFERENCE"></mat-radio-button>
+          <div>
+            <h4 class="fw-400 acva-para-1">Reference Students</h4>
+            <p class="acva-caption text-neutral-500">
+              Students retaking the course
+            </p>
+          </div>
+        </div>
+
+        <div
+          class="flex items-start border-[1px] border-neutral-300 p-4 rounded-[8px]"
+        >
+          <mat-radio-button value="UNREGISTERED"></mat-radio-button>
+          <div>
+            <h4 class="fw-400 acva-para-1">Unregistered Students</h4>
+            <p class="acva-caption text-neutral-500">
+              Students not officially registered for the course
+            </p>
+          </div>
+        </div>
+      </mat-radio-group>
     </div>
 
-    <header class="mt-4 mb-3">
-      <h4 class="acva-heading-6 fw-500">Student Category</h4>
-      <p class="acva-para-1 text-neutral-500">
-        Select which type of students this course will be available for.
-      </p>
-    </header>
-
-    <!-- STUDENT CATEGORY -->
-    <mat-radio-group
-      formControlName="category"
-      aria-label="Select Student Category"
-      class="grid gap-2 lg:grid-cols-3 md:grid-cols-2 lg:grid-cols-1"
+    <app-card
+      label="Result Analtyics"
+      [showDivider]="true"
+      dividerClass="!mt-4"
     >
-      <div
-        class="flex items-start border-[1px] border-neutral-300 p-4 rounded-[8px]"
-      >
-        <mat-radio-button value="REGULAR"> </mat-radio-button>
-        <div>
-          <h4 class="fw-400 acva-para-1">Regular Students</h4>
-          <p class="acva-caption text-neutral-500">
-            Students taking the course for the first time
-          </p>
-        </div>
-      </div>
+      <p rightHeaderContent class="acva-para-1 text-neutral-500">
+        Average Grade <span class="text-neutral-800">0.0%</span>
+      </p>
 
-      <div
-        class="flex items-start border-[1px] border-neutral-300 p-4 rounded-[8px]"
-      >
-        <mat-radio-button value="REFERENCE"></mat-radio-button>
-        <div>
-          <h4 class="fw-400 acva-para-1">Reference Students</h4>
-          <p class="acva-caption text-neutral-500">
-            Students retaking the course
-          </p>
-        </div>
-      </div>
+      <div content>
+        <app-analytics-chart [data]="analyticsChartData()" />
 
-      <div
-        class="flex items-start border-[1px] border-neutral-300 p-4 rounded-[8px]"
-      >
-        <mat-radio-button value="UNREGISTERED"></mat-radio-button>
-        <div>
-          <h4 class="fw-400 acva-para-1">Unregistered Students</h4>
-          <p class="acva-caption text-neutral-500">
-            Students not officially registered for the course
+        <div class="leading-[1.3rem] acva-caption text text-neutral-500 p-4">
+          <p class="flex items-center gap-4 w-full">
+            <span class="w-[20%]">Total Students</span>
+            <mat-divider class="w-full"></mat-divider>
+            <span>{{ totalStudent() || 0 }}</span>
+          </p>
+          <p class="flex items-center gap-4 w-full">
+            <span class="w-[20%]">Total Pass</span>
+            <mat-divider class="w-full"></mat-divider>
+            <span>{{ totalStudentPass() || 0 }}</span>
+          </p>
+          <p class="flex items-center gap-4 w-full">
+            <span class="w-[20%]">Total Fail</span>
+            <mat-divider class="w-full"></mat-divider>
+            <span>{{ totalStudentFail() || 0 }}</span>
           </p>
         </div>
       </div>
-    </mat-radio-group>
+    </app-card>
   </div>
 
-  <app-card label="Result Analtyics" [showDivider]="true" dividerClass="!mt-4">
-    <p rightHeaderContent class="acva-para-1 text-neutral-500">
-      Average Grade <span class="text-neutral-800">0.0%</span>
-    </p>
-
-    <div content>
-      <app-analytics-chart [data]="analyticsChartData()" />
-
-      <div class="leading-[1.3rem] acva-caption text text-neutral-500 p-4">
-        <p class="flex items-center gap-4 w-full">
-          <span class="w-[20%]">Total Students</span>
-          <mat-divider class="w-full"></mat-divider>
-          <span>{{ totalStudent() || 0 }}</span>
-        </p>
-        <p class="flex items-center gap-4 w-full">
-          <span class="w-[20%]">Total Pass</span>
-          <mat-divider class="w-full"></mat-divider>
-          <span>{{ totalStudentPass() || 0 }}</span>
-        </p>
-        <p class="flex items-center gap-4 w-full">
-          <span class="w-[20%]">Total Fail</span>
-          <mat-divider class="w-full"></mat-divider>
-          <span>{{ totalStudentFail() || 0 }}</span>
-        </p>
-      </div>
-    </div>
-  </app-card>
-</div>
-
-<mat-divider class="!my-4"></mat-divider>
+  <mat-divider class="!my-4"></mat-divider>
+}
 
 <!-- STUDENT GRADE TABLE -->
 <div>
