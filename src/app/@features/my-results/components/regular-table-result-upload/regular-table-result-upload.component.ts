@@ -137,7 +137,7 @@ export class RegularTableResultUploadComponent {
     this.setupTypingCountdown();
 
     this.inputSubject
-      .pipe(debounceTime(300), takeUntilDestroyed(this.destroyRef))
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(({ index }) => this.handleRowInput(index));
 
     this.formListener();

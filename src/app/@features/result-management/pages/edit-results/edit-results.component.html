@@ -86,21 +86,21 @@
         <app-regular-table-result-upload
           #regularTableResultUploadRef
           [students]="students()['REGULAR']"
-          (uploadResultEvent)="uploadResult($event)"
+          (uploadResultEvent)="uploadBulkResult($event)"
         />
       }
       @case ('REFERENCE') {
         <app-regular-table-result-upload
           #regularTableResultUploadRef
           [students]="students()['REFERENCE']"
-          (uploadResultEvent)="uploadResult($event)"
+          (uploadResultEvent)="uploadBulkResult($event)"
         />
       }
       @case ('UNREGISTERED') {
         <app-regular-table-result-upload
           #regularTableResultUploadRef
           [students]="students()['UNREGISTERED']"
-          (uploadResultEvent)="uploadResult($event)"
+          (uploadResultEvent)="uploadBulkResult($event)"
         />
       }
     }

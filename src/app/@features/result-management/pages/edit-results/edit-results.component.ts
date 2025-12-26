@@ -6,6 +6,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { finalize, forkJoin } from 'rxjs';
 import { RoleAccessDirective } from '../../../../@core/directives/role-access.directive';
 import { ToastService } from '../../../../@core/utility/toast.service';
+import { BackButtonComponent } from '../../../../@shared/components/back-button/back-button.component';
 import { CardComponent } from '../../../../@shared/components/card/card.component';
 import { ConfirmationComponent } from '../../../../@shared/components/confirmation/confirmation.component';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
@@ -27,7 +28,6 @@ import {
   SegmentValue,
 } from '../../models/results.model';
 import { ResultsService } from '../../services/results.service';
-import { BackButtonComponent } from '../../../../@shared/components/back-button/back-button.component';
 
 @Component({
   selector: 'app-edit-results',
@@ -186,6 +186,24 @@ export class EditResultsComponent implements OnInit {
     )!;
     this.activeSegment.set(selectedSegment);
     this.getResultAndEntries();
+  }
+
+  uploadBulkResult(results: IStudentGrade[]) {
+    let resultEntries: ICreateResultEntry[] = [];
+
+    for (const result of results)
+      resultEntries.push({ ...result, result: this.resultId });
+
+    this.resultsService.createBulkResultEntries(resultEntries).subscribe({
+      next: (resp) => {
+        if (!resp.status) {
+          this.toast.showNotification('error', 'Upload Error', resp.message);
+          return;
+        }
+
+        this.getResultAndEntries();
+      },
+    });
   }
 
   uploadResult(result: Partial<IStudentGrade>) {
