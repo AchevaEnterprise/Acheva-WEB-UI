@@ -4,7 +4,10 @@
   <div class="mt-8">
     <!-- SEARCH FILTERS -->
     <div class="flex flex-wrap justify-between gap-3">
-      <app-search-input placeholder="Search student name" />
+      <app-search-input
+        placeholder="Search student name"
+        [formControl]="searchCtrl"
+      />
 
       <div class="flex gap-3">
         <app-button

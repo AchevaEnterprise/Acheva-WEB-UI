@@ -75,6 +75,7 @@ export class RegularTableResultUploadComponent {
 
   private readonly COUNTDOWN_SECONDS: number = 5;
   countdown = signal<number | null>(null);
+  readonly completedRows = new Set<number>();
 
   readonly status: string = this.route.snapshot.queryParamMap.get('status')!;
   readonly displayedColumns = [
@@ -97,7 +98,6 @@ export class RegularTableResultUploadComponent {
     control?: string;
   }>();
   private readonly typeSubject = new Subject<void>();
-  readonly completedRows = new Set<number>();
 
   constructor() {
     effect(() => {
@@ -256,12 +256,26 @@ export class RegularTableResultUploadComponent {
         debounceTime(this.COUNTDOWN_SECONDS * 1000),
         takeUntilDestroyed(this.destroyRef)
       )
-      .subscribe({
-        next: async (rows: IStudentGrade[]) => {
-          const results = await this.utilsService.cleanUpResult(rows);
-          this.uploadResultEvent.emit(results);
-          this.hasChangesEvent.emit(false);
-        },
+      .subscribe(async () => {
+        if (this.completedRows.size === 0) return;
+
+        const changedResults: IStudentGrade[] = [];
+
+        for (const index of this.completedRows) {
+          const row = this.rows.at(index);
+          if (!row || row.invalid) continue;
+
+          changedResults.push(row.getRawValue() as IStudentGrade);
+        }
+
+        if (changedResults.length === 0) return;
+
+        const cleaned = await this.utilsService.cleanUpResult(changedResults);
+
+        this.uploadResultEvent.emit(cleaned);
+        this.hasChangesEvent.emit(false);
+
+        this.completedRows.clear();
       });
   }
 

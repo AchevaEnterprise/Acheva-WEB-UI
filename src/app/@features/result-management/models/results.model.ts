@@ -51,6 +51,7 @@ export interface IResult {
     E: number;
     F: number;
   };
+  students?: number;
   progress?: number;
   updatedAt?: Date;
 }

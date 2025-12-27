@@ -1,36 +1,45 @@
 <header class="mb-4">
   <app-back-button />
+
+  <app-button
+    [label]="tableExpanded() ? 'Collapse Table' : 'Expand Table'"
+    class="btn-sm"
+    type="clear"
+    (clickEvent)="toggleTableView()"
+  />
 </header>
 
-<app-card label="Course Analtyics" [showDivider]="true" dividerClass="!mt-4">
-  <p rightHeaderContent class="acva-para-1 text-neutral-500">
-    Average Grade <span class="text-neutral-800">0.0%</span>
-  </p>
+@if (!tableExpanded()) {
+  <app-card label="Course Analtyics" [showDivider]="true" dividerClass="!mt-4">
+    <p rightHeaderContent class="acva-para-1 text-neutral-500">
+      Average Grade <span class="text-neutral-800">0.0%</span>
+    </p>
 
-  <div content>
-    <app-analytics-chart [data]="analyticsChartData()" />
+    <div content>
+      <app-analytics-chart [data]="analyticsChartData()" />
 
-    <div class="leading-[1.3rem] acva-caption text text-neutral-500 p-4">
-      <p class="flex items-center gap-4 w-full">
-        <span class="w-[20%]">Total</span>
-        <mat-divider class="w-full"></mat-divider>
-        <span>{{ totalStudent() || 0 }}</span>
-      </p>
-      <p class="flex items-center gap-4 w-full">
-        <span class="w-[20%]">Total Pass</span>
-        <mat-divider class="w-full"></mat-divider>
-        <span>{{ totalStudentPass() || 0 }}</span>
-      </p>
-      <p class="flex items-center gap-4 w-full">
-        <span class="w-[20%]">Total Fail</span>
-        <mat-divider class="w-full"></mat-divider>
-        <span>{{ totalStudentFail() || 0 }}</span>
-      </p>
+      <div class="leading-[1.3rem] acva-caption text text-neutral-500 p-4">
+        <p class="flex items-center gap-4 w-full">
+          <span class="w-[20%]">Total</span>
+          <mat-divider class="w-full"></mat-divider>
+          <span>{{ totalStudent() || 0 }}</span>
+        </p>
+        <p class="flex items-center gap-4 w-full">
+          <span class="w-[20%]">Total Pass</span>
+          <mat-divider class="w-full"></mat-divider>
+          <span>{{ totalStudentPass() || 0 }}</span>
+        </p>
+        <p class="flex items-center gap-4 w-full">
+          <span class="w-[20%]">Total Fail</span>
+          <mat-divider class="w-full"></mat-divider>
+          <span>{{ totalStudentFail() || 0 }}</span>
+        </p>
+      </div>
     </div>
-  </div>
-</app-card>
+  </app-card>
 
-<mat-divider class="!my-4"></mat-divider>
+  <mat-divider class="!my-4"></mat-divider>
+}
 
 <div>
   <h4 class="acva-heading-6 fw-500 mt-4 mb-3">Student Grade</h4>

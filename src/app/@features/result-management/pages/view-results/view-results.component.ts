@@ -51,6 +51,7 @@ export class ViewResultsComponent implements OnInit {
   totalStudent = signal<number>(0);
   totalStudentPass = signal<number>(0);
   totalStudentFail = signal<number>(0);
+  tableExpanded = signal<boolean>(false);
 
   pagination = signal<IPaginator>({
     page: 1,
@@ -190,5 +191,9 @@ export class ViewResultsComponent implements OnInit {
           }
         },
       });
+  }
+
+  toggleTableView() {
+    this.tableExpanded.set(!this.tableExpanded());
   }
 }

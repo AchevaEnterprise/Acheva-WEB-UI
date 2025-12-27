@@ -3,6 +3,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { finalize } from 'rxjs';
 import { ToastService } from '../../../../@core/utility/toast.service';
 import { EmptyStateComponent } from '../../../../@shared/components/empty-state/empty-state.component';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
@@ -113,10 +114,12 @@ export class MyResultsComponent implements OnInit {
   }
 
   getResults() {
+    this.isloadingResults.set(true);
     this.resultService
       .getResults({
         status: this.activeSegment().value,
       })
+      .pipe(finalize(() => this.isloadingResults.set(false)))
       .subscribe({
         next: (resp) => {
           if (resp.status) {

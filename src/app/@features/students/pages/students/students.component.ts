@@ -1,7 +1,9 @@
+import { TitleCasePipe } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { MatTableModule } from '@angular/material/table';
-import { finalize } from 'rxjs';
+import { debounceTime, distinctUntilChanged, finalize } from 'rxjs';
 import { ToastService } from '../../../../@core/utility/toast.service';
 import { EmptyStateComponent } from '../../../../@shared/components/empty-state/empty-state.component';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
@@ -12,11 +14,11 @@ import { AuthenticationService } from '../../../auth/service/auth.service';
 import { LecturersService } from '../../../user-settings/service/lecturer.service';
 import { IStudent } from '../../models/student.model';
 import { StudentService } from '../../services/student.service';
-import { TitleCasePipe } from '@angular/common';
 
 @Component({
   selector: 'app-students',
   imports: [
+    ReactiveFormsModule,
     SearchInputComponent,
     ButtonComponent,
     MatTableModule,
@@ -36,12 +38,30 @@ export class StudentsComponent implements OnInit {
 
   displayedColumns: string[] = ['registrationNumber', 'fullName'];
   dataSource = signal<IStudent[]>([]);
+  students = signal<IStudent[]>([]);
+
+  searchCtrl: FormControl = new FormControl('');
 
   loading = signal(false);
   uploading = signal(false);
 
   ngOnInit(): void {
     this.getStudents();
+    this.onStudentSearch();
+  }
+
+  onStudentSearch() {
+    this.searchCtrl.valueChanges
+      .pipe(debounceTime(800), distinctUntilChanged())
+      .subscribe({
+        next: (search: string) => {
+          const searchedStudents = this.students().filter((student) =>
+            student.fullName.toLowerCase().includes(search)
+          );
+
+          this.dataSource.set(searchedStudents);
+        },
+      });
   }
 
   getStudents() {
@@ -63,6 +83,7 @@ export class StudentsComponent implements OnInit {
           );
 
           this.dataSource.set(sortedStudents);
+          this.students.set(sortedStudents);
         },
       });
   }

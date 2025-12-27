@@ -69,6 +69,7 @@ export class EditResultsComponent implements OnInit {
   uploadingResult = signal<boolean>(false);
   approvingResult = signal<boolean>(false);
   rejectingResult = signal<boolean>(false);
+  tableExpanded = signal<boolean>(false);
 
   userRole = this.authService.activeAccount()?.role;
 
@@ -345,5 +346,9 @@ export class EditResultsComponent implements OnInit {
           );
         },
       });
+  }
+
+  toggleTableView() {
+    this.tableExpanded.set(!this.tableExpanded());
   }
 }
