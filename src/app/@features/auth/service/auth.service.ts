@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { JwtHelperService } from '@auth0/angular-jwt';
+import { Idle } from '@ng-idle/core';
 import { Store } from '@ngrx/store';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
@@ -26,6 +27,7 @@ export class AuthenticationService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly store = inject(Store<AppState>);
+  private readonly idle = inject(Idle);
   private readonly jwtHelper: JwtHelperService = new JwtHelperService();
 
   private readonly authUrl = `${environment.BASE_URL}/auth`;
@@ -205,6 +207,9 @@ export class AuthenticationService {
   }
 
   logOut() {
+    this.idle.stop();
+    this.idle.clearInterrupts();
+
     localStorage.clear();
     this.router.navigate(['auth']);
   }
