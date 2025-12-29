@@ -259,8 +259,6 @@ export class EditResultsComponent implements OnInit {
     const { roles } = this.result() as IResult;
     const user = this.authService.activeAccount()!;
 
-    console.warn('Roles: ', roles);
-
     const approveRequest$ = this.resultsService.approveOrRejectResult(
       this.resultId,
       'APPROVED'

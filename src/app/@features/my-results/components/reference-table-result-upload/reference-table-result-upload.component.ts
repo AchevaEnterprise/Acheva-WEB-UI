@@ -101,7 +101,7 @@ export class ReferenceTableResultUploadComponent {
       if (refresh) {
         this.initializeFormRows(students);
       } else if (students?.length > 0 && this.rows.length === 0) {
-        console.warn('Initializing rows for the first time');
+        // Initializing rows for the first time
         this.initializeFormRows(students);
       }
     });
