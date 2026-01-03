@@ -43,6 +43,7 @@
 
   @if (showSubmitBtn()) {
     <app-button
+      [disabled]="!commentInputRef.value"
       label="Submit"
       class="btn-md w-full mb-4"
       (clickEvent)="submit(commentInputRef)"

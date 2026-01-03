@@ -121,7 +121,7 @@ export class SideBarComponent {
               `You are operating as a ${role}`
             );
 
-            setTimeout(() => location.reload(), 1500);
+            this.router.navigate(['/dashboard']);
           }
         },
       });

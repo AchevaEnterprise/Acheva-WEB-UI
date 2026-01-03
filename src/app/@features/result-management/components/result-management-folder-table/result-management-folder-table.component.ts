@@ -76,7 +76,7 @@ export class ResultManagementFolderTableComponent implements OnInit {
     // 'select',
     'courseCode',
     'courseTitle',
-    'faculty',
+    // 'faculty',
     'semester',
   ];
 

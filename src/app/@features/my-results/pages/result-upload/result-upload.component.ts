@@ -26,7 +26,6 @@ import {
   SegmentSwitcherComponent,
 } from '../../../../@shared/components/segment-switcher/segment-switcher.component';
 
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { RoleAccessDirective } from '../../../../@core/directives/role-access.directive';
 import { CanComponentDeactivate } from '../../../../@core/guards/pending-changes.guard';
 import { UtilityService } from '../../../../@core/utility/utility.service';
@@ -81,7 +80,6 @@ export class ResultUploadComponent implements OnInit, CanComponentDeactivate {
   private readonly dialog = inject(MatDialog);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly snackBar = inject(MatSnackBar);
 
   readonly resultId = this.route.snapshot.queryParamMap.get('resultId');
   readonly userRole = this.authService.activeAccount()?.role as RoleEnum;
@@ -287,9 +285,11 @@ export class ResultUploadComponent implements OnInit, CanComponentDeactivate {
         }
 
         this.getResultAndEntries();
-        this.snackBar.open('Result saved ✅', '', {
-          duration: 3000,
-        });
+        this.toast.showNotification(
+          'success',
+          'Result Saved ✅',
+          'Result has been saved successfully'
+        );
       },
     });
   }
