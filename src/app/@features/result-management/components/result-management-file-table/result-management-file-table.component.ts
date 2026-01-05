@@ -195,6 +195,7 @@ export class ResultManagementFileTableComponent implements OnInit, OnDestroy {
     if (!row) {
       return `${this.isAllEnabledSelected() ? 'deselect' : 'select'} all`;
     }
+
     return `${this.selection.isSelected(row) ? 'deselect' : 'select'} row ${row._id}`;
   }
 
@@ -204,6 +205,11 @@ export class ResultManagementFileTableComponent implements OnInit, OnDestroy {
   }
 
   trackResult(result: IResult) {
+    if (result._id === this.selectedResultId()) {
+      this.selectedResultId.set(null);
+      return;
+    }
+
     this.selectedResultId.set(result._id);
     this.trackResultEvent.emit(result);
   }

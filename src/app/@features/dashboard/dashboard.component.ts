@@ -315,7 +315,7 @@ export class DashboardComponent implements OnInit {
                 stats.count = statusCounts.VERIFIED;
               }
               if (stats.label.toLowerCase().includes('published')) {
-                stats.count = statusCounts.PENDING;
+                stats.count = statusCounts.PUBLISHED;
               }
               if (stats.label.toLowerCase().includes('imported')) {
                 stats.count = statusCounts.IMPORTED;

@@ -96,6 +96,18 @@ export class CourseManagementComponent implements OnInit {
     semester: '',
   };
 
+  constructor() {
+    this.route.queryParams.subscribe({
+      next: (params) => {
+        const level = params['level'] as LevelsEnum;
+        if (level) {
+          const segment = this.segments()?.find((seg) => seg.value === level);
+          if (segment) this.activeSegment.set(segment);
+        }
+      },
+    });
+  }
+
   ngOnInit(): void {
     this.getCourses();
   }

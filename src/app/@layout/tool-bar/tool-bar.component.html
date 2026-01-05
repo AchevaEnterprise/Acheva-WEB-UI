@@ -79,7 +79,11 @@
             }
           }
 
-          ({{ activeAccount()?.department?.name }})
+          @if (activeAccount()?.role === RoleEnum.DEAN) {
+            ({{ activeAccount()?.faculty?.name | facultyInitial }})
+          } @else {
+            ({{ activeAccount()?.department?.name }})
+          }
         </p>
       </div>
     </div>

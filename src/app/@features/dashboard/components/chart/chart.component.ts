@@ -11,78 +11,57 @@ export class ChartComponent {
   updateFlag = false;
   chartOptions: Highcharts.Options = {
     chart: {
-      type: 'area',
+      type: 'column',
       backgroundColor: 'transparent',
     },
-    accessibility: {
-      enabled: false,
-    },
     title: undefined,
+
+    xAxis: {
+      categories: ['CSC 101', 'CSC 102', 'CSC 103', 'CSC 104', 'CSC 105'],
+      crosshair: true,
+    },
+
     yAxis: {
-      title: undefined,
+      min: 0,
+      max: 100,
       labels: {
         format: '{value}%',
       },
+      title: undefined,
     },
-    xAxis: {
-      categories: [
-        'CSC 101',
-        'CSC 102',
-        'CSC 103',
-        'CSC 104',
-        'CSC 105',
-        'CSC 106',
-        'CSC 107',
-        'CSC 108',
-        'CSC 109',
-        'CSC 110',
-      ],
-      lineWidth: 0,
-    },
+
     tooltip: {
       pointFormat:
-        '<span style="color:{series.color}">{series.name}</span>' +
-        ': <b>{point.percentage:.1f}%</b>',
-      split: true,
+        '<span style="color:{series.color}">{series.name}</span>: ' +
+        '<b>{point.percentage:.1f}%</b><br/>',
     },
+
     plotOptions: {
-      series: {
-        pointPlacement: 'on',
-        label: {
-          style: {
-            fontSize: '1.4em',
-            opacity: 0.4,
-          },
-        },
-      },
-      area: {
+      column: {
         stacking: 'percent',
-        marker: {
-          enabled: true,
-        },
+        pointPadding: 0.2,
+        borderWidth: 0,
       },
     },
+
     credits: {
       enabled: false,
     },
+
+    accessibility: {
+      enabled: false,
+    },
+
     series: [
       {
-        type: 'area',
-        name: 'Attendance Rate',
-        color: '#A0CDFF',
-        data: [20, 30, 50, 73, 50],
-      },
-      {
-        type: 'area',
+        type: 'column',
         name: 'Pass Rate',
-        color: '#0D5ADA',
-        data: [30, 40, 100, 64, 10],
+        data: [10, 28, 70, 64, 54],
       },
       {
-        type: 'area',
+        type: 'column',
         name: 'Fail Rate',
-        color: '#8FAFFF',
-        data: [50, 30, 73, 38, 70],
+        data: [45, 30, 100, 20, 40],
       },
     ],
   };

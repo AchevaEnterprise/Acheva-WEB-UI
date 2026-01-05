@@ -14,6 +14,7 @@ import { INotification } from '../../@features/notifications/models/notification
 import { NotificationsComponent } from '../../@features/notifications/notifications.component';
 import { NotificationService } from '../../@features/notifications/service/notification.service';
 import { SvgComponent } from '../../@shared/components/svg/svg.component';
+import { FacultyInitialPipe } from '../../@core/pipes/faculty-initial.pipe';
 
 @Component({
   selector: 'app-tool-bar',
@@ -23,6 +24,7 @@ import { SvgComponent } from '../../@shared/components/svg/svg.component';
     MatBadgeModule,
     MatMenuModule,
     RoleAccessDirective,
+    FacultyInitialPipe,
   ],
   templateUrl: './tool-bar.component.html',
   styleUrl: './tool-bar.component.scss',

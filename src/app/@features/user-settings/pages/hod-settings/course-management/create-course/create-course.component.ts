@@ -449,6 +449,7 @@ export class CreateCourseComponent implements OnInit, OnDestroy {
               );
               this.router.navigate(['../course-management'], {
                 relativeTo: this.route,
+                queryParams: { level },
               });
             }
           },

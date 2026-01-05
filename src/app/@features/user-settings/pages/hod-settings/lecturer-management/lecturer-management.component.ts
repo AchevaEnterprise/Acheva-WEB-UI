@@ -98,7 +98,6 @@ export class LecturerManagementComponent implements OnInit, OnDestroy {
     'level',
     'lastDateModified',
     'action',
-    'assign',
     'status',
   ];
 
@@ -463,6 +462,11 @@ export class LecturerManagementComponent implements OnInit, OnDestroy {
           if (resp) this.getLecturers();
         },
       });
+  }
+
+  toggleLecturerActiveState(event: unknown): void {
+    // Implement logic to toggle lecturer's active state
+    console.warn('Toggle event: ', event);
   }
 
   // Bulk operations
