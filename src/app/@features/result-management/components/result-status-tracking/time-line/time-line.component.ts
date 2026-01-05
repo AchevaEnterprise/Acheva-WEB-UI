@@ -11,6 +11,46 @@ const STATUS_FLOW = [
   'IMPORTED',
 ] as const;
 type Status = (typeof STATUS_FLOW)[number];
+interface WorkflowStep {
+  key: string;
+  label: string;
+  icon: string;
+  completedWhen: readonly Status[];
+}
+
+const WORKFLOW_STEPS: readonly WorkflowStep[] = [
+  {
+    key: 'DRAFTS',
+    label: 'Drafts',
+    icon: 'draft-timeline-icon',
+    completedWhen: [
+      'DRAFT',
+      'PENDING',
+      'UNVERIFIED',
+      'VERIFIED',
+      'PUBLISHED',
+      'IMPORTED',
+    ],
+  },
+  {
+    key: 'HOD_REVIEW',
+    label: 'HOD Review',
+    icon: 'hod-review-icon',
+    completedWhen: ['UNVERIFIED', 'VERIFIED', 'PUBLISHED', 'IMPORTED'],
+  },
+  {
+    key: 'DEAN_APPROVAL',
+    label: 'Dean Approval',
+    icon: 'dean-approval-icon',
+    completedWhen: ['VERIFIED', 'PUBLISHED', 'IMPORTED'],
+  },
+  {
+    key: 'PUBLISHED',
+    label: 'Published',
+    icon: 'published-timeline-icon',
+    completedWhen: ['PUBLISHED', 'IMPORTED'],
+  },
+] as const;
 
 @Component({
   selector: 'app-time-line',
@@ -21,26 +61,21 @@ type Status = (typeof STATUS_FLOW)[number];
 })
 export class TimeLineComponent {
   status = input<string | undefined>();
+
   timelines = computed(() => {
-    const current = this.status() as Status | undefined;
-    const currentIndex = current ? STATUS_FLOW.indexOf(current) : -1;
+    const currentStatus = this.status() as Status | undefined;
 
-    const steps = [
-      { label: 'Drafts', icon: 'draft-timeline-icon' },
-      { label: 'HOD Review', icon: 'hod-review-icon' },
-      { label: 'Dean Approval', icon: 'dean-approval-icon' },
-      { label: 'Published', icon: 'published-timeline-icon' },
-    ];
-
-    return steps.map((step, index) => {
-      const active = index <= currentIndex;
+    return WORKFLOW_STEPS.map((step) => {
+      const completed = currentStatus
+        ? step.completedWhen.includes(currentStatus)
+        : false;
 
       return {
         status: step.label,
-        time: active ? 'Completed' : 'Pending',
+        time: completed ? 'Completed' : 'Pending',
         activeIcon: `icons/general/active-${step.icon}.svg`,
         inactiveIcon: `icons/general/inactive-${step.icon}.svg`,
-        active,
+        active: completed,
       };
     });
   });

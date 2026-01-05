@@ -19,6 +19,7 @@ import {
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { of } from 'rxjs';
+import { AuthenticationService } from '../../../../@features/auth/service/auth.service';
 import { ResultsService } from '../../../../@features/result-management/services/results.service';
 import { EmptyStateComponent } from '../../empty-state/empty-state.component';
 import { LoaderComponent } from '../../loader/loader.component';
@@ -47,6 +48,7 @@ import { ButtonComponent } from '../button/button.component';
 })
 export class CommentComponent implements ControlValueAccessor {
   private readonly resultService = inject(ResultsService);
+  private readonly authService = inject(AuthenticationService);
 
   resultId = input<string>();
   refresh = input<boolean>();
@@ -57,6 +59,8 @@ export class CommentComponent implements ControlValueAccessor {
   private onChange: (value: string) => void = () => {};
   private onTouched: () => void = () => {};
   disabled = false;
+
+  userId = this.authService.activeAccount()!.id;
 
   comments = rxResource({
     request: () => this.resultId(),
