@@ -18,20 +18,17 @@
     <div content>
       <app-analytics-chart [data]="analyticsChartData()" />
 
-      <div class="leading-[1.3rem] acva-caption text text-neutral-500 p-4">
+      <div class="leading-[1.5rem] acva-caption text text-neutral-500 p-4">
         <p class="flex items-center gap-4 w-full">
-          <span class="w-[20%]">Total</span>
-          <mat-divider class="w-full"></mat-divider>
+          <span class="w-[20%] font-medium">Total</span>
           <span>{{ totalStudent() || 0 }}</span>
         </p>
         <p class="flex items-center gap-4 w-full">
-          <span class="w-[20%]">Total Pass</span>
-          <mat-divider class="w-full"></mat-divider>
+          <span class="w-[20%] font-medium">Total Pass</span>
           <span>{{ totalStudentPass() || 0 }}</span>
         </p>
         <p class="flex items-center gap-4 w-full">
-          <span class="w-[20%]">Total Fail</span>
-          <mat-divider class="w-full"></mat-divider>
+          <span class="w-[20%] font-medium">Total Fail</span>
           <span>{{ totalStudentFail() || 0 }}</span>
         </p>
       </div>
