@@ -75,7 +75,7 @@
               <mat-checkbox
                 (click)="$event.stopPropagation()"
                 (keydown)="$event.stopPropagation()"
-                (change)="$event ? selection.toggle(result) : null"
+                (change)="onCheckboxChange(result)"
                 [checked]="selection.isSelected(result)"
                 [aria-label]="checkboxLabel(result)"
                 [disabled]="

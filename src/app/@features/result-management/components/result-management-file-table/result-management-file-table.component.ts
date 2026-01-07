@@ -199,6 +199,19 @@ export class ResultManagementFileTableComponent implements OnInit, OnDestroy {
     return `${this.selection.isSelected(row) ? 'deselect' : 'select'} row ${row._id}`;
   }
 
+  onCheckboxChange(result: IResult) {
+    this.selection.toggle(result);
+
+    if (this.selection.isSelected(result)) {
+      this.selectedResultId.set(result._id);
+      this.trackResultEvent.emit(result);
+    } else {
+      if (this.selectedResultId() === result._id) {
+        this.selectedResultId.set(null);
+      }
+    }
+  }
+
   viewResult(result: IResult) {
     if (this.userRole === RoleEnum.LECTURER && result.hasBeenSent) return;
     this.viewResultEvent.emit(result);

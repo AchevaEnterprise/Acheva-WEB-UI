@@ -47,6 +47,14 @@
     <div class="flex flex-wrap justify-end gap-3 items-center">
       <app-button
         *appRoleAccess="[RoleEnum.COURSE_COORDINATOR]"
+        label="Send to Lecturer"
+        class="btn-md"
+        [loading]="sendingToLecturer()"
+        (clickEvent)="confirmSendToLecturer()"
+      />
+
+      <app-button
+        *appRoleAccess="[RoleEnum.COURSE_COORDINATOR]"
         label="Send to HOD"
         class="btn-md"
         matTooltip="Send to Head of Department"

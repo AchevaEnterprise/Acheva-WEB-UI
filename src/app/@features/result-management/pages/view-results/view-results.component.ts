@@ -1,3 +1,4 @@
+import { NgClass } from '@angular/common';
 import { Component, inject, OnInit, signal, viewChild } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
@@ -19,7 +20,6 @@ import { ResultManagementFileTableComponent } from '../../components/result-mana
 import { ResultStatusTrackingComponent } from '../../components/result-status-tracking/result-status-tracking.component';
 import { IResult, ISendSelectedResult } from '../../models/results.model';
 import { ResultsService } from '../../services/results.service';
-import { NgClass } from '@angular/common';
 
 @Component({
   selector: 'app-view-results',
@@ -68,6 +68,7 @@ export class ViewResultsComponent implements OnInit {
 
   loadingResult = signal<boolean>(false);
   sendingToHOD = signal<boolean>(false);
+  sendingToLecturer = signal<boolean>(false);
   refreshComments = signal<boolean>(false);
   RoleEnum = RoleEnum;
 
@@ -199,6 +200,59 @@ export class ViewResultsComponent implements OnInit {
               'success',
               'Result Sent',
               'Result has been sent to the Head of Department(HOD)'
+            );
+
+            this.getResultAndAnalytics();
+          }
+        },
+      });
+  }
+
+  confirmSendToLecturer() {
+    const selectedResults = this.resultTableRef()?.selection.selected;
+
+    if (!selectedResults || selectedResults.length < 1) {
+      this.toast.showNotification(
+        'error',
+        'No Result(s) Selected',
+        'You have not selected any result(s) to be sent'
+      );
+      return;
+    }
+
+    this.dialog
+      .open(ConfirmationComponent, {
+        width: '600px',
+        data: {
+          message: `You're about to send this ${selectedResults.length} result(s) to the Head of Department. This action is irreversible, Are you sure you want to continue?`,
+        },
+      })
+      .afterClosed()
+      .subscribe({
+        next: (confirm: boolean) => {
+          if (confirm) this.sendToLecturer(selectedResults);
+        },
+      });
+  }
+
+  private sendToLecturer(results: IResult[]) {
+    this.sendingToLecturer.set(true);
+
+    const payload: ISendSelectedResult[] = results.map((result) => ({
+      resultId: result._id,
+      recipient: result.uploadedBy,
+    }));
+
+    this.resultsService
+      .sendSelectedResult(payload, RoleEnum.LECTURER)
+      .pipe(finalize(() => this.sendingToLecturer.set(false)))
+      .subscribe({
+        next: (resp) => {
+          if (resp.status) {
+            this.toast.showNotification(
+              'success',
+              'Result Sent',
+              'Result has been sent to the Lecturer'
             );
 
             this.getResultAndAnalytics();

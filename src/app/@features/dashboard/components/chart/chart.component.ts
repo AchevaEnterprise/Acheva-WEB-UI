@@ -27,20 +27,18 @@ export class ChartComponent {
       labels: {
         format: '{value}%',
       },
-      title: undefined,
+      title: { text: 'Percentage (%)' },
     },
 
     tooltip: {
-      pointFormat:
-        '<span style="color:{series.color}">{series.name}</span>: ' +
-        '<b>{point.percentage:.1f}%</b><br/>',
+      valueSuffix: ' %',
     },
 
     plotOptions: {
       column: {
-        stacking: 'percent',
         pointPadding: 0.2,
         borderWidth: 0,
+        grouping: true,
       },
     },
 
