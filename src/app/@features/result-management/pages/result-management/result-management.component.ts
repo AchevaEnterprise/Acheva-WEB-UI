@@ -285,11 +285,27 @@ export class ResultManagementComponent implements OnInit {
       .subscribe({
         next: (resp) => {
           if (resp.status) {
-            this.toast.showNotification(
-              'success',
-              'Result Sent',
-              'Result has been sent to the Course Cordinator'
-            );
+            const { failedCount, sentCount, failed } = resp.data as {
+              failedCount: number;
+              sentCount: number;
+              failed: unknown[];
+            };
+            const totalCount = failedCount + sentCount;
+
+            if (failedCount > 0) {
+              this.toast.showNotification(
+                'error',
+                'Some Results Failed',
+                `${failedCount} of ${totalCount} results failed to be sent, ${(failed[0] as { error: string }).error}`
+              );
+            } else {
+              this.toast.showNotification(
+                'success',
+                'Result Sent',
+                'Result has been sent to the Course Cordinator'
+              );
+            }
+
             this.getResults();
           }
         },

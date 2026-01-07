@@ -25,7 +25,7 @@ export interface IResult {
   department: IDepartment;
   school: ISchool;
   status: ResultStatusEnum;
-  uploadedBy: string;
+  uploadedBy: string | { _id: string; firstname: string; lastname: string };
   isApproved: boolean;
   roles: {
     COURSE_ADVISOR: string;

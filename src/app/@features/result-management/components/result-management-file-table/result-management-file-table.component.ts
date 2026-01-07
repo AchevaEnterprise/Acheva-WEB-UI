@@ -12,7 +12,10 @@ import {
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { MatCheckboxModule } from '@angular/material/checkbox';
+import {
+  MatCheckboxChange,
+  MatCheckboxModule,
+} from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatMenuModule } from '@angular/material/menu';
 import { PageEvent } from '@angular/material/paginator';
@@ -66,6 +69,7 @@ export class ResultManagementFileTableComponent implements OnInit, OnDestroy {
   faculties = signal<IFaculty[]>([]);
   departments = signal<IDepartment[]>([]);
   selectedResultId = signal<string | null>(null);
+  activeRow = signal<IResult | null>(null);
 
   userRole = this.authService.activeAccount()?.role as RoleEnum;
 
@@ -199,8 +203,16 @@ export class ResultManagementFileTableComponent implements OnInit, OnDestroy {
     return `${this.selection.isSelected(row) ? 'deselect' : 'select'} row ${row._id}`;
   }
 
-  onCheckboxChange(result: IResult) {
-    this.selection.toggle(result);
+  onCheckboxChange(event: MatCheckboxChange, result: IResult) {
+    const checked = event.checked;
+
+    if (checked) {
+      this.selection.select(result);
+      this.activeRow.set(result);
+    } else {
+      this.selection.deselect(result);
+      this.activeRow.set(null);
+    }
 
     if (this.selection.isSelected(result)) {
       this.selectedResultId.set(result._id);
@@ -218,12 +230,12 @@ export class ResultManagementFileTableComponent implements OnInit, OnDestroy {
   }
 
   trackResult(result: IResult) {
-    if (result._id === this.selectedResultId()) {
-      this.selectedResultId.set(null);
-      return;
-    }
+    // Toggle checkbox selection
+    this.selection.toggle(result);
 
-    this.selectedResultId.set(result._id);
+    // Always make clicked row the active one
+    this.activeRow.set(result);
+
     this.trackResultEvent.emit(result);
   }
 

@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, HostListener, inject, OnInit, signal } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -70,6 +70,7 @@ export class EditResultsComponent implements OnInit {
   approvingResult = signal<boolean>(false);
   rejectingResult = signal<boolean>(false);
   tableExpanded = signal<boolean>(false);
+  hasChanges = signal<boolean>(false);
 
   userRole = this.authService.activeAccount()?.role;
 
@@ -350,5 +351,27 @@ export class EditResultsComponent implements OnInit {
 
   toggleTableView() {
     this.tableExpanded.set(!this.tableExpanded());
+  }
+
+  updateChanges(hasChanges: boolean) {
+    this.hasChanges.set(hasChanges);
+  }
+
+  canDeactivate(): boolean {
+    if (!this.hasChanges()) {
+      return true;
+    }
+
+    return confirm(
+      'You have unsaved changes. Are you sure you want to leave this page?'
+    );
+  }
+
+  @HostListener('window:beforeunload', ['$event'])
+  beforeUnloadHandler(event: BeforeUnloadEvent): void {
+    if (this.hasChanges()) {
+      event.preventDefault();
+      event.returnValue = '';
+    }
   }
 }

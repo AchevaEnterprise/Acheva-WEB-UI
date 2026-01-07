@@ -20,15 +20,15 @@
 
       <div class="leading-[1.5rem] acva-caption text text-neutral-500 p-4">
         <p class="flex items-center gap-2 w-full">
-          <span class="w-[20%] font-medium">Total Students:</span>
+          <span class="w-[15%] font-medium">Total Students:</span>
           <span>{{ totalStudent() || 0 }}</span>
         </p>
         <p class="flex items-center gap-2 w-full">
-          <span class="w-[20%] font-medium">Total Pass:</span>
+          <span class="w-[15%] font-medium">Total Pass:</span>
           <span>{{ totalStudentPass() || 0 }}</span>
         </p>
         <p class="flex items-center gap-2 w-full">
-          <span class="w-[20%] font-medium">Total Fail:</span>
+          <span class="w-[15%] font-medium">Total Fail:</span>
           <span>{{ totalStudentFail() || 0 }}</span>
         </p>
       </div>
@@ -93,6 +93,7 @@
         <app-regular-table-result-upload
           #regularTableResultUploadRef
           [students]="students()['REGULAR']"
+          (hasChangesEvent)="updateChanges($event)"
           (uploadResultEvent)="uploadBulkResult($event)"
         />
       }
@@ -100,6 +101,7 @@
         <app-regular-table-result-upload
           #regularTableResultUploadRef
           [students]="students()['REFERENCE']"
+          (hasChangesEvent)="updateChanges($event)"
           (uploadResultEvent)="uploadBulkResult($event)"
         />
       }
@@ -107,6 +109,7 @@
         <app-regular-table-result-upload
           #regularTableResultUploadRef
           [students]="students()['UNREGISTERED']"
+          (hasChangesEvent)="updateChanges($event)"
           (uploadResultEvent)="uploadBulkResult($event)"
         />
       }

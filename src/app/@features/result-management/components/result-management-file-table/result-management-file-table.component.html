@@ -75,7 +75,8 @@
               <mat-checkbox
                 (click)="$event.stopPropagation()"
                 (keydown)="$event.stopPropagation()"
-                (change)="onCheckboxChange(result)"
+                (change)="selection.toggle(result)"
+                (change)="onCheckboxChange($event, result)"
                 [checked]="selection.isSelected(result)"
                 [aria-label]="checkboxLabel(result)"
                 [disabled]="
@@ -215,7 +216,7 @@
             mat-row
             *matRowDef="let result; columns: displayedColumns"
             class="cursor-pointer hover:bg-gray-400"
-            [class.selected]="selectedResultId() === result._id"
+            [class.selected]="activeRow() === result"
             [class.rejected]="result.isApproved === false"
             [class.disabled]="
               (userRole === RoleEnum.LECTURER && result.hasBeenSent) ||

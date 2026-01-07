@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { PendingChangesGuard } from '../../@core/guards/pending-changes.guard';
 
 export const routes: Routes = [
   {
@@ -26,6 +27,7 @@ export const routes: Routes = [
     data: {
       title: 'Result Management',
     },
+    canDeactivate: [PendingChangesGuard],
     loadComponent: () =>
       import('./pages/edit-results/edit-results.component').then(
         (m) => m.EditResultsComponent

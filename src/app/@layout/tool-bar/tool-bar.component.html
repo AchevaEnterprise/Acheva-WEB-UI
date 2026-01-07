@@ -37,77 +37,112 @@
       ></app-svg>
     </button>
 
+    <!-- FOR HOD AND DEAN AVATAR -->
+    <div *appRoleAccess="[RoleEnum.HOD, RoleEnum.DEAN]">
+      <div
+        class="flex items-center gap-3 cursor-pointer"
+        #menuTrigger="matMenuTrigger"
+        [matMenuTriggerFor]="roleMenu"
+        (click)="beforeOpen(menuTrigger)"
+        (keydown)="beforeOpen(menuTrigger)"
+      >
+        <img
+          src=""
+          [appImageFallback]="'icons/general/profile-pic-placeholder.svg'"
+          alt="Avatar"
+          class="w-8 h-8 aspect-square object-cover rounded-full"
+        />
+
+        <div>
+          <p class="font-medium">
+            {{ activeAccount()?.firstname }} {{ activeAccount()?.lastname }}
+          </p>
+          <p class="text-neutral-500 text-sm">
+            @switch (activeAccount()?.role) {
+              @case (RoleEnum.DEAN) {
+                Dean
+              }
+              @case (RoleEnum.HOD) {
+                HOD
+              }
+              <!-- @case (RoleEnum.LECTURER) {
+                Lecturer
+              } -->
+            }
+
+            @if (activeAccount()?.role === RoleEnum.DEAN) {
+              ({{ activeAccount()?.faculty?.name | facultyInitial }})
+            } @else {
+              ({{ activeAccount()?.department?.name }})
+            }
+          </p>
+        </div>
+      </div>
+      <mat-menu #roleMenu="matMenu">
+        <div *appRoleAccess="[RoleEnum.DEAN, RoleEnum.HOD, RoleEnum.LECTURER]">
+          @for (role of roles(); track role) {
+            @if (role.role !== RoleEnum.LECTURER) {
+              <button
+                mat-menu-item
+                [disabled]="role.disabled"
+                (click)="switchAccount(role.role)"
+              >
+                <span>
+                  {{ role.label }}
+                </span>
+
+                @if (activeRole() === role.role) {
+                  <span class="checkmark">✓</span>
+                }
+              </button>
+            }
+          }
+        </div>
+      </mat-menu>
+    </div>
+
+    <!-- FOR LECTURER, CC AND CA AVATAR -->
     <div
-      class="flex items-center gap-3 cursor-pointer"
-      #menuTrigger="matMenuTrigger"
-      [matMenuTriggerFor]="roleMenu"
-      (click)="beforeOpen(menuTrigger)"
-      (keydown)="beforeOpen(menuTrigger)"
+      *appRoleAccess="[
+        RoleEnum.LECTURER,
+        RoleEnum.COURSE_COORDINATOR,
+        RoleEnum.COURSE_ADVISOR,
+      ]"
     >
-      <img
-        src=""
-        [appImageFallback]="'icons/general/profile-pic-placeholder.svg'"
-        alt="Avatar"
-        class="w-8 h-8 aspect-square object-cover rounded-full"
-      />
+      <div class="flex items-center gap-3 cursor-pointer">
+        <img
+          src=""
+          [appImageFallback]="'icons/general/profile-pic-placeholder.svg'"
+          alt="Avatar"
+          class="w-8 h-8 aspect-square object-cover rounded-full"
+        />
 
-      <div>
-        <p class="font-medium">
-          {{ activeAccount()?.firstname }} {{ activeAccount()?.lastname }}
-          <span
-            *appRoleAccess="[RoleEnum.COURSE_ADVISOR]"
-            class="px-[5px] py-[2px] rounded-[8px] bg-blue-400 text-white text-[0.75rem]"
-            >{{ activeAccount()?.assignedLevel }} LVL</span
-          >
-        </p>
-        <p class="text-neutral-500 text-sm">
-          @switch (activeAccount()?.role) {
-            @case (RoleEnum.COURSE_ADVISOR) {
-              Course Advisor
+        <div>
+          <p class="font-medium">
+            {{ activeAccount()?.firstname }} {{ activeAccount()?.lastname }}
+            <span
+              *appRoleAccess="[RoleEnum.COURSE_ADVISOR]"
+              class="px-[5px] py-[2px] rounded-[8px] bg-blue-400 text-white text-[0.75rem]"
+              >{{ activeAccount()?.assignedLevel }} LVL</span
+            >
+          </p>
+          <p class="text-neutral-500 text-sm">
+            @switch (activeAccount()?.role) {
+              @case (RoleEnum.COURSE_ADVISOR) {
+                Course Advisor
+              }
+              @case (RoleEnum.COURSE_COORDINATOR) {
+                Course Co-ordinator
+              }
+              @case (RoleEnum.LECTURER) {
+                Lecturer
+              }
             }
-            @case (RoleEnum.COURSE_COORDINATOR) {
-              Course Co-ordinator
-            }
-            @case (RoleEnum.DEAN) {
-              Dean
-            }
-            @case (RoleEnum.HOD) {
-              HOD
-            }
-            @case (RoleEnum.LECTURER) {
-              Lecturer
-            }
-          }
 
-          @if (activeAccount()?.role === RoleEnum.DEAN) {
-            ({{ activeAccount()?.faculty?.name | facultyInitial }})
-          } @else {
             ({{ activeAccount()?.department?.name }})
-          }
-        </p>
+          </p>
+        </div>
       </div>
     </div>
-    <mat-menu #roleMenu="matMenu">
-      <div *appRoleAccess="[RoleEnum.DEAN, RoleEnum.HOD, RoleEnum.LECTURER]">
-        @for (role of roles(); track role) {
-          <button
-            mat-menu-item
-            [disabled]="role.disabled"
-            (click)="switchAccount(role.role)"
-          >
-            <span>
-              {{ role.label }}
-              @if (role.role === RoleEnum.LECTURER) {
-                <small><em>(Default)</em></small>
-              }
-            </span>
-
-            @if (activeRole() === role.role) {
-              <span class="checkmark">✓</span>
-            }
-          </button>
-        }
-      </div>
-    </mat-menu>
   </div>
 </div>

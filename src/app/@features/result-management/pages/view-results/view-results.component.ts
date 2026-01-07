@@ -240,7 +240,7 @@ export class ViewResultsComponent implements OnInit {
 
     const payload: ISendSelectedResult[] = results.map((result) => ({
       resultId: result._id,
-      recipient: result.uploadedBy,
+      recipient: (result.uploadedBy as { _id: string })._id,
     }));
 
     this.resultsService
