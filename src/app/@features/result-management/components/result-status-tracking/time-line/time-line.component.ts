@@ -1,56 +1,22 @@
 import { DatePipe } from '@angular/common';
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, signal } from '@angular/core';
 import { SvgComponent } from '../../../../../@shared/components/svg/svg.component';
 
-const STATUS_FLOW = [
-  'DRAFT',
-  'PENDING',
-  'UNVERIFIED',
-  'VERIFIED',
-  'PUBLISHED',
-  'IMPORTED',
-] as const;
-type Status = (typeof STATUS_FLOW)[number];
-interface WorkflowStep {
-  key: string;
-  label: string;
-  icon: string;
-  completedWhen: readonly Status[];
-}
+type Status =
+  | 'DRAFT'
+  | 'PENDING'
+  | 'UNVERIFIED'
+  | 'VERIFIED'
+  | 'PUBLISHED'
+  | 'IMPORTED';
 
-const WORKFLOW_STEPS: readonly WorkflowStep[] = [
-  {
-    key: 'DRAFTS',
-    label: 'Drafts',
-    icon: 'draft-timeline-icon',
-    completedWhen: [
-      'DRAFT',
-      'PENDING',
-      'UNVERIFIED',
-      'VERIFIED',
-      'PUBLISHED',
-      'IMPORTED',
-    ],
-  },
-  {
-    key: 'HOD_REVIEW',
-    label: 'HOD Review',
-    icon: 'hod-review-icon',
-    completedWhen: ['UNVERIFIED', 'VERIFIED', 'PUBLISHED', 'IMPORTED'],
-  },
-  {
-    key: 'DEAN_APPROVAL',
-    label: 'Dean Approval',
-    icon: 'dean-approval-icon',
-    completedWhen: ['VERIFIED', 'PUBLISHED', 'IMPORTED'],
-  },
-  {
-    key: 'PUBLISHED',
-    label: 'Published',
-    icon: 'published-timeline-icon',
-    completedWhen: ['PUBLISHED', 'IMPORTED'],
-  },
-] as const;
+interface ITimeline {
+  label: string;
+  activeIcon: string;
+  inactiveIcon: string;
+  activeStatus: Status[];
+  completed: boolean;
+}
 
 @Component({
   selector: 'app-time-line',
@@ -60,23 +26,47 @@ const WORKFLOW_STEPS: readonly WorkflowStep[] = [
   providers: [DatePipe],
 })
 export class TimeLineComponent {
-  status = input<string | undefined>();
+  status = input<Status | undefined>();
 
-  timelines = computed(() => {
-    const currentStatus = this.status() as Status | undefined;
+  timelineSteps = signal<ITimeline[]>([
+    {
+      label: 'Drafts',
+      activeIcon: 'icons/general/active-draft-timeline-icon.svg',
+      inactiveIcon: 'icons/general/inactive-draft-timeline-icon.svg',
+      activeStatus: ['PENDING', 'UNVERIFIED', 'VERIFIED', 'PUBLISHED'],
+      completed: false,
+    },
+    {
+      label: 'HOD Review',
+      activeIcon: 'icons/general/active-hod-review-icon.svg',
+      inactiveIcon: 'icons/general/inactive-hod-review-icon.svg',
+      activeStatus: ['UNVERIFIED', 'VERIFIED', 'PUBLISHED'],
+      completed: false,
+    },
+    {
+      label: 'Dean Approval',
+      activeIcon: 'icons/general/active-dean-approval-icon.svg',
+      inactiveIcon: 'icons/general/inactive-dean-approval-icon.svg',
+      activeStatus: ['VERIFIED', 'PUBLISHED'],
+      completed: false,
+    },
+    {
+      label: 'Published',
+      activeIcon: 'icons/general/active-published-timeline-icon.svg',
+      inactiveIcon: 'icons/general/inactive-published-timeline-icon.svg',
+      activeStatus: ['PUBLISHED'],
+      completed: false,
+    },
+  ]);
 
-    return WORKFLOW_STEPS.map((step) => {
-      const completed = currentStatus
-        ? step.completedWhen.includes(currentStatus)
-        : false;
+  timelines = computed<ITimeline[]>(() => {
+    const currentStatus = this.status();
 
-      return {
-        status: step.label,
-        time: completed ? 'Completed' : 'Pending',
-        activeIcon: `icons/general/active-${step.icon}.svg`,
-        inactiveIcon: `icons/general/inactive-${step.icon}.svg`,
-        active: completed,
-      };
+    const steps: ITimeline[] = this.timelineSteps()?.map((step) => {
+      step.completed = step.activeStatus.includes(currentStatus!);
+      return step;
     });
+
+    return steps;
   });
 }

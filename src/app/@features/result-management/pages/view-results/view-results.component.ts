@@ -265,7 +265,7 @@ export class ViewResultsComponent implements OnInit {
     this.tableExpanded.set(!this.tableExpanded());
   }
 
-  trackResult(result: IResult) {
+  trackResult(result: IResult | null) {
     this.result.set(result);
   }
 

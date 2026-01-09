@@ -79,7 +79,7 @@ export class ResultManagementFileTableComponent implements OnInit, OnDestroy {
   pagination = input<IPaginator>();
 
   viewResultEvent = output<IResult>();
-  trackResultEvent = output<IResult>();
+  trackResultEvent = output<IResult | null>();
   deleteResultEvent = output<IResult>();
   pageEvent = output<PageEvent>();
 
@@ -221,6 +221,7 @@ export class ResultManagementFileTableComponent implements OnInit, OnDestroy {
       if (this.selectedResultId() === result._id) {
         this.selectedResultId.set(null);
       }
+      this.trackResultEvent.emit(null);
     }
   }
 
@@ -230,13 +231,15 @@ export class ResultManagementFileTableComponent implements OnInit, OnDestroy {
   }
 
   trackResult(result: IResult) {
-    // Toggle checkbox selection
-    this.selection.toggle(result);
-
-    // Always make clicked row the active one
-    this.activeRow.set(result);
-
-    this.trackResultEvent.emit(result);
+    if (this.activeRow() === result) {
+      this.selection.deselect(result);
+      this.activeRow.set(null);
+      this.trackResultEvent.emit(null);
+    } else {
+      this.selection.select(result);
+      this.activeRow.set(result);
+      this.trackResultEvent.emit(result);
+    }
   }
 
   paginate(page: PageEvent) {

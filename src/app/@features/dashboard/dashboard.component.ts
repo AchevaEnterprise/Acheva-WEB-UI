@@ -378,7 +378,7 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  trackResult(result: IResult) {
+  trackResult(result: IResult | null) {
     this.result.set(result);
   }
 

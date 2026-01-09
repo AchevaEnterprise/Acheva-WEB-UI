@@ -33,8 +33,6 @@ import {
 import { UtilityService } from '../../../../@core/utility/utility.service';
 import { EmptyStateComponent } from '../../../../@shared/components/empty-state/empty-state.component';
 import { StatusBadgeComponent } from '../../../../@shared/components/status-badge/status-badge.component';
-import { RoleEnum } from '../../../auth/model/auth.model';
-import { AuthenticationService } from '../../../auth/service/auth.service';
 import { IStudentGrade } from '../../../students/models/student.model';
 
 @Component({
@@ -57,11 +55,7 @@ export class RegularTableResultUploadComponent {
   private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
   private readonly titlecasePipe = inject(TitleCasePipe);
-  private readonly authService = inject(AuthenticationService);
   private readonly utilsService = inject(UtilityService);
-
-  private readonly userRole = this.authService.activeAccount()
-    ?.role as RoleEnum;
 
   students = input<Partial<IStudentGrade>[]>([]);
   searchValue = input<string | null>(null);
@@ -174,10 +168,7 @@ export class RegularTableResultUploadComponent {
 
     // disabled when user is not a lecturer or a course-cordinator
     // and when staus is not draft, if there is a status
-    const isDisabled =
-      ![RoleEnum.COURSE_COORDINATOR, RoleEnum.LECTURER].includes(
-        this.userRole
-      ) && this.status !== 'DRAFT';
+    const isDisabled = this.status !== 'DRAFT';
 
     const createNumberControl = (value: number | undefined) =>
       new FormControl({ value, disabled: isDisabled }, numberValidator);
