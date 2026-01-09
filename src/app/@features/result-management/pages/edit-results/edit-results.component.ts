@@ -28,6 +28,7 @@ import {
   SegmentValue,
 } from '../../models/results.model';
 import { ResultsService } from '../../services/results.service';
+import { CanComponentDeactivate } from '../../../../@core/guards/pending-changes.guard';
 
 @Component({
   selector: 'app-edit-results',
@@ -47,7 +48,7 @@ import { ResultsService } from '../../services/results.service';
   templateUrl: './edit-results.component.html',
   styleUrl: './edit-results.component.scss',
 })
-export class EditResultsComponent implements OnInit {
+export class EditResultsComponent implements OnInit, CanComponentDeactivate {
   private readonly authService = inject(AuthenticationService);
   private readonly resultsService = inject(ResultsService);
   private readonly dialog = inject(MatDialog);
