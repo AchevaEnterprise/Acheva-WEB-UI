@@ -57,7 +57,7 @@ export class LecturersService {
     );
   }
 
-  assignOrUnassignCourseAdvisor(
+  assignCourseAdvisor(
     lecturerId: string,
     level: LevelsEnum,
     admissionYear: string
@@ -68,6 +68,13 @@ export class LecturersService {
         level,
         assignedLevelAdmissionYear: admissionYear,
       }
+    );
+  }
+
+  unassignCourseAdvisor(lecturerId: string): Observable<IAPIResponse<any>> {
+    return this.http.patch<IAPIResponse<any>>(
+      `${this.lecturerUrl}/unassign-course-advisor/${lecturerId}`,
+      {}
     );
   }
 

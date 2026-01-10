@@ -79,7 +79,7 @@ export class AssignCourseAdvisorComponent {
     const { level, admissionYear } = this.form.value;
 
     this.lecturerService
-      .assignOrUnassignCourseAdvisor(lecturerId, level!, admissionYear!)
+      .assignCourseAdvisor(lecturerId, level!, admissionYear!)
       .subscribe({
         next: (resp) => {
           if (!resp.status) {

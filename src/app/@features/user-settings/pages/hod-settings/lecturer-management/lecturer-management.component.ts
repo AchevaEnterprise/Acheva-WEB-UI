@@ -1,4 +1,3 @@
-import { DatePipe } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -38,7 +37,6 @@ import { LecturersService } from '../../../service/lecturer.service';
     MatInputModule,
     MatSelectModule,
     ReactiveFormsModule,
-    DatePipe,
     ButtonComponent,
     MatSlideToggleModule,
     StatusBadgeComponent,
@@ -131,8 +129,6 @@ export class LecturerManagementComponent implements OnInit {
         width: '40%',
         data: {
           lecturerId: lecturer._id,
-          assignedLevel: lecturer.assignedLevel,
-          assignedLevelAdmissionYear: lecturer.assignedLevelAdmissionYear,
         },
       })
       .afterClosed()
