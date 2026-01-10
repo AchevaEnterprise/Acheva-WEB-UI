@@ -283,6 +283,12 @@ export class ResultsService {
     );
   }
 
+  deleteResult(resultId: string) {
+    return this.http.delete<IAPIResponse<unknown>>(
+      `${this.resultsUrl}/${resultId}`
+    );
+  }
+
   approveOrRejectResult(
     resultId: string,
     action: 'APPROVED' | 'REJECTED',

@@ -168,10 +168,13 @@ export class RegularTableResultUploadComponent {
 
     // disabled when user is not a lecturer or a course-cordinator
     // and when staus is not draft, if there is a status
-    const isDisabled = this.status !== 'DRAFT';
+    const isDisabled = this.status && this.status !== 'DRAFT';
 
     const createNumberControl = (value: number | undefined) =>
-      new FormControl({ value, disabled: isDisabled }, numberValidator);
+      new FormControl(
+        { value, disabled: isDisabled || false },
+        numberValidator
+      );
 
     return this.fb.group({
       registrationNumber: [student.registrationNumber, Validators.required],

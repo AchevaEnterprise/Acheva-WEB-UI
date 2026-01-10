@@ -34,6 +34,7 @@ import { PaginatorComponent } from '../../../../@shared/components/paginator/pag
 import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
 import { AuthenticationService } from '../../../auth/service/auth.service';
 import { IGroupedResult } from '../../models/results.model';
+import { HasRejectedPipe } from '../../../../@core/pipes/has-rejected.pipe';
 
 @Component({
   selector: 'app-result-management-folder-table',
@@ -50,6 +51,7 @@ import { IGroupedResult } from '../../models/results.model';
     MatIconModule,
     EmptyStateComponent,
     LoaderComponent,
+    HasRejectedPipe,
   ],
   templateUrl: './result-management-folder-table.component.html',
   styleUrl: './result-management-folder-table.component.scss',

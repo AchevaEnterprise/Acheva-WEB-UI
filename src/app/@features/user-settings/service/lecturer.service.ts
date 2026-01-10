@@ -45,6 +45,18 @@ export class LecturersService {
     );
   }
 
+  activateOrDeactivateLecturer(
+    lecturerId: string,
+    isActive: boolean
+  ): Observable<IAPIResponse<any>> {
+    return this.http.patch<IAPIResponse<any>>(
+      `${this.lecturerUrl}/toggle-active-status/${lecturerId}`,
+      {
+        isActive,
+      }
+    );
+  }
+
   assignOrUnassignCourseAdvisor(
     lecturerId: string,
     level: LevelsEnum | 'NONE',

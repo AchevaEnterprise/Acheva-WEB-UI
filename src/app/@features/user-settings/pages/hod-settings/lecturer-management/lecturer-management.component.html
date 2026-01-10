@@ -30,57 +30,59 @@
   @if (loading()) {
     <app-loader />
   } @else {
-    @if (paginatedLecturers().length > 0) {
+    @if (lecturersData().length > 0) {
       <div class="w-full overflow-auto max-h-[50vh]">
-        <table mat-table [dataSource]="paginatedLecturers()">
+        <table mat-table [dataSource]="lecturersData()">
           <ng-container matColumnDef="name">
             <th mat-header-cell *matHeaderCellDef>NAME</th>
-            <td mat-cell *matCellDef="let element">
-              {{ element.firstname }} {{ element.lastname }}
+            <td mat-cell *matCellDef="let lecturer">
+              {{ lecturer.firstname }} {{ lecturer.lastname }}
             </td>
           </ng-container>
 
           <ng-container matColumnDef="email">
             <th mat-header-cell *matHeaderCellDef>EMAIL</th>
-            <td mat-cell *matCellDef="let element">
-              {{ element.email }}
+            <td mat-cell *matCellDef="let lecturer">
+              {{ lecturer.email }}
             </td>
           </ng-container>
 
           <ng-container matColumnDef="level">
             <th mat-header-cell *matHeaderCellDef>ASSIGNED LEVEL</th>
-            <td mat-cell *matCellDef="let element">
+            <td mat-cell *matCellDef="let lecturer">
               {{
-                element.assignedLevel && element.assignedLevel !== 'NONE'
-                  ? element.assignedLevel + ' Level'
-                  : 'Not Assigned'
+                lecturer.assignedLevel && lecturer.assignedLevel !== 'NONE'
+                  ? lecturer.assignedLevel + ' Level'
+                  : 'N/A'
               }}
             </td>
           </ng-container>
 
           <ng-container matColumnDef="lastDateModified">
             <th mat-header-cell *matHeaderCellDef>LAST MODIFIED DATE</th>
-            <td mat-cell *matCellDef="let element">
-              {{ element.lastDateModified | date: 'MMM d, YYYY h:mm a' }}
+            <td mat-cell *matCellDef="let lecturer">
+              {{ lecturer.lastDateModified | date: 'MMM d, YYYY h:mm a' }}
             </td>
           </ng-container>
 
           <ng-container matColumnDef="action">
             <th mat-header-cell *matHeaderCellDef>ACTION</th>
-            <td mat-cell *matCellDef="let element">
-              @if (!element.assignedLevel || element.assignedLevel === 'NONE') {
+            <td mat-cell *matCellDef="let lecturer">
+              @if (
+                !lecturer.assignedLevel || lecturer.assignedLevel === 'NONE'
+              ) {
                 <app-button
                   label="Assign"
                   type="outline"
                   class="btn-sm"
-                  (clickEvent)="confirmAssignAsCourseAdvisor(element)"
+                  (clickEvent)="confirmAssignAsCourseAdvisor(lecturer)"
                 />
               } @else {
                 <app-button
                   label="Unassign"
                   type="outline"
                   class="btn-sm"
-                  (clickEvent)="confirmUnassignAsCourseAdvisor(element)"
+                  (clickEvent)="confirmUnassignAsCourseAdvisor(lecturer)"
                 />
               }
             </td>
@@ -88,15 +90,18 @@
 
           <ng-container matColumnDef="status">
             <th mat-header-cell *matHeaderCellDef>STATUS</th>
-            <td mat-cell *matCellDef="let element">
+            <td mat-cell *matCellDef="let lecturer">
               <div class="flex items-center gap-3">
                 <mat-slide-toggle
                   class="custom-toggle"
-                  (toggleChange)="toggleLecturerActiveState($event)"
+                  [(ngModel)]="lecturer.isActive"
+                  (toggleChange)="toggleLecturerActiveState(lecturer)"
                 >
                   <span class="toggle-text">Active</span>
                 </mat-slide-toggle>
-                <app-status-badge status="Active" />
+                <app-status-badge
+                  [status]="lecturer.isActive ? 'Active' : 'Inactive'"
+                />
               </div>
             </td>
           </ng-container>

@@ -45,9 +45,29 @@
     <app-search-input placeholder="Search students" />
 
     <div class="flex flex-wrap justify-end gap-3 items-center">
+      @if (status === 'PENDING') {
+        <app-button
+          *appRoleAccess="[RoleEnum.HOD]"
+          label="Resend"
+          class="btn-md"
+          [loading]="resending()"
+          [matMenuTriggerFor]="resendMenu"
+        />
+        <mat-menu #resendMenu="matMenu">
+          <button mat-menu-item (click)="confirmResendToCC()">
+            Resend to CC
+          </button>
+          <button mat-menu-item (click)="confirmResendToDean()">
+            Resend to Dean
+          </button>
+        </mat-menu>
+      }
+
       @if (
         (status === 'UNVERIFIED' && userRole === RoleEnum.DEAN) ||
-        (status === 'PENDING' && userRole === RoleEnum.HOD)
+        (status === 'PENDING' &&
+          userRole === RoleEnum.HOD &&
+          result()?.isApproved === null)
       ) {
         <app-button
           *appRoleAccess="[RoleEnum.HOD, RoleEnum.DEAN]"

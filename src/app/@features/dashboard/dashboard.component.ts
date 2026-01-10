@@ -18,6 +18,7 @@ import { RoleAccessDirective } from '../../@core/directives/role-access.directiv
 import { IPaginator } from '../../@core/models/paginator.model';
 import { IAnalytics } from '../../@core/models/school.model';
 import { GreetingPipe } from '../../@core/pipes/greeting.pipe';
+import { ToastService } from '../../@core/utility/toast.service';
 import { CardComponent } from '../../@shared/components/card/card.component';
 import { EmptyStateComponent } from '../../@shared/components/empty-state/empty-state.component';
 import {
@@ -63,6 +64,7 @@ export class DashboardComponent implements OnInit {
   private readonly authService = inject(AuthenticationService);
   private readonly resultService = inject(ResultsService);
   private readonly router = inject(Router);
+  private readonly toast = inject(ToastService);
 
   currentRole = signal<RoleEnum>(this.authService.activeAccount()?.role!);
   loadingResults = signal<boolean>(false);
@@ -383,7 +385,19 @@ export class DashboardComponent implements OnInit {
   }
 
   deleteResult(result: IResult) {
-    console.warn(result._id);
+    this.resultService.deleteResult(result._id).subscribe({
+      next: (resp) => {
+        if (resp.status) {
+          this.toast.showNotification(
+            'success',
+            'Result Deleted',
+            'Result deleted successfully'
+          );
+
+          this.getResults();
+        }
+      },
+    });
   }
 
   viewFolder(result: IGroupedResult) {

@@ -1,10 +1,12 @@
 import { Component, HostListener, inject, OnInit, signal } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ActivatedRoute, Router } from '@angular/router';
 import { finalize, forkJoin } from 'rxjs';
 import { RoleAccessDirective } from '../../../../@core/directives/role-access.directive';
+import { CanComponentDeactivate } from '../../../../@core/guards/pending-changes.guard';
 import { ToastService } from '../../../../@core/utility/toast.service';
 import { BackButtonComponent } from '../../../../@shared/components/back-button/back-button.component';
 import { CardComponent } from '../../../../@shared/components/card/card.component';
@@ -22,13 +24,15 @@ import { AuthenticationService } from '../../../auth/service/auth.service';
 import { AnalyticsChartComponent } from '../../../my-results/components/analytics-chart/analytics-chart.component';
 import { RegularTableResultUploadComponent } from '../../../my-results/components/regular-table-result-upload/regular-table-result-upload.component';
 import { IStudentGrade } from '../../../students/models/student.model';
+import { ResendToCourseCoordinatorComponent } from '../../components/resend-to-course-coordinator/resend-to-course-coordinator.component';
+import { ResendToDeanComponent } from '../../components/resend-to-dean/resend-to-dean.component';
 import {
   ICreateResultEntry,
   IResult,
+  ISendSelectedResult,
   SegmentValue,
 } from '../../models/results.model';
 import { ResultsService } from '../../services/results.service';
-import { CanComponentDeactivate } from '../../../../@core/guards/pending-changes.guard';
 
 @Component({
   selector: 'app-edit-results',
@@ -44,6 +48,7 @@ import { CanComponentDeactivate } from '../../../../@core/guards/pending-changes
     RoleAccessDirective,
     LoaderComponent,
     BackButtonComponent,
+    MatMenuModule,
   ],
   templateUrl: './edit-results.component.html',
   styleUrl: './edit-results.component.scss',
@@ -70,6 +75,7 @@ export class EditResultsComponent implements OnInit, CanComponentDeactivate {
   uploadingResult = signal<boolean>(false);
   approvingResult = signal<boolean>(false);
   rejectingResult = signal<boolean>(false);
+  resending = signal<boolean>(false);
   tableExpanded = signal<boolean>(false);
   hasChanges = signal<boolean>(false);
 
@@ -346,6 +352,103 @@ export class EditResultsComponent implements OnInit, CanComponentDeactivate {
             'Error Occured',
             error.error.message
           );
+        },
+      });
+  }
+
+  confirmResendToCC() {
+    this.dialog
+      .open(ResendToCourseCoordinatorComponent, {
+        width: '600px',
+      })
+      .afterClosed()
+      .subscribe({
+        next: (confirmed: boolean) => {
+          if (confirmed) this.sendToCC();
+        },
+      });
+  }
+
+  confirmResendToDean() {
+    this.dialog
+      .open(ResendToDeanComponent, {
+        width: '600px',
+      })
+      .afterClosed()
+      .subscribe({
+        next: (confirmed: boolean) => {
+          if (confirmed) this.resendToDean();
+        },
+      });
+  }
+
+  private sendToCC() {
+    this.resending.set(true);
+
+    const payload: ISendSelectedResult[] = [
+      {
+        resultId: this.resultId,
+        recipient: this.result()?.roles.COURSE_COORDINATOR || '',
+      },
+    ];
+
+    this.resultsService
+      .sendSelectedResult(payload, RoleEnum.COURSE_COORDINATOR)
+      .pipe(finalize(() => this.resending.set(false)))
+      .subscribe({
+        next: (resp) => {
+          if (resp.status) {
+            const { failedCount, sentCount, failed } = resp.data as {
+              failedCount: number;
+              sentCount: number;
+              failed: unknown[];
+            };
+            const totalCount = failedCount + sentCount;
+
+            if (failedCount > 0) {
+              this.toast.showNotification(
+                'error',
+                'Some Results Failed',
+                `${failedCount} of ${totalCount} results failed to be sent, ${(failed[0] as { error: string }).error}`
+              );
+            } else {
+              this.toast.showNotification(
+                'success',
+                'Result Sent',
+                'Result has been sent to the Course Cordinator'
+              );
+            }
+
+            this.getResultAndEntries();
+          }
+        },
+      });
+  }
+
+  resendToDean() {
+    this.resending.set(true);
+
+    const payload: ISendSelectedResult[] = [
+      {
+        resultId: this.resultId,
+        recipient: this.result()?.roles.DEAN || '',
+      },
+    ];
+
+    this.resultsService
+      .sendSelectedResult(payload, RoleEnum.DEAN)
+      .pipe(finalize(() => this.resending.set(false)))
+      .subscribe({
+        next: (resp) => {
+          if (resp.status) {
+            this.toast.showNotification(
+              'success',
+              'Result Sent',
+              'Result has been re-sent to the Dean'
+            );
+
+            this.getResultAndEntries();
+          }
         },
       });
   }

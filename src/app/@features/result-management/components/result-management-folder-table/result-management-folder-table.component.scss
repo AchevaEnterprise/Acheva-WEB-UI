@@ -64,3 +64,24 @@ tr.table-expanded-row {
   transform: translateX(2px);
   transition: all 0.2s ease;
 }
+
+.rejected {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    background-color: #faecec;
+  }
+
+  50% {
+    background-color: #fdd6d6;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rejected {
+    animation: none;
+  }
+}

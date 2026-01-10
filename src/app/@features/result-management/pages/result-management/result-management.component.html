@@ -41,24 +41,6 @@
           />
         }
 
-        @if (activeSegment().value === 'UNVERIFIED') {
-          <app-button
-            *appRoleAccess="[RoleEnum.HOD]"
-            label="Resend"
-            class="btn-md"
-            [loading]="resending()"
-            [matMenuTriggerFor]="resendMenu"
-          />
-          <mat-menu #resendMenu="matMenu">
-            <button mat-menu-item (click)="confirmResendToCC()">
-              Resend to CC
-            </button>
-            <button mat-menu-item (click)="confirmResendToDean()">
-              Resend to Dean
-            </button>
-          </mat-menu>
-        }
-
         @if (activeSegment().value === 'IMPORTED') {
           <app-button
             *appRoleAccess="[RoleEnum.COURSE_ADVISOR]"

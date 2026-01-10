@@ -12,6 +12,10 @@ export type SegmentValue = 'REGULAR' | 'REFERENCE' | 'UNREGISTERED';
 export enum ResultStatusEnum {
   DRAFT = 'DRAFT',
   PENDING = 'PENDING',
+  UNVERIFIED = 'UNVERIFIED',
+  VERIFIED = 'VERIFIED',
+  PUBLISHED = 'PUBLISHED',
+  IMPORTED = 'IMPORTED',
   APPROVED = 'APPROVED',
   REJECTED = 'REJECTED',
 }
@@ -26,7 +30,7 @@ export interface IResult {
   school: ISchool;
   status: ResultStatusEnum;
   uploadedBy: string | { _id: string; firstname: string; lastname: string };
-  isApproved: boolean;
+  isApproved: boolean | null;
   roles: {
     COURSE_ADVISOR: string;
     COURSE_COORDINATOR: string;
