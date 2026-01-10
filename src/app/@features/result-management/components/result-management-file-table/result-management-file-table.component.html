@@ -1,8 +1,8 @@
 <div class="p-4">
   <div class="flex flex-wrap justify-between items-end">
-    <div class="flex gap-4">
+    <div class="flex gap-4 justify-end w-full">
       <!-- Faculty Selection -->
-      <div class="input-style-1 acheva-input w-[40%]">
+      <div class="input-style-1 acheva-input w-[30%]">
         <p class="acva-para-2 fw-400 label-text">Faculty</p>
         <mat-form-field [style.width.%]="100" appearance="outline">
           <mat-select
@@ -18,7 +18,7 @@
       </div>
 
       <!-- Department Selection -->
-      <div class="input-style-1 acheva-input w-[40%]">
+      <div class="input-style-1 acheva-input w-[30%]">
         <p class="acva-para-2 fw-400 label-text">Department</p>
         <mat-form-field [style.width.%]="100" appearance="outline">
           <mat-select
@@ -33,22 +33,6 @@
           </mat-select>
         </mat-form-field>
       </div>
-    </div>
-
-    <div class="input-style-1 acheva-input w-[20%]">
-      <mat-form-field [style.width.%]="100" appearance="outline">
-        <span matPrefix>
-          <app-svg
-            svgWidth="1.3rem"
-            svgHeight="1.3rem"
-            src="icons/general/filter-icon.svg"
-          ></app-svg>
-        </span>
-
-        <mat-select placeholder="Filter" formControlName="title">
-          <mat-option [value]="'Science'">Science</mat-option>
-        </mat-select>
-      </mat-form-field>
     </div>
   </div>
 

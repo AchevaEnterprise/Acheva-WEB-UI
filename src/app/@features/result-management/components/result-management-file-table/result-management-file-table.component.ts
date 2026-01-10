@@ -37,7 +37,6 @@ import { EmptyStateComponent } from '../../../../@shared/components/empty-state/
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
 import { LoaderComponent } from '../../../../@shared/components/loader/loader.component';
 import { PaginatorComponent } from '../../../../@shared/components/paginator/paginator.component';
-import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
 import { RoleEnum } from '../../../auth/model/auth.model';
 import { AuthenticationService } from '../../../auth/service/auth.service';
 import { IResult } from '../../models/results.model';
@@ -45,7 +44,6 @@ import { IResult } from '../../models/results.model';
 @Component({
   selector: 'app-result-management-file-table',
   imports: [
-    SvgComponent,
     DatePipe,
     MatTableModule,
     PaginatorComponent,

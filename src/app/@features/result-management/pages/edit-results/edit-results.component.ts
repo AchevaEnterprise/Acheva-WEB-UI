@@ -305,6 +305,7 @@ export class EditResultsComponent implements OnInit, CanComponentDeactivate {
     this.dialog
       .open(RejectReasonComponent, {
         width: '600px',
+        data: { resultId: this.resultId },
       })
       .afterClosed()
       .subscribe({

@@ -1,6 +1,10 @@
 import { Component, inject } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import {
+  MAT_DIALOG_DATA,
+  MatDialogModule,
+  MatDialogRef,
+} from '@angular/material/dialog';
 import { ButtonComponent } from '../forms/button/button.component';
 import { CommentComponent } from '../forms/comment/comment.component';
 
@@ -17,6 +21,9 @@ import { CommentComponent } from '../forms/comment/comment.component';
 })
 export class RejectReasonComponent {
   private readonly dialogRef = inject(MatDialogRef<RejectReasonComponent>);
+  readonly data = inject<{
+    resultId: string;
+  }>(MAT_DIALOG_DATA);
 
   commentCtrl: FormControl = new FormControl('');
 
