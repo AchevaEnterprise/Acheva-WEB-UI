@@ -58,13 +58,6 @@
             </td>
           </ng-container>
 
-          <ng-container matColumnDef="lastDateModified">
-            <th mat-header-cell *matHeaderCellDef>LAST MODIFIED DATE</th>
-            <td mat-cell *matCellDef="let lecturer">
-              {{ lecturer.lastDateModified | date: 'MMM d, YYYY h:mm a' }}
-            </td>
-          </ng-container>
-
           <ng-container matColumnDef="action">
             <th mat-header-cell *matHeaderCellDef>ACTION</th>
             <td mat-cell *matCellDef="let lecturer">
@@ -75,6 +68,7 @@
                   label="Assign"
                   type="outline"
                   class="btn-sm"
+                  [disabled]="!lecturer.isActive"
                   (clickEvent)="confirmAssignAsCourseAdvisor(lecturer)"
                 />
               } @else {
@@ -82,6 +76,7 @@
                   label="Unassign"
                   type="outline"
                   class="btn-sm"
+                  [disabled]="!lecturer.isActive"
                   (clickEvent)="confirmUnassignAsCourseAdvisor(lecturer)"
                 />
               }

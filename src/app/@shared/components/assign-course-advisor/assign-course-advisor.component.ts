@@ -63,7 +63,10 @@ export class AssignCourseAdvisorComponent {
   ]);
 
   form = new FormGroup({
-    level: new FormControl<LevelsEnum | 'NONE'>('NONE', Validators.required),
+    level: new FormControl<LevelsEnum>(
+      LevelsEnum.YEAR_ONE,
+      Validators.required
+    ),
     admissionYear: new FormControl('', Validators.required),
   });
 

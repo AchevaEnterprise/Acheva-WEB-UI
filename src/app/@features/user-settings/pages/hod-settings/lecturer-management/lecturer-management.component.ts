@@ -63,14 +63,7 @@ export class LecturerManagementComponent implements OnInit {
 
   currentPage = signal(0);
 
-  displayedColumns: string[] = [
-    'name',
-    'email',
-    'level',
-    'lastDateModified',
-    'action',
-    'status',
-  ];
+  displayedColumns: string[] = ['name', 'email', 'level', 'action', 'status'];
 
   // Data and loading states
   lecturersData = signal<ILecturer[]>([]);
@@ -138,6 +131,8 @@ export class LecturerManagementComponent implements OnInit {
         width: '40%',
         data: {
           lecturerId: lecturer._id,
+          assignedLevel: lecturer.assignedLevel,
+          assignedLevelAdmissionYear: lecturer.assignedLevelAdmissionYear,
         },
       })
       .afterClosed()

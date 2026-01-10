@@ -4,6 +4,7 @@ import {
   MatDialogModule,
   MatDialogRef,
 } from '@angular/material/dialog';
+import { LevelsEnum } from '../../../@core/models/school.model';
 import { ToastService } from '../../../@core/utility/toast.service';
 import { LecturersService } from '../../../@features/user-settings/service/lecturer.service';
 import { ButtonComponent } from '../forms/button/button.component';
@@ -23,6 +24,8 @@ export class UnassignCourseAdvisorComponent {
   );
   readonly data = inject<{
     lecturerId: string;
+    assignedLevel: LevelsEnum;
+    assignedLevelAdmissionYear: string;
   }>(MAT_DIALOG_DATA);
 
   cancel() {
@@ -30,9 +33,13 @@ export class UnassignCourseAdvisorComponent {
   }
 
   unAssign() {
-    const lecturerId = this.data.lecturerId;
+    const { lecturerId, assignedLevel, assignedLevelAdmissionYear } = this.data;
     this.lecturerService
-      .assignOrUnassignCourseAdvisor(lecturerId, 'NONE')
+      .assignOrUnassignCourseAdvisor(
+        lecturerId,
+        assignedLevel,
+        assignedLevelAdmissionYear
+      )
       .subscribe({
         next: (resp) => {
           if (!resp.status) {
