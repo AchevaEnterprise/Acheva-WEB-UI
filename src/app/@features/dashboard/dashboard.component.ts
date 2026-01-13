@@ -7,6 +7,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatMenuModule } from '@angular/material/menu';
@@ -20,6 +21,7 @@ import { IAnalytics } from '../../@core/models/school.model';
 import { GreetingPipe } from '../../@core/pipes/greeting.pipe';
 import { ToastService } from '../../@core/utility/toast.service';
 import { CardComponent } from '../../@shared/components/card/card.component';
+import { ConfirmationComponent } from '../../@shared/components/confirmation/confirmation.component';
 import { EmptyStateComponent } from '../../@shared/components/empty-state/empty-state.component';
 import {
   ISegmentSwitcher,
@@ -64,6 +66,7 @@ export class DashboardComponent implements OnInit {
   private readonly authService = inject(AuthenticationService);
   private readonly resultService = inject(ResultsService);
   private readonly router = inject(Router);
+  private readonly dialog = inject(MatDialog);
   private readonly toast = inject(ToastService);
 
   currentRole = signal<RoleEnum>(this.authService.activeAccount()?.role!);
@@ -385,19 +388,34 @@ export class DashboardComponent implements OnInit {
   }
 
   deleteResult(result: IResult) {
-    this.resultService.deleteResult(result._id).subscribe({
-      next: (resp) => {
-        if (resp.status) {
-          this.toast.showNotification(
-            'success',
-            'Result Deleted',
-            'Result deleted successfully'
-          );
+    this.dialog
+      .open(ConfirmationComponent, {
+        width: '600px',
+        data: {
+          message: 'Are you sure you want to delete this result?',
+          subTitle: 'Kindly confirm this action',
+        },
+      })
+      .afterClosed()
+      .subscribe({
+        next: (confirm: boolean) => {
+          if (confirm) {
+            this.resultService.deleteResult(result._id).subscribe({
+              next: (resp) => {
+                if (resp.status) {
+                  this.toast.showNotification(
+                    'success',
+                    'Result Deleted',
+                    'Result deleted successfully'
+                  );
 
-          this.getResults();
-        }
-      },
-    });
+                  this.getResults();
+                }
+              },
+            });
+          }
+        },
+      });
   }
 
   viewFolder(result: IGroupedResult) {

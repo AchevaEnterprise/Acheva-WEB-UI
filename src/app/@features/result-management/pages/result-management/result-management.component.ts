@@ -521,20 +521,34 @@ export class ResultManagementComponent implements OnInit {
   }
 
   deleteResult(result: IResult) {
-    console.warn(result._id);
-    this.resultService.deleteResult(result._id).subscribe({
-      next: (resp) => {
-        if (resp.status) {
-          this.toast.showNotification(
-            'success',
-            'Result Deleted',
-            'Result deleted successfully'
-          );
+    this.dialog
+      .open(ConfirmationComponent, {
+        width: '600px',
+        data: {
+          message: 'Are you sure you want to delete this result?',
+          subTitle: 'Kindly confirm this action',
+        },
+      })
+      .afterClosed()
+      .subscribe({
+        next: (confirm: boolean) => {
+          if (confirm) {
+            this.resultService.deleteResult(result._id).subscribe({
+              next: (resp) => {
+                if (resp.status) {
+                  this.toast.showNotification(
+                    'success',
+                    'Result Deleted',
+                    'Result deleted successfully'
+                  );
 
-          this.getResults();
-        }
-      },
-    });
+                  this.getResults();
+                }
+              },
+            });
+          }
+        },
+      });
   }
 
   viewFolder(result: IGroupedResult) {
