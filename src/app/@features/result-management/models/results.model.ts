@@ -90,6 +90,8 @@ export interface IResultQuery {
   status: string;
   course: string;
   hasBeenSent: boolean;
+  faculty: string;
+  department: string;
 }
 
 export interface IPreparedResultQuery {

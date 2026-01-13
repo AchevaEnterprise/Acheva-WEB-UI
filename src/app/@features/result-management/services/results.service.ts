@@ -43,6 +43,12 @@ export class ResultsService {
       if (query.hasBeenSent) {
         params = params.append('hasBeenSent', query.hasBeenSent.toString());
       }
+      if (query.faculty) {
+        params = params.append('faculty', query.faculty);
+      }
+      if (query.department) {
+        params = params.append('department', query.department);
+      }
     }
 
     return this.http.get<IAPIPaginatedResponse<IResult[]>>(

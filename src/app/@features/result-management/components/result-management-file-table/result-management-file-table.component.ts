@@ -13,6 +13,12 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
+  FormControl,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import {
   MatCheckboxChange,
   MatCheckboxModule,
 } from '@angular/material/checkbox';
@@ -41,6 +47,11 @@ import { RoleEnum } from '../../../auth/model/auth.model';
 import { AuthenticationService } from '../../../auth/service/auth.service';
 import { IResult } from '../../models/results.model';
 
+export interface FileTableFilter {
+  faculty: string;
+  department: string;
+}
+
 @Component({
   selector: 'app-result-management-file-table',
   imports: [
@@ -54,6 +65,7 @@ import { IResult } from '../../models/results.model';
     EmptyStateComponent,
     LoaderComponent,
     ButtonComponent,
+    ReactiveFormsModule,
   ],
   templateUrl: './result-management-file-table.component.html',
   styleUrl: './result-management-file-table.component.scss',
@@ -79,6 +91,7 @@ export class ResultManagementFileTableComponent implements OnInit, OnDestroy {
   viewResultEvent = output<IResult>();
   trackResultEvent = output<IResult | null>();
   deleteResultEvent = output<IResult>();
+  filterEvent = output<FileTableFilter>();
   pageEvent = output<PageEvent>();
 
   displayedColumns: string[] = [
@@ -93,6 +106,11 @@ export class ResultManagementFileTableComponent implements OnInit, OnDestroy {
   selection = new SelectionModel<IResult>(true, []);
 
   RoleEnum = RoleEnum;
+
+  filterForm = new FormGroup({
+    faculty: new FormControl<IFaculty | null>(null, Validators.required),
+    department: new FormControl<IDepartment | null>(null, Validators.required),
+  });
 
   constructor() {
     effect(() => {
@@ -246,6 +264,18 @@ export class ResultManagementFileTableComponent implements OnInit, OnDestroy {
 
   deleteResult(result: IResult) {
     this.deleteResultEvent.emit(result);
+  }
+
+  filter() {
+    const { faculty, department } = this.filterForm.value;
+    this.filterEvent.emit({
+      faculty: faculty!._id,
+      department: department!._id,
+    });
+  }
+
+  clearFilter() {
+    this.filterForm.reset();
   }
 
   ngOnDestroy(): void {

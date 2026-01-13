@@ -1,6 +1,9 @@
 <div class="p-4">
   <div class="flex flex-wrap justify-between items-end">
-    <div class="flex gap-4 justify-end w-full">
+    <div
+      class="flex gap-4 justify-end items-center w-full"
+      [formGroup]="filterForm"
+    >
       <!-- Faculty Selection -->
       <div class="input-style-1 acheva-input w-[30%]">
         <p class="acva-para-2 fw-400 label-text">Faculty</p>
@@ -33,6 +36,21 @@
           </mat-select>
         </mat-form-field>
       </div>
+
+      <app-button
+        label="Filter"
+        class="btn-md"
+        (clickEvent)="filter()"
+        [disabled]="this.filterForm.invalid"
+      />
+      @if (this.filterForm.valid) {
+        <app-button
+          label="Clear"
+          type="outline"
+          class="btn-md btn-error"
+          (clickEvent)="clearFilter()"
+        />
+      }
     </div>
   </div>
 

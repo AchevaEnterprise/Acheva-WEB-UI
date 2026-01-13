@@ -88,6 +88,7 @@
             (viewResultEvent)="viewResult($event)"
             (trackResultEvent)="trackResult($event)"
             (deleteResultEvent)="deleteResult($event)"
+            (filterEvent)="filter($event)"
           />
 
           <ng-container *appRoleAccess="[RoleEnum.COURSE_COORDINATOR]">

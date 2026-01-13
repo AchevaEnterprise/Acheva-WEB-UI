@@ -302,30 +302,30 @@ export class DashboardComponent implements OnInit {
         if (resp.status) {
           const { statusCounts } = resp.data;
 
-          this.analtyics.update((analytics: IAnalytics[]) => {
-            for (const stats of analytics) {
-              if (stats.label.toLowerCase().includes('draft')) {
-                stats.count = statusCounts.DRAFT;
-              }
-              if (stats.label.toLowerCase().includes('pending')) {
-                stats.count = statusCounts.PENDING;
-              }
-              if (stats.label.toLowerCase().includes('unverified')) {
-                stats.count = statusCounts.UNVERIFIED;
-              }
-              if (stats.label.toLowerCase().includes('verified')) {
-                stats.count = statusCounts.VERIFIED;
-              }
-              if (stats.label.toLowerCase().includes('published')) {
-                stats.count = statusCounts.PUBLISHED;
-              }
-              if (stats.label.toLowerCase().includes('imported')) {
-                stats.count = statusCounts.IMPORTED;
-              }
-            }
+          const updatedAnalytics = this.analtyics().map(
+            (analytics: IAnalytics) => {
+              let count = analytics.count;
+              const label = analytics.label.toLowerCase();
 
-            return analytics;
-          });
+              if (label.includes('draft')) count = statusCounts.DRAFT;
+              else if (label.includes('pending')) count = statusCounts.PENDING;
+              else if (label.includes('unverified'))
+                count = statusCounts.UNVERIFIED;
+              else if (label.includes('verified'))
+                count = statusCounts.VERIFIED;
+              else if (label.includes('published'))
+                count = statusCounts.PUBLISHED;
+              else if (label.includes('imported'))
+                count = statusCounts.IMPORTED;
+
+              return {
+                ...analytics,
+                count,
+              };
+            }
+          );
+
+          this.analtyics.set(updatedAnalytics);
         }
       },
     });

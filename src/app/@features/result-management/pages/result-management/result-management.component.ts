@@ -20,12 +20,16 @@ import { RoleEnum } from '../../../auth/model/auth.model';
 import { AuthenticationService } from '../../../auth/service/auth.service';
 import { ResendToCourseCoordinatorComponent } from '../../components/resend-to-course-coordinator/resend-to-course-coordinator.component';
 import { ResendToDeanComponent } from '../../components/resend-to-dean/resend-to-dean.component';
-import { ResultManagementFileTableComponent } from '../../components/result-management-file-table/result-management-file-table.component';
+import {
+  FileTableFilter,
+  ResultManagementFileTableComponent,
+} from '../../components/result-management-file-table/result-management-file-table.component';
 import { ResultManagementFolderTableComponent } from '../../components/result-management-folder-table/result-management-folder-table.component';
 import { ResultStatusTrackingComponent } from '../../components/result-status-tracking/result-status-tracking.component';
 import {
   IGroupedResult,
   IResult,
+  IResultQuery,
   ISendSelectedResult,
 } from '../../models/results.model';
 import { ResultsService } from '../../services/results.service';
@@ -156,12 +160,13 @@ export class ResultManagementComponent implements OnInit {
     else this.getResults();
   }
 
-  getResults() {
+  getResults(params?: Partial<IResultQuery>) {
     this.loadingResults.set(true);
 
     this.resultService
       .getResults({
         status: this.activeSegment().value,
+        ...params,
       })
       .pipe(finalize(() => this.loadingResults.set(false)))
       .subscribe({
@@ -509,6 +514,10 @@ export class ResultManagementComponent implements OnInit {
 
   trackResult(result: IResult | null) {
     this.result.set(result);
+  }
+
+  filter(filter: FileTableFilter) {
+    this.getResults(filter);
   }
 
   deleteResult(result: IResult) {

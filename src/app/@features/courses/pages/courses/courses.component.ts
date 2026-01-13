@@ -78,7 +78,7 @@ export class CoursesComponent {
 
   // Search stream
   searchResults$ = this.searchSubject.pipe(
-    debounceTime(300),
+    debounceTime(800),
     distinctUntilChanged(),
     switchMap((query) => {
       if (!query.trim()) {
@@ -94,7 +94,7 @@ export class CoursesComponent {
       const courseCodeParams = {
         courseCode: query.trim(),
         courseTitle: '',
-        level: LevelsEnum.EXCEPTION,
+        // level: LevelsEnum.EXCEPTION,
       };
 
       return this.courseService.getCourses(courseCodeParams).pipe(

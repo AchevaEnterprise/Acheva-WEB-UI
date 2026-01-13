@@ -45,7 +45,7 @@
     <app-search-input placeholder="Search students" />
 
     <div class="flex flex-wrap justify-end gap-3 items-center">
-      @if (status === 'PENDING') {
+      <!-- @if (status === 'PENDING') {
         <app-button
           *appRoleAccess="[RoleEnum.HOD]"
           label="Resend"
@@ -61,13 +61,11 @@
             Resend to Dean
           </button>
         </mat-menu>
-      }
+      } -->
 
       @if (
         (status === 'UNVERIFIED' && userRole === RoleEnum.DEAN) ||
-        (status === 'PENDING' &&
-          userRole === RoleEnum.HOD &&
-          result()?.isApproved === null)
+        (status === 'PENDING' && userRole === RoleEnum.HOD)
       ) {
         <app-button
           *appRoleAccess="[RoleEnum.HOD, RoleEnum.DEAN]"

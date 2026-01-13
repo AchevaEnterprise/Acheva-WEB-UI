@@ -9,7 +9,7 @@
 
 <!-- ANALYTICS -->
 <div class="grid grid-cols-[repeat(auto-fit,_minmax(0,_1fr))] gap-4 mt-4">
-  @for (data of analtyics(); track $index) {
+  @for (data of analtyics(); track data.label) {
     <app-analytics-card [analtyics]="data" *appRoleAccess="data.accessRole" />
   }
 </div>
