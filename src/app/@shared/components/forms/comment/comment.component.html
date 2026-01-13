@@ -16,10 +16,10 @@
             @if (comment.lecturer._id !== userId) {
               <li class="mb-3">
                 <span class="text-gray-500 text-[.7rem]"
-                  ><span class="font-medium text-[.785rem]">
-                    <!-- {{ comment.lecturer.firstname }}
-                    {{ comment.lecturer.lastname }} -->
-                    {{ comment.lecturer.role }}
+                  ><span class="font-medium text-[.75rem]">
+                    {{ comment.lecturer.firstname }}
+                    {{ comment.lecturer.lastname }}
+                    [{{ comment.lecturer.role }}]
                   </span>
                   ({{ comment.createdAt | date: 'MMM d, YYYY h:mm a' }})</span
                 >

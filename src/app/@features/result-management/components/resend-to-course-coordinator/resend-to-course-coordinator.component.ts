@@ -1,6 +1,10 @@
 import { Component, inject } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import {
+  MAT_DIALOG_DATA,
+  MatDialogModule,
+  MatDialogRef,
+} from '@angular/material/dialog';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
 import { CommentComponent } from '../../../../@shared/components/forms/comment/comment.component';
 
@@ -19,6 +23,9 @@ export class ResendToCourseCoordinatorComponent {
   private readonly dialogRef = inject(
     MatDialogRef<ResendToCourseCoordinatorComponent>
   );
+  readonly data = inject<{
+    resultId: string;
+  }>(MAT_DIALOG_DATA);
 
   commentCtrl: FormControl = new FormControl('');
 

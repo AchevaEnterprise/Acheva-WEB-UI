@@ -245,31 +245,49 @@ export class EditResultsComponent implements OnInit, CanComponentDeactivate {
   }
 
   confirmApproval() {
-    const message = `You're about to send this vetted result to the Dean. This action is irreversible. Are you sure you want to continue?`;
+    const role = this.authService.activeAccount()!.role as RoleEnum;
+    const message = `You're about to send this vetted result to the Course Advisor. This action is irreversible. Are you sure you want to continue?`;
 
-    this.dialog
-      .open(ConfirmationComponent, {
-        width: '600px',
-        data: {
-          message: message,
-        },
-      })
-      .afterClosed()
-      .subscribe({
-        next: (confirmed: boolean) => {
-          if (confirmed) this.approve();
-        },
-      });
+    if (role === RoleEnum.HOD) {
+      this.dialog
+        .open(ResendToDeanComponent, {
+          width: '600px',
+          data: {
+            resultId: this.resultId,
+          },
+        })
+        .afterClosed()
+        .subscribe({
+          next: (result: { issueStatus: string; comment: string }) => {
+            if (result) this.approve(result);
+          },
+        });
+    } else {
+      this.dialog
+        .open(ConfirmationComponent, {
+          width: '600px',
+          data: {
+            message: message,
+          },
+        })
+        .afterClosed()
+        .subscribe({
+          next: (confirmed: boolean) => {
+            if (confirmed) this.approve();
+          },
+        });
+    }
   }
 
-  approve() {
+  approve(meta?: { issueStatus: string; comment: string }) {
     this.approvingResult.set(true);
     const { roles } = this.result() as IResult;
     const user = this.authService.activeAccount()!;
 
     const approveRequest$ = this.resultsService.approveOrRejectResult(
       this.resultId,
-      'APPROVED'
+      'APPROVED',
+      meta?.comment
     );
     const sendResultRequest$ = this.resultsService.sendResult(
       this.resultId,
@@ -302,17 +320,35 @@ export class EditResultsComponent implements OnInit, CanComponentDeactivate {
   }
 
   confirmReject() {
-    this.dialog
-      .open(RejectReasonComponent, {
-        width: '600px',
-        data: { resultId: this.resultId },
-      })
-      .afterClosed()
-      .subscribe({
-        next: (comment: string) => {
-          if (comment) this.reject(comment);
-        },
-      });
+    const role = this.authService.activeAccount()!.role as RoleEnum;
+
+    if (role === RoleEnum.HOD) {
+      this.dialog
+        .open(ResendToCourseCoordinatorComponent, {
+          width: '600px',
+          data: {
+            resultId: this.resultId,
+          },
+        })
+        .afterClosed()
+        .subscribe({
+          next: (comment: string) => {
+            if (comment) this.reject(comment);
+          },
+        });
+    } else {
+      this.dialog
+        .open(RejectReasonComponent, {
+          width: '600px',
+          data: { resultId: this.resultId },
+        })
+        .afterClosed()
+        .subscribe({
+          next: (comment: string) => {
+            if (comment) this.reject(comment);
+          },
+        });
+    }
   }
 
   reject(reason: string) {
