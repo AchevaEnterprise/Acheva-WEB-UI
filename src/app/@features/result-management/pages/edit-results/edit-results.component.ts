@@ -258,7 +258,10 @@ export class EditResultsComponent implements OnInit, CanComponentDeactivate {
         })
         .afterClosed()
         .subscribe({
-          next: (result: { issueStatus: string; comment: string }) => {
+          next: (result: {
+            issueStatus: 'RESOLVED' | 'UNRESOLVED';
+            comment: string;
+          }) => {
             if (result) this.approve(result);
           },
         });
@@ -279,7 +282,7 @@ export class EditResultsComponent implements OnInit, CanComponentDeactivate {
     }
   }
 
-  approve(meta?: { issueStatus: string; comment: string }) {
+  approve(meta?: { issueStatus: 'RESOLVED' | 'UNRESOLVED'; comment: string }) {
     this.approvingResult.set(true);
     const { roles } = this.result() as IResult;
     const user = this.authService.activeAccount()!;
@@ -287,7 +290,8 @@ export class EditResultsComponent implements OnInit, CanComponentDeactivate {
     const approveRequest$ = this.resultsService.approveOrRejectResult(
       this.resultId,
       'APPROVED',
-      meta?.comment
+      meta?.comment,
+      meta?.issueStatus
     );
     const sendResultRequest$ = this.resultsService.sendResult(
       this.resultId,

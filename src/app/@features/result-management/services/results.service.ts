@@ -298,7 +298,8 @@ export class ResultsService {
   approveOrRejectResult(
     resultId: string,
     action: 'APPROVED' | 'REJECTED',
-    comment?: string
+    comment?: string,
+    issueStatus?: 'RESOLVED' | 'UNRESOLVED'
   ) {
     return this.http.patch<IAPIResponse<unknown>>(
       `${this.resultsUrl}/${resultId}/approve-or-reject`,
