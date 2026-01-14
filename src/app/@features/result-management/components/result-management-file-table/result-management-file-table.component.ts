@@ -278,6 +278,11 @@ export class ResultManagementFileTableComponent implements OnInit, OnDestroy {
     this.filterForm.reset();
   }
 
+  isApprovedForMe(rejectedBy: string[]) {
+    const userId = this.authService.activeAccount()?.id;
+    return rejectedBy.includes(userId!);
+  }
+
   ngOnDestroy(): void {
     this.selectedResultId.set(null);
   }

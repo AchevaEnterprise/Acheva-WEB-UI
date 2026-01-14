@@ -45,10 +45,14 @@
 }
 
 .rejected {
-  animation: pulse 2s ease-in-out infinite;
+  animation: rejected-pulse 2s ease-in-out infinite;
 }
 
-@keyframes pulse {
+.approved {
+  animation: approved-pulse 2s ease-in-out infinite;
+}
+
+@keyframes rejected-pulse {
   0%,
   100% {
     background-color: #faecec;
@@ -59,8 +63,23 @@
   }
 }
 
+@keyframes approved-pulse {
+  0%,
+  100% {
+    background-color: #ecfaee;
+  }
+
+  50% {
+    background-color: #cefcd8;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .rejected {
+    animation: none;
+  }
+
+  .approved {
     animation: none;
   }
 }

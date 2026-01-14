@@ -220,6 +220,9 @@
             class="cursor-pointer hover:bg-gray-400"
             [class.selected]="activeRow() === result"
             [class.rejected]="result.isApproved === false"
+            [class.approved]="
+              result.isApproved === true && isApprovedForMe(result.rejectedBy)
+            "
             [class.disabled]="
               (userRole === RoleEnum.LECTURER && result.hasBeenSent) ||
               (userRole === RoleEnum.COURSE_COORDINATOR && !result.hasBeenSent)

@@ -48,6 +48,7 @@ import { StudentService } from '../../../students/services/student.service';
     MatMenuModule,
     SearchSelectComponent,
     ButtonComponent,
+    TitleCasePipe,
   ],
   templateUrl: './reference-table-result-upload.component.html',
   styleUrl: './reference-table-result-upload.component.scss',
@@ -140,13 +141,10 @@ export class ReferenceTableResultUploadComponent {
       this.dataSource.set(filtered);
     });
 
-    // Add 10 Default roles
-    for (let i = 0; i < 10; i++) this.addRow();
-
     this.setupTypingCountdown();
 
     this.inputSubject
-      .pipe(debounceTime(800), takeUntilDestroyed(this.destroyRef))
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(({ index }) => this.handleRowInput(index));
 
     this.formListener();
@@ -172,6 +170,11 @@ export class ReferenceTableResultUploadComponent {
 
     this.allRows.set([...this.rows.controls]);
     this.dataSource.set([...this.rows.controls]);
+
+    // Add 10 Default roles
+    if (this.allRows().length < 1) {
+      for (let i = 0; i < 10; i++) this.addRow();
+    }
   }
 
   addRow() {
