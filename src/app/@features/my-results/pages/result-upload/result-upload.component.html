@@ -217,7 +217,8 @@
           #referenceTableResultUploadRef
           [refreshTable]="isUploaded()"
           [students]="students()['REFERENCE']"
-          (uploadResultEvent)="uploadResult($event)"
+          (hasChangesEvent)="updateChanges($event)"
+          (uploadResultEvent)="uploadBulkResult($event)"
         />
       }
       @case ('UNREGISTERED') {
@@ -225,7 +226,8 @@
           #unregisteredTableResultUploadRef
           [refreshTable]="isUploaded()"
           [students]="students()['UNREGISTERED']"
-          (uploadResultEvent)="uploadResult($event)"
+          (hasChangesEvent)="updateChanges($event)"
+          (uploadResultEvent)="uploadBulkResult($event)"
         />
       }
     }

@@ -19,10 +19,18 @@ import {
 } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
 import { ActivatedRoute } from '@angular/router';
-import { Subject, debounceTime, finalize } from 'rxjs';
+import {
+  Subject,
+  debounceTime,
+  finalize,
+  interval,
+  switchMap,
+  take,
+  tap,
+} from 'rxjs';
+import { UtilityService } from '../../../../@core/utility/utility.service';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
 import { StatusBadgeComponent } from '../../../../@shared/components/status-badge/status-badge.component';
-import { RoleEnum } from '../../../auth/model/auth.model';
 import { AuthenticationService } from '../../../auth/service/auth.service';
 import { IStudentGrade } from '../../../students/models/student.model';
 import { StudentService } from '../../../students/services/student.service';
@@ -44,21 +52,25 @@ import { StudentService } from '../../../students/services/student.service';
 export class UnregisteredTableResultUploadComponent {
   private readonly authService = inject(AuthenticationService);
   private readonly studentService = inject(StudentService);
+  private readonly utilsService = inject(UtilityService);
   private readonly titlecasePipe = inject(TitleCasePipe);
   private readonly fb = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
 
-  private readonly userRole = this.authService.activeAccount()
-    ?.role as RoleEnum;
-
   students = input<Partial<IStudentGrade>[]>([]);
   searchValue = input<string | null>(null);
   refreshTable = input<boolean>(false);
-  uploadResultEvent = output<Partial<IStudentGrade>>();
+
+  hasChangesEvent = output<boolean>();
+  uploadResultEvent = output<IStudentGrade[]>();
 
   allRows = signal<FormGroup[]>([]);
   dataSource = signal<FormGroup[]>([]);
+
+  private readonly COUNTDOWN_SECONDS: number = 5;
+  countdown = signal<number | null>(null);
+  readonly completedRows = new Set<number>();
 
   readonly status: string = this.route.snapshot.queryParamMap.get('status')!;
   readonly displayedColumns = [
@@ -81,7 +93,7 @@ export class UnregisteredTableResultUploadComponent {
     index: number;
     control?: string;
   }>();
-  readonly completedRows = new Set<number>();
+  private readonly typeSubject = new Subject<void>();
 
   filterdStudentRegNumber = signal<
     { label: string; value: { registrationNumber: string; fullName: string } }[]
@@ -126,9 +138,13 @@ export class UnregisteredTableResultUploadComponent {
     // Add 10 Default roles
     for (let i = 0; i < 10; i++) this.addRow();
 
+    this.setupTypingCountdown();
+
     this.inputSubject
       .pipe(debounceTime(800), takeUntilDestroyed(this.destroyRef))
       .subscribe(({ index }) => this.handleRowInput(index));
+
+    this.formListener();
   }
 
   get rows(): FormArray<FormGroup> {
@@ -174,13 +190,13 @@ export class UnregisteredTableResultUploadComponent {
 
     // disabled when user is not a lecturer or a course-cordinator
     // and when staus is not draft, if there is a status
-    const isDisabled =
-      ![RoleEnum.COURSE_COORDINATOR, RoleEnum.LECTURER].includes(
-        this.userRole
-      ) && this.status !== 'DRAFT';
+    const isDisabled = this.status && this.status !== 'DRAFT';
 
     const createNumberControl = (value: number | undefined) =>
-      new FormControl({ value, disabled: isDisabled }, numberValidator);
+      new FormControl(
+        { value, disabled: isDisabled || false },
+        numberValidator
+      );
 
     return this.fb.group({
       registrationNumber: [student?.registrationNumber, Validators.required],
@@ -214,6 +230,7 @@ export class UnregisteredTableResultUploadComponent {
     }
 
     this.inputSubject.next({ index, control: controlName });
+    this.typeSubject.next();
   }
 
   handleRowInput(index: number): void {
@@ -244,9 +261,59 @@ export class UnregisteredTableResultUploadComponent {
       if (total >= 40) row.get('status')?.setValue('PASS');
       else row.get('status')?.setValue('FAIL');
 
+      this.hasChangesEvent.emit(true);
       this.completedRows.add(index);
-      this.uploadResultEvent.emit(row.getRawValue());
     }
+  }
+
+  formListener() {
+    this.form.controls['rows'].valueChanges
+      .pipe(
+        debounceTime(this.COUNTDOWN_SECONDS * 1000),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe(async () => {
+        if (this.completedRows.size === 0) return;
+
+        const changedResults: IStudentGrade[] = [];
+
+        for (const index of this.completedRows) {
+          const row = this.rows.at(index);
+          if (!row || row.invalid) continue;
+
+          changedResults.push(row.getRawValue() as IStudentGrade);
+        }
+
+        if (changedResults.length === 0) return;
+
+        const cleaned = await this.utilsService.cleanUpResult(changedResults);
+
+        this.uploadResultEvent.emit(cleaned);
+        this.hasChangesEvent.emit(false);
+
+        this.completedRows.clear();
+      });
+  }
+
+  private setupTypingCountdown(): void {
+    this.typeSubject
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        switchMap(() => {
+          this.countdown.set(this.COUNTDOWN_SECONDS);
+
+          return interval(1000).pipe(
+            take(this.COUNTDOWN_SECONDS),
+            tap((tick) => {
+              this.countdown.set(this.COUNTDOWN_SECONDS - tick - 1);
+            }),
+            finalize(() => {
+              this.countdown.set(null);
+            })
+          );
+        })
+      )
+      .subscribe();
   }
 
   searchStudentsByRegNo(regNo: string) {
