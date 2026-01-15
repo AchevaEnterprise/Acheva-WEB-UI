@@ -246,13 +246,20 @@ export class EditResultsComponent implements OnInit, CanComponentDeactivate {
 
   confirmApproval() {
     const role = this.authService.activeAccount()!.role as RoleEnum;
-    const message = `You're about to send this vetted result to the Course Advisor. This action is irreversible. Are you sure you want to continue?`;
 
-    if (role === RoleEnum.HOD) {
+    let message = `You're about to send this vetted result to the Course Advisor. This action is irreversible. Are you sure you want to continue?`;
+    if (role === RoleEnum.HOD)
+      message = `You're about to send this vetted result to the Dean. This action is irreversible. Are you sure you want to continue?`;
+
+    if (this.result()?.isApproved === false) {
       this.dialog
         .open(ResendToDeanComponent, {
           width: '600px',
           data: {
+            title:
+              role === RoleEnum.HOD
+                ? 'Resend to Dean'
+                : 'Resend to Course Advisor',
             resultId: this.resultId,
           },
         })

@@ -26,6 +26,7 @@ import { CommentComponent } from '../../../../@shared/components/forms/comment/c
 export class ResendToDeanComponent {
   private readonly dialogRef = inject(MatDialogRef<ResendToDeanComponent>);
   readonly data = inject<{
+    title: string;
     resultId: string;
   }>(MAT_DIALOG_DATA);
 
