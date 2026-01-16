@@ -160,6 +160,14 @@ export class ResultManagementComponent implements OnInit {
     else this.getResults();
   }
 
+  get resultIsSelected() {
+    return this.fileTableRef()!.selection.selected.length > 0;
+  }
+
+  get resultIsHighlighted() {
+    return this.fileTableRef()!.activeRow() !== null;
+  }
+
   getResults(params?: Partial<IResultQuery>) {
     this.loadingResults.set(true);
 

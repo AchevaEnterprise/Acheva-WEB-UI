@@ -52,7 +52,9 @@ export class CommentComponent implements ControlValueAccessor {
 
   resultId = input<string>();
   refresh = input<boolean>();
+  disableComment = input<boolean>(false);
   showSubmitBtn = input<boolean>(false);
+
   submitEvent = output<{ resultId: string; comment: string }>();
 
   value = signal<string>('');

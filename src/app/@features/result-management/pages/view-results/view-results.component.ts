@@ -147,6 +147,14 @@ export class ViewResultsComponent implements OnInit {
       });
   }
 
+  get resultIsSelected() {
+    return this.resultTableRef()!.selection.selected.length > 0;
+  }
+
+  get resultIsHighlighted() {
+    return this.resultTableRef()!.activeRow() !== null;
+  }
+
   editResult(result: IResult) {
     const { _id } = result;
 

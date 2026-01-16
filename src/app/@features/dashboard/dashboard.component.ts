@@ -14,7 +14,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
 import { Router } from '@angular/router';
-import { finalize } from 'rxjs';
+import { finalize, forkJoin, map, switchMap } from 'rxjs';
 import { RoleAccessDirective } from '../../@core/directives/role-access.directive';
 import { IPaginator } from '../../@core/models/paginator.model';
 import { IAnalytics } from '../../@core/models/school.model';
@@ -217,6 +217,9 @@ export class DashboardComponent implements OnInit {
   );
   segmentCardLabel = signal<string>('Access your recent drafts from here');
   segmentCardIconSrc = signal<string>('icons/general/draft-icon.svg');
+  chart = signal<{ courseCode: string; passRate: number; failRate: number }[]>(
+    []
+  );
 
   selectedCalendarDate = model<number>(Date.now());
 
@@ -293,6 +296,7 @@ export class DashboardComponent implements OnInit {
 
   ngOnInit(): void {
     this.getDashboardAnalytics();
+    this.getFirstFiveResultCharts();
 
     if (this.currentRole() === RoleEnum.COURSE_COORDINATOR)
       this.getGroupedResults();
@@ -371,6 +375,47 @@ export class DashboardComponent implements OnInit {
           if (resp.status) {
             this.groupedResults.set(resp.data.data);
           }
+        },
+      });
+  }
+
+  getFirstFiveResultCharts() {
+    this.resultService
+      .getResults()
+      .pipe(
+        switchMap((resp) => {
+          const { result } = resp.data;
+
+          const firstFive = result.slice(0, 5);
+
+          const requests = firstFive.map((res: IResult) =>
+            this.resultService.getResultEntries(res._id).pipe(
+              map((entriesResp) => ({
+                courseCode: res.course.courseCode,
+                entries: entriesResp.data,
+              }))
+            )
+          );
+
+          return forkJoin(requests);
+        })
+      )
+      .subscribe({
+        next: (results) => {
+          const analytics = results.map((item) => {
+            const entries = item.entries as {
+              totalPass: number;
+              totalFail: number;
+              total: number;
+            };
+            return {
+              courseCode: item.courseCode,
+              passRate: (entries.totalPass / entries.total) * 100,
+              failRate: (entries.totalFail / entries.total) * 100,
+            };
+          });
+
+          this.chart.set(analytics);
         },
       });
   }

@@ -1,66 +1,80 @@
-import { Component } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
+import * as Highcharts from 'highcharts';
 import { HighchartsChartComponent } from 'highcharts-angular';
 
 @Component({
   selector: 'app-chart',
+  standalone: true,
   imports: [HighchartsChartComponent],
   templateUrl: './chart.component.html',
   styleUrl: './chart.component.scss',
 })
 export class ChartComponent {
-  updateFlag = false;
-  chartOptions: Highcharts.Options = {
-    chart: {
-      type: 'column',
-      backgroundColor: 'transparent',
-    },
-    title: undefined,
+  Highcharts: typeof Highcharts = Highcharts;
 
-    xAxis: {
-      categories: ['CSC 101', 'CSC 102', 'CSC 103', 'CSC 104', 'CSC 105'],
-      crosshair: true,
-    },
+  chart = input<{ courseCode: string; passRate: number; failRate: number }[]>(
+    []
+  );
 
-    yAxis: {
-      min: 0,
-      max: 100,
-      labels: {
-        format: '{value}%',
-      },
-      title: { text: 'Percentage (%)' },
-    },
+  updateFlag = true;
 
-    tooltip: {
-      valueSuffix: ' %',
-    },
+  chartOptions = computed<Highcharts.Options>(() => {
+    const data = this.chart();
 
-    plotOptions: {
-      column: {
-        pointPadding: 0.2,
-        borderWidth: 0,
-        grouping: true,
-      },
-    },
-
-    credits: {
-      enabled: false,
-    },
-
-    accessibility: {
-      enabled: false,
-    },
-
-    series: [
-      {
+    return {
+      chart: {
         type: 'column',
-        name: 'Pass Rate',
-        data: [10, 28, 70, 64, 54],
+        backgroundColor: 'transparent',
       },
-      {
-        type: 'column',
-        name: 'Fail Rate',
-        data: [45, 30, 100, 20, 40],
+
+      title: undefined,
+
+      xAxis: {
+        categories: data.map((d) => d.courseCode),
+        crosshair: true,
       },
-    ],
-  };
+
+      yAxis: {
+        min: 0,
+        max: 100,
+        title: { text: 'Percentage (%)' },
+        labels: {
+          format: '{value}%',
+        },
+      },
+
+      tooltip: {
+        shared: true,
+        valueSuffix: '%',
+      },
+
+      plotOptions: {
+        column: {
+          grouping: true,
+          borderWidth: 0,
+        },
+      },
+
+      credits: {
+        enabled: false,
+      },
+
+      accessibility: {
+        enabled: false,
+      },
+
+      series: [
+        {
+          type: 'column',
+          name: 'Pass Rate',
+          data: data.map((d) => Number(d.passRate.toFixed(2))),
+        },
+        {
+          type: 'column',
+          name: 'Fail Rate',
+          data: data.map((d) => Number(d.failRate.toFixed(2))),
+        },
+      ],
+    };
+  });
 }

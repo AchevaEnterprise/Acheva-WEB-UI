@@ -49,6 +49,7 @@
         *appRoleAccess="[RoleEnum.COURSE_COORDINATOR]"
         label="Send to Lecturer"
         class="btn-md"
+        [disabled]="!resultIsSelected"
         [loading]="sendingToLecturer()"
         (clickEvent)="confirmSendToLecturer()"
       />
@@ -58,6 +59,7 @@
         label="Send to HOD"
         class="btn-md"
         matTooltip="Send to Head of Department"
+        [disabled]="!resultIsSelected"
         [loading]="sendingToHOD()"
         (clickEvent)="confirmSendToHOD()"
       />
@@ -96,6 +98,7 @@
         [refresh]="refreshComments()"
         [showSubmitBtn]="true"
         [resultId]="result()?._id"
+        [disableComment]="!resultIsHighlighted"
         (submitEvent)="sendComment($event)"
       />
     </div>

@@ -4,13 +4,13 @@
   <header class="flex gap-8 justify-between items-center mb-4">
     <h6 class="acva-clamp-2 acva-para-2 fw-500">Result Status Tracking</h6>
 
-    <div class="input-style-1 acheva-input w-[40%]">
+    <!-- <div class="input-style-1 acheva-input w-[40%]">
       <mat-form-field [style.width.%]="100" appearance="outline">
         <mat-select placeholder="Course">
           <mat-option [value]="'csc100'">CSC 100</mat-option>
         </mat-select>
       </mat-form-field>
-    </div>
+    </div> -->
   </header>
 
   <!-- INFO CARD -->
@@ -26,7 +26,7 @@
   }
 
   <div>
-    <h6 class="acva-para-2 mb-3 fw-500">Status Timeline</h6>
+    <h6 class="acva-para-2 mb-3 fw-400">Status Timeline</h6>
     <app-time-line [status]="result()?.status" />
   </div>
 </div>

@@ -17,6 +17,7 @@
             label="Send to CC"
             class="btn-md"
             matTooltip="Send to Course Cordinator"
+            [disabled]="!resultIsSelected"
             [loading]="sendingToCC()"
             (clickEvent)="confirmSendToCC()"
           />
@@ -28,6 +29,7 @@
             label="Send to CA"
             class="btn-md"
             matTooltip="Send to Course Adviser"
+            [disabled]="!resultIsSelected"
             [loading]="sendingToCA()"
             (clickEvent)="confirmSendToCA()"
           />
@@ -37,6 +39,7 @@
             label="Publish"
             class="btn-md"
             [loading]="publishing()"
+            [disabled]="!resultIsSelected"
             (clickEvent)="confirmPublishResult()"
           />
         }
@@ -124,6 +127,7 @@
             [refresh]="refreshComments()"
             [showSubmitBtn]="true"
             [resultId]="result()?._id"
+            [disableComment]="!resultIsHighlighted"
             (submitEvent)="sendComment($event)"
           />
         </div>
