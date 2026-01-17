@@ -55,6 +55,16 @@
         }
 
         <app-button
+          *appRoleAccess="[RoleEnum.LECTURER]"
+          label="Delete"
+          class="btn-md btn-error"
+          type="outline"
+          [disabled]="!resultIsSelected"
+          [loading]="deleting()"
+          (clickEvent)="deleteResults()"
+        />
+
+        <app-button
           [label]="expandView() ? 'Expand' : 'Collapse'"
           type="outline"
           class="btn-md"
@@ -90,7 +100,6 @@
             [pagination]="pagination()"
             (viewResultEvent)="viewResult($event)"
             (trackResultEvent)="trackResult($event)"
-            (deleteResultEvent)="deleteResult($event)"
             (filterEvent)="filter($event)"
           />
 

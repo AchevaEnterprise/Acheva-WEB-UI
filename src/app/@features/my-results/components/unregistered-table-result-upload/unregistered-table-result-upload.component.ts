@@ -82,7 +82,7 @@ export class UnregisteredTableResultUploadComponent {
     'total',
     'grade',
     'status',
-    'action',
+    // 'action',
   ];
 
   form = this.fb.group({

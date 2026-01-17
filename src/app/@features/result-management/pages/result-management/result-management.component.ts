@@ -83,6 +83,7 @@ export class ResultManagementComponent implements OnInit {
   sendingToCA = signal<boolean>(false);
   resending = signal<boolean>(false);
   publishing = signal<boolean>(false);
+  deleting = signal<boolean>(false);
   refreshComments = signal<boolean>(false);
 
   segments = signal<ISegmentSwitcher[]>([
@@ -161,11 +162,11 @@ export class ResultManagementComponent implements OnInit {
   }
 
   get resultIsSelected() {
-    return this.fileTableRef()!.selection.selected.length > 0;
+    return (this.fileTableRef()?.selection?.selected?.length ?? 0) > 0;
   }
 
   get resultIsHighlighted() {
-    return this.fileTableRef()!.activeRow() !== null;
+    return this.fileTableRef()?.activeRow() !== null;
   }
 
   getResults(params?: Partial<IResultQuery>) {
@@ -317,9 +318,12 @@ export class ResultManagementComponent implements OnInit {
                 'Result Sent',
                 'Result has been sent to the Course Cordinator'
               );
-            }
 
-            this.getResults();
+              this.getResults();
+              selectedResults.forEach((result) => {
+                this.fileTableRef()!.selection.deselect(result);
+              });
+            }
           }
         },
       });
@@ -373,6 +377,10 @@ export class ResultManagementComponent implements OnInit {
             );
 
             this.getResults();
+            // Unselect selected result
+            selectedResults.forEach((result) => {
+              this.fileTableRef()!.selection.deselect(result);
+            });
           }
         },
       });
@@ -424,6 +432,10 @@ export class ResultManagementComponent implements OnInit {
             );
 
             this.getResults();
+            // Unselect selected result
+            selectedResults.forEach((result) => {
+              this.fileTableRef()!.selection.deselect(result);
+            });
           }
         },
       });
@@ -506,6 +518,10 @@ export class ResultManagementComponent implements OnInit {
             );
 
             this.getResults();
+            // Unselect selected result
+            selectedResults.forEach((result) => {
+              this.fileTableRef()!.selection.deselect(result);
+            });
           }
         },
       });
@@ -528,12 +544,15 @@ export class ResultManagementComponent implements OnInit {
     this.getResults(filter);
   }
 
-  deleteResult(result: IResult) {
+  deleteResults() {
+    const selectedResults: IResult[] = this.fileTableRef()?.selection.selected!;
+    const resultCount = selectedResults.length;
+
     this.dialog
       .open(ConfirmationComponent, {
         width: '600px',
         data: {
-          message: 'Are you sure you want to delete this result?',
+          message: `You are about to delete ${resultCount} result(s)?`,
           subTitle: 'Kindly confirm this action',
         },
       })
@@ -541,19 +560,25 @@ export class ResultManagementComponent implements OnInit {
       .subscribe({
         next: (confirm: boolean) => {
           if (confirm) {
-            this.resultService.deleteResult(result._id).subscribe({
-              next: (resp) => {
-                if (resp.status) {
+            this.deleting.set(true);
+
+            const deleteRequests = selectedResults?.map((result: IResult) =>
+              this.resultService.deleteResult(result._id)
+            );
+
+            forkJoin(deleteRequests)
+              .pipe(finalize(() => this.deleting.set(false)))
+              .subscribe({
+                next: () => {
                   this.toast.showNotification(
                     'success',
-                    'Result Deleted',
-                    'Result deleted successfully'
+                    `${resultCount} Result(s) Deleted`,
+                    'Results deleted successfully'
                   );
 
                   this.getResults();
-                }
-              },
-            });
+                },
+              });
           }
         },
       });

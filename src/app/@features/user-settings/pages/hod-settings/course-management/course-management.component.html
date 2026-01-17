@@ -60,55 +60,55 @@
           <table mat-table [dataSource]="dataSource()">
             <ng-container matColumnDef="courseTitle">
               <th mat-header-cell *matHeaderCellDef>COURSE TITLE</th>
-              <td mat-cell *matCellDef="let element">
-                {{ element.courseTitle }}
+              <td mat-cell *matCellDef="let course">
+                {{ course.courseTitle }}
               </td>
             </ng-container>
 
             <ng-container matColumnDef="courseCode">
               <th mat-header-cell *matHeaderCellDef>COURSE CODE</th>
-              <td mat-cell *matCellDef="let element">
-                {{ element.courseCode }}
+              <td mat-cell *matCellDef="let course">
+                {{ course.courseCode }}
               </td>
             </ng-container>
 
             <ng-container matColumnDef="courseLoad">
               <th mat-header-cell *matHeaderCellDef>COURSE LOAD</th>
-              <td mat-cell *matCellDef="let element">
-                {{ element.courseLoad }} Units
+              <td mat-cell *matCellDef="let course">
+                {{ course.courseLoad }} Units
               </td>
             </ng-container>
 
             <ng-container matColumnDef="courseCoordinator">
               <th mat-header-cell *matHeaderCellDef>COURSE COORDINATOR</th>
-              <td mat-cell *matCellDef="let element">
-                {{ element.courseCoordinator || 'N/A' }}
+              <td mat-cell *matCellDef="let course">
+                {{ course.courseCoordinator || 'N/A' }}
               </td>
             </ng-container>
 
             <ng-container matColumnDef="assignedAt">
               <th mat-header-cell *matHeaderCellDef>ASSIGNED DATE</th>
-              <td mat-cell *matCellDef="let element">
-                {{ (element.assignedAt | date: 'MMM d, YYYY h:mm a') || '-' }}
+              <td mat-cell *matCellDef="let course">
+                {{ (course.assignedAt | date: 'MMM d, YYYY h:mm a') || '-' }}
               </td>
             </ng-container>
 
             <ng-container matColumnDef="action">
               <th mat-header-cell *matHeaderCellDef>ACTION</th>
-              <td mat-cell *matCellDef="let element">
-                @if (element.assignedTo) {
+              <td mat-cell *matCellDef="let course">
+                @if (course.assignedTo) {
                   <app-button
                     [label]="'Unassign'"
                     type="outline"
                     class="btn-sm"
-                    (clickEvent)="unassignCourseCoordinator(element)"
+                    (clickEvent)="unassignCourseCoordinator(course)"
                   />
                 } @else {
                   <app-button
                     [label]="'Assign'"
                     type="outline"
                     class="btn-sm"
-                    (clickEvent)="assignCourseCoordinator(element)"
+                    (clickEvent)="assignCourseCoordinator(course)"
                   />
                 }
               </td>

@@ -88,7 +88,7 @@ export class ReferenceTableResultUploadComponent {
     'total',
     'grade',
     'status',
-    'action',
+    // 'action',
   ];
 
   form = this.fb.group({

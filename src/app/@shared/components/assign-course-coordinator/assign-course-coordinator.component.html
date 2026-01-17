@@ -20,5 +20,5 @@
 
 <mat-dialog-actions class="gap-4">
   <app-button label="Cancel" type="outline" (clickEvent)="cancel()" />
-  <app-button label="Assign" (clickEvent)="assign()" />
+  <app-button label="Assign" (clickEvent)="assign()" [loading]="loading()" />
 </mat-dialog-actions>

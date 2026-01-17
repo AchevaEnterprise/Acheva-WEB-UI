@@ -36,7 +36,7 @@ export class StudentsComponent implements OnInit {
   private readonly dialog = inject(MatDialog);
   private readonly toastService = inject(ToastService);
 
-  displayedColumns: string[] = ['registrationNumber', 'fullName'];
+  displayedColumns: string[] = ['sn', 'registrationNumber', 'fullName'];
   dataSource = signal<IStudent[]>([]);
   students = signal<IStudent[]>([]);
 

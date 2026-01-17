@@ -30,6 +30,8 @@ import { MatTableModule } from '@angular/material/table';
 import { Store } from '@ngrx/store';
 import { IPaginator } from '../../../../@core/models/paginator.model';
 import { IDepartment, IFaculty } from '../../../../@core/models/school.model';
+import { ResultApprovedForMePipe } from '../../../../@core/pipes/result-approved-for-me.pipe';
+import { ResultDisabledPipe } from '../../../../@core/pipes/result-disabled.pipe';
 import { AppState } from '../../../../@core/store/app.state';
 import {
   loadDepartments,
@@ -66,6 +68,8 @@ export interface FileTableFilter {
     LoaderComponent,
     ButtonComponent,
     ReactiveFormsModule,
+    ResultApprovedForMePipe,
+    ResultDisabledPipe,
   ],
   templateUrl: './result-management-file-table.component.html',
   styleUrl: './result-management-file-table.component.scss',
@@ -127,8 +131,8 @@ export class ResultManagementFileTableComponent implements OnInit, OnDestroy {
       if (this.expand()) {
         this.displayedColumns.push('uploadedBy', 'createdAt', 'updatedAt');
 
-        if (this.userRole === RoleEnum.LECTURER)
-          this.displayedColumns.push('actions');
+        // if (this.userRole === RoleEnum.LECTURER)
+        //   this.displayedColumns.push('actions');
       }
 
       if (this.results()) this.dataSource.set(this.results());
@@ -247,7 +251,13 @@ export class ResultManagementFileTableComponent implements OnInit, OnDestroy {
   }
 
   trackResult(result: IResult) {
-    if (this.activeRow() === result) {
+    if (this.isRowDisabled(result) && this.activeRow() !== result) {
+      this.activeRow.set(result);
+      this.trackResultEvent.emit(result);
+    } else if (this.isRowDisabled(result) && this.activeRow() === result) {
+      this.activeRow.set(null);
+      this.trackResultEvent.emit(null);
+    } else if (this.activeRow() === result) {
       this.selection.deselect(result);
       this.activeRow.set(null);
       this.trackResultEvent.emit(null);

@@ -148,11 +148,11 @@ export class ViewResultsComponent implements OnInit {
   }
 
   get resultIsSelected() {
-    return this.resultTableRef()!.selection.selected.length > 0;
+    return (this.resultTableRef()?.selection?.selected?.length ?? 0) > 0;
   }
 
   get resultIsHighlighted() {
-    return this.resultTableRef()!.activeRow() !== null;
+    return this.resultTableRef()?.activeRow() !== null;
   }
 
   editResult(result: IResult) {

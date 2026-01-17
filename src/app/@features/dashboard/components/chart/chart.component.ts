@@ -16,10 +16,11 @@ export class ChartComponent {
     []
   );
 
-  updateFlag = true;
+  updateFlag = false;
 
   chartOptions = computed<Highcharts.Options>(() => {
     const data = this.chart();
+    this.updateFlag = true;
 
     return {
       chart: {
