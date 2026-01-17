@@ -11,3 +11,10 @@
     )
   );
 }
+
+.disabled {
+  color: #8f8f8f;
+  touch-action: none !important;
+  cursor: not-allowed !important;
+  filter: blur(2px);
+}

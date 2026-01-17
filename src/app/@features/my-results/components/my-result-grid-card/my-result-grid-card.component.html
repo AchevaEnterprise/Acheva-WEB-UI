@@ -1,5 +1,6 @@
 <div
   class="bg-white border border-[#E5E7EB] rounded-[8px] w-full h-full shadow-sm cursor-pointer"
+  [class.disabled]="result()!.hasBeenSent | resultDisabled"
   (click)="viewResult()"
   (keydown)="viewResult()"
 >

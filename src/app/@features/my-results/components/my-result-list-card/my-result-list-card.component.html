@@ -1,6 +1,9 @@
-<div class="bg-white border-b border-[#E5E7EB] p-4 rounded-lg mb-3">
+<div
+  class="bg-white border-b border-[#E5E7EB] p-4 rounded-lg mb-3 cursor-pointer"
+  [class.disabled]="result()!.hasBeenSent | resultDisabled"
+>
   <div
-    class="flex items-center justify-between w-full gap-8 cursor-pointer"
+    class="flex items-center justify-between w-full gap-8"
     (click)="viewResult()"
     (keydown)="viewResult()"
   >

@@ -2,7 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { ToastService } from '../../../../@core/utility/toast.service';
 import { EmptyStateComponent } from '../../../../@shared/components/empty-state/empty-state.component';
@@ -41,6 +41,7 @@ import { MyResultListCardComponent } from '../../components/my-result-list-card/
 })
 export class MyResultsComponent implements OnInit {
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly resultService = inject(ResultsService);
   private readonly dialog = inject(MatDialog);
   private readonly toast = inject(ToastService);
@@ -185,9 +186,10 @@ export class MyResultsComponent implements OnInit {
   viewResult(result: IResult) {
     const { _id, status } = result;
 
-    if (status.toLowerCase().includes('draft')) {
-      this.router.navigate(['upload-results'], {
+    if (status === 'DRAFT') {
+      this.router.navigate(['/my-result/upload-result'], {
         queryParams: { resultId: _id },
+        relativeTo: this.route,
       });
     } else {
       this.router.navigate(['/result-management/edit-results'], {
