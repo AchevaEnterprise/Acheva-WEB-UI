@@ -48,6 +48,7 @@ export interface IResult {
     total: number;
     totalPass: number;
     totalFail: number;
+    averageTotal: number;
     A: number;
     B: number;
     C: number;

@@ -70,6 +70,7 @@ export class EditResultsComponent implements OnInit, CanComponentDeactivate {
   totalStudent = signal<number>(0);
   totalStudentPass = signal<number>(0);
   totalStudentFail = signal<number>(0);
+  averageTotal = signal<number>(0);
 
   loadingResult = signal<boolean>(false);
   uploadingResult = signal<boolean>(false);

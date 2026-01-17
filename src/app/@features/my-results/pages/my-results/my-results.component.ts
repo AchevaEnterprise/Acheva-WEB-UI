@@ -185,8 +185,14 @@ export class MyResultsComponent implements OnInit {
   viewResult(result: IResult) {
     const { _id, status } = result;
 
-    this.router.navigate(['/result-management/edit-results'], {
-      queryParams: { resultId: _id, status },
-    });
+    if (status.toLowerCase().includes('draft')) {
+      this.router.navigate(['upload-results'], {
+        queryParams: { resultId: _id },
+      });
+    } else {
+      this.router.navigate(['/result-management/edit-results'], {
+        queryParams: { resultId: _id, status },
+      });
+    }
   }
 }

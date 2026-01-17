@@ -109,7 +109,10 @@
       dividerClass="!mt-4"
     >
       <p rightHeaderContent class="acva-para-1 text-neutral-500">
-        Average Grade <span class="text-neutral-800">0.0%</span>
+        Average Grade
+        <span class="text-neutral-800"
+          >{{ averageTotal().toFixed(2) || '0.0' }}%</span
+        >
       </p>
 
       <div content>

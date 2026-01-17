@@ -161,6 +161,8 @@ export class ResultUploadComponent implements OnInit, CanComponentDeactivate {
   tableExpanded = signal<boolean>(false);
   hasChanges = signal<boolean>(false);
 
+  averageTotal = signal<number>(0);
+
   ngOnInit(): void {
     this.categoryListener();
     this.getResultAndEntries();
@@ -187,13 +189,15 @@ export class ResultUploadComponent implements OnInit, CanComponentDeactivate {
   }
 
   setResultDetails(result: IResult) {
-    const { course, session, level } = result;
+    const { course, session, level, analytics } = result;
 
     this.courseForm.patchValue({
       course: `${course?.courseCode} - ${course?.courseTitle}`,
       session: session,
       level: level,
     });
+
+    this.averageTotal.set(analytics.averageTotal);
   }
 
   setResultEntriesDetails(resultEntries: unknown) {
