@@ -303,6 +303,7 @@ export class ResultsService {
     return this.http.patch<IAPIResponse<unknown>>(
       `${this.resultsUrl}/${resultId}/approve`,
       {
+        action: 'APPROVED',
         comment,
         issueStatus,
       }
@@ -313,6 +314,7 @@ export class ResultsService {
     return this.http.patch<IAPIResponse<unknown>>(
       `${this.resultsUrl}/${resultId}/reject`,
       {
+        action: 'REJECTED',
         comment,
       }
     );
