@@ -4,7 +4,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ActivatedRoute, Router } from '@angular/router';
-import { finalize, forkJoin } from 'rxjs';
+import { finalize, forkJoin, switchMap, throwError } from 'rxjs';
 import { RoleAccessDirective } from '../../../../@core/directives/role-access.directive';
 import { CanComponentDeactivate } from '../../../../@core/guards/pending-changes.guard';
 import { ToastService } from '../../../../@core/utility/toast.service';
@@ -295,23 +295,28 @@ export class EditResultsComponent implements OnInit, CanComponentDeactivate {
     const { roles } = this.result() as IResult;
     const user = this.authService.activeAccount()!;
 
-    const approveRequest$ = this.resultsService.approveOrRejectResult(
-      this.resultId,
-      'APPROVED',
-      meta?.comment,
-      meta?.issueStatus
-    );
-    const sendResultRequest$ = this.resultsService.sendResult(
-      this.resultId,
-      user.role === RoleEnum.HOD ? roles.DEAN : roles.HOD,
-      user.role === RoleEnum.HOD ? RoleEnum.DEAN : RoleEnum.HOD
-    );
+    this.resultsService
+      .approveResult(this.resultId, meta?.comment, meta?.issueStatus)
+      .pipe(
+        switchMap((resp) => {
+          if (resp.status) {
+            return this.resultsService.sendResult(
+              this.resultId,
+              user.role === RoleEnum.HOD ? roles.DEAN : roles.HOD,
+              user.role === RoleEnum.HOD ? RoleEnum.DEAN : RoleEnum.HOD
+            );
+          }
 
-    forkJoin([approveRequest$, sendResultRequest$])
-      .pipe(finalize(() => this.approvingResult.set(false)))
+          return throwError(() => {
+            const error = new Error('Failed to approve result');
+            return error;
+          });
+        }),
+        finalize(() => this.approvingResult.set(false))
+      )
       .subscribe({
-        next: ([approvalResp, sentResultResp]) => {
-          if (approvalResp.status && sentResultResp.status) {
+        next: (resp) => {
+          if (resp.status) {
             this.toast.showNotification(
               'success',
               'Result Approved & Sent',
@@ -368,24 +373,29 @@ export class EditResultsComponent implements OnInit, CanComponentDeactivate {
     const { roles } = this.result() as IResult;
     const user = this.authService.activeAccount()!;
 
-    const rejectRequest$ = this.resultsService.approveOrRejectResult(
-      this.resultId,
-      'REJECTED',
-      reason
-    );
+    this.resultsService
+      .rejectResult(this.resultId, reason)
+      .pipe(
+        switchMap((resp) => {
+          if (resp.status) {
+            return this.resultsService.sendResult(
+              this.resultId,
+              user.role === RoleEnum.HOD ? roles.COURSE_COORDINATOR : roles.HOD,
+              user.role === RoleEnum.HOD
+                ? RoleEnum.COURSE_COORDINATOR
+                : RoleEnum.HOD
+            );
+          }
 
-    // If HOD rejects goes to Course Coordinator if Dean rejects it goes to HOD
-    const sendToCCRequest$ = this.resultsService.sendResult(
-      this.resultId,
-      user.role === RoleEnum.HOD ? roles.COURSE_COORDINATOR : roles.HOD,
-      user.role === RoleEnum.HOD ? RoleEnum.COURSE_COORDINATOR : RoleEnum.HOD
-    );
-
-    forkJoin([rejectRequest$, sendToCCRequest$])
-      .pipe(finalize(() => this.rejectingResult.set(false)))
+          return throwError(() => {
+            const error = new Error('Failed to reject result');
+            return error;
+          });
+        })
+      )
       .subscribe({
-        next: ([rejectResp, sentResultResp]) => {
-          if (rejectResp.status && sentResultResp.status) {
+        next: (resp) => {
+          if (resp.status) {
             this.toast.showNotification(
               'success',
               'Result Rejected',

@@ -295,16 +295,24 @@ export class ResultsService {
     );
   }
 
-  approveOrRejectResult(
+  approveResult(
     resultId: string,
-    action: 'APPROVED' | 'REJECTED',
     comment?: string,
     issueStatus?: 'RESOLVED' | 'UNRESOLVED'
   ) {
     return this.http.patch<IAPIResponse<unknown>>(
-      `${this.resultsUrl}/${resultId}/approve-or-reject`,
+      `${this.resultsUrl}/${resultId}/approve`,
       {
-        action,
+        comment,
+        issueStatus,
+      }
+    );
+  }
+
+  rejectResult(resultId: string, comment: string) {
+    return this.http.patch<IAPIResponse<unknown>>(
+      `${this.resultsUrl}/${resultId}/reject`,
+      {
         comment,
       }
     );
