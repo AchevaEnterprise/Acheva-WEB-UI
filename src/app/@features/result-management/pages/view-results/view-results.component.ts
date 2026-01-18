@@ -4,7 +4,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ActivatedRoute, Router } from '@angular/router';
-import { finalize, forkJoin } from 'rxjs';
+import { finalize, forkJoin, switchMap, throwError } from 'rxjs';
 import { RoleAccessDirective } from '../../../../@core/directives/role-access.directive';
 import { IPaginator } from '../../../../@core/models/paginator.model';
 import { ToastService } from '../../../../@core/utility/toast.service';
@@ -14,6 +14,7 @@ import { ConfirmationComponent } from '../../../../@shared/components/confirmati
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
 import { CommentComponent } from '../../../../@shared/components/forms/comment/comment.component';
 import { SearchInputComponent } from '../../../../@shared/components/forms/search-input/search-input.component';
+import { RejectReasonComponent } from '../../../../@shared/components/reject-reason/reject-reason.component';
 import { RoleEnum } from '../../../auth/model/auth.model';
 import { AnalyticsChartComponent } from '../../../my-results/components/analytics-chart/analytics-chart.component';
 import { ResultManagementFileTableComponent } from '../../components/result-management-file-table/result-management-file-table.component';
@@ -193,14 +194,34 @@ export class ViewResultsComponent implements OnInit {
   private sendToHOD(results: IResult[]) {
     this.sendingToHOD.set(true);
 
+    const approveBulkReq = results.map((result) =>
+      this.resultsService.approveResult(result._id)
+    );
+
     const payload: ISendSelectedResult[] = results.map((result) => ({
       resultId: result._id,
       recipient: result.roles.HOD,
     }));
 
-    this.resultsService
-      .sendSelectedResult(payload, RoleEnum.HOD)
-      .pipe(finalize(() => this.sendingToHOD.set(false)))
+    forkJoin(approveBulkReq)
+      .pipe(
+        switchMap((resp) => {
+          const isSuccessful = resp.every((res) => res.status);
+
+          if (isSuccessful) {
+            return this.resultsService.sendSelectedResult(
+              payload,
+              RoleEnum.HOD
+            );
+          }
+
+          return throwError(() => {
+            const error = new Error('Failed to approve result');
+            return error;
+          });
+        }),
+        finalize(() => this.sendingToHOD.set(false))
+      )
       .subscribe({
         next: (resp) => {
           if (resp.status) {
@@ -212,6 +233,13 @@ export class ViewResultsComponent implements OnInit {
 
             this.getResultAndAnalytics();
           }
+        },
+        error: (error) => {
+          this.toast.showNotification(
+            'error',
+            'Error Occured',
+            error.error.message
+          );
         },
       });
   }
@@ -229,31 +257,48 @@ export class ViewResultsComponent implements OnInit {
     }
 
     this.dialog
-      .open(ConfirmationComponent, {
+      .open(RejectReasonComponent, {
         width: '600px',
-        data: {
-          message: `You're about to send this ${selectedResults.length} result(s) to the Head of Department. This action is irreversible, Are you sure you want to continue?`,
-        },
       })
       .afterClosed()
       .subscribe({
-        next: (confirm: boolean) => {
-          if (confirm) this.sendToLecturer(selectedResults);
+        next: (comment: string) => {
+          if (comment) this.sendToLecturer(selectedResults, comment);
         },
       });
   }
 
-  private sendToLecturer(results: IResult[]) {
+  private sendToLecturer(results: IResult[], comment: string) {
     this.sendingToLecturer.set(true);
+
+    const rejectBulkReq = results.map((result) =>
+      this.resultsService.rejectResult(result._id, comment)
+    );
 
     const payload: ISendSelectedResult[] = results.map((result) => ({
       resultId: result._id,
       recipient: (result.uploadedBy as { _id: string })._id,
     }));
 
-    this.resultsService
-      .sendSelectedResult(payload, RoleEnum.LECTURER)
-      .pipe(finalize(() => this.sendingToLecturer.set(false)))
+    forkJoin(rejectBulkReq)
+      .pipe(
+        switchMap((resp) => {
+          const isSuccessful = resp.every((res) => res.status);
+
+          if (isSuccessful) {
+            return this.resultsService.sendSelectedResult(
+              payload,
+              RoleEnum.LECTURER
+            );
+          }
+
+          return throwError(() => {
+            const error = new Error('Failed to rekject result');
+            return error;
+          });
+        }),
+        finalize(() => this.sendingToLecturer.set(false))
+      )
       .subscribe({
         next: (resp) => {
           if (resp.status) {
@@ -265,6 +310,13 @@ export class ViewResultsComponent implements OnInit {
 
             this.getResultAndAnalytics();
           }
+        },
+        error: (error) => {
+          this.toast.showNotification(
+            'error',
+            'Error Occured',
+            error.error.message
+          );
         },
       });
   }
