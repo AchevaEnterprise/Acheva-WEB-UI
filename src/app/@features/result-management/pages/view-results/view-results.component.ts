@@ -259,6 +259,9 @@ export class ViewResultsComponent implements OnInit {
     this.dialog
       .open(RejectReasonComponent, {
         width: '600px',
+        data: {
+          resultId: selectedResults[0]._id,
+        },
       })
       .afterClosed()
       .subscribe({

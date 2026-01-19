@@ -138,6 +138,7 @@ export interface IResultComment {
     role: RoleEnum;
     accessLevel: string;
   };
+  role: RoleEnum;
   comment: string;
   createdAt: Date;
   updatedAt: Date;
