@@ -2,5 +2,9 @@
   <mat-progress-bar mode="indeterminate" />
 }
 <div class="app-container">
-  <router-outlet></router-outlet>
+  @if (isDesiredWidth()) {
+    <router-outlet></router-outlet>
+  } @else {
+    <app-desktop-only-view />
+  }
 </div>
