@@ -6,15 +6,18 @@ import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 import { filter, finalize } from 'rxjs';
 import { ImageFallbackDirective } from '../../@core/directives/image-fallback.directive';
 import { RoleAccessDirective } from '../../@core/directives/role-access.directive';
+import { FacultyInitialPipe } from '../../@core/pipes/faculty-initial.pipe';
 import { ToastService } from '../../@core/utility/toast.service';
 import { UtilityService } from '../../@core/utility/utility.service';
 import { RoleEnum } from '../../@features/auth/model/auth.model';
 import { AuthenticationService } from '../../@features/auth/service/auth.service';
 import { INotification } from '../../@features/notifications/models/notification.model';
 import { NotificationsComponent } from '../../@features/notifications/notifications.component';
-import { NotificationService } from '../../@features/notifications/service/notification.service';
 import { SvgComponent } from '../../@shared/components/svg/svg.component';
-import { FacultyInitialPipe } from '../../@core/pipes/faculty-initial.pipe';
+import { Store } from '@ngrx/store';
+import { AppState } from '../../@core/store/app.state';
+import { loadNotification } from '../../@core/store/notification/notification.action';
+import { notificationSelector } from '../../@core/store/notification/notification.selector';
 
 @Component({
   selector: 'app-tool-bar',
@@ -32,11 +35,11 @@ import { FacultyInitialPipe } from '../../@core/pipes/faculty-initial.pipe';
 export class ToolBarComponent implements OnInit {
   private readonly authService = inject(AuthenticationService);
   private readonly utilityService = inject(UtilityService);
-  private readonly notificationService = inject(NotificationService);
   private readonly toast = inject(ToastService);
   private readonly dialog = inject(MatDialog);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly store = inject(Store<AppState>);
 
   activeAccount = this.authService.activeAccount;
   activeRole = computed(() => this.activeAccount()?.role);
@@ -145,23 +148,27 @@ export class ToolBarComponent implements OnInit {
       width: '30%',
       height: '98%',
       position: { right: '10px' },
+      data: {
+        notifications: this.notifications(),
+      },
     });
   }
 
   private loadNotifications() {
-    this.notificationService.getNotifications().subscribe({
-      next: (resp) => {
-        if (resp.status && resp.data) {
-          this.notifications.set(resp.data);
-          const unreadNotifications = resp.data.filter(
-            (n: INotification) => n.status === 'UNREAD'
-          );
-          const count = unreadNotifications.length;
-          this.unreadCount.set(count);
-          this.badgeCount.set(count > 0 ? count.toString() : '');
-        }
+    this.store.dispatch(loadNotification());
+    this.store.select(notificationSelector).subscribe({
+      next: (notifications) => {
+        this.notifications.set(notifications);
+
+        const unreadNotifications = notifications.filter(
+          (n: INotification) => n.status === 'UNREAD'
+        ).length;
+        this.unreadCount.set(unreadNotifications);
+        this.badgeCount.set(
+          unreadNotifications > 0 ? unreadNotifications.toString() : ''
+        );
       },
-      error: (error) => {
+      error: () => {
         this.badgeCount.set('');
       },
     });

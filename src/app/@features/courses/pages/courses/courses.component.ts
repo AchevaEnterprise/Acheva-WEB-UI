@@ -66,7 +66,7 @@ export class CoursesComponent {
   recentCourses$: Observable<ICourse[]> = this.courseService
     .getRecentCourses()
     .pipe(
-      map((resp) => resp.data),
+      map((resp) => resp.data?.slice(0, 4)),
       finalize(() => this.isloadingRecentCourses.set(false))
     );
 

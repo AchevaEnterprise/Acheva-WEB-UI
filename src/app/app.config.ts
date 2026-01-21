@@ -22,6 +22,8 @@ import { provideHighcharts } from 'highcharts-angular';
 import { authInterceptor } from './@core/interceptors/auth.interceptor';
 import { errorHandlerInterceptor } from './@core/interceptors/error-handler.interceptor';
 import { retryInterceptor } from './@core/interceptors/retry.interceptor';
+import { NotificationEffects } from './@core/store/notification/notification.effect';
+import { notificationReducer } from './@core/store/notification/notification.reducer';
 import { ProfileEffects } from './@core/store/profile/profile.effect';
 import { profileReducer } from './@core/store/profile/profile.reducer';
 import { SchoolEffects } from './@core/store/school/school.effect';
@@ -47,8 +49,9 @@ export const appConfig: ApplicationConfig = {
     provideStore({
       profile: profileReducer,
       school: schoolReducer,
+      notification: notificationReducer,
     }),
-    provideEffects([ProfileEffects, SchoolEffects]),
+    provideEffects([ProfileEffects, SchoolEffects, NotificationEffects]),
     provideStoreDevtools({ maxAge: 25, logOnly: !isDevMode() }),
     provideHighcharts(),
     provideNativeDateAdapter(),

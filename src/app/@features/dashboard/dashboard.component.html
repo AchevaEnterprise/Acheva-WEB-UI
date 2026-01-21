@@ -128,13 +128,16 @@
       </div>
 
       <div content class="p-4 h-[35vh] overflow-y-auto">
-        <!-- @for (activity of activities(); track $index) {
-          <app-activity [activity]="activity" />
-        } -->
-        <app-empty-state
-          iconSrc="images/general/empty-disk.svg"
-          description="You have no recent activities"
-        />
+        @if (activities().length > 0) {
+          @for (activity of activities(); track $index) {
+            <app-activity [activity]="activity" />
+          }
+        } @else {
+          <app-empty-state
+            iconSrc="images/general/empty-disk.svg"
+            description="You have no recent activities"
+          />
+        }
       </div>
     </app-card>
 

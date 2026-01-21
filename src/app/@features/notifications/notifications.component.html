@@ -1,29 +1,25 @@
 <div class="p-4">
   <h1 class="acva-heading-5 fw-500">Notification</h1>
 
-  @if (loading()) {
-    <app-loader />
-  } @else {
-    @if (notifications().length > 0) {
-      @for (notification of notifications(); track $index) {
-        <div class="border-b border-gray-200 py-3">
-          <h4 class="font-semibold text-sm">{{ notification.title }}</h4>
-          <p class="text-gray-600 text-sm mt-1">{{ notification.message }}</p>
-          <span class="text-xs text-gray-400">{{
-            notification.createdAt | date: 'short'
-          }}</span>
-          @if (notification.status === 'UNREAD') {
-            <span
-              class="inline-block w-2 h-2 bg-blue-500 rounded-full ml-2"
-            ></span>
-          }
-        </div>
-      }
-    } @else {
-      <app-empty-state
-        iconSrc="images/general/empty-doc.svg"
-        description="You have no notifications"
-      />
+  @if (data.notifications.length > 0) {
+    @for (notification of data.notifications; track $index) {
+      <div class="border-b border-gray-200 py-3">
+        <h4 class="font-semibold text-sm">{{ notification.title }}</h4>
+        <p class="text-gray-600 text-sm mt-1">{{ notification.message }}</p>
+        <span class="text-xs text-gray-400">{{
+          notification.createdAt | date: 'short'
+        }}</span>
+        @if (notification.status === 'UNREAD') {
+          <span
+            class="inline-block w-2 h-2 bg-blue-500 rounded-full ml-2"
+          ></span>
+        }
+      </div>
     }
+  } @else {
+    <app-empty-state
+      iconSrc="images/general/empty-doc.svg"
+      description="You have no notifications"
+    />
   }
 </div>

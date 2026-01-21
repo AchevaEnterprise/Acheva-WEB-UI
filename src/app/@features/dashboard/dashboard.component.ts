@@ -14,11 +14,14 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
 import { Router } from '@angular/router';
+import { Store } from '@ngrx/store';
 import { finalize, forkJoin, map, switchMap } from 'rxjs';
 import { RoleAccessDirective } from '../../@core/directives/role-access.directive';
 import { IPaginator } from '../../@core/models/paginator.model';
 import { IAnalytics } from '../../@core/models/school.model';
 import { GreetingPipe } from '../../@core/pipes/greeting.pipe';
+import { AppState } from '../../@core/store/app.state';
+import { notificationSelector } from '../../@core/store/notification/notification.selector';
 import { ToastService } from '../../@core/utility/toast.service';
 import { CardComponent } from '../../@shared/components/card/card.component';
 import { ConfirmationComponent } from '../../@shared/components/confirmation/confirmation.component';
@@ -29,6 +32,7 @@ import {
 } from '../../@shared/components/segment-switcher/segment-switcher.component';
 import { RoleEnum } from '../auth/model/auth.model';
 import { AuthenticationService } from '../auth/service/auth.service';
+import { INotification } from '../notifications/models/notification.model';
 import { ResultManagementFileTableComponent } from '../result-management/components/result-management-file-table/result-management-file-table.component';
 import { ResultManagementFolderTableComponent } from '../result-management/components/result-management-folder-table/result-management-folder-table.component';
 import {
@@ -36,7 +40,7 @@ import {
   IResult,
 } from '../result-management/models/results.model';
 import { ResultsService } from '../result-management/services/results.service';
-import { IActivity } from './components/activity/activity.component';
+import { ActivityComponent } from './components/activity/activity.component';
 import { AnalyticsCardComponent } from './components/analytics-card/analytics-card.component';
 import { ChartComponent } from './components/chart/chart.component';
 
@@ -58,6 +62,7 @@ import { ChartComponent } from './components/chart/chart.component';
     RoleAccessDirective,
     ResultManagementFileTableComponent,
     ResultManagementFolderTableComponent,
+    ActivityComponent,
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
@@ -68,6 +73,7 @@ export class DashboardComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly dialog = inject(MatDialog);
   private readonly toast = inject(ToastService);
+  private readonly store = inject(Store<AppState>);
 
   currentRole = signal<RoleEnum>(this.authService.activeAccount()?.role!);
   loadingResults = signal<boolean>(false);
@@ -222,37 +228,7 @@ export class DashboardComponent implements OnInit {
   );
 
   selectedCalendarDate = model<number>(Date.now());
-
-  activities = signal<IActivity[]>([
-    {
-      type: 'submit',
-      message:
-        'Database Management System (CSC 301) results has been submitted',
-      date: new Date(),
-    },
-    {
-      type: 'add',
-      message: 'Created new course: Software Engineering (CSC 401)',
-      date: new Date(),
-    },
-    {
-      type: 'reminder',
-      message: 'Reminder: Software Engineering (CSC 401) results due in 4 days',
-      date: new Date(),
-    },
-    {
-      type: 'add',
-      message: 'Created new course: Software Engineering (CSC 401)',
-      date: new Date(),
-    },
-    {
-      type: 'edit',
-      message:
-        'Updated scores for 4 Students in Software Engineering (CSC 401)',
-      date: new Date(),
-    },
-  ]);
-
+  activities = signal<INotification[]>([]);
   activeAccount = this.authService.activeAccount;
 
   switchSegment(switchValue: ISegmentSwitcher['value']) {
@@ -297,6 +273,7 @@ export class DashboardComponent implements OnInit {
   ngOnInit(): void {
     this.getDashboardAnalytics();
     this.getFirstFiveResultCharts();
+    this.getActivities();
 
     if (this.currentRole() === RoleEnum.COURSE_COORDINATOR)
       this.getGroupedResults();
@@ -466,11 +443,19 @@ export class DashboardComponent implements OnInit {
   viewFolder(result: IGroupedResult) {
     const { course, session } = result;
 
-    this.router.navigate(['/result-management/edit-results'], {
+    this.router.navigate(['/result-management/view-results'], {
       queryParams: {
         courseId: course,
         status: this.activeSegment().value,
         session,
+      },
+    });
+  }
+
+  getActivities() {
+    this.store.select(notificationSelector).subscribe({
+      next: (notifications) => {
+        this.activities.set(notifications);
       },
     });
   }
