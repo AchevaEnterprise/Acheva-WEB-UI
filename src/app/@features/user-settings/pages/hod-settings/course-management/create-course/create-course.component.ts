@@ -108,7 +108,7 @@ export class CreateCourseComponent implements OnInit, OnDestroy {
   semesterOptions = signal<{ label: string; value: string }[]>([
     { label: '1st Semester', value: SemesterEnum.FIRST },
     { label: '2nd Semester', value: SemesterEnum.SECOND },
-    { label: '3rd Semester', value: SemesterEnum.THIRD },
+    // { label: '3rd Semester', value: SemesterEnum.THIRD },
   ]);
 
   schoolsOptions = signal<ISchool[]>([]);

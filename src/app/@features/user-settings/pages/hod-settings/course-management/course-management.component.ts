@@ -70,10 +70,10 @@ export class CourseManagementComponent implements OnInit {
       label: '2nd Semester',
       value: SemesterEnum.SECOND,
     },
-    {
-      label: '3rd Semester',
-      value: SemesterEnum.THIRD,
-    },
+    // {
+    //   label: '3rd Semester',
+    //   value: SemesterEnum.THIRD,
+    // },
   ]);
 
   displayedColumns: string[] = [

@@ -1,10 +1,13 @@
+import { TitleCasePipe } from '@angular/common';
 import { Component, input, output } from '@angular/core';
+import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
 import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
 import { ICourse, ICourseTemplate } from '../../models/course.model';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @Component({
   selector: 'app-course-card',
-  imports: [SvgComponent],
+  imports: [SvgComponent, ButtonComponent, TitleCasePipe, MatTooltipModule],
   templateUrl: './course-card.component.html',
   styleUrl: './course-card.component.scss',
 })
