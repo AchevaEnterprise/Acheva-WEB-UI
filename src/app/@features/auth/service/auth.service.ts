@@ -146,7 +146,7 @@ export class AuthenticationService {
       );
   }
 
-  switchRole(role: RoleEnum): Observable<IAPIResponse<any>> {
+  switchRole(role: RoleEnum): Observable<IAPIResponse<IAuthProfile>> {
     return this.http
       .patch<
         IAPIResponse<any>
@@ -154,7 +154,10 @@ export class AuthenticationService {
       .pipe(
         tap((res) => {
           if (res.status) {
-            this.activeAccount.set(res.data);
+            const { accessToken, ...rest } = res.data;
+            this.setToken(accessToken);
+
+            this.activeAccount.set(rest);
             localStorage.setItem(
               STORAGE_KEYS.ACTIVE_ACCOUNT,
               JSON.stringify(this.activeAccount())
