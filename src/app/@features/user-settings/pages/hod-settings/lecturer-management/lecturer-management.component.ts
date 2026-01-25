@@ -11,6 +11,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTableModule } from '@angular/material/table';
 import { finalize } from 'rxjs';
 
+import { TitleCasePipe } from '@angular/common';
 import { ToastService } from '../../../../../@core/utility/toast.service';
 import { AssignCourseAdvisorComponent } from '../../../../../@shared/components/assign-course-advisor/assign-course-advisor.component';
 import { BackButtonComponent } from '../../../../../@shared/components/back-button/back-button.component';
@@ -47,6 +48,7 @@ import { LecturersService } from '../../../service/lecturer.service';
     EmptyStateComponent,
     BackButtonComponent,
     FormsModule,
+    TitleCasePipe,
   ],
   templateUrl: './lecturer-management.component.html',
   styleUrl: './lecturer-management.component.scss',
@@ -61,7 +63,14 @@ export class LecturerManagementComponent implements OnInit {
 
   currentPage = signal(0);
 
-  displayedColumns: string[] = ['name', 'email', 'level', 'action', 'status'];
+  displayedColumns: string[] = [
+    'name',
+    'email',
+    'level',
+    'admissionYear',
+    'action',
+    'status',
+  ];
 
   // Data and loading states
   lecturersData = signal<ILecturer[]>([]);

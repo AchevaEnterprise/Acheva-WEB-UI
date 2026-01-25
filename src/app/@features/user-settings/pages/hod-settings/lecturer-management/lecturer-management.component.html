@@ -36,7 +36,7 @@
           <ng-container matColumnDef="name">
             <th mat-header-cell *matHeaderCellDef>NAME</th>
             <td mat-cell *matCellDef="let lecturer">
-              {{ lecturer.firstname }} {{ lecturer.lastname }}
+              {{ lecturer.firstname + ' ' + lecturer.lastname | titlecase }}
             </td>
           </ng-container>
 
@@ -55,6 +55,13 @@
                   ? lecturer.assignedLevel + ' Level'
                   : 'N/A'
               }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="admissionYear">
+            <th mat-header-cell *matHeaderCellDef>ADMISSION YEAR</th>
+            <td mat-cell *matCellDef="let lecturer">
+              {{ lecturer.assignedLevelAdmissionYear || '-' }}
             </td>
           </ng-container>
 

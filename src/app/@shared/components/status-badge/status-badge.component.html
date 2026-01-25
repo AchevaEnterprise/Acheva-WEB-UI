@@ -1,6 +1,8 @@
 <p
-  [class.pass]="lowercaseStatus() === 'pass'"
-  [class.fail]="lowercaseStatus() === 'fail'"
+  [class.pass]="lowercaseStatus() === 'pass' || lowercaseStatus() === 'active'"
+  [class.fail]="
+    lowercaseStatus() === 'fail' || lowercaseStatus() === 'inactive'
+  "
 >
   {{ status() }}
 </p>
