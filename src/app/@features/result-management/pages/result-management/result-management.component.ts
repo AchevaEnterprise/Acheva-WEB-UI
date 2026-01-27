@@ -11,7 +11,6 @@ import { ToastService } from '../../../../@core/utility/toast.service';
 import { CardComponent } from '../../../../@shared/components/card/card.component';
 import { ConfirmationComponent } from '../../../../@shared/components/confirmation/confirmation.component';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
-import { CommentComponent } from '../../../../@shared/components/forms/comment/comment.component';
 import {
   ISegmentSwitcher,
   SegmentSwitcherComponent,
@@ -25,7 +24,6 @@ import {
   ResultManagementFileTableComponent,
 } from '../../components/result-management-file-table/result-management-file-table.component';
 import { ResultManagementFolderTableComponent } from '../../components/result-management-folder-table/result-management-folder-table.component';
-import { ResultStatusTrackingComponent } from '../../components/result-status-tracking/result-status-tracking.component';
 import {
   IGroupedResult,
   IResult,
@@ -41,8 +39,8 @@ import { ResultsService } from '../../services/results.service';
     NgClass,
     SegmentSwitcherComponent,
     ButtonComponent,
-    ResultStatusTrackingComponent,
-    CommentComponent,
+    // ResultStatusTrackingComponent,
+    // CommentComponent,
     MatTooltipModule,
     CardComponent,
     ResultManagementFolderTableComponent,
@@ -151,7 +149,7 @@ export class ResultManagementComponent implements OnInit {
   segmentCardLabel = signal<string>('Access your recent drafts from here');
   segmentCardIconSrc = signal<string>('icons/general/draft-icon.svg');
 
-  expandView = signal<boolean>(false);
+  expandView = signal<boolean>(true);
 
   RoleEnum = RoleEnum;
 

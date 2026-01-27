@@ -12,13 +12,11 @@ import { BackButtonComponent } from '../../../../@shared/components/back-button/
 import { CardComponent } from '../../../../@shared/components/card/card.component';
 import { ConfirmationComponent } from '../../../../@shared/components/confirmation/confirmation.component';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
-import { CommentComponent } from '../../../../@shared/components/forms/comment/comment.component';
 import { SearchInputComponent } from '../../../../@shared/components/forms/search-input/search-input.component';
 import { RejectReasonComponent } from '../../../../@shared/components/reject-reason/reject-reason.component';
 import { RoleEnum } from '../../../auth/model/auth.model';
 import { AnalyticsChartComponent } from '../../../my-results/components/analytics-chart/analytics-chart.component';
 import { ResultManagementFileTableComponent } from '../../components/result-management-file-table/result-management-file-table.component';
-import { ResultStatusTrackingComponent } from '../../components/result-status-tracking/result-status-tracking.component';
 import { IResult, ISendSelectedResult } from '../../models/results.model';
 import { ResultsService } from '../../services/results.service';
 
@@ -35,8 +33,8 @@ import { ResultsService } from '../../services/results.service';
     RoleAccessDirective,
     ButtonComponent,
     BackButtonComponent,
-    ResultStatusTrackingComponent,
-    CommentComponent,
+    // ResultStatusTrackingComponent,
+    // CommentComponent,
   ],
   templateUrl: './view-results.component.html',
   styleUrl: './view-results.component.scss',
@@ -73,7 +71,7 @@ export class ViewResultsComponent implements OnInit {
   refreshComments = signal<boolean>(false);
   RoleEnum = RoleEnum;
 
-  expandView = signal<boolean>(false);
+  expandView = signal<boolean>(true);
 
   resultTableRef =
     viewChild<ResultManagementFileTableComponent>('resultTableRef');

@@ -64,18 +64,18 @@
         (clickEvent)="confirmSendToHOD()"
       />
 
-      <app-button
+      <!-- <app-button
         [label]="expandView() ? 'Expand' : 'Collapse'"
         type="outline"
         class="btn-md"
         (clickEvent)="toggleView()"
-      />
+      /> -->
     </div>
   </div>
 </div>
 
 <div
-  class="grid grid-cols-[1fr_30%] gap-4 mt-4 items-start"
+  class="grid grid-cols-1 gap-4 mt-4 items-start"
   [ngClass]="{
     'grid-cols-1': expandView(),
     'grid-cols-[1fr_30%]': !expandView(),
@@ -91,7 +91,7 @@
   />
 
   <!-- RESULT STATUS TRACKING & COMMENT-->
-  @if (!expandView()) {
+  <!-- @if (!expandView()) {
     <div class="flex flex-col gap-4">
       <app-result-status-tracking [result]="result()" />
       <app-comment
@@ -102,5 +102,5 @@
         (submitEvent)="sendComment($event)"
       />
     </div>
-  }
+  } -->
 </div>
