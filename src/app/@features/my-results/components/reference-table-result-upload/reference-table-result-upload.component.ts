@@ -289,21 +289,10 @@ export class ReferenceTableResultUploadComponent {
           const row = this.rows.at(index);
           if (!row || row.invalid) continue;
 
-          const validRow: IStudentGrade = {
-            ...(row.getRawValue() as IStudentGrade),
-            registrationNumber: (
-              row.getRawValue().registrationNumber as {
-                registrationNumber: string;
-                fullName: string;
-              }
-            ).registrationNumber,
-          };
-
-          changedResults.push(validRow);
+          changedResults.push(row.value);
         }
 
         if (changedResults.length === 0) return;
-
         const cleaned = await this.utilsService.cleanUpResult(changedResults);
 
         this.uploadResultEvent.emit(cleaned);
@@ -363,11 +352,12 @@ export class ReferenceTableResultUploadComponent {
   onSelect(value: unknown, index: number) {
     const row = this.rows.at(index);
 
-    const { fullName } = value as {
+    const { fullName, registrationNumber } = value as {
       registrationNumber: string;
       fullName: string;
     };
 
+    row.get('registrationNumber')?.setValue(registrationNumber);
     row.get('fullName')?.setValue(fullName);
   }
 }
