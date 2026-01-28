@@ -253,6 +253,15 @@ export class ResultUploadComponent implements OnInit, CanComponentDeactivate {
   }
 
   switchSegment(value: ISegmentSwitcher['value']): void {
+    if (this.hasChanges()) {
+      this.toast.showNotification(
+        'error',
+        'Changes not saved',
+        'Please wait until changes has been saved'
+      );
+      return;
+    }
+
     const selectedSegment: ISegmentSwitcher = this.segments()?.find(
       (segment: ISegmentSwitcher) => segment.value === value
     )!;
