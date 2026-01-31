@@ -1,10 +1,17 @@
+import {
+  IDepartment,
+  IFaculty,
+  ISchool,
+  LevelsEnum,
+} from '../../../@core/models/school.model';
+
 export interface IStudent {
   _id: string;
   fullName: string;
   registrationNumber: string;
-  faculty: string;
-  department: string;
-  school: string;
+  faculty: IFaculty | string;
+  department: IDepartment | string;
+  school: ISchool | string;
   email: string;
   session: string;
   level: string;
@@ -36,7 +43,7 @@ export interface IStudentPerformance {
   total: number;
 }
 
-interface StudentResultType {
+export interface StudentResultType {
   _id: string;
   test: number;
   lab: number;
@@ -50,11 +57,30 @@ interface StudentResultType {
 
 export interface IStudentResult {
   gpa: number;
-  results: StudentResultType;
+  results: StudentResultType[];
 }
 
 export interface IStudentAnalytics {
   results: number;
   departmentalDues: number;
   hasPaidDues: boolean;
+}
+
+export interface IResultEntry {
+  resultId: string;
+  courseId: string;
+  courseCode: string;
+  courseTitle: string;
+  test: number;
+  lab: number;
+  exam: number;
+  total: number;
+  grade: string;
+  status: string;
+}
+
+export interface IStudentSessionsResult {
+  session: string;
+  level: LevelsEnum;
+  entries: IResultEntry[];
 }

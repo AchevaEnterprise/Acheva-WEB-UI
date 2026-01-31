@@ -6,7 +6,12 @@ import {
   IAPIPaginatedResponse,
   IAPIResponse,
 } from '../../../@core/models/api-response.model';
+import { SemesterEnum } from '../../../@core/models/school.model';
 import { RoleEnum } from '../../auth/model/auth.model';
+import {
+  IStudentResult,
+  IStudentSessionsResult,
+} from '../../students/models/student.model';
 import {
   ICreateResult,
   ICreateResultEntry,
@@ -324,6 +329,36 @@ export class ResultsService {
     return this.http.patch<IAPIResponse<unknown>>(
       `${this.resultsUrl}/${resultId}/publish`,
       {}
+    );
+  }
+
+  getStudentResult(
+    studentId: string,
+    level: string,
+    session: string,
+    semester?: SemesterEnum
+  ): Observable<IAPIResponse<IStudentResult>> {
+    let params = new HttpParams();
+    if (studentId) params = params.append('studentId', studentId);
+    if (level) params = params.append('level', level);
+    if (session) params = params.append('session', session);
+    if (semester) params = params.append('semester', semester);
+
+    return this.http.get<IAPIResponse<IStudentResult>>(
+      `${this.resultsUrl}/students/results`,
+      { params }
+    );
+  }
+
+  getStudentResultsBySessions(
+    studentId: string
+  ): Observable<IAPIResponse<IStudentSessionsResult[]>> {
+    let params = new HttpParams();
+    params = params.append('studentId', studentId);
+
+    return this.http.get<IAPIResponse<IStudentSessionsResult[]>>(
+      `${this.resultsUrl}/students/results/sessions`,
+      { params }
     );
   }
 }

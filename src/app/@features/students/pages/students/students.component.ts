@@ -3,6 +3,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { MatTableModule } from '@angular/material/table';
+import { ActivatedRoute, Router } from '@angular/router';
 import { debounceTime, distinctUntilChanged, finalize } from 'rxjs';
 import { ToastService } from '../../../../@core/utility/toast.service';
 import { EmptyStateComponent } from '../../../../@shared/components/empty-state/empty-state.component';
@@ -35,6 +36,8 @@ export class StudentsComponent implements OnInit {
   private readonly lecturerService = inject(LecturersService);
   private readonly dialog = inject(MatDialog);
   private readonly toastService = inject(ToastService);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   displayedColumns: string[] = ['sn', 'registrationNumber', 'fullName'];
   dataSource = signal<IStudent[]>([]);
@@ -127,4 +130,8 @@ export class StudentsComponent implements OnInit {
   }
 
   addStudent() {}
+
+  viewStudentResult(regNo: string) {
+    this.router.navigate([`${regNo}/result`], { relativeTo: this.route });
+  }
 }

@@ -7,7 +7,6 @@ import {
   IStudent,
   IStudentPerformance,
   IStudentQuery,
-  IStudentResult,
 } from '../models/student.model';
 
 @Injectable({
@@ -61,20 +60,6 @@ export class StudentService {
 
     return this.http.get<IAPIResponse<IStudentPerformance>>(
       `${this.studentUrl}/performance`,
-      { params }
-    );
-  }
-
-  getStudentResult(
-    level: string,
-    session: string
-  ): Observable<IAPIResponse<IStudentResult>> {
-    let params = new HttpParams();
-    params = params.append('level', level);
-    params = params.append('session', session);
-
-    return this.http.get<IAPIResponse<IStudentResult>>(
-      `${this.studentUrl}/results`,
       { params }
     );
   }

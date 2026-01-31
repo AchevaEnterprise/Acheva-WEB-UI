@@ -95,10 +95,8 @@ export const routes: Routes = [
         data: {
           title: 'Students',
         },
-        loadComponent: () =>
-          import(
-            '../@features/students/pages/students/students.component'
-          ).then((m) => m.StudentsComponent),
+        loadChildren: () =>
+          import('../@features/students/students.routes').then((m) => m.routes),
       },
       {
         path: 'dues-management',
