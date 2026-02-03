@@ -64,12 +64,19 @@
         (clickEvent)="confirmSendToHOD()"
       />
 
-      <!-- <app-button
-        [label]="expandView() ? 'Expand' : 'Collapse'"
-        type="outline"
-        class="btn-md"
-        (clickEvent)="toggleView()"
-      /> -->
+      @if (
+        !(
+          this.currentRole() === RoleEnum.COURSE_COORDINATOR &&
+          status === 'DRAFT'
+        )
+      ) {
+        <app-button
+          [label]="collapseView() ? 'Expand' : 'Collapse'"
+          type="outline"
+          class="btn-md"
+          (clickEvent)="toggleView()"
+        />
+      }
     </div>
   </div>
 </div>
@@ -77,13 +84,13 @@
 <div
   class="grid grid-cols-1 gap-4 mt-4 items-start"
   [ngClass]="{
-    'grid-cols-1': expandView(),
-    'grid-cols-[1fr_30%]': !expandView(),
+    'grid-cols-1': collapseView(),
+    'grid-cols-[1fr_30%]': !collapseView(),
   }"
 >
   <app-result-management-file-table
     #resultTableRef
-    [expand]="expandView()"
+    [expand]="collapseView()"
     [results]="results()"
     [pagination]="pagination()"
     (viewResultEvent)="editResult($event)"
@@ -91,7 +98,7 @@
   />
 
   <!-- RESULT STATUS TRACKING & COMMENT-->
-  <!-- @if (!expandView()) {
+  @if (!collapseView()) {
     <div class="flex flex-col gap-4">
       <app-result-status-tracking [result]="result()" />
       <app-comment
@@ -102,5 +109,5 @@
         (submitEvent)="sendComment($event)"
       />
     </div>
-  } -->
+  }
 </div>

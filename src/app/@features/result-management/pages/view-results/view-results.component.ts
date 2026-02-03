@@ -12,11 +12,14 @@ import { BackButtonComponent } from '../../../../@shared/components/back-button/
 import { CardComponent } from '../../../../@shared/components/card/card.component';
 import { ConfirmationComponent } from '../../../../@shared/components/confirmation/confirmation.component';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
+import { CommentComponent } from '../../../../@shared/components/forms/comment/comment.component';
 import { SearchInputComponent } from '../../../../@shared/components/forms/search-input/search-input.component';
 import { RejectReasonComponent } from '../../../../@shared/components/reject-reason/reject-reason.component';
 import { RoleEnum } from '../../../auth/model/auth.model';
+import { AuthenticationService } from '../../../auth/service/auth.service';
 import { AnalyticsChartComponent } from '../../../my-results/components/analytics-chart/analytics-chart.component';
 import { ResultManagementFileTableComponent } from '../../components/result-management-file-table/result-management-file-table.component';
+import { ResultStatusTrackingComponent } from '../../components/result-status-tracking/result-status-tracking.component';
 import { IResult, ISendSelectedResult } from '../../models/results.model';
 import { ResultsService } from '../../services/results.service';
 
@@ -33,8 +36,8 @@ import { ResultsService } from '../../services/results.service';
     RoleAccessDirective,
     ButtonComponent,
     BackButtonComponent,
-    // ResultStatusTrackingComponent,
-    // CommentComponent,
+    ResultStatusTrackingComponent,
+    CommentComponent,
   ],
   templateUrl: './view-results.component.html',
   styleUrl: './view-results.component.scss',
@@ -45,11 +48,14 @@ export class ViewResultsComponent implements OnInit {
   private readonly toast = inject(ToastService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly authService = inject(AuthenticationService);
 
   readonly courseId: string =
     this.route.snapshot.queryParamMap.get('courseId')!;
   readonly session: string = this.route.snapshot.queryParamMap.get('session')!;
   readonly status: string = this.route.snapshot.queryParamMap.get('status')!;
+
+  currentRole = signal<RoleEnum>(this.authService.activeAccount()?.role!);
 
   result = signal<IResult | null>(null);
   results = signal<IResult[]>([]);
@@ -71,7 +77,7 @@ export class ViewResultsComponent implements OnInit {
   refreshComments = signal<boolean>(false);
   RoleEnum = RoleEnum;
 
-  expandView = signal<boolean>(true);
+  collapseView = signal<boolean>(true);
 
   resultTableRef =
     viewChild<ResultManagementFileTableComponent>('resultTableRef');
@@ -81,7 +87,7 @@ export class ViewResultsComponent implements OnInit {
   }
 
   toggleView() {
-    this.expandView.update((prev) => !prev);
+    this.collapseView.update((prev) => !prev);
   }
 
   getResultAndAnalytics() {

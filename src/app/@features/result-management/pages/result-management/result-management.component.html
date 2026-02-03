@@ -64,20 +64,27 @@
           (clickEvent)="deleteResults()"
         />
 
-        <!-- <app-button
-          [label]="expandView() ? 'Expand' : 'Collapse'"
-          type="outline"
-          class="btn-md"
-          (clickEvent)="toggleView()"
-        /> -->
+        @if (
+          !(
+            this.currentRole() === RoleEnum.COURSE_COORDINATOR &&
+            this.activeSegment().value === 'DRAFT'
+          )
+        ) {
+          <app-button
+            [label]="collapseView() ? 'Expand' : 'Collapse'"
+            type="outline"
+            class="btn-md"
+            (clickEvent)="toggleView()"
+          />
+        }
       </div>
     </div>
 
     <div
       class="grid grid-cols-1 gap-4 mt-4 items-start"
       [ngClass]="{
-        'grid-cols-1': expandView(),
-        'grid-cols-[1fr_30%]': !expandView(),
+        'grid-cols-1': collapseView(),
+        'grid-cols-[1fr_30%]': !collapseView(),
       }"
     >
       <app-card
@@ -94,7 +101,7 @@
               RoleEnum.COURSE_ADVISOR,
             ]"
             #fileTableRef
-            [expand]="expandView()"
+            [expand]="collapseView()"
             [loading]="loadingResults()"
             [results]="results()"
             [pagination]="pagination()"
@@ -107,7 +114,7 @@
             @if (activeSegment().value === 'DRAFT') {
               <app-result-management-folder-table
                 #folderTableRef
-                [expand]="expandView()"
+                [expand]="collapseView()"
                 [loading]="loadingResults()"
                 [groupedResults]="groupedResults()"
                 [pagination]="pagination()"
@@ -116,7 +123,7 @@
             } @else {
               <app-result-management-file-table
                 #fileTableRef
-                [expand]="expandView()"
+                [expand]="collapseView()"
                 [loading]="loadingResults()"
                 [results]="results()"
                 [pagination]="pagination()"
@@ -129,7 +136,7 @@
       </app-card>
 
       <!-- RESULT STATUS TRACKING & COMMENT-->
-      <!-- @if (!expandView()) {
+      @if (!collapseView()) {
         <div class="flex flex-col gap-4">
           <app-result-status-tracking [result]="result()" />
           <app-comment
@@ -140,7 +147,7 @@
             (submitEvent)="sendComment($event)"
           />
         </div>
-      } -->
+      }
     </div>
   </div>
 </div>
