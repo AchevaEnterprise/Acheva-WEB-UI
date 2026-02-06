@@ -148,7 +148,7 @@ export class CreateAccountComponent implements OnInit, OnDestroy {
         if (role === RoleEnum.LECTURER) {
           this.form.controls['fullname'].setValidators([
             Validators.required,
-            Validators.pattern(/[a-zA-Z]+\s[a-zA-Z]+$/),
+            Validators.pattern(/[a-zA-Z-?]+\s[a-zA-Z-?]+$/),
           ]);
           this.form.controls['title'].setValidators(Validators.required);
           this.form.controls['faculty'].setValidators(Validators.required);

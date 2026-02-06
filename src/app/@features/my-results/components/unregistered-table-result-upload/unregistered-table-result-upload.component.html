@@ -19,6 +19,17 @@
             (searchEvent)="searchStudentsByRegNo($event)"
             (selectEvent)="onSelect($event, i)"
           /> -->
+          <ng-container matColumnDef="sn">
+            <th mat-header-cell *matHeaderCellDef>S/N</th>
+            <td
+              mat-cell
+              *matCellDef="let row; let i = index"
+              [formGroupName]="i"
+            >
+              {{ i + 1 }}.
+            </td>
+          </ng-container>
+
           <input
             type="text"
             class="border border-neutral-300 rounded-[8px] p-2 my-4 w-full bg-white"

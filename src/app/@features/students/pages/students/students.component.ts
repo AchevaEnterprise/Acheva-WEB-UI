@@ -43,8 +43,9 @@ export class StudentsComponent implements OnInit {
   dataSource = signal<IStudent[]>([]);
   students = signal<IStudent[]>([]);
 
-  searchCtrl: FormControl = new FormControl('');
+  searchCtrl: FormControl = new FormControl<string>('');
 
+  disableUploadStudentBtn = signal(false);
   loading = signal(false);
   uploading = signal(false);
 
@@ -58,8 +59,15 @@ export class StudentsComponent implements OnInit {
       .pipe(debounceTime(800), distinctUntilChanged())
       .subscribe({
         next: (search: string) => {
+          const term = (search ?? '').toLowerCase().trim();
+
+          if (!term) {
+            this.dataSource.set(this.students());
+            return;
+          }
+
           const searchedStudents = this.students().filter((student) =>
-            student.fullName.toLowerCase().includes(search)
+            student.fullName.toLowerCase().includes(term)
           );
 
           this.dataSource.set(searchedStudents);
@@ -87,6 +95,10 @@ export class StudentsComponent implements OnInit {
 
           this.dataSource.set(sortedStudents);
           this.students.set(sortedStudents);
+
+          if (this.students().length > 0) {
+            this.disableUploadStudentBtn.set(true);
+          }
         },
       });
   }

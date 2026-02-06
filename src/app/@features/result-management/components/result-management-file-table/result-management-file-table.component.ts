@@ -105,6 +105,9 @@ export class ResultManagementFileTableComponent implements OnInit, OnDestroy {
     'semester',
     'department',
     'faculty',
+    'uploadedBy',
+    'createdAt',
+    'updatedAt',
   ];
   dataSource = signal<IResult[]>([]);
   selection = new SelectionModel<IResult>(true, []);
@@ -118,23 +121,6 @@ export class ResultManagementFileTableComponent implements OnInit, OnDestroy {
 
   constructor() {
     effect(() => {
-      // Reset displayed columns to base columns
-      this.displayedColumns = [
-        'select',
-        'courseCode',
-        'courseTitle',
-        'semester',
-        'department',
-        'faculty',
-      ];
-
-      if (this.expand()) {
-        this.displayedColumns.push('uploadedBy', 'createdAt', 'updatedAt');
-
-        // if (this.userRole === RoleEnum.LECTURER)
-        //   this.displayedColumns.push('actions');
-      }
-
       if (this.results()) this.dataSource.set(this.results());
     });
   }

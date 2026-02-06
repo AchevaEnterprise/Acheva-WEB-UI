@@ -80,6 +80,7 @@ export class ReferenceTableResultUploadComponent {
 
   readonly status: string = this.route.snapshot.queryParamMap.get('status')!;
   readonly displayedColumns = [
+    'sn',
     'registrationNumber',
     'fullName',
     'test',
@@ -234,6 +235,14 @@ export class ReferenceTableResultUploadComponent {
       ctrl.markAsTouched();
       ctrl.markAsDirty();
       ctrl.updateValueAndValidity();
+      return;
+    }
+
+    const { test, lab, exam } = row.getRawValue() as IStudentGrade;
+    const total = (test ?? 0) + (lab ?? 0) + (exam ?? 0);
+
+    if (total > 100) {
+      ctrl.reset();
       return;
     }
 

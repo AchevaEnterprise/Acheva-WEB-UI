@@ -14,6 +14,7 @@
           label="Upload File"
           class="btn-md"
           [loading]="uploading()"
+          [disabled]="disableUploadStudentBtn()"
           (clickEvent)="uploadFile()"
         />
 

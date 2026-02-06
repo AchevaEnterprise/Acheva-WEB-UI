@@ -151,7 +151,7 @@ export class ResultManagementComponent implements OnInit {
   segmentCardLabel = signal<string>('Access your recent drafts from here');
   segmentCardIconSrc = signal<string>('icons/general/draft-icon.svg');
 
-  collapseView = signal<boolean>(true);
+  collapseView = signal<boolean>(false);
 
   RoleEnum = RoleEnum;
 

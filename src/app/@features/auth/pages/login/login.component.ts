@@ -1,5 +1,14 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnDestroy, signal } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  inject,
+  OnDestroy,
+  QueryList,
+  signal,
+  ViewChildren,
+} from '@angular/core';
 import {
   FormControl,
   FormGroup,
@@ -41,7 +50,7 @@ import { AuthenticationService } from '../../service/auth.service';
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
 })
-export class LoginComponent implements OnDestroy {
+export class LoginComponent implements AfterViewInit, OnDestroy {
   private readonly authService = inject(AuthenticationService);
   private readonly router = inject(Router);
 
@@ -49,10 +58,36 @@ export class LoginComponent implements OnDestroy {
   isLoading = signal(false);
   private readonly sub: Subscription = new Subscription();
 
+  @ViewChildren('inputRef') inputRef!: QueryList<ElementRef<HTMLInputElement>>;
+
   form: FormGroup = new FormGroup({
     email: new FormControl<string>('', [Validators.required, Validators.email]),
     password: new FormControl<string>('', Validators.required),
   });
+
+  ngAfterViewInit(): void {
+    this.enterListener();
+  }
+
+  enterListener() {
+    this.inputRef.forEach((input, index) => {
+      input.nativeElement.addEventListener('keydown', (e: KeyboardEvent) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+
+          if (index < this.inputRef.length - 1) {
+            this.inputRef.toArray()[index + 1].nativeElement.focus();
+          } else {
+            this.submitForm();
+          }
+        }
+      });
+    });
+  }
+
+  togglePasswordVisibility() {
+    this.showPassword.update((show) => !show);
+  }
 
   submitForm() {
     this.isLoading.set(true);
@@ -67,10 +102,6 @@ export class LoginComponent implements OnDestroy {
           },
         })
     );
-  }
-
-  togglePasswordVisibility() {
-    this.showPassword.update((show) => !show);
   }
 
   ngOnDestroy(): void {
