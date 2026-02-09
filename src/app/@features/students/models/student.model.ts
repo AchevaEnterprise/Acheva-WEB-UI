@@ -19,6 +19,11 @@ export interface IStudent {
   emailVerified: boolean;
 }
 
+export interface ICreateStudent {
+  fullName: string;
+  registrationNumber: string;
+}
+
 export interface IStudentGrade {
   _id?: string;
   registrationNumber: string;

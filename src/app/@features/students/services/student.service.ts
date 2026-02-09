@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { IAPIResponse } from '../../../@core/models/api-response.model';
 import {
+  ICreateStudent,
   IStudent,
   IStudentPerformance,
   IStudentQuery,
@@ -15,6 +16,14 @@ import {
 export class StudentService {
   private readonly http = inject(HttpClient);
   private readonly studentUrl = `${environment.BASE_URL}/students`;
+  private readonly lecturerUrl = `${environment.BASE_URL}/lecturers`;
+
+  createStudent(payload: ICreateStudent): Observable<IAPIResponse<unknown>> {
+    return this.http.post<IAPIResponse<unknown>>(
+      `${this.lecturerUrl}/students`,
+      payload
+    );
+  }
 
   getStudents(
     query: Partial<IStudentQuery>

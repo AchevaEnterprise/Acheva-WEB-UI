@@ -210,7 +210,9 @@
             mat-row
             *matRowDef="let result; columns: displayedColumns"
             class="cursor-pointer hover:bg-gray-400"
-            [class.selected]="activeRow() === result"
+            [class.selected]="
+              activeRow() === result || result?.isEdited === true
+            "
             [class.rejected]="result.isApproved === false"
             [class.approved]="
               result.isApproved === true &&

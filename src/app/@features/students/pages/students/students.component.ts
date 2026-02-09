@@ -13,6 +13,7 @@ import { LoaderComponent } from '../../../../@shared/components/loader/loader.co
 import { UploadDialogComponent } from '../../../../@shared/components/upload-dialog/upload-dialog.component';
 import { AuthenticationService } from '../../../auth/service/auth.service';
 import { LecturersService } from '../../../user-settings/service/lecturer.service';
+import { AddStudentDialogComponent } from '../../components/add-student-dialog/add-student-dialog.component';
 import { IStudent } from '../../models/student.model';
 import { StudentService } from '../../services/student.service';
 
@@ -39,7 +40,12 @@ export class StudentsComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 
-  displayedColumns: string[] = ['sn', 'registrationNumber', 'fullName'];
+  displayedColumns: string[] = [
+    'sn',
+    'registrationNumber',
+    'fullName',
+    // 'actions',
+  ];
   dataSource = signal<IStudent[]>([]);
   students = signal<IStudent[]>([]);
 
@@ -141,9 +147,22 @@ export class StudentsComponent implements OnInit {
       });
   }
 
-  addStudent() {}
+  addStudent() {
+    this.dialog
+      .open(AddStudentDialogComponent, {
+        width: '600px',
+      })
+      .afterClosed()
+      .subscribe({
+        next: (result) => {
+          if (result) this.getStudents();
+        },
+      });
+  }
 
   viewStudentResult(regNo: string) {
     this.router.navigate([`${regNo}/result`], { relativeTo: this.route });
   }
+
+  toggleActivateDeactivate(student: IStudent) {}
 }

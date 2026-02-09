@@ -1,0 +1,41 @@
+<h2 mat-dialog-title class="flex justify-between items-center">Add Student</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="form" class="login-wrapper md:w-full overflow-auto">
+    <div class="input-style-1 acheva-input w-full">
+      <p class="acva-para-2 fw-400 label-text">Full Name</p>
+
+      <mat-form-field [style.width.%]="100" appearance="outline">
+        <input
+          matInput
+          type="text"
+          placeholder="First Name &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Middle Name &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Surname"
+          formControlName="fullName"
+        />
+      </mat-form-field>
+    </div>
+
+    <div class="input-style-1 acheva-input w-full">
+      <p class="acva-para-2 fw-400 label-text">Registration Number</p>
+
+      <mat-form-field [style.width.%]="100" appearance="outline">
+        <input
+          matInput
+          type="text"
+          placeholder="Registration Number"
+          formControlName="registrationNumber"
+        />
+      </mat-form-field>
+    </div>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions class="gap-4">
+  <app-button label="Cancel" type="outline" (clickEvent)="cancel()" />
+  <app-button
+    [disabled]="form.invalid"
+    label="Add Student"
+    (clickEvent)="confirm()"
+    [loading]="loading()"
+  />
+</mat-dialog-actions>
