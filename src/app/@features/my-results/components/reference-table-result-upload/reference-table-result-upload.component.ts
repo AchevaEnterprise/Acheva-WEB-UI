@@ -221,6 +221,7 @@ export class ReferenceTableResultUploadComponent {
       total: [student?.total, numberValidator],
       grade: [student?.grade],
       status: [student?.status],
+      isEdited: [student?.isEdited],
     });
   }
 

@@ -8,7 +8,7 @@ import {
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { debounceTime, finalize, Subscription } from 'rxjs';
 import { ToastService } from '../../../../@core/utility/toast.service';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
@@ -37,12 +37,16 @@ export class CreateNewPasswordComponent implements OnInit, OnDestroy {
   private readonly authService = inject(AuthenticationService);
   private readonly toast = inject(ToastService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   showPassword = signal<boolean>(false);
   showConfirmPassword = signal<boolean>(false);
   passwordMatchError = signal<string>('');
 
+  accountId = signal(this.route.snapshot.queryParamMap.get('accountId'));
+
   form: FormGroup = new FormGroup({
+    token: new FormControl('', Validators.required),
     password: new FormControl('', Validators.required),
     confirm_password: new FormControl('', Validators.required),
   });
@@ -76,7 +80,8 @@ export class CreateNewPasswordComponent implements OnInit, OnDestroy {
   }
 
   submitForm() {
-    const { password, confirm_password } = this.form.value as {
+    const { token, password, confirm_password } = this.form.value as {
+      token: string;
       password: string;
       confirm_password: string;
     };
@@ -88,14 +93,14 @@ export class CreateNewPasswordComponent implements OnInit, OnDestroy {
 
     this.isLoading.set(true);
     const payload: IResetPassword = {
-      // token: this.token!,
+      token,
       password,
       confirmPassword: confirm_password,
     };
 
     this.sub.add(
       this.authService
-        .resetPassword(payload)
+        .resetPassword(payload, this.accountId()!)
         .pipe(finalize(() => this.isLoading.set(false)))
         .subscribe({
           next: (resp) => {

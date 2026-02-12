@@ -215,6 +215,7 @@ export class UnregisteredTableResultUploadComponent {
       total: [student?.total, numberValidator],
       grade: [student?.grade],
       status: [student?.status],
+      isEdited: [student?.isEdited],
     });
   }
 

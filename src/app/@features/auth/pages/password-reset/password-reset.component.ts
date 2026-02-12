@@ -47,7 +47,7 @@ export class PasswordResetComponent implements OnDestroy {
         .pipe(finalize(() => this.isLoading.set(false)))
         .subscribe({
           next: (res) => {
-            this.router.navigate(['/auth/verify-email'], {
+            this.router.navigate(['/auth/create-password'], {
               queryParams: {
                 email: this.emailCtrl.value as string,
                 accountId: res.data.user.id as string,

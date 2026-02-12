@@ -58,7 +58,7 @@ export interface IAccount
 }
 
 export interface IResetPassword {
-  // token: string;
+  token: string;
   password: string;
   confirmPassword: string;
 }

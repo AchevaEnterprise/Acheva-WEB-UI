@@ -193,10 +193,13 @@ export class AuthenticationService {
     );
   }
 
-  resetPassword(payload: IResetPassword): Observable<IAPIResponse<any>> {
+  resetPassword(
+    payload: IResetPassword,
+    accountId: string
+  ): Observable<IAPIResponse<any>> {
     return this.http.patch<IAPIResponse<any>>(
-      `${this.authUrl}/reset-password`,
-      { payload }
+      `${this.authUrl}/reset-password/${accountId}`,
+      payload
     );
   }
 

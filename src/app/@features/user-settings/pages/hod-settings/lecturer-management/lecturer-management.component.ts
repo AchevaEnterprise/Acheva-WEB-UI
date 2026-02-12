@@ -70,6 +70,7 @@ export class LecturerManagementComponent implements OnInit {
     'admissionYear',
     'action',
     'status',
+    'toggle',
   ];
 
   // Data and loading states

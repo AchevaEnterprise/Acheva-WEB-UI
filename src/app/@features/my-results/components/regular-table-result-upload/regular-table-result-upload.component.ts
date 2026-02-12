@@ -99,6 +99,8 @@ export class RegularTableResultUploadComponent {
       const students = this.students();
       const refresh = this.refreshTable();
 
+      console.warn('Students: ', students);
+
       if (refresh) {
         this.initializeFormRows(students);
       } else if (students?.length > 0 && this.rows.length === 0) {
@@ -191,6 +193,7 @@ export class RegularTableResultUploadComponent {
       total: [student.total, numberValidator],
       grade: [student.grade],
       status: [student.status],
+      isEdited: [student.isEdited],
     });
   }
 

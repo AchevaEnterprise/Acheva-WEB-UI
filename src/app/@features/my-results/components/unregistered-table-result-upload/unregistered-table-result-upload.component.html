@@ -150,6 +150,7 @@
         mat-row
         *matRowDef="let row; let i = index; columns: displayedColumns"
         [class.completed]="completedRows.has(i)"
+        [class.edited]="row.value.isEdited === true"
       ></tr>
     </table>
   </div>
