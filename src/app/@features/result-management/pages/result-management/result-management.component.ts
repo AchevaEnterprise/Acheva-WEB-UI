@@ -191,6 +191,10 @@ export class ResultManagementComponent implements OnInit {
               return prev;
             });
             this.results.set(result);
+
+            // Reset result selections if there is
+            if (!this.fileTableRef()?.selection.isEmpty())
+              this.fileTableRef()?.selection.clear();
           }
         },
       });
