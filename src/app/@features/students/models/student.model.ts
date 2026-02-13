@@ -34,7 +34,7 @@ export interface IStudentGrade {
   total: number;
   grade: string;
   status: string;
-  isEdited: boolean;
+  isEdited?: boolean;
 }
 
 export interface IStudentQuery {

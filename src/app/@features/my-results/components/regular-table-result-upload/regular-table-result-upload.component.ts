@@ -193,7 +193,7 @@ export class RegularTableResultUploadComponent {
       total: [student.total, numberValidator],
       grade: [student.grade],
       status: [student.status],
-      isEdited: [student.isEdited],
+      isEdited: [student.isEdited || false],
     });
   }
 
