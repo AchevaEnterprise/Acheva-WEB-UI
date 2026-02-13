@@ -54,15 +54,17 @@
           />
         }
 
-        <app-button
-          *appRoleAccess="[RoleEnum.LECTURER]"
-          label="Delete"
-          class="btn-md btn-error"
-          type="outline"
-          [disabled]="!resultIsSelected"
-          [loading]="deleting()"
-          (clickEvent)="deleteResults()"
-        />
+        @if (activeSegment().value === 'DRAFT') {
+          <app-button
+            *appRoleAccess="[RoleEnum.LECTURER]"
+            label="Delete"
+            class="btn-md btn-error"
+            type="outline"
+            [disabled]="!resultIsSelected"
+            [loading]="deleting()"
+            (clickEvent)="deleteResults()"
+          />
+        }
 
         @if (
           !(
