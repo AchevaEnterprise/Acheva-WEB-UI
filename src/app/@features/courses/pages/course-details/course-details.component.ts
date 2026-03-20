@@ -487,7 +487,7 @@ export class CourseDetailsComponent implements OnInit, OnDestroy {
       semester: semester || '',
       school: (school as ISchool)?._id,
       department: (department as IDepartment)?._id,
-      status: ResultStatusEnum.PENDING,
+      status: ResultStatusEnum.DRAFT,
     };
 
     this.sub.add(

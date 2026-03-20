@@ -92,7 +92,33 @@ export class DashboardComponent {
       label: 'Verified',
       count: 0,
       iconSrc: 'images/general/dash-card-verified.svg',
-      infoLabel: 'Results approved by the Dean',
+      infoLabel: 'Results verified by the Dean',
+      accessRole: [
+        RoleEnum.DEAN,
+        RoleEnum.HOD,
+        RoleEnum.COURSE_ADVISOR,
+        RoleEnum.COURSE_COORDINATOR,
+        RoleEnum.LECTURER,
+      ],
+    },
+    {
+      label: 'Approved',
+      count: 0,
+      iconSrc: 'images/general/dash-card-pending.svg',
+      infoLabel: 'Results in post-Dean approval (workflow)',
+      accessRole: [
+        RoleEnum.DEAN,
+        RoleEnum.HOD,
+        RoleEnum.COURSE_ADVISOR,
+        RoleEnum.COURSE_COORDINATOR,
+        RoleEnum.LECTURER,
+      ],
+    },
+    {
+      label: 'Complete',
+      count: 0,
+      iconSrc: 'images/general/dash-card-published.svg',
+      infoLabel: 'Results fully approved, ready to publish',
       accessRole: [
         RoleEnum.DEAN,
         RoleEnum.HOD,
@@ -118,7 +144,7 @@ export class DashboardComponent {
       label: 'Imported',
       count: 0,
       iconSrc: 'images/general/dash-card-imported.svg',
-      infoLabel: 'Manually approved results',
+      infoLabel: 'Results imported / manually processed',
       accessRole: [RoleEnum.DEAN, RoleEnum.HOD, RoleEnum.COURSE_ADVISOR],
     },
   ]);
@@ -152,7 +178,7 @@ export class DashboardComponent {
     },
     {
       label: 'Unverified',
-      value: 'VERIFIED',
+      value: 'UNVERIFIED',
       accessRole: [
         RoleEnum.DEAN,
         RoleEnum.HOD,
@@ -163,6 +189,28 @@ export class DashboardComponent {
     {
       label: 'Verified',
       value: 'VERIFIED',
+      accessRole: [
+        RoleEnum.DEAN,
+        RoleEnum.HOD,
+        RoleEnum.COURSE_ADVISOR,
+        RoleEnum.COURSE_COORDINATOR,
+        RoleEnum.LECTURER,
+      ],
+    },
+    {
+      label: 'Approved',
+      value: 'APPROVED',
+      accessRole: [
+        RoleEnum.DEAN,
+        RoleEnum.HOD,
+        RoleEnum.COURSE_ADVISOR,
+        RoleEnum.COURSE_COORDINATOR,
+        RoleEnum.LECTURER,
+      ],
+    },
+    {
+      label: 'Complete',
+      value: 'COMPLETE',
       accessRole: [
         RoleEnum.DEAN,
         RoleEnum.HOD,
@@ -254,16 +302,26 @@ export class DashboardComponent {
         this.segmentCardIconSrc.set('icons/general/verified-icon.svg');
         break;
       }
+      case 'APPROVED': {
+        this.segmentCardLabel.set('Access approved results from here');
+        this.segmentCardIconSrc.set('icons/general/verified-icon.svg');
+        break;
+      }
+      case 'COMPLETE': {
+        this.segmentCardLabel.set('Access complete results ready to publish');
+        this.segmentCardIconSrc.set('icons/general/published-icon.svg');
+        break;
+      }
       case 'PUBLISHED': {
         this.segmentCardLabel.set('Access your published results from here');
         this.segmentCardIconSrc.set('icons/general/published-icon.svg');
         break;
       }
-      // case 'imported': {
-      //   this.segmentCardLabel.set('Access your imported results from here');
-      //   this.segmentCardIconSrc.set('icons/general/imported-icon.svg');
-      //   break;
-      // }
+      case 'IMPORTED': {
+        this.segmentCardLabel.set('Access imported results from here');
+        this.segmentCardIconSrc.set('icons/general/published-icon.svg');
+        break;
+      }
     }
   }
 }

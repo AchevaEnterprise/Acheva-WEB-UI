@@ -31,6 +31,20 @@ export class TimeLineComponent {
       active: false,
     },
     {
+      status: 'Approved',
+      time: 'Pending',
+      activeIcon: 'icons/general/active-dean-approval-icon.svg',
+      inactiveIcon: 'icons/general/inactive-dean-approval-icon.svg',
+      active: false,
+    },
+    {
+      status: 'Complete',
+      time: 'Pending',
+      activeIcon: 'icons/general/active-hod-review-icon.svg',
+      inactiveIcon: 'icons/general/inactive-hod-review-icon.svg',
+      active: false,
+    },
+    {
       status: 'Published',
       time: 'Pending',
       activeIcon: 'icons/general/active-published-timeline-icon.svg',

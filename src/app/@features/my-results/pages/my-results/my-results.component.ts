@@ -16,7 +16,10 @@ import {
 } from '../../../../@shared/components/segment-switcher/segment-switcher.component';
 import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
 import { RoleEnum } from '../../../auth/model/auth.model';
-import { IResult } from '../../../result-management/models/results.model';
+import {
+  IResult,
+  ResultStatusEnum,
+} from '../../../result-management/models/results.model';
 import { ResultsService } from '../../../result-management/services/results.service';
 import { DeleteConfirmationDialogComponent } from '../../components/app-delete-confirmation-dialog/app-delete-confirmation-dialog.component';
 import { MyResultGridCardComponent } from '../../components/my-result-grid-card/my-result-grid-card.component';
@@ -162,7 +165,7 @@ export class MyResultsComponent implements OnInit {
                 draft.courseDetails?.courseTitle ||
                 draftData.courseDetails?.courseTitle ||
                 `Draft - ${draft.resultId}`,
-              status: 'DRAFT',
+              status: ResultStatusEnum.DRAFT,
               timestamp: draft.timestamp,
               segments: draft.segments,
               studentCount:

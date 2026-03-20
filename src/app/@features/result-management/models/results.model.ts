@@ -1,11 +1,28 @@
 import { IDepartment, ISchool } from '../../../@core/models/school.model';
 import { ICourse } from '../../courses/models/course.model';
 
+/**
+ * Mirrors backend `ResultStatus` in `acheva-nestjs/src/results/results.enum.ts`.
+ * Keep in sync when the API enum changes.
+ */
 export enum ResultStatusEnum {
   DRAFT = 'DRAFT',
   PENDING = 'PENDING',
+  UNVERIFIED = 'UNVERIFIED',
+  VERIFIED = 'VERIFIED',
   APPROVED = 'APPROVED',
   REJECTED = 'REJECTED',
+  COMPLETE = 'COMPLETE',
+  PUBLISHED = 'PUBLISHED',
+  IMPORTED = 'IMPORTED',
+}
+
+/** All valid API result status string values */
+export const RESULT_STATUS_VALUES: ResultStatusEnum[] =
+  Object.values(ResultStatusEnum);
+
+export function isResultStatus(value: string): value is ResultStatusEnum {
+  return RESULT_STATUS_VALUES.includes(value as ResultStatusEnum);
 }
 
 export interface IResult {
@@ -51,11 +68,12 @@ export interface ICreateResult {
   level: string;
   semester: string;
   school: string;
-  status: ResultStatusEnum;
+  status?: ResultStatusEnum;
 }
 
+/** `status` should be a backend `ResultStatus` string (see {@link ResultStatusEnum}). */
 export interface IResultQuery {
-  status: string;
+  status?: string;
 }
 
 export interface ICreateResultEntry {

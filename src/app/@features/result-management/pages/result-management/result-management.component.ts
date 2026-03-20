@@ -97,6 +97,28 @@ export class ResultManagementComponent implements OnInit {
       ],
     },
     {
+      label: 'Approved',
+      value: 'APPROVED',
+      accessRole: [
+        RoleEnum.DEAN,
+        RoleEnum.HOD,
+        RoleEnum.COURSE_ADVISOR,
+        RoleEnum.COURSE_COORDINATOR,
+        RoleEnum.LECTURER,
+      ],
+    },
+    {
+      label: 'Complete',
+      value: 'COMPLETE',
+      accessRole: [
+        RoleEnum.DEAN,
+        RoleEnum.HOD,
+        RoleEnum.COURSE_ADVISOR,
+        RoleEnum.COURSE_COORDINATOR,
+        RoleEnum.LECTURER,
+      ],
+    },
+    {
       label: 'Published',
       value: 'PUBLISHED',
       accessRole: [
@@ -227,7 +249,7 @@ export class ResultManagementComponent implements OnInit {
     // Then load from API and merge
     this.resultService
       .getResults({
-        status: 'DRAFT',
+        status: ResultStatusEnum.DRAFT,
       })
       .subscribe({
         next: (resp) => {
@@ -297,16 +319,16 @@ export class ResultManagementComponent implements OnInit {
       if (currentUser?.role === RoleEnum.LECTURER) {
         // Lecturers should NOT see results they've sent to CC
         completedResults = resultManagementList.filter((item: any) => 
-          item.status === 'DRAFT' && !item.sentToCC
+          item.status === ResultStatusEnum.DRAFT && !item.sentToCC
         );
       } else if (currentUser?.role === RoleEnum.COURSE_COORDINATOR) {
         // Course Coordinators should ONLY see results sent to them
         completedResults = resultManagementList.filter((item: any) => 
-          item.status === 'DRAFT' && item.sentToCC === true
+          item.status === ResultStatusEnum.DRAFT && item.sentToCC === true
         );
       } else {
         // Other roles see all drafts
-        completedResults = resultManagementList.filter((item: any) => item.status === 'DRAFT');
+        completedResults = resultManagementList.filter((item: any) => item.status === ResultStatusEnum.DRAFT);
       }
     } else {
       // For non-DRAFT statuses, show all results matching the status
@@ -380,16 +402,16 @@ export class ResultManagementComponent implements OnInit {
     if (currentUser?.role === RoleEnum.LECTURER) {
       // Lecturers should NOT see results they've sent to CC
       availableDrafts = [
-        ...resultManagementList.filter((item: any) => item.status === 'DRAFT' && !item.sentToCC),
+        ...resultManagementList.filter((item: any) => item.status === ResultStatusEnum.DRAFT && !item.sentToCC),
         ...resultDraftsList.filter((item: any) => !sentToCCIds.includes(item.resultId))
       ];
     } else if (currentUser?.role === RoleEnum.COURSE_COORDINATOR) {
       // Course Coordinators should ONLY see results sent to them
-      availableDrafts = resultManagementList.filter((item: any) => item.status === 'DRAFT' && item.sentToCC === true);
+      availableDrafts = resultManagementList.filter((item: any) => item.status === ResultStatusEnum.DRAFT && item.sentToCC === true);
     } else {
       // Other roles see all drafts
       availableDrafts = [
-        ...resultManagementList.filter((item: any) => item.status === 'DRAFT'),
+        ...resultManagementList.filter((item: any) => item.status === ResultStatusEnum.DRAFT),
         ...resultDraftsList
       ];
     }
@@ -452,14 +474,27 @@ export class ResultManagementComponent implements OnInit {
     this.results.set(draftResults);
   }
 
+  /** Map segment filter value 1:1 to API `ResultStatus` */
   private mapStatusToEnum(segmentValue: string): ResultStatusEnum {
     switch (segmentValue) {
-      case 'DRAFT': return ResultStatusEnum.DRAFT;
-      case 'PENDING': return ResultStatusEnum.PENDING;
-      case 'UNVERIFIED': return ResultStatusEnum.PENDING;
-      case 'VERIFIED': return ResultStatusEnum.APPROVED;
-      case 'PUBLISHED': return ResultStatusEnum.APPROVED;
-      default: return ResultStatusEnum.PENDING;
+      case 'DRAFT':
+        return ResultStatusEnum.DRAFT;
+      case 'PENDING':
+        return ResultStatusEnum.PENDING;
+      case 'UNVERIFIED':
+        return ResultStatusEnum.UNVERIFIED;
+      case 'VERIFIED':
+        return ResultStatusEnum.VERIFIED;
+      case 'APPROVED':
+        return ResultStatusEnum.APPROVED;
+      case 'COMPLETE':
+        return ResultStatusEnum.COMPLETE;
+      case 'PUBLISHED':
+        return ResultStatusEnum.PUBLISHED;
+      case 'IMPORTED':
+        return ResultStatusEnum.IMPORTED;
+      default:
+        return ResultStatusEnum.PENDING;
     }
   }
 
@@ -496,8 +531,23 @@ export class ResultManagementComponent implements OnInit {
         this.segmentCardIconSrc.set('icons/general/verified-icon.svg');
         break;
       }
+      case 'APPROVED': {
+        this.segmentCardLabel.set('Access approved results from here');
+        this.segmentCardIconSrc.set('icons/general/verified-icon.svg');
+        break;
+      }
+      case 'COMPLETE': {
+        this.segmentCardLabel.set('Access complete results from here');
+        this.segmentCardIconSrc.set('icons/general/published-icon.svg');
+        break;
+      }
       case 'PUBLISHED': {
         this.segmentCardLabel.set('Access your published results from here');
+        this.segmentCardIconSrc.set('icons/general/published-icon.svg');
+        break;
+      }
+      case 'IMPORTED': {
+        this.segmentCardLabel.set('Access imported results from here');
         this.segmentCardIconSrc.set('icons/general/published-icon.svg');
         break;
       }
@@ -688,7 +738,7 @@ export class ResultManagementComponent implements OnInit {
     
     // Remove from management list drafts as well
     const filteredManagementList = resultManagementList.filter((item: any) => 
-      !(item.status === 'DRAFT' && sentResultIds.includes(item.resultId))
+      !(item.status === ResultStatusEnum.DRAFT && sentResultIds.includes(item.resultId))
     );
     
     // Add sent results to course coordinator drafts with sentToCC flag
@@ -701,7 +751,7 @@ export class ResultManagementComponent implements OnInit {
       semester: result.semester,
       department: result.department?.name || 'Unknown Department',
       faculty: result.faculty || 'Unknown Faculty',
-      status: 'DRAFT',
+      status: ResultStatusEnum.DRAFT,
       timestamp: new Date().toISOString(),
       lastModified: new Date().toISOString(),
       sentToCC: true,

@@ -23,6 +23,7 @@ import {
 import { RoleEnum } from '../../../auth/model/auth.model';
 import { AuthenticationService } from '../../../auth/service/auth.service';
 import { IStudentGrade } from '../../../courses/models/student-grade.model';
+import { ResultStatusEnum } from '../../../result-management/models/results.model';
 import { ResultsService } from '../../../result-management/services/results.service';
 import { StudentService } from '../../../students/services/student.service';
 import { AnalyticsChartComponent } from '../../components/analytics-chart/analytics-chart.component';
@@ -1439,7 +1440,7 @@ export class ResultUploadComponent implements OnInit {
       level: this.courseForm.get('level')?.value || 'Unknown Level',
       timestamp: new Date().toISOString(),
       lastModified: new Date().toISOString(),
-      status: 'DRAFT',
+      status: ResultStatusEnum.DRAFT,
       lecturer: currentUser ? `${currentUser.firstname} ${currentUser.lastname}` : 'Unknown Lecturer',
       department: currentUser?.department || 'Computer Science',
       faculty: currentUser?.faculty || 'Faculty of Engineering',

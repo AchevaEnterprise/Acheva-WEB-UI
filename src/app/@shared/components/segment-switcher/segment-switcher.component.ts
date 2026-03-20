@@ -11,6 +11,8 @@ export interface ISegmentSwitcher {
     | 'PENDING'
     | 'UNVERIFIED'
     | 'VERIFIED'
+    | 'APPROVED'
+    | 'COMPLETE'
     | 'PUBLISHED'
     | 'IMPORTED'
     | 'REGULAR'

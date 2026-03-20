@@ -350,10 +350,18 @@ export class ResultManagementFileTableComponent implements OnInit {
         return 'bg-orange-100 text-orange-800';
       case 'PENDING':
         return 'bg-yellow-100 text-yellow-800';
+      case 'UNVERIFIED':
+        return 'bg-amber-100 text-amber-900';
       case 'VERIFIED':
-        return 'bg-green-100 text-green-800';
+        return 'bg-lime-100 text-lime-900';
+      case 'APPROVED':
+        return 'bg-emerald-100 text-emerald-900';
+      case 'COMPLETE':
+        return 'bg-teal-100 text-teal-900';
       case 'PUBLISHED':
         return 'bg-blue-100 text-blue-800';
+      case 'IMPORTED':
+        return 'bg-violet-100 text-violet-900';
       case 'REJECTED':
         return 'bg-red-100 text-red-800';
       default:
