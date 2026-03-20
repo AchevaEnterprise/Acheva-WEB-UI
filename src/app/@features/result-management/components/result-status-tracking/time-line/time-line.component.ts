@@ -49,7 +49,33 @@ export class TimeLineComponent {
       label: 'Dean Approval',
       activeIcon: 'icons/general/active-dean-approval-icon.svg',
       inactiveIcon: 'icons/general/inactive-dean-approval-icon.svg',
-      activeStatus: [ResultStatusEnum.VERIFIED, ResultStatusEnum.PUBLISHED],
+      activeStatus: [
+        ResultStatusEnum.VERIFIED,
+        ResultStatusEnum.APPROVED,
+        ResultStatusEnum.COMPLETE,
+        ResultStatusEnum.PUBLISHED,
+      ],
+      completed: false,
+    },
+    {
+      label: 'Approved',
+      activeIcon: 'icons/general/active-hod-review-icon.svg',
+      inactiveIcon: 'icons/general/inactive-hod-review-icon.svg',
+      activeStatus: [
+        ResultStatusEnum.APPROVED,
+        ResultStatusEnum.COMPLETE,
+        ResultStatusEnum.PUBLISHED,
+      ],
+      completed: false,
+    },
+    {
+      label: 'Complete',
+      activeIcon: 'icons/general/active-dean-approval-icon.svg',
+      inactiveIcon: 'icons/general/inactive-dean-approval-icon.svg',
+      activeStatus: [
+        ResultStatusEnum.COMPLETE,
+        ResultStatusEnum.PUBLISHED,
+      ],
       completed: false,
     },
     {

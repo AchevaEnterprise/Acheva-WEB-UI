@@ -114,7 +114,33 @@ export class DashboardComponent implements OnInit {
       label: 'Verified',
       count: 0,
       iconSrc: 'images/general/dash-card-verified.svg',
-      infoLabel: 'Results approved by the Dean',
+      infoLabel: 'Results verified by the Dean',
+      accessRole: [
+        RoleEnum.DEAN,
+        RoleEnum.HOD,
+        RoleEnum.COURSE_ADVISOR,
+        RoleEnum.COURSE_COORDINATOR,
+        RoleEnum.LECTURER,
+      ],
+    },
+    {
+      label: 'Approved',
+      count: 0,
+      iconSrc: 'images/general/dash-card-pending.svg',
+      infoLabel: 'Results in post-Dean approval (workflow)',
+      accessRole: [
+        RoleEnum.DEAN,
+        RoleEnum.HOD,
+        RoleEnum.COURSE_ADVISOR,
+        RoleEnum.COURSE_COORDINATOR,
+        RoleEnum.LECTURER,
+      ],
+    },
+    {
+      label: 'Complete',
+      count: 0,
+      iconSrc: 'images/general/dash-card-published.svg',
+      infoLabel: 'Results fully approved, ready to publish',
       accessRole: [
         RoleEnum.DEAN,
         RoleEnum.HOD,
@@ -140,7 +166,7 @@ export class DashboardComponent implements OnInit {
       label: 'Imported',
       count: 0,
       iconSrc: 'images/general/dash-card-imported.svg',
-      infoLabel: 'Manually approved results',
+      infoLabel: 'Results imported / manually processed',
       accessRole: [RoleEnum.DEAN, RoleEnum.HOD, RoleEnum.COURSE_ADVISOR],
     },
   ]);
@@ -187,6 +213,28 @@ export class DashboardComponent implements OnInit {
     {
       label: 'Verified',
       value: 'VERIFIED',
+      accessRole: [
+        RoleEnum.DEAN,
+        RoleEnum.HOD,
+        RoleEnum.COURSE_ADVISOR,
+        RoleEnum.COURSE_COORDINATOR,
+        RoleEnum.LECTURER,
+      ],
+    },
+    {
+      label: 'Approved',
+      value: 'APPROVED',
+      accessRole: [
+        RoleEnum.DEAN,
+        RoleEnum.HOD,
+        RoleEnum.COURSE_ADVISOR,
+        RoleEnum.COURSE_COORDINATOR,
+        RoleEnum.LECTURER,
+      ],
+    },
+    {
+      label: 'Complete',
+      value: 'COMPLETE',
       accessRole: [
         RoleEnum.DEAN,
         RoleEnum.HOD,
@@ -260,8 +308,23 @@ export class DashboardComponent implements OnInit {
         this.segmentCardIconSrc.set('icons/general/verified-icon.svg');
         break;
       }
+      case 'APPROVED': {
+        this.segmentCardLabel.set('Access approved results from here');
+        this.segmentCardIconSrc.set('icons/general/verified-icon.svg');
+        break;
+      }
+      case 'COMPLETE': {
+        this.segmentCardLabel.set('Access complete results ready to publish');
+        this.segmentCardIconSrc.set('icons/general/published-icon.svg');
+        break;
+      }
       case 'PUBLISHED': {
         this.segmentCardLabel.set('Access your published results from here');
+        this.segmentCardIconSrc.set('icons/general/published-icon.svg');
+        break;
+      }
+      case 'IMPORTED': {
+        this.segmentCardLabel.set('Access imported results from here');
         this.segmentCardIconSrc.set('icons/general/published-icon.svg');
         break;
       }
@@ -297,6 +360,10 @@ export class DashboardComponent implements OnInit {
                 count = statusCounts.UNVERIFIED;
               else if (label.includes('verified'))
                 count = statusCounts.VERIFIED;
+              else if (label.includes('approved'))
+                count = statusCounts.APPROVED ?? 0;
+              else if (label.includes('complete'))
+                count = statusCounts.COMPLETE ?? 0;
               else if (label.includes('published'))
                 count = statusCounts.PUBLISHED;
               else if (label.includes('imported'))

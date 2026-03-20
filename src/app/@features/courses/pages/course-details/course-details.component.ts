@@ -353,7 +353,7 @@ export class CourseDetailsComponent implements OnInit {
       school: this.school()?._id!,
       department: department?._id,
       faculty: faculty?._id,
-      status: ResultStatusEnum.PENDING,
+      status: ResultStatusEnum.DRAFT,
     };
 
     this.resultService

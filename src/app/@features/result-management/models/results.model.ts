@@ -9,15 +9,25 @@ import { ICourse } from '../../courses/models/course.model';
 
 export type SegmentValue = 'REGULAR' | 'REFERENCE' | 'UNREGISTERED';
 
+/**
+ * Mirrors backend `ResultStatus` in `acheva-nestjs/src/results/results.enum.ts`.
+ */
 export enum ResultStatusEnum {
   DRAFT = 'DRAFT',
   PENDING = 'PENDING',
   UNVERIFIED = 'UNVERIFIED',
   VERIFIED = 'VERIFIED',
+  APPROVED = 'APPROVED',
+  COMPLETE = 'COMPLETE',
   PUBLISHED = 'PUBLISHED',
   IMPORTED = 'IMPORTED',
-  APPROVED = 'APPROVED',
-  REJECTED = 'REJECTED',
+}
+
+export const RESULT_STATUS_VALUES: ResultStatusEnum[] =
+  Object.values(ResultStatusEnum);
+
+export function isResultStatus(value: string): value is ResultStatusEnum {
+  return RESULT_STATUS_VALUES.includes(value as ResultStatusEnum);
 }
 
 export interface IResult {
@@ -84,7 +94,8 @@ export interface ICreateResult {
   semester: string;
   admissionYear: string;
   school: string;
-  status: ResultStatusEnum;
+  /** Defaults to DRAFT on the server when omitted. */
+  status?: ResultStatusEnum;
 }
 
 export interface IResultQuery {
@@ -149,6 +160,8 @@ type ResultStatus =
   | 'PENDING'
   | 'UNVERIFIED'
   | 'VERIFIED'
+  | 'APPROVED'
+  | 'COMPLETE'
   | 'PUBLISHED'
   | 'IMPORTED';
 
@@ -160,6 +173,8 @@ export interface IResultStatusCount {
     PENDING: number;
     UNVERIFIED: number;
     VERIFIED: number;
+    APPROVED: number;
+    COMPLETE: number;
     PUBLISHED: number;
     IMPORTED: number;
   };

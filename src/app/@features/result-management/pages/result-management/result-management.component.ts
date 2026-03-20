@@ -123,6 +123,28 @@ export class ResultManagementComponent implements OnInit {
       ],
     },
     {
+      label: 'Approved',
+      value: 'APPROVED',
+      accessRole: [
+        RoleEnum.DEAN,
+        RoleEnum.HOD,
+        RoleEnum.COURSE_ADVISOR,
+        RoleEnum.COURSE_COORDINATOR,
+        RoleEnum.LECTURER,
+      ],
+    },
+    {
+      label: 'Complete',
+      value: 'COMPLETE',
+      accessRole: [
+        RoleEnum.DEAN,
+        RoleEnum.HOD,
+        RoleEnum.COURSE_ADVISOR,
+        RoleEnum.COURSE_COORDINATOR,
+        RoleEnum.LECTURER,
+      ],
+    },
+    {
       label: 'Published',
       value: 'PUBLISHED',
       accessRole: [
@@ -248,8 +270,23 @@ export class ResultManagementComponent implements OnInit {
         this.segmentCardIconSrc.set('icons/general/verified-icon.svg');
         break;
       }
+      case 'APPROVED': {
+        this.segmentCardLabel.set('Access approved results from here');
+        this.segmentCardIconSrc.set('icons/general/verified-icon.svg');
+        break;
+      }
+      case 'COMPLETE': {
+        this.segmentCardLabel.set('Access complete results from here');
+        this.segmentCardIconSrc.set('icons/general/published-icon.svg');
+        break;
+      }
       case 'PUBLISHED': {
         this.segmentCardLabel.set('Access your published results from here');
+        this.segmentCardIconSrc.set('icons/general/published-icon.svg');
+        break;
+      }
+      case 'IMPORTED': {
+        this.segmentCardLabel.set('Access imported results from here');
         this.segmentCardIconSrc.set('icons/general/published-icon.svg');
         break;
       }
