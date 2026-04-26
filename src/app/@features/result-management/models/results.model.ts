@@ -1,61 +1,135 @@
-import { IDepartment, ISchool } from '../../../@core/models/school.model';
+import {
+  IDepartment,
+  IFaculty,
+  ISchool,
+} from '../../../@core/models/school.model';
+import { ISegmentSwitcher } from '../../../@shared/components/segment-switcher/segment-switcher.component';
+import { RoleEnum } from '../../auth/model/auth.model';
 import { ICourse } from '../../courses/models/course.model';
 
+export type SegmentValue = 'REGULAR' | 'REFERENCE' | 'UNREGISTERED';
+
+/**
+ * Mirrors backend `ResultStatus` in `acheva-nestjs/src/results/results.enum.ts`.
+ */
 export enum ResultStatusEnum {
   DRAFT = 'DRAFT',
   PENDING = 'PENDING',
+  UNVERIFIED = 'UNVERIFIED',
+  VERIFIED = 'VERIFIED',
   APPROVED = 'APPROVED',
-  REJECTED = 'REJECTED',
+  COMPLETE = 'COMPLETE',
+  PUBLISHED = 'PUBLISHED',
+  IMPORTED = 'IMPORTED',
+}
+
+export const RESULT_STATUS_VALUES: ResultStatusEnum[] =
+  Object.values(ResultStatusEnum);
+
+export function isResultStatus(value: string): value is ResultStatusEnum {
+  return RESULT_STATUS_VALUES.includes(value as ResultStatusEnum);
+}
+
+/**
+ * Role IDs attached to every result by the backend
+ * (see `ResultsService.attachRolesToResult` in the Nest API).
+ *
+ * The HOD field is split in two because a single result may route through
+ * both the course-owning department and the students' (offering) department:
+ *
+ *   HOD_COURSE_DEPT   — HOD of the department that OWNS the course
+ *                        (e.g. Mathematics for `MTH 101`)
+ *   HOD_OFFERING_DEPT — HOD of the department whose students wrote the course
+ *                        (e.g. Physics when Physics 100L sits `MTH 101`)
+ *
+ * When the cohort is internal (course dept === offering dept) both IDs point
+ * to the same lecturer.
+ */
+export interface IResultRoles {
+  HOD_COURSE_DEPT: string | null;
+  HOD_OFFERING_DEPT: string | null;
+  DEAN: string | null;
+  COURSE_COORDINATOR: string;
+  COURSE_ADVISOR: string | null;
 }
 
 export interface IResult {
-  _id?: string;
+  _id: string;
+  course: ICourse;
   session: string;
   level: string;
   semester: string;
-  department: IDepartment | any; // Allow flexible department structure
-  school: ISchool | any;
+  department: IDepartment;
+  faculty?: IFaculty;
+  school: ISchool;
   status: ResultStatusEnum;
-  uploadedBy: string;
-  isApproved: boolean;
-  comments: any[];
-  createdAt: Date | string; // Allow string dates from localStorage
-  updatedAt: Date | string; // Allow string dates from localStorage
-  course: ICourse | any;
-  // Additional fields for comprehensive data
-  lecturer?: string;
-  faculty?: string;
-  createdBy?: {
-    fullName: string;
-  } | string; // Allow flexible structure
-  // Draft-specific properties
-  isDraft?: boolean;
-  studentCount?: number;
-  studentsWithGrades?: number;
-  completionPercentage?: number;
-  courseDetails?: {
-    courseTitle: string;
-    session: string;
-    level: string;
-    units: number;
+  uploadedBy: string | { _id: string; firstname: string; lastname: string };
+  isApproved: boolean | null;
+  roles: IResultRoles;
+  hasBeenSent: boolean;
+  hasFinalApproval: boolean;
+  currentHandler: string;
+  lastAction: string;
+  previousAction: string;
+  workflowHistory: Array<unknown>;
+  receivingHandler: string;
+  rejectedBy?: string[];
+  analytics: {
+    total: number;
+    totalPass: number;
+    totalFail: number;
+    averageTotal: number;
+    A: number;
+    B: number;
+    C: number;
+    D: number;
+    E: number;
+    F: number;
   };
-  segments?: string[];
-  timestamp?: string;
-  lastModified?: string;
+  students?: number;
+  progress?: number;
+  updatedAt?: Date;
+}
+
+export interface IGroupedResult {
+  course: string;
+  courseCode: string;
+  courseTitle: string;
+  courseLoad: number;
+  session: string;
+  faculty: IFaculty;
+  semester: string;
+  results: IResult[];
+  totalResults: number;
+  approvedCount: number;
+  finalApprovalCount: number;
 }
 
 export interface ICreateResult {
   course: string;
   department: string;
+  faculty: string;
   session: string;
   level: string;
   semester: string;
+  admissionYear: string;
   school: string;
-  status: ResultStatusEnum;
+  /** Defaults to DRAFT on the server when omitted. */
+  status?: ResultStatusEnum;
 }
 
 export interface IResultQuery {
   status: string;
+  course: string;
+  hasBeenSent: boolean;
+  faculty: string;
+  department: string;
+}
+
+export interface IPreparedResultQuery {
+  courseId: string;
+  status: string;
+  session: string;
 }
 
 export interface ICreateResultEntry {
@@ -66,6 +140,7 @@ export interface ICreateResultEntry {
   exam: number;
   total: number;
   result: string;
+  category?: ISegmentSwitcher['value'];
 }
 
 export interface IUpdateResultEntry extends ICreateResultEntry {
@@ -77,4 +152,56 @@ export interface IResultEntriesQuery {
   category?: string;
   fullName?: string;
   limit?: string;
+}
+
+export interface ISendSelectedResult {
+  resultId: string;
+  recipient: string;
+}
+
+export interface IResultComment {
+  _id: string;
+  result: string;
+  lecturer: {
+    _id: string;
+    firstname: string;
+    lastname: string;
+    role: RoleEnum;
+    accessLevel: string;
+  };
+  role: RoleEnum;
+  comment: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+type ResultStatus =
+  | 'DRAFT'
+  | 'PENDING'
+  | 'UNVERIFIED'
+  | 'VERIFIED'
+  | 'APPROVED'
+  | 'COMPLETE'
+  | 'PUBLISHED'
+  | 'IMPORTED';
+
+export interface IResultStatusCount {
+  role: RoleEnum;
+  allowedStatuses: ResultStatus[];
+  statusCounts: {
+    DRAFT: number;
+    PENDING: number;
+    UNVERIFIED: number;
+    VERIFIED: number;
+    APPROVED: number;
+    COMPLETE: number;
+    PUBLISHED: number;
+    IMPORTED: number;
+  };
+  summary: {
+    total: number;
+    pendingAction: number;
+    currentlyWithMe: number;
+    sentByMe: number;
+  };
 }

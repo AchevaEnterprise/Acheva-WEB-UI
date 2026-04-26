@@ -1,15 +1,28 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { Observable, tap } from 'rxjs';
+import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { IAPIResponse } from '../../../@core/models/api-response.model';
-import { NotificationService } from '../../notifications/service/notification.service';
+import {
+  IAPIPaginatedResponse,
+  IAPIResponse,
+} from '../../../@core/models/api-response.model';
+import { SemesterEnum } from '../../../@core/models/school.model';
+import { RoleEnum } from '../../auth/model/auth.model';
+import {
+  IStudentResult,
+  IStudentSessionsResult,
+} from '../../students/models/student.model';
 import {
   ICreateResult,
   ICreateResultEntry,
+  IGroupedResult,
+  IPreparedResultQuery,
   IResult,
+  IResultComment,
   IResultEntriesQuery,
   IResultQuery,
+  IResultStatusCount,
+  ISendSelectedResult,
   IUpdateResultEntry,
 } from '../models/results.model';
 
@@ -18,34 +31,156 @@ import {
 })
 export class ResultsService {
   private readonly http = inject(HttpClient);
-  private readonly notificationService = inject(NotificationService);
   private readonly resultsUrl = `${environment.BASE_URL}/results`;
 
-  getResults(query?: IResultQuery): Observable<IAPIResponse<any>> {
+  // RESULT
+  getResults(
+    query?: Partial<IResultQuery>
+  ): Observable<IAPIPaginatedResponse<IResult[]>> {
     let params = new HttpParams();
-    params = params.append('status', query?.status || '');
+    if (query) {
+      if (query.status) {
+        params = params.append('status', query.status);
+      }
+      if (query.course) {
+        params = params.append('course', query.course);
+      }
+      if (query.hasBeenSent) {
+        params = params.append('hasBeenSent', query.hasBeenSent.toString());
+      }
+      if (query.faculty) {
+        params = params.append('faculty', query.faculty);
+      }
+      if (query.department) {
+        params = params.append('department', query.department);
+      }
+    }
 
-    return this.http.get<IAPIResponse<IResult>>(`${this.resultsUrl}`, {
-      params,
-    });
+    return this.http.get<IAPIPaginatedResponse<IResult[]>>(
+      `${this.resultsUrl}`,
+      {
+        params,
+      }
+    );
   }
 
-  getResult(resultId: string): Observable<IAPIResponse<any>> {
-    return this.http.get<IAPIResponse<any>>(`${this.resultsUrl}/${resultId}`);
+  getResult(resultId: string): Observable<IAPIResponse<IResult>> {
+    return this.http.get<IAPIResponse<IResult>>(
+      `${this.resultsUrl}/${resultId}`
+    );
   }
 
+  getGroupResults(): Observable<
+    IAPIResponse<{
+      data: IGroupedResult[];
+      message: string;
+      total: number;
+    }>
+  > {
+    return this.http.get<
+      IAPIResponse<{
+        data: IGroupedResult[];
+        message: string;
+        total: number;
+      }>
+    >(`${this.resultsUrl}/sent/grouped`);
+  }
+
+  getPreparedResults(
+    query?: Partial<IPreparedResultQuery>
+  ): Observable<IAPIResponse<unknown>> {
+    return this.http.get<IAPIResponse<unknown>>(
+      `${this.resultsUrl}/prepared-results`
+    );
+  }
+
+  getResultComments(
+    resultId: string
+  ): Observable<IAPIResponse<IResultComment[]>> {
+    return this.http.get<IAPIResponse<IResultComment[]>>(
+      `${this.resultsUrl}/${resultId}/comments`
+    );
+  }
+
+  sendResultComment(resultId: string, comment: string) {
+    return this.http.post<IAPIResponse<unknown>>(
+      `${this.resultsUrl}/${resultId}/comments`,
+      { comment }
+    );
+  }
+
+  sendResult(
+    resultId: string,
+    recepientId: string,
+    role: RoleEnum
+  ): Observable<IAPIResponse<unknown>> {
+    let params = new HttpParams();
+    params = params.append('role', role);
+
+    return this.http.patch<IAPIResponse<unknown>>(
+      `${this.resultsUrl}/${resultId}/send/${recepientId}`,
+      {},
+      { params }
+    );
+  }
+
+  sendSelectedResult(
+    payload: ISendSelectedResult[],
+    role: RoleEnum
+  ): Observable<IAPIResponse<unknown>> {
+    let params = new HttpParams();
+    params = params.append('role', role);
+
+    return this.http.post<IAPIResponse<unknown>>(
+      `${this.resultsUrl}/selected`,
+      payload,
+      { params }
+    );
+  }
+
+  sendBulkResult(
+    role: RoleEnum,
+    courseIds: Array<string>
+  ): Observable<IAPIResponse<unknown>> {
+    return this.http.post<IAPIResponse<unknown>>(
+      `${this.resultsUrl}/bulk/many`,
+      { role, courseIds }
+    );
+  }
+
+  createResult(result: ICreateResult): Observable<IAPIResponse<IResult>> {
+    return this.http.post<IAPIResponse<IResult>>(`${this.resultsUrl}`, result);
+  }
+
+  updateResult(
+    resultId: string,
+    result: Partial<ICreateResult>
+  ): Observable<IAPIResponse<unknown>> {
+    return this.http.patch<IAPIResponse<unknown>>(
+      `${this.resultsUrl}/${resultId}`,
+      result
+    );
+  }
+
+  // RESULT ENTRIES
   getResultEntries(
     resultId: string,
-    query?: IResultEntriesQuery
-  ): Observable<IAPIResponse<any>> {
+    query?: Partial<IResultEntriesQuery>
+  ): Observable<IAPIResponse<unknown>> {
     let params = new HttpParams();
-    params = params.append('category', query?.category || '');
+    if (query) {
+      if (query.category) {
+        params = params.append('category', query.category);
+      }
+      if (query.fullName) {
+        params = params.append('fullName', query.fullName);
+      }
+      if (query.limit) {
+        params = params.append('limit', query.limit);
+      }
+    }
 
-    if (query?.fullName)
-      params = params.append('fullName', query?.fullName || '');
-    if (query?.limit) params = params.append('limit', query?.limit || '');
-
-    return this.http.get<IAPIResponse<any>>(
+    return this.http.get<IAPIResponse<unknown>>(
       `${this.resultsUrl}/${resultId}/entries`,
       {
         params,
@@ -53,171 +188,177 @@ export class ResultsService {
     );
   }
 
-  sendResult(
-    resultId: string,
-    recepientId: string,
-    courseTitle?: string,
-    senderRole?: string,
-    recipientRole?: string
-  ): Observable<IAPIResponse<any>> {
-    return this.http.patch<IAPIResponse<any>>(
-      `${this.resultsUrl}/${resultId}/send/${recepientId}`,
-      {}
-    ).pipe(
-      tap((response) => {
-        if (response.status) {
-          // Create notification for recipient
-          const notification = {
-            title: 'New Result Received',
-            message: `You have received a new result${courseTitle ? ` for ${courseTitle}` : ''} from ${senderRole || 'colleague'}`,
-            type: 'RESULT_RECEIVED',
-            recipientId: recepientId,
-            data: { resultId, courseTitle, senderRole, recipientRole }
-          };
-          
-          this.notificationService.createNotification(notification).subscribe();
-          
-          // Trigger notification refresh
-          document.dispatchEvent(new CustomEvent('refreshNotifications'));
-        }
-      })
-    );
-  }
-
-  createResult(result: ICreateResult): Observable<IAPIResponse<any>> {
-    return this.http.post<IAPIResponse<any>>(`${this.resultsUrl}`, result);
-  }
-
   createResultEntry(
     resultEntry: ICreateResultEntry
-  ): Observable<IAPIResponse<any>> {
-    return this.http.post<IAPIResponse<any>>(
+  ): Observable<IAPIResponse<unknown>> {
+    return this.http.post<IAPIResponse<unknown>>(
       `${this.resultsUrl}/entries`,
       resultEntry
-    );
-  }
-
-  createBulkResultEntries(
-    entries: ICreateResultEntry[]
-  ): Observable<IAPIResponse<any>> {
-    return this.http.post<IAPIResponse<any>>(
-      `${this.resultsUrl}/entries/bulk`,
-      entries
-    );
-  }
-
-  updateResult(
-    resultId: string,
-    result: Partial<ICreateResult>
-  ): Observable<IAPIResponse<any>> {
-    return this.http.patch<IAPIResponse<any>>(
-      `${this.resultsUrl}/${resultId}`,
-      result
     );
   }
 
   updateResultEntry(
     resultEntryId: string,
     resultEntry: Partial<ICreateResultEntry>
-  ): Observable<IAPIResponse<any>> {
-    return this.http.patch<IAPIResponse<any>>(
+  ): Observable<IAPIResponse<unknown>> {
+    return this.http.patch<IAPIResponse<unknown>>(
       `${this.resultsUrl}/entries/${resultEntryId}`,
       resultEntry
     );
   }
 
+  deleteResultEntry(resultEntryId: string): Observable<IAPIResponse<unknown>> {
+    return this.http.delete<IAPIResponse<unknown>>(
+      `${this.resultsUrl}/${resultEntryId}/entries`
+    );
+  }
+
+  createBulkResultEntries(
+    entries: ICreateResultEntry[]
+  ): Observable<IAPIResponse<unknown>> {
+    return this.http.post<IAPIResponse<unknown>>(
+      `${this.resultsUrl}/entries/bulk`,
+      entries
+    );
+  }
+
   updateBulkResultEntry(
     resultEntries: Partial<IUpdateResultEntry>
-  ): Observable<IAPIResponse<any>> {
-    return this.http.patch<IAPIResponse<any>>(
+  ): Observable<IAPIResponse<unknown>> {
+    return this.http.patch<IAPIResponse<unknown>>(
       `${this.resultsUrl}/entries/bulk`,
       resultEntries
     );
   }
 
-  updateBulkResultEntries(entries: any[]): Observable<IAPIResponse<any>> {
-    return this.http.patch<IAPIResponse<any>>(
-      `${this.resultsUrl}/entries/bulk`,
-      entries
-    );
-  }
-
-  deleteResultEntry(resultEntryId: string): Observable<IAPIResponse<any>> {
-    return this.http.delete<IAPIResponse<any>>(
-      `${this.resultsUrl}/${resultEntryId}/entries`
-    );
-  }
-
   deleteBulkResultEntries(
     resultEntryIds: string[]
-  ): Observable<IAPIResponse<any>> {
-    return this.http.delete<IAPIResponse<any>>(
+  ): Observable<IAPIResponse<unknown>> {
+    return this.http.delete<IAPIResponse<unknown>>(
       `${this.resultsUrl}/entries/bulk`,
       { body: { entryIds: resultEntryIds } }
     );
   }
 
-  // Import Result - Upload CSV/Excel files
   uploadResultFile(
     resultId: string,
     file: File
-  ): Observable<IAPIResponse<any>> {
+  ): Observable<IAPIResponse<unknown>> {
     const formData = new FormData();
     formData.append('file', file);
 
-    return this.http.post<IAPIResponse<any>>(
+    return this.http.post<IAPIResponse<unknown>>(
       `${this.resultsUrl}/entries/import/${resultId}`,
       formData
     );
   }
 
-  // Create single result entry for grid input
-  createSingleResultEntry(entry: {
-    registrationNumber: string;
-    fullName: string;
-    test: number;
-    lab: number;
-    exam: number;
-    total: number;
-    result: string;
-  }): Observable<IAPIResponse<any>> {
-    return this.http.post<IAPIResponse<any>>(
-      `${this.resultsUrl}/entries`,
-      entry
-    );
-  }
-
-  // Create multiple result entries for bulk grid operations
-  createMultipleResultEntries(
-    entries: Array<{
-      registrationNumber: string;
-      fullName: string;
-      test: number;
-      lab: number;
-      exam: number;
-      total: number;
-      result: string;
-    }>
-  ): Observable<IAPIResponse<any>> {
-    return this.http.post<IAPIResponse<any>>(
-      `${this.resultsUrl}/entries/bulk`,
-      entries
-    );
-  }
-
   updateResultEntriesWithAnalytics(
     resultId: string,
-    entries: any[]
-  ): Observable<IAPIResponse<any>> {
-    return this.http.patch<IAPIResponse<any>>(
+    entries: IResult[]
+  ): Observable<IAPIResponse<unknown>> {
+    return this.http.patch<IAPIResponse<unknown>>(
       `${this.resultsUrl}/${resultId}/entries`,
       { entries }
     );
   }
 
-  getResultAnalytics(resultId: string): Observable<IAPIResponse<any>> {
-    return this.http.get<IAPIResponse<any>>(
+  getResultAnalytics(resultId: string): Observable<IAPIResponse<unknown>> {
+    return this.http.get<IAPIResponse<unknown>>(
       `${this.resultsUrl}/${resultId}/analytics`
+    );
+  }
+
+  getResultStatusCounts(): Observable<IAPIResponse<IResultStatusCount>> {
+    return this.http.get<IAPIResponse<IResultStatusCount>>(
+      `${this.resultsUrl}/status-counts`
+    );
+  }
+
+  getCourseResultsAnalytics(query: {
+    courseId: string;
+    session: string;
+  }): Observable<IAPIResponse<unknown>> {
+    let params = new HttpParams();
+    if (query) {
+      if (query.courseId) {
+        params = params.append('courseId', query.courseId);
+      }
+      if (query.session) {
+        params = params.append('session', query.session);
+      }
+    }
+    return this.http.get<IAPIResponse<unknown>>(
+      `${this.resultsUrl}/total-analytics`,
+      { params }
+    );
+  }
+
+  deleteResult(resultId: string) {
+    return this.http.delete<IAPIResponse<unknown>>(
+      `${this.resultsUrl}/${resultId}`
+    );
+  }
+
+  approveResult(
+    resultId: string,
+    comment?: string,
+    issueStatus?: 'RESOLVED' | 'UNRESOLVED'
+  ) {
+    return this.http.patch<IAPIResponse<unknown>>(
+      `${this.resultsUrl}/${resultId}/approve`,
+      {
+        action: 'APPROVED',
+        comment,
+        issueStatus,
+      }
+    );
+  }
+
+  rejectResult(resultId: string, comment: string) {
+    return this.http.patch<IAPIResponse<unknown>>(
+      `${this.resultsUrl}/${resultId}/reject`,
+      {
+        action: 'REJECTED',
+        comment,
+      }
+    );
+  }
+
+  publishResult(resultId: string) {
+    return this.http.patch<IAPIResponse<unknown>>(
+      `${this.resultsUrl}/${resultId}/publish`,
+      {}
+    );
+  }
+
+  getStudentResult(
+    studentId: string,
+    level: string,
+    session: string,
+    semester?: SemesterEnum
+  ): Observable<IAPIResponse<IStudentResult>> {
+    let params = new HttpParams();
+    if (studentId) params = params.append('studentId', studentId);
+    if (level) params = params.append('level', level);
+    if (session) params = params.append('session', session);
+    if (semester) params = params.append('semester', semester);
+
+    return this.http.get<IAPIResponse<IStudentResult>>(
+      `${this.resultsUrl}/students/results`,
+      { params }
+    );
+  }
+
+  getStudentResultsBySessions(
+    studentId: string
+  ): Observable<IAPIResponse<IStudentSessionsResult[]>> {
+    let params = new HttpParams();
+    params = params.append('studentId', studentId);
+
+    return this.http.get<IAPIResponse<IStudentSessionsResult[]>>(
+      `${this.resultsUrl}/students/results/sessions`,
+      { params }
     );
   }
 }

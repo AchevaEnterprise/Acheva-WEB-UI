@@ -16,17 +16,19 @@
   </header>
 
   <div class="grid lg:grid-cols-[20%_1fr] md:grid-cols-2 sm:grid-cols-1 gap-4">
-    <app-card (click)="createNewResult()">
+    <app-card (click)="createNewResult()" (keydown)="createNewResult()">
       <div
         content
         class="border-[1px] border-dashed rounded-[8px] grid place-content-center place-items-center h-[30vh] mx-4 mb-4 cursor-pointer"
       >
         <app-svg
-          svgWidth="5rem"
-          svgHeight="5rem"
+          svgWidth="3rem"
+          svgHeight="3rem"
           src="icons/general/file-icon.svg"
         ></app-svg>
-        <p class="text-neutral-500 acva-para-2 mt-4">Create a new result</p>
+        <p class="text-neutral-500 acva-para-2 mt-4 text-center">
+          Create a new result
+        </p>
       </div>
     </app-card>
 
@@ -42,7 +44,9 @@
 
         <ng-container *ngIf="recentCourses$ | async as recentCourses">
           @if (recentCourses.length > 0) {
-            <div class="flex gap-4 overflow-x-auto pb-2">
+            <div
+              class="grid lg:grid-cols-4 grid-cols-2 gap-4 overflow-x-auto pb-2"
+            >
               @for (course of recentCourses; track $index) {
                 <div class="flex-shrink-0" style="width: 280px">
                   <app-course-card

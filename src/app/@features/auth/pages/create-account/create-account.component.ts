@@ -78,14 +78,6 @@ export class CreateAccountComponent implements OnInit, OnDestroy {
       label: 'HOD',
       value: RoleEnum.HOD,
     },
-    // {
-    //   label: 'Course Advisor',
-    //   value: RoleEnum.COURSE_ADVISOR,
-    // },
-    // {
-    //   label: 'Course Coordinator',
-    //   value: RoleEnum.COURSE_COORDINATOR,
-    // },
     {
       label: 'Lecturer',
       value: RoleEnum.LECTURER,
@@ -121,12 +113,12 @@ export class CreateAccountComponent implements OnInit, OnDestroy {
   private readonly sub: Subscription = new Subscription();
 
   form: FormGroup = new FormGroup({
-    fullname: new FormControl(null, Validators.required),
+    fullname: new FormControl(),
     email: new FormControl(null, [Validators.required, Validators.email]),
     school: new FormControl(null, Validators.required),
-    faculty: new FormControl(null, Validators.required),
-    department: new FormControl(null, Validators.required),
-    title: new FormControl(null, Validators.required),
+    faculty: new FormControl(null),
+    department: new FormControl(null),
+    title: new FormControl(null),
     role: new FormControl(null, Validators.required),
     password: new FormControl(null, Validators.required),
     confirm_password: new FormControl(null, Validators.required),
@@ -135,7 +127,10 @@ export class CreateAccountComponent implements OnInit, OnDestroy {
   showPassword = signal<boolean>(false);
   showConfirmPassword = signal<boolean>(false);
 
+  RoleEnum = RoleEnum;
+
   ngOnInit(): void {
+    this.verifyRole();
     this.getSchools();
   }
 
@@ -145,6 +140,55 @@ export class CreateAccountComponent implements OnInit, OnDestroy {
 
   toggleConfirmPasswordVisibility() {
     this.showConfirmPassword.update((val) => !val);
+  }
+
+  verifyRole() {
+    this.form.controls['role'].valueChanges.subscribe({
+      next: (role: RoleEnum) => {
+        if (role === RoleEnum.LECTURER) {
+          this.form.controls['fullname'].setValidators([
+            Validators.required,
+            Validators.pattern(/[a-zA-Z-?]+\s[a-zA-Z-?]+$/),
+          ]);
+          this.form.controls['title'].setValidators(Validators.required);
+          this.form.controls['faculty'].setValidators(Validators.required);
+          this.form.controls['department'].setValidators(Validators.required);
+        } else if (role === RoleEnum.HOD) {
+          this.form.controls['faculty'].setValidators(Validators.required);
+          this.form.controls['department'].setValidators(Validators.required);
+        } else if (role === RoleEnum.DEAN) {
+          this.form.controls['faculty'].setValidators(Validators.required);
+        } else {
+          if (
+            this.form.controls['fullname'].hasValidator(Validators.required)
+          ) {
+            this.form.controls['fullname'].removeValidators([
+              Validators.required,
+              Validators.pattern(/[a-zA-Z]+\s[a-zA-Z]+$/),
+            ]);
+          } else if (
+            this.form.controls['title'].hasValidator(Validators.required)
+          ) {
+            this.form.controls['title'].removeValidators(Validators.required);
+          } else if (
+            this.form.controls['faculty'].hasValidator(Validators.required)
+          ) {
+            this.form.controls['faculty'].removeValidators(Validators.required);
+          } else if (
+            this.form.controls['department'].hasValidator(Validators.required)
+          ) {
+            this.form.controls['department'].removeValidators(
+              Validators.required
+            );
+          }
+        }
+
+        this.form.controls['fullname'].updateValueAndValidity();
+        this.form.controls['title'].updateValueAndValidity();
+        this.form.controls['faculty'].updateValueAndValidity();
+        this.form.controls['department'].updateValueAndValidity();
+      },
+    });
   }
 
   getSchools() {
@@ -219,7 +263,7 @@ export class CreateAccountComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const [firstname, lastname] = fullname.split(' ');
+    const [firstname, lastname] = fullname ? fullname.split(' ') : [null, null];
 
     this.isLoading.set(true);
     const payload = {

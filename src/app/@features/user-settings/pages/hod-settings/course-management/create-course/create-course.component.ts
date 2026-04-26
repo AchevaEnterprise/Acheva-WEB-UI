@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import {
   FormControl,
   FormGroup,
@@ -11,12 +11,12 @@ import { MatSelectChange, MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import {
-  Subject,
-  Subscription,
   debounceTime,
   distinctUntilChanged,
   finalize,
   map,
+  Subject,
+  Subscription,
   takeUntil,
 } from 'rxjs';
 import {
@@ -38,15 +38,16 @@ import {
   schoolsSelector,
 } from '../../../../../../@core/store/school/school.selector';
 import { ToastService } from '../../../../../../@core/utility/toast.service';
+import { CardComponent } from '../../../../../../@shared/components/card/card.component';
+import { AutocompleteInputComponent } from '../../../../../../@shared/components/forms/autocomplete-input/autocomplete-input.component';
 import { ButtonComponent } from '../../../../../../@shared/components/forms/button/button.component';
 import { AuthenticationService } from '../../../../../auth/service/auth.service';
+import { CoursePreviewComponent } from '../../../../../courses/components/course-preview/course-preview.component';
 import {
   ICourse,
   ICreateCourse,
 } from '../../../../../courses/models/course.model';
 import { CoursesService } from '../../../../../courses/services/courses.service';
-import { CoursePreviewComponent } from '../../../../components/course-preview/course-preview.component';
-import { AutocompleteInputComponent } from '../../../../../../@shared/components/forms/autocomplete-input/autocomplete-input.component';
 
 @Component({
   selector: 'app-create-course',
@@ -58,11 +59,12 @@ import { AutocompleteInputComponent } from '../../../../../../@shared/components
     MatFormFieldModule,
     MatInputModule,
     ButtonComponent,
+    CardComponent,
   ],
   templateUrl: './create-course.component.html',
   styleUrl: './create-course.component.scss',
 })
-export class CreateCourseComponent {
+export class CreateCourseComponent implements OnInit, OnDestroy {
   // ========================================
   // DEPENDENCY INJECTION
   // ========================================
@@ -77,13 +79,13 @@ export class CreateCourseComponent {
   // DATA
   // ========================================
   private readonly userSchoolId =
-    this.authService.activeAccount()?.school || '';
+    this.authService.activeAccount()?.school!._id || '';
 
   private readonly userFacultyId =
-    this.authService.activeAccount()?.faculty || '';
+    this.authService.activeAccount()?.faculty!._id || '';
 
   private readonly userDepartmentId =
-    this.authService.activeAccount()?.department || '';
+    this.authService.activeAccount()?.department!._id || '';
 
   courses = signal<ICourse[]>([]);
   invalidCourseCodeError: string | null = null;
@@ -108,7 +110,7 @@ export class CreateCourseComponent {
   semesterOptions = signal<{ label: string; value: string }[]>([
     { label: '1st Semester', value: SemesterEnum.FIRST },
     { label: '2nd Semester', value: SemesterEnum.SECOND },
-    { label: '3rd Semester', value: SemesterEnum.THIRD },
+    // { label: '3rd Semester', value: SemesterEnum.THIRD },
   ]);
 
   schoolsOptions = signal<ISchool[]>([]);
@@ -155,12 +157,24 @@ export class CreateCourseComponent {
   ngOnInit(): void {
     this.initializeComponent();
     this.setupCourseCodeListener();
+    this.updateFaultyAndDepartment();
   }
 
   ngOnDestroy(): void {
     this.sub.unsubscribe();
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  updateFaultyAndDepartment() {
+    const { faculty, department } = this.authService.activeAccount()!;
+    this.form.patchValue({
+      faculty: faculty,
+      department: department,
+    });
+
+    this.form.controls['faculty'].disable();
+    this.form.controls['department'].disable();
   }
 
   private setupCourseCodeListener(): void {
@@ -196,6 +210,19 @@ export class CreateCourseComponent {
     return this.form.get('courseCode') as FormControl<string>;
   }
 
+  /**
+   * Shape the form value for the shared `CoursePreviewComponent`.
+   * The preview component reads `school/faculty/department` as objects, so
+   * we surface the current user's school from the active account to avoid
+   * showing a blank row during course creation.
+   */
+  get previewTemplate() {
+    return {
+      ...this.form.getRawValue(),
+      school: this.authService.activeAccount()?.school,
+    };
+  }
+
   // ========================================
   // DATA FETCHING METHODS
   // ========================================
@@ -204,13 +231,12 @@ export class CreateCourseComponent {
       this.courseService
         .getCourses()
         .pipe(
-          map((resp) => resp.data.courses),
+          map((resp) => resp.data['courses']),
           finalize(() => this.isloadingCourses.set(false))
         )
         .subscribe({
           next: (courses) => this.courses.set(courses),
           error: (error) => {
-            console.error('Error loading courses:', error);
             this.isloadingCourses.set(false);
           },
         })
@@ -356,8 +382,6 @@ export class CreateCourseComponent {
 
     if (userFaculty) {
       this.form.get('faculty')?.setValue(userFaculty);
-    } else {
-      console.warn('❌ User faculty not found in available faculties list');
     }
   }
 
@@ -370,8 +394,6 @@ export class CreateCourseComponent {
 
     if (userDepartment) {
       this.form.get('department')?.setValue(userDepartment);
-    } else {
-      console.warn('User department not found in available departments list');
     }
   }
 
@@ -442,15 +464,16 @@ export class CreateCourseComponent {
               );
               this.router.navigate(['../course-management'], {
                 relativeTo: this.route,
+                queryParams: { level },
               });
             }
           },
           error: (error) => {
-            console.error('Error creating course:', error);
             this.toast.showNotification(
               'error',
               'Course Creation Failed',
-              'An error occurred while creating the course'
+              error.error.message ||
+                'An error occurred while creating the course'
             );
           },
         })

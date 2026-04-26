@@ -1,36 +1,21 @@
 <div
-  class="bg-white border border-[#E5E7EB] rounded-[8px] w-full h-full shadow-sm"
+  class="bg-white border border-[#E5E7EB] rounded-[8px] w-full h-full shadow-sm cursor-pointer"
+  [class.disabled]="result()!.hasBeenSent | resultDisabled"
+  (click)="viewResult()"
+  (keydown)="viewResult()"
 >
   <div class="p-4">
     <!-- Header with title and status -->
     <div class="flex justify-between items-start mb-3">
       <div class="flex-1">
         <h4 class="acva-para-2 fw-500 text-[#111827] mb-1 line-clamp-2">
-          {{
-            result()?.isDraft
-              ? result()?.courseDetails?.courseTitle
-              : result()?.course?.courseTitle
-          }}
+          {{ result()?.course?.courseTitle }}
         </h4>
         <p class="acva-caption text-[#6B7280] fw-400">
-          CSC 101 -
-          {{
-            result()?.isDraft
-              ? result()?.courseDetails?.units
-              : result()?.course?.courseLoad
-          }}
+          {{ result()?.course?.courseCode }} -
+          {{ result()?.course?.courseLoad }}
           Units
         </p>
-      </div>
-
-      <!-- Status badge -->
-      <div class="ml-2">
-        @if (result()?.isDraft) {
-          <span
-            class="px-2 py-1 bg-[#FEF3C7] text-[#D97706] text-xs fw-500 rounded-[4px]"
-            >Drafts</span
-          >
-        }
       </div>
     </div>
 
@@ -42,7 +27,7 @@
           svgHeight="14px"
           src="icons/general/calendar-icon.svg"
         ></app-svg>
-        <span>1st Semester - 2024/2025</span>
+        <span> {{ result()?.course?.semester }} - {{ result()?.session }}</span>
       </div>
 
       <div class="flex items-center gap-2 text-[#6B7280] acva-caption">
@@ -51,12 +36,7 @@
           svgHeight="14px"
           src="icons/general/role-icon.svg"
         ></app-svg>
-        <span
-          >{{
-            result()?.isDraft ? result()?.studentCount || 67 : 67
-          }}
-          Students</span
-        >
+        <span>{{ result()?.students }} Students</span>
       </div>
     </div>
 
@@ -64,39 +44,15 @@
     <div class="w-full">
       <div class="flex justify-between items-center mb-2">
         <span class="acva-caption text-[#6B7280]"
-          >{{ result()?.isDraft ? result()?.completionPercentage || 0 : 100 }}%
-          done</span
+          >{{ result()?.progress }}% done</span
         >
       </div>
       <div class="w-full bg-[#E5E7EB] rounded-full h-3">
         <div
           class="h-3 bg-[#2793FF] rounded-full transition-all duration-300"
-          [style.width.%]="
-            result()?.isDraft ? result()?.completionPercentage || 0 : 100
-          "
+          [style.width.%]="result()?.progress"
         ></div>
       </div>
     </div>
-  </div>
-
-  <!-- Footer with menu -->
-  <div
-    class="flex justify-end items-center px-4 py-2 bg-[#F9FAFB] border-t border-[#E5E7EB]"
-  >
-    <button [matMenuTriggerFor]="menu" class="cursor-pointer">
-      <app-svg
-        svgWidth="3rem"
-        svgHeight="3rem"
-        src="icons/general/option-icon.svg"
-      ></app-svg>
-    </button>
-    <mat-menu #menu="matMenu">
-      <button mat-menu-item (click)="viewResult()">View Result</button>
-      @if (result()?.isDraft) {
-        <button mat-menu-item (click)="deleteResult()" class="text-red-600">
-          Delete Result
-        </button>
-      }
-    </mat-menu>
   </div>
 </div>

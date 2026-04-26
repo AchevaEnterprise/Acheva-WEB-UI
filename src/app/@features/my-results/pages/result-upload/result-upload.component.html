@@ -1,177 +1,188 @@
-<!-- ANALTYICS -->
-<div
-  class="grid lg:grid-cols-[60%_1fr] md:grid-cols-2 sm:grid-cols-1 gap-4 p-4 border-[1px] border-neutral-300 rounded-[8px]"
->
-  <!-- FORM -->
-  <div [formGroup]="courseForm">
-    <div class="input-style-1 acheva-input w-full">
-      <p class="acva-para-2 fw-400 label-text">Course</p>
+<header class="mb-4 flex gap-4 justify-between">
+  <app-back-button />
 
-      <mat-form-field [style.width.%]="100" appearance="outline">
-        <input matInput type="text" placeholder="" formControlName="course" />
-      </mat-form-field>
-    </div>
+  <app-button
+    [label]="tableExpanded() ? 'Collapse Table' : 'Expand Table'"
+    class="btn-sm"
+    type="clear"
+    (clickEvent)="toggleTableView()"
+  />
+</header>
 
-    <div class="grid grid-cols-2 gap-4">
+@if (!tableExpanded()) {
+  <!-- ANALTYICS -->
+  <div
+    class="grid lg:grid-cols-[60%_1fr] md:grid-cols-2 sm:grid-cols-1 gap-4 p-4 border-[1px] border-neutral-300 rounded-[8px]"
+  >
+    <!-- FORM -->
+    <div [formGroup]="courseForm">
       <div class="input-style-1 acheva-input w-full">
-        <p class="acva-para-2 fw-400 label-text">Session</p>
+        <p class="acva-para-2 fw-400 label-text">Course</p>
 
         <mat-form-field [style.width.%]="100" appearance="outline">
-          <input
-            matInput
-            type="text"
-            placeholder=""
-            formControlName="session"
-          />
+          <input matInput type="text" placeholder="" formControlName="course" />
         </mat-form-field>
       </div>
 
-      <div class="input-style-1 acheva-input w-full">
-        <p class="acva-para-2 fw-400 label-text">Level</p>
+      <div class="grid grid-cols-2 gap-4">
+        <div class="input-style-1 acheva-input w-full">
+          <p class="acva-para-2 fw-400 label-text">Session</p>
 
-        <mat-form-field [style.width.%]="100" appearance="outline">
-          <input matInput type="text" placeholder="" formControlName="level" />
-        </mat-form-field>
+          <mat-form-field [style.width.%]="100" appearance="outline">
+            <input
+              matInput
+              type="text"
+              placeholder=""
+              formControlName="session"
+            />
+          </mat-form-field>
+        </div>
+
+        <div class="input-style-1 acheva-input w-full">
+          <p class="acva-para-2 fw-400 label-text">Level</p>
+
+          <mat-form-field [style.width.%]="100" appearance="outline">
+            <input
+              matInput
+              type="text"
+              placeholder=""
+              formControlName="level"
+            />
+          </mat-form-field>
+        </div>
       </div>
+
+      <header class="mt-4 mb-3">
+        <h4 class="acva-heading-6 fw-500">Student Category</h4>
+        <p class="acva-para-1 text-neutral-500">
+          Select which type of students this course will be available for.
+        </p>
+      </header>
+
+      <!-- STUDENT CATEGORY -->
+      <mat-radio-group
+        formControlName="category"
+        aria-label="Select Student Category"
+        class="grid gap-2 lg:grid-cols-3 md:grid-cols-2 lg:grid-cols-1"
+      >
+        <div
+          class="flex items-start border-[1px] border-neutral-300 p-4 rounded-[8px]"
+        >
+          <mat-radio-button value="REGULAR"> </mat-radio-button>
+          <div>
+            <h4 class="fw-400 acva-para-1">Regular Students</h4>
+            <p class="acva-caption text-neutral-500">
+              Students taking the course for the first time
+            </p>
+          </div>
+        </div>
+
+        <div
+          class="flex items-start border-[1px] border-neutral-300 p-4 rounded-[8px]"
+        >
+          <mat-radio-button value="REFERENCE"></mat-radio-button>
+          <div>
+            <h4 class="fw-400 acva-para-1">Reference Students</h4>
+            <p class="acva-caption text-neutral-500">
+              Students retaking the course
+            </p>
+          </div>
+        </div>
+
+        <div
+          class="flex items-start border-[1px] border-neutral-300 p-4 rounded-[8px]"
+        >
+          <mat-radio-button value="UNREGISTERED"></mat-radio-button>
+          <div>
+            <h4 class="fw-400 acva-para-1">Unregistered Students</h4>
+            <p class="acva-caption text-neutral-500">
+              Students not officially registered for the course
+            </p>
+          </div>
+        </div>
+      </mat-radio-group>
     </div>
 
-    <header class="mt-4 mb-3">
-      <h4 class="acva-heading-6 fw-500">Student Category</h4>
-      <p class="acva-para-1 text-neutral-500">
-        Select which type of students this course will be available for.
-      </p>
-    </header>
-
-    <!-- STUDENT CATEGORY -->
-    <mat-radio-group
-      formControlName="category"
-      aria-label="Select Student Category"
-      class="grid gap-2 lg:grid-cols-3 md:grid-cols-2 lg:grid-cols-1"
+    <app-card
+      label="Result Analtyics"
+      [showDivider]="true"
+      dividerClass="!mt-4"
     >
-      <div
-        class="flex items-start border-[1px] border-neutral-300 p-4 rounded-[8px]"
-      >
-        <mat-radio-button value="regular"> </mat-radio-button>
-        <div>
-          <h4 class="fw-400 acva-para-1">Regular Students</h4>
-          <p class="acva-caption text-neutral-500">
-            Students taking the course for the first time
-          </p>
-        </div>
-      </div>
+      <p rightHeaderContent class="acva-para-1 text-neutral-500">
+        Average Grade
+        <span class="text-neutral-800"
+          >{{ averageTotal().toFixed(2) || '0.0' }}%</span
+        >
+      </p>
 
-      <div
-        class="flex items-start border-[1px] border-neutral-300 p-4 rounded-[8px]"
-      >
-        <mat-radio-button value="reference"></mat-radio-button>
-        <div>
-          <h4 class="fw-400 acva-para-1">Reference Students</h4>
-          <p class="acva-caption text-neutral-500">
-            Students retaking the course
-          </p>
-        </div>
-      </div>
+      <div content>
+        <app-analytics-chart [data]="analyticsChartData()" />
 
-      <div
-        class="flex items-start border-[1px] border-neutral-300 p-4 rounded-[8px]"
-      >
-        <mat-radio-button value="unregistered"></mat-radio-button>
-        <div>
-          <h4 class="fw-400 acva-para-1">Unregistered Students</h4>
-          <p class="acva-caption text-neutral-500">
-            Students not officially registered for the course
+        <div class="leading-[1.5rem] acva-caption text text-neutral-500 p-4">
+          <p class="flex items-center gap-2 w-full">
+            <span class="w-[15%] font-medium">Total Students:</span>
+            <span>{{ totalStudent() || 0 }}</span>
+          </p>
+          <p class="flex items-center gap-2 w-full">
+            <span class="w-[15%] font-medium">Total Pass:</span>
+            <span>{{ totalStudentPass() || 0 }}</span>
+          </p>
+          <p class="flex items-center gap-2 w-full">
+            <span class="w-[15%] font-medium">Total Fail:</span>
+            <span>{{ totalStudentFail() || 0 }}</span>
           </p>
         </div>
       </div>
-    </mat-radio-group>
+    </app-card>
   </div>
 
-  <app-card label="Course Analtyics" [showDivider]="true" dividerClass="!mt-4">
-    <p rightHeaderContent class="acva-para-1 text-neutral-500">
-      Average Grade <span class="text-neutral-800">0.0%</span>
-    </p>
-
-    <div content>
-      <app-analytics-chart [data]="analyticsChartData()" />
-
-      <div class="leading-[1.3rem] acva-caption text text-neutral-500 p-4">
-        <p class="flex items-center gap-4 w-full">
-          <span class="w-[20%]">Total Students</span>
-          <mat-divider class="w-full"></mat-divider>
-          <span>{{ totalStudent() || 0 }}</span>
-        </p>
-        <p class="flex items-center gap-4 w-full">
-          <span class="w-[20%]">Total Pass</span>
-          <mat-divider class="w-full"></mat-divider>
-          <span>{{ totalStudentPass() || 0 }}</span>
-        </p>
-        <p class="flex items-center gap-4 w-full">
-          <span class="w-[20%]">Total Fail</span>
-          <mat-divider class="w-full"></mat-divider>
-          <span>{{ totalStudentFail() || 0 }}</span>
-        </p>
-      </div>
-    </div>
-  </app-card>
-</div>
-
-<mat-divider class="!my-4"></mat-divider>
+  <mat-divider class="!my-4"></mat-divider>
+}
 
 <!-- STUDENT GRADE TABLE -->
 <div>
-  <header class="mt-4 mb-3">
-    <div class="flex items-center gap-3">
-      <h4 class="acva-heading-6 fw-500">Student Grade</h4>
-      @if (isDraftMode()) {
-        <span
-          class="px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded-full"
-        >
-          Draft Mode - Auto-saving...
-        </span>
-      }
-      @if (hasUnsavedChanges()) {
-        <span
-          class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full"
-        >
-          Unsaved Changes
-        </span>
-      }
-    </div>
-  </header>
+  <h4 class="acva-heading-6 fw-500 mt-4 mb-3">Student Grade</h4>
 
-  <div class="flex gap-3 items-center justify-between">
-    <app-search-input placeholder="Search students" (searchEvent)="onStudentSearch($event)" />
+  <div class="flex gap-3 items-start justify-between">
+    <app-search-input
+      placeholder="Search students"
+      (searchEvent)="onStudentSearch($event)"
+    />
 
     <div class="flex flex-wrap justify-end gap-3 items-center">
-            <app-button
+      <app-button
         label="Save Changes"
         icon="icons/general/save-btn-icon.svg"
         class="btn-md"
+        [disabled]="!resultEntryCompleted()"
         (clickEvent)="saveChanges()"
-        [class.opacity-50]="!canSaveChanges()"
+        *appRoleAccess="[RoleEnum.LECTURER]"
       />
 
       <app-button
-        label="Upload Results"
-        type="outline"
+        *appRoleAccess="[RoleEnum.COURSE_ADVISOR]"
+        label="Publish"
         class="btn-md"
-        [loading]="uploadingResult()"
-        (clickEvent)="uploadResult()"
+        [loading]="publishing()"
+        (clickEvent)="confirmPublish()"
       />
-      <app-button
-        label="Delete File"
-        type="clear"
-        icon="icons/general/trash-icon.svg"
-        class="btn-md"
-        [disabled]="!canDeleteEntries()"
-        [loading]="deletingEntries()"
-        (clickEvent)="deleteFile()"
-        [class.opacity-50]="!canDeleteEntries()"
-      />
+
+      @if (!isUploaded()) {
+        <app-button
+          [label]="
+            userRole === RoleEnum.LECTURER ? 'Upload Results' : 'Import Results'
+          "
+          type="outline"
+          class="btn-md"
+          [loading]="uploading()"
+          (clickEvent)="uploadResultDocument()"
+          *appRoleAccess="[RoleEnum.LECTURER, RoleEnum.COURSE_ADVISOR]"
+        />
+      }
     </div>
   </div>
 
-  <div class="flex items-center justify-between mt-4">
+  <div class="flex flex-wrap items-center justify-between mt-4">
     <app-segment-switcher
       [activeSegment]="activeSegment()"
       [segments]="segments()"
@@ -189,30 +200,30 @@
   <div class="mt-4">
     @switch (activeSegment().value) {
       @case ('REGULAR') {
-        <app-reference-table-result-upload
+        <app-regular-table-result-upload
           #regularTableResultUploadRef
+          [refreshTable]="isUploaded()"
           [students]="students()['REGULAR']"
-          [resultId]="resultId || ''"
-          [segment]="'REGULAR'"
-          (tableUpdateEvent)="onTableDataChanged($event)"
+          (hasChangesEvent)="updateChanges($event)"
+          (uploadResultEvent)="uploadBulkResult($event)"
         />
       }
       @case ('REFERENCE') {
         <app-reference-table-result-upload
           #referenceTableResultUploadRef
+          [refreshTable]="isUploaded()"
           [students]="students()['REFERENCE']"
-          [resultId]="resultId || ''"
-          [segment]="'REFERENCE'"
-          (tableUpdateEvent)="onTableDataChanged($event)"
+          (hasChangesEvent)="updateChanges($event)"
+          (uploadResultEvent)="uploadBulkResult($event)"
         />
       }
       @case ('UNREGISTERED') {
-        <app-reference-table-result-upload
+        <app-unregistered-table-result-upload
           #unregisteredTableResultUploadRef
+          [refreshTable]="isUploaded()"
           [students]="students()['UNREGISTERED']"
-          [resultId]="resultId || ''"
-          [segment]="'UNREGISTERED'"
-          (tableUpdateEvent)="onTableDataChanged($event)"
+          (hasChangesEvent)="updateChanges($event)"
+          (uploadResultEvent)="uploadBulkResult($event)"
         />
       }
     }

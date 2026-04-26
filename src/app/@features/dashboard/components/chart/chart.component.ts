@@ -1,88 +1,81 @@
-import { Component } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
+import * as Highcharts from 'highcharts';
 import { HighchartsChartComponent } from 'highcharts-angular';
 
 @Component({
   selector: 'app-chart',
+  standalone: true,
   imports: [HighchartsChartComponent],
   templateUrl: './chart.component.html',
   styleUrl: './chart.component.scss',
 })
 export class ChartComponent {
-  chartOptions: Highcharts.Options = {
-    chart: {
-      type: 'area',
-      backgroundColor: 'transparent',
-    },
-    accessibility: {
-      enabled: false,
-    },
-    title: undefined,
-    yAxis: {
+  Highcharts: typeof Highcharts = Highcharts;
+
+  chart = input<{ courseCode: string; passRate: number; failRate: number }[]>(
+    []
+  );
+
+  updateFlag = false;
+
+  chartOptions = computed<Highcharts.Options>(() => {
+    const data = this.chart();
+    this.updateFlag = true;
+
+    return {
+      chart: {
+        type: 'column',
+        backgroundColor: 'transparent',
+      },
+
       title: undefined,
-      labels: {
-        format: '{value}%',
+
+      xAxis: {
+        categories: data.map((d) => d.courseCode),
+        crosshair: true,
       },
-    },
-    xAxis: {
-      categories: [
-        'CSC 101',
-        'CSC 102',
-        'CSC 103',
-        'CSC 104',
-        'CSC 105',
-        'CSC 106',
-        'CSC 107',
-        'CSC 108',
-        'CSC 109',
-        'CSC 110',
+
+      yAxis: {
+        min: 0,
+        max: 100,
+        title: { text: 'Percentage (%)' },
+        labels: {
+          format: '{value}%',
+        },
+      },
+
+      tooltip: {
+        shared: true,
+        valueSuffix: '%',
+      },
+
+      plotOptions: {
+        column: {
+          grouping: true,
+          borderWidth: 0,
+        },
+      },
+
+      credits: {
+        enabled: false,
+      },
+
+      accessibility: {
+        enabled: false,
+      },
+
+      series: [
+        {
+          type: 'column',
+          name: 'Pass Rate',
+          data: data.map((d) => Number(d.passRate.toFixed(2))),
+        },
+        {
+          type: 'column',
+          name: 'Fail Rate',
+          data: data.map((d) => Number(d.failRate.toFixed(2))),
+        },
       ],
-      lineWidth: 0,
-    },
-    tooltip: {
-      pointFormat:
-        '<span style="color:{series.color}">{series.name}</span>' +
-        ': <b>{point.percentage:.1f}%</b>',
-      split: true,
-    },
-    plotOptions: {
-      series: {
-        pointPlacement: 'on',
-        label: {
-          style: {
-            fontSize: '1.4em',
-            opacity: 0.4,
-          },
-        },
-      },
-      area: {
-        stacking: 'percent',
-        marker: {
-          enabled: true,
-        },
-      },
-    },
-    credits: {
-      enabled: false,
-    },
-    series: [
-      {
-        type: 'area',
-        name: 'Attendance Rate',
-        color: '#A0CDFF',
-        data: [20, 30, 50, 73, 50],
-      },
-      {
-        type: 'area',
-        name: 'Pass Rate',
-        color: '#0D5ADA',
-        data: [30, 40, 100, 64, 10],
-      },
-      {
-        type: 'area',
-        name: 'Fail Rate',
-        color: '#8FAFFF',
-        data: [50, 30, 73, 38, 70],
-      },
-    ],
-  };
+    };
+  });
 }

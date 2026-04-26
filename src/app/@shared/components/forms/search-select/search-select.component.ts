@@ -12,7 +12,12 @@ import { debounceTime, distinctUntilChanged, filter } from 'rxjs';
 
 @Component({
   selector: 'app-search-select',
-  imports: [MatFormFieldModule, MatSelectModule, NgxMatSelectSearchModule, ReactiveFormsModule],
+  imports: [
+    MatFormFieldModule,
+    MatSelectModule,
+    NgxMatSelectSearchModule,
+    ReactiveFormsModule,
+  ],
   templateUrl: './search-select.component.html',
   styleUrl: './search-select.component.scss',
   providers: [
@@ -30,6 +35,7 @@ export class SearchSelectComponent implements ControlValueAccessor {
   options = input<{ label: string; value: any }[]>([]);
 
   searchEvent = output<string>();
+  selectEvent = output<unknown>();
 
   value = signal<string>('');
   searchCtrl: FormControl = new FormControl('');
@@ -48,6 +54,10 @@ export class SearchSelectComponent implements ControlValueAccessor {
       .subscribe({
         next: (val: string) => this.searchEvent.emit(val),
       });
+  }
+
+  selectOption(value: unknown) {
+    this.selectEvent.emit(value);
   }
 
   writeValue(obj: any): void {

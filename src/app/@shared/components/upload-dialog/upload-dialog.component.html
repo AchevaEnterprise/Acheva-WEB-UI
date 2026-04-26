@@ -1,0 +1,59 @@
+<h2 mat-dialog-title class="flex justify-between items-center">
+  {{ title || '' }}
+</h2>
+
+<mat-dialog-content>
+  <p>{{ description || '' }}</p>
+
+  <div
+    appDragDrop
+    (filesDropped)="onFilesDropped($event)"
+    (filesHovered)="isHovering = $event"
+    class="upload-box border-dashed border-[1px] border-blue-300 p-8 rounded-[10px] grid place-content-center gap-4 text-center mt-3"
+  >
+    <input
+      #filePicker
+      type="file"
+      class="hidden"
+      (change)="onFileSelected($event)"
+      accept=".csv, .xls, .xlsx, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    />
+
+    <app-svg [src]="'icons/general/result-upload-icon.svg'" />
+
+    <p>Drag and drop your file here</p>
+    <span>OR</span>
+
+    <app-button
+      [icon]="
+        file()
+          ? 'icons/general/replace-file-icon.svg'
+          : 'icons/general/browse-file-search-icon.svg'
+      "
+      [label]="file() ? 'Replace file' : 'Browse files'"
+      type="outline"
+      class="btn-md"
+      (clickEvent)="filePicker.click()"
+    />
+  </div>
+
+  @if (file()) {
+    <div
+      class="flex items-center justify-between gap-3 mt-3 border-[1px] border-neutral-300 rounded-[10px] p-3"
+    >
+      <div class="flex gap-3 items-center">
+        <app-svg [src]="'icons/general/file-select-icon.svg'" />
+        <p>{{ file()?.name }}</p>
+      </div>
+
+      <button (click)="removeFile()">
+        <app-svg [src]="'icons/general/close-icon.svg'" />
+      </button>
+    </div>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions class="gap-4">
+  <app-button label="Cancel" type="outline" (clickEvent)="cancel()" />
+  <app-button label="Confirm" (clickEvent)="confirm()" />
+</mat-dialog-actions>

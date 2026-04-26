@@ -1,9 +1,10 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import {
   MAT_DIALOG_DATA,
   MatDialogModule,
   MatDialogRef,
 } from '@angular/material/dialog';
+import { finalize } from 'rxjs';
 import { ToastService } from '../../../@core/utility/toast.service';
 import { CoursesService } from '../../../@features/courses/services/courses.service';
 import { AssignCourseCoordinatorComponent } from '../assign-course-coordinator/assign-course-coordinator.component';
@@ -27,15 +28,20 @@ export class UnassignCourseCordinatorComponent {
     lecturerId: string;
   }>(MAT_DIALOG_DATA);
 
+  loading = signal(false);
+
   cancel() {
     this.dialogRef.close();
   }
 
   unAssign() {
+    this.loading.set(true);
+
     const lecturerId = this.data.lecturerId;
     const courseId = this.data.courseId;
     this.courseService
       .unassignCourseFromLecturer(courseId, lecturerId)
+      .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: (res) => {
           if (!res.status) {

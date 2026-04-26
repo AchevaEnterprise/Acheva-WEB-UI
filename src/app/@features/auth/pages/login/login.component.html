@@ -37,6 +37,7 @@
               type="text"
               placeholder=""
               formControlName="email"
+              #inputRef
             />
 
             <span matPrefix mat-icon-button>
@@ -57,6 +58,7 @@
               matInput
               [type]="showPassword() ? 'text' : 'password'"
               formControlName="password"
+              #inputRef
             />
 
             <span matPrefix>

@@ -1,0 +1,51 @@
+<div mat-dialog-title>
+  <h2 class="flex justify-between items-center">{{ data.title }}<br /></h2>
+  <p class="acva-caption">
+    Please provide the details of your issue and select its current status.
+  </p>
+</div>
+
+<mat-dialog-content [formGroup]="form">
+  <mat-divider class="!mb-4" />
+
+  <p class="fw-500 acva-para-1">Issue Status</p>
+  <p class="acva-caption mb-3">
+    Select whether this issue has been resolved or is still pending resolution.
+  </p>
+  <mat-radio-group
+    formControlName="issueStatus"
+    aria-label="Select Issue Status"
+    class="grid gap-2 lg:grid-cols-2 md:grid-cols-2 sm:grid-cols-1 mb-3"
+  >
+    <div
+      class="flex items-start border-[1px] border-neutral-300 p-4 rounded-[8px]"
+    >
+      <mat-radio-button value="RESOLVED"> </mat-radio-button>
+      <div>
+        <h4 class="fw-500 acva-para-1">Resolved</h4>
+        <p class="acva-caption text-neutral-500">
+          The issue has been fixed or addressed
+        </p>
+      </div>
+    </div>
+
+    <div
+      class="flex items-start border-[1px] border-neutral-300 p-4 rounded-[8px]"
+    >
+      <mat-radio-button value="UNRESOLVED"></mat-radio-button>
+      <div>
+        <h4 class="fw-500 acva-para-1">Unresolved</h4>
+        <p class="acva-caption text-neutral-500">
+          The issue is still pending resolution
+        </p>
+      </div>
+    </div>
+  </mat-radio-group>
+
+  <app-comment [resultId]="data.resultId" formControlName="comment" />
+</mat-dialog-content>
+
+<mat-dialog-actions class="gap-4">
+  <app-button label="Cancel" type="outline" (clickEvent)="cancel()" />
+  <app-button label="Submit" (clickEvent)="confrim()" />
+</mat-dialog-actions>

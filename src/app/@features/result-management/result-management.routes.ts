@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { PendingChangesGuard } from '../../@core/guards/pending-changes.guard';
 
 export const routes: Routes = [
   {
@@ -12,17 +13,24 @@ export const routes: Routes = [
       ),
   },
   {
-    path: 'verify-result',
+    path: 'view-results',
     data: {
       title: 'Result Management',
-      breadcrumbs: [
-        { label: 'My Results', link: '/my-result' },
-        { label: 'Results Upload' }
-      ]
     },
     loadComponent: () =>
-      import(
-        './pages/approve-reject-result/approve-reject-result.component'
-      ).then((m) => m.ApproveRejectResultComponent),
+      import('./pages/view-results/view-results.component').then(
+        (m) => m.ViewResultsComponent
+      ),
+  },
+  {
+    path: 'edit-results',
+    data: {
+      title: 'Result Management',
+    },
+    canDeactivate: [PendingChangesGuard],
+    loadComponent: () =>
+      import('./pages/edit-results/edit-results.component').then(
+        (m) => m.EditResultsComponent
+      ),
   },
 ];

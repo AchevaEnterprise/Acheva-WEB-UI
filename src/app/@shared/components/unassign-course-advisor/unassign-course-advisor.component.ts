@@ -4,6 +4,7 @@ import {
   MatDialogModule,
   MatDialogRef,
 } from '@angular/material/dialog';
+import { LevelsEnum } from '../../../@core/models/school.model';
 import { ToastService } from '../../../@core/utility/toast.service';
 import { LecturersService } from '../../../@features/user-settings/service/lecturer.service';
 import { ButtonComponent } from '../forms/button/button.component';
@@ -23,6 +24,8 @@ export class UnassignCourseAdvisorComponent {
   );
   readonly data = inject<{
     lecturerId: string;
+    assignedLevel: LevelsEnum;
+    assignedLevelAdmissionYear: string;
   }>(MAT_DIALOG_DATA);
 
   cancel() {
@@ -30,27 +33,25 @@ export class UnassignCourseAdvisorComponent {
   }
 
   unAssign() {
-    const lecturerId = this.data.lecturerId;
-    this.lecturerService
-      .assignOrUnassignCourseAdvisor(lecturerId, 'NONE')
-      .subscribe({
-        next: (resp) => {
-          if (!resp.status) {
-            this.toast.showNotification(
-              'error',
-              'Error Unassigning Role',
-              'Failed to unassign role from lecturer.'
-            );
-            return;
-          }
-
+    const { lecturerId } = this.data;
+    this.lecturerService.unassignCourseAdvisor(lecturerId).subscribe({
+      next: (resp) => {
+        if (!resp.status) {
           this.toast.showNotification(
-            'success',
-            'Role Unassigned',
-            'The role has been successfully unassigned from the lecturer.'
+            'error',
+            'Error Unassigning Role',
+            'Failed to unassign role from lecturer.'
           );
-          this.dialogRef.close(resp);
-        },
-      });
+          return;
+        }
+
+        this.toast.showNotification(
+          'success',
+          'Role Unassigned',
+          'The role has been successfully unassigned from the lecturer.'
+        );
+        this.dialogRef.close(resp);
+      },
+    });
   }
 }

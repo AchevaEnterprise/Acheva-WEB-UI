@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { PendingChangesGuard } from '../../@core/guards/pending-changes.guard';
 
 export const routes: Routes = [
   {
@@ -16,19 +17,10 @@ export const routes: Routes = [
     data: {
       title: 'Upload Result',
     },
+    canDeactivate: [PendingChangesGuard],
     loadComponent: () =>
       import('./pages/result-upload/result-upload.component').then(
         (m) => m.ResultUploadComponent
-      ),
-  },
-  {
-    path: 'course-coordinator-results',
-    data: {
-      title: 'Course Coordinator Results View',
-    },
-    loadComponent: () =>
-      import('./pages/course-coordinator-results/course-coordinator-results.component').then(
-        (m) => m.CourseCoordinatorResultsComponent
       ),
   },
 ];

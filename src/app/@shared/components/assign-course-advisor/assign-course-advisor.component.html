@@ -1,15 +1,29 @@
 <h2 mat-dialog-title>Assign Course Advisor</h2>
 
-<mat-dialog-content>
+<mat-dialog-content [formGroup]="form">
   <p class="acva-caption mb-8">
     Assign <strong>{{ data.lecturer }}</strong> the Course Advisor role.
   </p>
 
   <div class="input-style-1 acheva-input w-full">
+    <p class="acva-para-2 fw-400 label-text">Admission Year</p>
+    <mat-form-field [style.width.%]="100" appearance="outline">
+      <mat-select
+        placeholder="Select admission year"
+        formControlName="admissionYear"
+      >
+        @for (admissionYear of admissionYearOptions(); track $index) {
+          <mat-option [value]="admissionYear">{{ admissionYear }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  <div class="input-style-1 acheva-input w-full">
     <p class="acva-para-2 fw-400 label-text">Level</p>
 
     <mat-form-field [style.width.%]="100" appearance="outline">
-      <mat-select placeholder="Select level" [formControl]="levelCtrl">
+      <mat-select placeholder="Select level" formControlName="level">
         @for (level of levelOptions(); track $index) {
           <mat-option [value]="level.value">{{ level.label }}</mat-option>
         }
@@ -20,5 +34,9 @@
 
 <mat-dialog-actions class="gap-4">
   <app-button label="Cancel" type="outline" (clickEvent)="cancel()" />
-  <app-button label="Assign" (clickEvent)="assign()" />
+  <app-button
+    [disabled]="form.invalid"
+    label="Assign"
+    (clickEvent)="assign()"
+  />
 </mat-dialog-actions>

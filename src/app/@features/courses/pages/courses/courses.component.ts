@@ -1,17 +1,18 @@
 import { AsyncPipe, NgIf } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { MatDivider } from '@angular/material/divider';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import {
+  BehaviorSubject,
+  debounceTime,
+  distinctUntilChanged,
   finalize,
   map,
   Observable,
-  BehaviorSubject,
-  switchMap,
-  debounceTime,
-  distinctUntilChanged,
   of,
+  switchMap,
 } from 'rxjs';
+import { LevelsEnum } from '../../../../@core/models/school.model';
 import { CardComponent } from '../../../../@shared/components/card/card.component';
 import { EmptyStateComponent } from '../../../../@shared/components/empty-state/empty-state.component';
 import { SearchInputComponent } from '../../../../@shared/components/forms/search-input/search-input.component';
@@ -22,7 +23,6 @@ import { AuthenticationService } from '../../../auth/service/auth.service';
 import { CourseCardComponent } from '../../components/course-card/course-card.component';
 import { ICourse, ICourseTemplate } from '../../models/course.model';
 import { CoursesService } from '../../services/courses.service';
-import { LevelsEnum } from '../../../../@core/models/school.model';
 
 @Component({
   selector: 'app-courses',
@@ -33,7 +33,6 @@ import { LevelsEnum } from '../../../../@core/models/school.model';
     EmptyStateComponent,
     MatDivider,
     CourseCardComponent,
-    RouterLink,
     LoaderComponent,
     AsyncPipe,
     NgIf,
@@ -67,19 +66,19 @@ export class CoursesComponent {
   recentCourses$: Observable<ICourse[]> = this.courseService
     .getRecentCourses()
     .pipe(
-      map((resp) => resp.data),
+      map((resp) => resp.data?.slice(0, 4)),
       finalize(() => this.isloadingRecentCourses.set(false))
     );
 
   isloadingCourses = signal(true);
   courses$: Observable<ICourse[]> = this.courseService.getCourses().pipe(
-    map((resp) => resp.data.courses),
+    map((resp) => resp.data['courses']),
     finalize(() => this.isloadingCourses.set(false))
   );
 
   // Search stream
   searchResults$ = this.searchSubject.pipe(
-    debounceTime(300),
+    debounceTime(800),
     distinctUntilChanged(),
     switchMap((query) => {
       if (!query.trim()) {
@@ -95,12 +94,12 @@ export class CoursesComponent {
       const courseCodeParams = {
         courseCode: query.trim(),
         courseTitle: '',
-        level: LevelsEnum.EXCEPTION,
+        // level: LevelsEnum.EXCEPTION,
       };
 
       return this.courseService.getCourses(courseCodeParams).pipe(
         switchMap((resp) => {
-          const courses: ICourse[] = resp.data?.courses || [];
+          const courses: ICourse[] = resp.data['courses'];
 
           if (courses.length > 0) {
             // Found results with course code search
@@ -115,9 +114,7 @@ export class CoursesComponent {
 
             return this.courseService
               .getCourses(courseTitleParams)
-              .pipe(
-                map((titleResp) => (titleResp.data?.courses as ICourse[]) || [])
-              );
+              .pipe(map((titleResp) => titleResp.data['courses'] || []));
           }
         }),
         finalize(() => this.isSearching.set(false))
@@ -171,14 +168,13 @@ export class CoursesComponent {
     this.showAllCourses.set(true);
     this.isLoadingAllCourses.set(true);
 
-    // Fetch all courses without any filters
+    // Fetch all courses without filters
     this.courseService.getCourses().subscribe({
       next: (resp) => {
-        this.allCourses.set(resp.data?.courses || []);
+        this.allCourses.set(resp.data['courses'] || []);
         this.isLoadingAllCourses.set(false);
       },
       error: (error) => {
-        console.error('Error fetching all courses:', error);
         this.isLoadingAllCourses.set(false);
       },
     });

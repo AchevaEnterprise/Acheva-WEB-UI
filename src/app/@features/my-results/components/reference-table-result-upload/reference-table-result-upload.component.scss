@@ -1,5 +1,25 @@
-.no-wrap {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis; /* optional: adds "..." if text is too long */
+:host {
+  .mat-column-registrationNumber {
+    width: 10%;
+  }
+
+  .mat-column-fullName {
+    width: 30%;
+  }
+
+  .mat-column-test,
+  .mat-column-lab,
+  .mat-column-exam,
+  .mat-column-total,
+  .mat-column-grade {
+    width: 10%;
+  }
+
+  ::ng-deep.mat-mdc-form-field-infix {
+    padding-inline: 1rem;
+  }
+
+  .edited {
+    background: #cde6f86e;
+  }
 }

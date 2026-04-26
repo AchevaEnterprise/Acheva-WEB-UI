@@ -1,0 +1,15 @@
+<h2 mat-dialog-title class="flex justify-between items-center">
+  Reject Result<br />
+</h2>
+
+<mat-dialog-content>
+  <p class="acva-caption mb-8">
+    Kindly drop a comment to guide the recipent on possible reasons why.
+  </p>
+  <app-comment [resultId]="data.resultId" [formControl]="commentCtrl" />
+</mat-dialog-content>
+
+<mat-dialog-actions class="gap-4">
+  <app-button label="Cancel" type="outline" (clickEvent)="cancel()" />
+  <app-button label="Confirm" (clickEvent)="confrim()" />
+</mat-dialog-actions>

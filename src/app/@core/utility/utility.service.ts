@@ -1,11 +1,22 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import * as FileSaver from 'file-saver';
 import * as XLSX from 'xlsx';
+import { IStudentGrade } from '../../@features/students/models/student.model';
 
 @Injectable({
   providedIn: 'root',
 })
 export class UtilityService {
+  loadingGlobal = signal<boolean>(false);
+
+  showLoader() {
+    this.loadingGlobal.set(true);
+  }
+
+  hideLoader() {
+    this.loadingGlobal.set(false);
+  }
+
   formatCount(count: number) {
     return count > 10 ? '10+' : count.toString();
   }
@@ -43,37 +54,71 @@ export class UtilityService {
     return sessions.reverse();
   }
 
-  convertExcelToJson(
+  generateAdmissionYear() {
+    const currentYear = new Date().getFullYear();
+    const startYear = 2000;
+    const admissionYear = [];
+
+    for (let year = startYear; year <= currentYear; year++) {
+      const session = `${year}`;
+      admissionYear.push(session);
+    }
+
+    return admissionYear.reverse();
+  }
+
+  convertExcelToJson<T = Record<string, unknown>>(
     file: File
-  ): Promise<{ columns: string[]; records: any[] }> {
+  ): Promise<{ columns: string[]; records: T[] }> {
     return new Promise((resolve, reject) => {
-      const reader: FileReader = new FileReader();
-      reader.onload = (e: ProgressEvent<FileReader>) => {
-        const data: string =
-          e.target && typeof e.target.result === 'string'
-            ? (e.target.result as string)
-            : '';
-        const workbook: XLSX.WorkBook = XLSX.read(data, {
-          type: 'binary',
-        });
+      const worker = new Worker(
+        new URL('../workers/excel.worker', import.meta.url)
+      );
 
-        // Read first sheet
-        const sheetName: string = workbook.SheetNames[0];
-        const worksheet: XLSX.WorkSheet = workbook.Sheets[sheetName];
-
-        // Convert to JSON
-        const jsonData: any[] = XLSX.utils.sheet_to_json(worksheet, {
-          raw: true,
-        });
-
-        if (jsonData.length > 0) {
-          const columns = Object.keys(jsonData[0]);
-          const records = jsonData;
-          resolve({ columns, records });
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const binary = e.target?.result;
+        if (typeof binary !== 'string') {
+          reject(new Error('Invalid file data'));
+          return;
         }
+
+        worker.postMessage({ binary });
       };
-      reader.onerror = (error) => reject(error);
+
       reader.readAsBinaryString(file);
+
+      worker.onmessage = ({ data }) => {
+        if (data.error) reject(data.error);
+        else resolve(data);
+        worker.terminate();
+      };
+
+      worker.onerror = (err) => {
+        reject(err.message);
+        worker.terminate();
+      };
+    });
+  }
+
+  cleanUpResult(results: IStudentGrade[]): Promise<IStudentGrade[]> {
+    return new Promise((resolve, reject) => {
+      const worker = new Worker(
+        new URL('../workers/result.worker', import.meta.url)
+      );
+
+      worker.postMessage(results);
+
+      worker.onmessage = ({ data }) => {
+        if (data.error) reject(data.error);
+        else resolve(data);
+        worker.terminate();
+      };
+
+      worker.onerror = (err) => {
+        reject(err.message);
+        worker.terminate();
+      };
     });
   }
 }

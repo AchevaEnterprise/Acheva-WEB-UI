@@ -2,7 +2,10 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { IAPIResponse } from '../../../@core/models/api-response.model';
+import {
+  IAPIPaginatedResponse,
+  IAPIResponse,
+} from '../../../@core/models/api-response.model';
 import { ICourse, ICourseQuery, ICreateCourse } from '../models/course.model';
 
 @Injectable({
@@ -12,13 +15,26 @@ export class CoursesService {
   private readonly http = inject(HttpClient);
   private readonly coursesUrl = `${environment.BASE_URL}/courses`;
 
-  getCourses(query?: ICourseQuery): Observable<IAPIResponse<any>> {
+  getCourses(
+    query?: Partial<ICourseQuery>
+  ): Observable<IAPIPaginatedResponse<ICourse[]>> {
     let params = new HttpParams();
-    params = params.append('courseCode', query?.courseCode || '');
-    params = params.append('courseTitle', query?.courseTitle || '');
-    params = params.append('level', query?.level || '');
 
-    return this.http.get<IAPIResponse<any>>(`${this.coursesUrl}`, { params });
+    if (query) {
+      if (query.courseCode)
+        params = params.append('courseCode', query.courseCode);
+      if (query.courseTitle)
+        params = params.append('courseTitle', query.courseTitle);
+      if (query.level) params = params.append('level', query.level);
+      if (query.semester) params = params.append('semester', query.semester);
+    }
+
+    return this.http.get<IAPIPaginatedResponse<ICourse[]>>(
+      `${this.coursesUrl}`,
+      {
+        params,
+      }
+    );
   }
 
   getCourse(courseId: string): Observable<IAPIResponse<ICourse>> {

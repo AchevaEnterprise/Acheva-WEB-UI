@@ -1,56 +1,96 @@
-<div class="rounded-[8px] bg-[#D9D9D94D] p-4">
-  <h3 class="acva-heading-5 fw-500 mb-8">Course Preview</h3>
+<div
+  class="rounded-[12px] border border-neutral-200 overflow-hidden bg-white w-full"
+>  <!-- Blue gradient header -->
+  <div
+    class="px-5 py-5 text-white relative flex flex-col gap-3"
+    style="
+      background: linear-gradient(135deg, #2793ff 0%, #134980 100%);
+    "
+  >
+    @if (courseCode()) {
+      <span
+        class="inline-flex items-center self-start px-2 py-1 rounded-[6px] bg-white/25 text-[0.75rem] fw-500 tracking-wide"
+      >
+        {{ courseCode() | uppercase }}
+      </span>
+    } @else {
+      <span
+        class="inline-flex items-center self-start px-3 py-1 rounded-[6px] bg-white/20 text-[0.75rem]"
+      >
+        —
+      </span>
+    }
 
-  <div class="mb-4">
-    <p class="acva-para-1 text-neutral-500">Session</p>
-    <p class="acva-para-2">{{ template()?.session ?? '-' }}</p>
+    <h3 class="acva-heading-5 fw-500 text-white leading-tight">
+      {{ (template()?.courseTitle || '—') | titlecase }}
+    </h3>
+
+    @if (dateLabel()) {
+      <p class="acva-caption text-white/80">{{ dateLabel() }}</p>
+    }
   </div>
-  <div class="mb-4">
-    <p class="acva-para-1 text-neutral-500">Semester</p>
-    <p class="acva-para-2">{{ template()?.semester ?? '-' | titlecase }}</p>
+
+  <!-- Meta rows -->
+  <div class="px-5 py-4 flex flex-col gap-3">
+    <div class="flex items-center justify-between">
+      <span class="acva-para-1 text-neutral-500">Course Coordinator</span>
+      <span class="acva-para-2 fw-500 text-neutral-800 text-right">
+        {{ template()?.courseCordinator || '—' | titlecase }}
+      </span>
+    </div>
+
+    <div class="flex items-center justify-between">
+      <span class="acva-para-1 text-neutral-500">Level</span>
+      <span class="acva-para-2 fw-500 text-neutral-800">
+        {{ levelLabel() || '—' }}
+      </span>
+    </div>
+
+    <div class="flex items-center justify-between">
+      <span class="acva-para-1 text-neutral-500">Course Load</span>
+      <span
+        class="inline-flex items-center px-2 py-1 rounded-[6px] bg-[#E7F1FF] text-[#2793FF] acva-caption fw-500"
+      >
+        {{ courseLoadLabel() }}
+      </span>
+    </div>
   </div>
-  <div class="mb-4">
-    <p class="acva-para-1 text-neutral-500">Level</p>
-    <p class="acva-para-2">{{ template()?.level ?? '-' }}</p>
+
+  <mat-divider class="!mx-5"></mat-divider>
+
+  <!-- Icon meta rows -->
+  <div class="px-5 py-4 flex flex-col gap-3">
+    <div class="flex items-center gap-2 text-neutral-600 acva-para-2">
+      <app-svg
+        svgWidth="1rem"
+        svgHeight="1rem"
+        src="icons/general/calendar-icon.svg"
+      />
+      <span>{{ template()?.session || '—' }} Session</span>
+    </div>
+
+    <div class="flex items-center gap-2 text-neutral-600 acva-para-2">
+      <app-svg
+        svgWidth="1rem"
+        svgHeight="1rem"
+        src="icons/general/building-icon.svg"
+      />
+      <span>
+        @if (template()?.department?.name) {
+          {{ template()?.department?.name | titlecase }} Department
+        } @else {
+          —
+        }
+      </span>
+    </div>
+
+    <div class="flex items-center gap-2 text-neutral-600 acva-para-2">
+      <app-svg
+        svgWidth="1rem"
+        svgHeight="1rem"
+        src="icons/general/faculty-icon.svg"
+      />
+      <span>{{ semesterLabel() || '—' }}</span>
+    </div>
   </div>
-  <div class="mb-4">
-    <p class="acva-para-1 text-neutral-500">Course Title</p>
-    <p class="acva-para-2">{{ template()?.courseTitle ?? '-' | titlecase }}</p>
-  </div>
-  <div class="mb-4">
-    <p class="acva-para-1 text-neutral-500">Course Code</p>
-    <p class="acva-para-2">{{ template()?.courseCode ?? '-' }}</p>
-  </div>
-  <div class="mb-4">
-    <p class="acva-para-1 text-neutral-500">Course Coordinator</p>
-    <p class="acva-para-2">
-      {{ template()?.courseCordinator ?? '-' | titlecase }}
-    </p>
-  </div>
-  <div class="mb-4">
-    <p class="acva-para-1 text-neutral-500">School</p>
-    <p class="acva-para-2">{{ template()?.school?.name ?? '-' | titlecase }}</p>
-  </div>
-  <div class="mb-4">
-    <p class="acva-para-1 text-neutral-500">Faculty</p>
-    <p class="acva-para-2">
-      {{ template()?.faculty?.name ?? '-' | titlecase }}
-    </p>
-  </div>
-  <div class="mb-4">
-    <p class="acva-para-1 text-neutral-500">Department</p>
-    <p class="acva-para-2">
-      {{ template()?.department?.name ?? '-' | titlecase }}
-    </p>
-  </div>
-  <div class="mb-4">
-    <p class="acva-para-1 text-neutral-500">Course Load</p>
-    <p class="acva-para-2">{{ template()?.courseLoad ?? '-' }}</p>
-  </div>
-  <!-- <div class="mb-4">
-    <p class="acva-para-1 text-neutral-500">Date Created</p>
-    <p class="acva-para-2">
-      {{ template()?.createdAt | date: 'MMM d, YYYY h:mm a' }}
-    </p>
-  </div> -->
 </div>

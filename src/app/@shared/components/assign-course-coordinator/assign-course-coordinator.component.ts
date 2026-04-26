@@ -5,6 +5,7 @@ import {
   MatDialogModule,
   MatDialogRef,
 } from '@angular/material/dialog';
+import { finalize } from 'rxjs';
 import { ToastService } from '../../../@core/utility/toast.service';
 import { AuthenticationService } from '../../../@features/auth/service/auth.service';
 import { CoursesService } from '../../../@features/courses/services/courses.service';
@@ -38,12 +39,14 @@ export class AssignCourseCoordinatorComponent implements OnInit {
     courseCode: string;
   }>(MAT_DIALOG_DATA);
 
+  loading = signal(false);
+
   form = new FormGroup({
     lecturer: new FormControl(null),
   });
 
   lecturers = signal<{ label: string; value: string }[]>([]);
-  userDepartmentId = this.authService.activeAccount()?.department;
+  userDepartmentId = this.authService.activeAccount()?.department!._id;
 
   ngOnInit(): void {
     this.getLecturers();
@@ -116,25 +119,29 @@ export class AssignCourseCoordinatorComponent implements OnInit {
       return;
     }
 
-    this.courseService.assignCourseToLecturer(courseId, lecturerId).subscribe({
-      next: (res) => {
-        if (!res.status) {
-          this.toast.showNotification(
-            'error',
-            'Error Assigning Course',
-            'Failed to assign course to lecturer.'
-          );
-          return;
-        }
+    this.loading.set(true);
+    this.courseService
+      .assignCourseToLecturer(courseId, lecturerId)
+      .pipe(finalize(() => this.loading.set(false)))
+      .subscribe({
+        next: (res) => {
+          if (!res.status) {
+            this.toast.showNotification(
+              'error',
+              'Error Assigning Course',
+              'Failed to assign course to lecturer.'
+            );
+            return;
+          }
 
-        this.toast.showNotification(
-          'success',
-          'Course Assigned',
-          'The course has been successfully assigned to the lecturer.'
-        );
-        this.dialogRef.close(res);
-      },
-      error: (err) => {},
-    });
+          this.toast.showNotification(
+            'success',
+            'Course Assigned',
+            'The course has been successfully assigned to the lecturer.'
+          );
+          this.dialogRef.close(res);
+        },
+        error: (err) => {},
+      });
   }
 }

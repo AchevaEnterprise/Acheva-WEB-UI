@@ -1,43 +1,45 @@
-<div class="bg-white border-b border-[#E5E7EB] py-6">
-  <div class="flex items-center justify-between w-full gap-8">
+<div
+  class="bg-white border-b border-[#E5E7EB] p-4 rounded-lg mb-3 cursor-pointer"
+  [class.disabled]="result()!.hasBeenSent | resultDisabled"
+>
+  <div
+    class="flex items-center justify-between w-full gap-8"
+    (click)="viewResult()"
+    (keydown)="viewResult()"
+  >
     <!-- Course Title and Code -->
     <div class="flex-1 min-w-0 pr-4">
       <h5 class="acva-para-2 fw-500 text-[#111827] mb-1 truncate">
-        {{
-          result()?.isDraft
-            ? result()?.courseDetails?.courseTitle
-            : result()?.course?.courseTitle
-        }}
+        {{ result()?.course?.courseTitle }}
       </h5>
-      <p class="acva-caption text-[#6B7280] fw-400">CSC 101</p>
+      <p class="acva-caption text-[#6B7280] fw-400">
+        {{ result()?.course?.courseCode }}
+      </p>
     </div>
 
     <!-- Units -->
     <div class="text-center px-4">
       <p class="acva-para-1 fw-400 text-[#374151]">
-        {{
-          result()?.isDraft
-            ? result()?.courseDetails?.units
-            : result()?.course?.courseLoad
-        }}
-        Units
+        {{ result()?.course?.courseLoad }} Units
       </p>
     </div>
 
     <!-- Semester -->
     <div class="text-center px-4">
-      <p class="acva-para-1 fw-400 text-[#374151]">1st Semester</p>
+      <p class="acva-para-1 fw-400 text-[#374151]">
+        {{ result()?.course?.semester }}
+      </p>
     </div>
 
     <!-- Session -->
     <div class="text-center px-4">
-      <p class="acva-para-1 fw-400 text-[#374151]">2024/2025</p>
+      <p class="acva-para-1 fw-400 text-[#374151]">{{ result()?.session }}</p>
     </div>
 
     <!-- Students Count -->
     <div class="text-center px-4">
       <p class="acva-para-1 fw-400 text-[#374151]">
-        {{ result()?.isDraft ? result()?.studentCount || 67 : 67 }} Students
+        {{ result()?.students }} Students
       </p>
     </div>
 
@@ -47,35 +49,13 @@
         <div class="w-full bg-[#E5E7EB] rounded-full h-3">
           <div
             class="h-3 bg-[#2793FF] rounded-full transition-all duration-300"
-            [style.width.%]="
-              result()?.isDraft ? result()?.completionPercentage || 0 : 100
-            "
+            [style.width.%]="result()?.progress"
           ></div>
         </div>
       </div>
       <span class="acva-caption text-[#6B7280] whitespace-nowrap">
-        {{ result()?.isDraft ? result()?.completionPercentage || 0 : 100 }}%
-        done
+        {{ result()?.progress }}% done
       </span>
-    </div>
-
-    <!-- Menu -->
-    <div class="pl-4">
-      <button [matMenuTriggerFor]="menu" class="cursor-pointer">
-        <app-svg
-          svgWidth="3rem"
-          svgHeight="3rem"
-          src="icons/general/option-icon.svg"
-        ></app-svg>
-      </button>
-      <mat-menu #menu="matMenu">
-        <button mat-menu-item (click)="viewResult()">View Result</button>
-        @if (result()?.isDraft) {
-          <button mat-menu-item (click)="deleteResult()" class="text-red-600">
-            Delete Result
-          </button>
-        }
-      </mat-menu>
     </div>
   </div>
 </div>

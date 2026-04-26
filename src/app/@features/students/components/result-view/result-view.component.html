@@ -1,0 +1,62 @@
+<div class="bg-[#fff] p-4 my-8 w-full rounded-[12px]">
+  @if (loading()) {
+    <div class="min-h-[30vh] grid place-content-center">
+      <app-loader />
+    </div>
+  } @else {
+    @if (results().length > 0) {
+      <header class="text-center">
+        <h2 class="font-semibold text-[1.5rem]">
+          DEPARTMENT OF {{ resultData().department | uppercase }}
+        </h2>
+        <h4 class="font-medium text-[1rem]">
+          {{ resultData().faculty | uppercase }}
+        </h4>
+        <h5 class="font-medium text-[1rem]">
+          {{ resultData().school | uppercase }}
+        </h5>
+      </header>
+
+      <div class="mt-8 flex gap-4 justify-between mb-6 text-[.89rem]">
+        <p class="font-semibold">{{ resultData().fullName | uppercase }}</p>
+        <p>GPA: {{ (gpa() | number: '1.2-2') || 0.0 }}</p>
+        <p>{{ semester() }}</p>
+      </div>
+
+      <table class="w-full text-center">
+        <thead class="border-t-[1px] border-b-[1px] border-gray-400">
+          <tr>
+            <th>COURSE CODE</th>
+            <th>TEST</th>
+            <th>LAB</th>
+            <th>EXAM</th>
+            <th>TOTAL</th>
+            <th>FINAL GRADE</th>
+            <th>STATUS</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (result of results(); track result) {
+            <tr>
+              <td>{{ result.courseCode }}</td>
+              <td>{{ result.test }}</td>
+              <td>{{ result.lab }}</td>
+              <td>{{ result.exam }}</td>
+              <td>{{ result.total }}</td>
+              <td>{{ result.grade }}</td>
+              <td class="flex justify-center">
+                <app-status-badge [status]="result.status" />
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      <p class="font-medium mt-20">
+        Registration Number: {{ resultData().registrationNumber }}
+      </p>
+    } @else {
+      <app-empty-state />
+    }
+  }
+</div>

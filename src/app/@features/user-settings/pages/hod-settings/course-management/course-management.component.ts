@@ -1,14 +1,19 @@
 import { DatePipe } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
+import { MatSelectChange, MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
 import { ActivatedRoute, Router } from '@angular/router';
 import { finalize } from 'rxjs';
-import { LevelsEnum } from '../../../../../@core/models/school.model';
+import {
+  LevelsEnum,
+  SemesterEnum,
+} from '../../../../../@core/models/school.model';
 import { AssignCourseCoordinatorComponent } from '../../../../../@shared/components/assign-course-coordinator/assign-course-coordinator.component';
+import { BackButtonComponent } from '../../../../../@shared/components/back-button/back-button.component';
 import { EmptyStateComponent } from '../../../../../@shared/components/empty-state/empty-state.component';
 import { ButtonComponent } from '../../../../../@shared/components/forms/button/button.component';
 import { LoaderComponent } from '../../../../../@shared/components/loader/loader.component';
@@ -17,13 +22,14 @@ import {
   SegmentSwitcherComponent,
 } from '../../../../../@shared/components/segment-switcher/segment-switcher.component';
 import { SvgComponent } from '../../../../../@shared/components/svg/svg.component';
-import { ICourseQuery } from '../../../../courses/models/course.model';
-import { CoursesService } from '../../../../courses/services/courses.service';
 import { UnassignCourseCordinatorComponent } from '../../../../../@shared/components/unassign-course-cordinator/unassign-course-cordinator.component';
+import { ICourse, ICourseQuery } from '../../../../courses/models/course.model';
+import { CoursesService } from '../../../../courses/services/courses.service';
 
 @Component({
   selector: 'app-course-management',
   imports: [
+    FormsModule,
     SvgComponent,
     SegmentSwitcherComponent,
     MatTableModule,
@@ -34,6 +40,7 @@ import { UnassignCourseCordinatorComponent } from '../../../../../@shared/compon
     MatSelectModule,
     EmptyStateComponent,
     LoaderComponent,
+    BackButtonComponent,
   ],
   templateUrl: './course-management.component.html',
   styleUrl: './course-management.component.scss',
@@ -44,7 +51,6 @@ export class CourseManagementComponent implements OnInit {
   private readonly dialog = inject(MatDialog);
   private readonly courseService = inject(CoursesService);
 
-  // Segment options (100L, 200L, etc.)
   segments = signal<ISegmentSwitcher[]>([
     { label: '100L', value: LevelsEnum.YEAR_ONE },
     { label: '200L', value: LevelsEnum.YEAR_TWO },
@@ -53,8 +59,22 @@ export class CourseManagementComponent implements OnInit {
     { label: '500L', value: LevelsEnum.YEAR_FIVE },
     { label: '600L', value: LevelsEnum.YEAR_SIX },
   ]);
-
   activeSegment = signal<ISegmentSwitcher>(this.segments()[0]);
+
+  semesterOptions = signal<{ label: string; value: SemesterEnum }[]>([
+    {
+      label: '1st Semester',
+      value: SemesterEnum.FIRST,
+    },
+    {
+      label: '2nd Semester',
+      value: SemesterEnum.SECOND,
+    },
+    // {
+    //   label: '3rd Semester',
+    //   value: SemesterEnum.THIRD,
+    // },
+  ]);
 
   displayedColumns: string[] = [
     'courseTitle',
@@ -73,7 +93,20 @@ export class CourseManagementComponent implements OnInit {
     courseCode: '',
     courseTitle: '',
     level: this.activeSegment().value as LevelsEnum,
+    semester: '',
   };
+
+  constructor() {
+    this.route.queryParams.subscribe({
+      next: (params) => {
+        const level = params['level'] as LevelsEnum;
+        if (level) {
+          const segment = this.segments()?.find((seg) => seg.value === level);
+          if (segment) this.activeSegment.set(segment);
+        }
+      },
+    });
+  }
 
   ngOnInit(): void {
     this.getCourses();
@@ -87,14 +120,14 @@ export class CourseManagementComponent implements OnInit {
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: (resp) => {
-          if (resp?.data?.courses) {
+          if (resp?.data['courses']) {
             this.dataSource.set(
-              resp.data.courses
+              resp.data['courses']
                 .filter(
-                  (course: any) =>
+                  (course: ICourse) =>
                     course.level === this.activeSegment().label.replace('L', '')
                 )
-                .map((course: any) => ({
+                .map((course: ICourse) => ({
                   ...course,
                   courseCoordinator: course.assignedTo
                     ? `${course.assignedTo.firstname} ${course.assignedTo.lastname}`
@@ -117,6 +150,12 @@ export class CourseManagementComponent implements OnInit {
 
     // update filter.level and refetch
     this.filter.level = this.activeSegment().value as LevelsEnum;
+    this.getCourses();
+  }
+
+  filterBySemester(value: MatSelectChange) {
+    const semseter = value.value as SemesterEnum;
+    this.filter.semester = semseter;
     this.getCourses();
   }
 

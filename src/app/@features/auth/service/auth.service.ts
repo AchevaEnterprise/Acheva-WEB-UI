@@ -2,8 +2,9 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { JwtHelperService } from '@auth0/angular-jwt';
+import { Idle } from '@ng-idle/core';
 import { Store } from '@ngrx/store';
-import { Observable, of, tap } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { IAPIResponse } from '../../../@core/models/api-response.model';
 import { STORAGE_KEYS } from '../../../@core/models/storage.model';
@@ -16,6 +17,7 @@ import {
   ILogIn,
   IResetPassword,
   ISignUp,
+  RoleEnum,
 } from '../model/auth.model';
 
 @Injectable({
@@ -25,13 +27,14 @@ export class AuthenticationService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly store = inject(Store<AppState>);
+  private readonly idle = inject(Idle);
   private readonly jwtHelper: JwtHelperService = new JwtHelperService();
 
   private readonly authUrl = `${environment.BASE_URL}/auth`;
   private readonly baseUrl = `${environment.BASE_URL}`;
 
-  accounts = signal<IAccount[]>([]);
-  activeAccount = signal<IAccount | null>(null);
+  accounts = signal<Partial<IAccount>[]>([]);
+  activeAccount = signal<Partial<IAccount> | null>(null);
 
   setToken(token: string) {
     localStorage.setItem(STORAGE_KEYS.TOKEN, token);
@@ -63,22 +66,16 @@ export class AuthenticationService {
       >(`${this.authUrl}/lecturers/signin`, payload)
       .pipe(
         tap((resp) => {
-          const { accessToken, refreshToken } = resp.data;
+          const { accessToken, refreshToken, ...rest } = resp.data;
 
           this.setToken(accessToken);
           this.setRefreshToken(refreshToken);
 
           // Sets the signal state for the active account
-          this.activeAccount.set(resp.data);
+          this.activeAccount.set(rest);
           localStorage.setItem(
             STORAGE_KEYS.ACTIVE_ACCOUNT,
             JSON.stringify(this.activeAccount())
-          );
-
-          this.store.dispatch(
-            saveProfile({
-              profile: resp.data,
-            })
           );
         })
       );
@@ -93,20 +90,12 @@ export class AuthenticationService {
 
   public getProfile() {
     const userId = this.activeAccount()?.id;
-    if (!userId) {
-      return of({
-        status: false,
-        message: 'User ID not found',
-        data: null,
-      } as IAPIResponse<any>);
-    }
-
     return this.http
-      .get<IAPIResponse<any>>(`${this.baseUrl}/lecturers/${userId}`)
+      .get<IAPIResponse<IAuthProfile>>(`${this.baseUrl}/lecturers/${userId}`)
       .pipe(
         tap((resp) => {
           if (resp.status) {
-            this.activeAccount.set(resp.data as IAccount);
+            this.activeAccount.set(resp.data);
             localStorage.setItem(
               STORAGE_KEYS.ACTIVE_ACCOUNT,
               JSON.stringify(this.activeAccount())
@@ -134,22 +123,30 @@ export class AuthenticationService {
       >(`${this.authUrl}/lecturers/switch-account`, { accountId })
       .pipe(
         tap((res) => {
-          const { accessToken, refreshToken } = res.data;
+          if (res.status) {
+            const { accessToken, refreshToken, ...rest } = res.data;
 
-          this.setToken(accessToken);
-          this.setRefreshToken(refreshToken);
+            this.setToken(accessToken);
+            this.setRefreshToken(refreshToken);
 
-          // Sets the signal state for the active account
-          this.activeAccount.set(res.data);
-          localStorage.setItem(
-            STORAGE_KEYS.ACTIVE_ACCOUNT,
-            JSON.stringify(this.activeAccount())
-          );
+            // Sets the signal state for the active account
+            this.activeAccount.set(rest);
+            localStorage.setItem(
+              STORAGE_KEYS.ACTIVE_ACCOUNT,
+              JSON.stringify(this.activeAccount())
+            );
+
+            this.store.dispatch(
+              saveProfile({
+                profile: res.data,
+              })
+            );
+          }
         })
       );
   }
 
-  switchRole(role: string): Observable<IAPIResponse<any>> {
+  switchRole(role: RoleEnum): Observable<IAPIResponse<IAuthProfile>> {
     return this.http
       .patch<
         IAPIResponse<any>
@@ -157,30 +154,17 @@ export class AuthenticationService {
       .pipe(
         tap((res) => {
           if (res.status) {
-            this.activeAccount.set(res.data);
+            const { accessToken, ...rest } = res.data;
+            this.setToken(accessToken);
+
+            this.activeAccount.set(rest);
             localStorage.setItem(
               STORAGE_KEYS.ACTIVE_ACCOUNT,
               JSON.stringify(this.activeAccount())
             );
-            
-            // Navigate based on new role
-            this.navigateByRole(role);
           }
         })
       );
-  }
-
-  private navigateByRole(role: string) {
-    const roleRoutes: { [key: string]: string } = {
-      'Course Coordinator': '/course-coordinator',
-      'Course Advisor': '/course-advisor',
-      'Lecturer': '/lecturer',
-      'HOD': '/hod',
-      'Dean': '/dean'
-    };
-    
-    const route = roleRoutes[role] || '/dashboard';
-    this.router.navigate([route]);
   }
 
   forgotPassword(email: string): Observable<IAPIResponse<any>> {
@@ -209,10 +193,13 @@ export class AuthenticationService {
     );
   }
 
-  resetPassword(payload: IResetPassword): Observable<IAPIResponse<any>> {
+  resetPassword(
+    payload: IResetPassword,
+    accountId: string
+  ): Observable<IAPIResponse<any>> {
     return this.http.patch<IAPIResponse<any>>(
-      `${this.authUrl}/reset-password`,
-      { payload }
+      `${this.authUrl}/reset-password/${accountId}`,
+      payload
     );
   }
 
@@ -226,6 +213,9 @@ export class AuthenticationService {
   }
 
   logOut() {
+    this.idle.stop();
+    this.idle.clearInterrupts();
+
     localStorage.clear();
     this.router.navigate(['auth']);
   }

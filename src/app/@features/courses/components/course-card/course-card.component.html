@@ -2,8 +2,11 @@
   class="flex flex-col justify-between border border-gray-200 rounded-lg w-full min-h-[200px] p-4 bg-white shadow-sm hover:shadow-md transition-shadow"
 >
   <div class="flex-1">
-    <h4 class="text-lg font-semibold text-gray-900 mb-1 line-clamp-2">
-      {{ course()?.courseTitle }}
+    <h4
+      [matTooltip]="course()?.courseTitle | titlecase"
+      class="acva-heading-6 text-lg font-semibold text-gray-900 mb-1 line-clamp-1"
+    >
+      {{ course()?.courseTitle | titlecase }}
     </h4>
     <p class="text-gray-600 text-sm mb-4">
       {{ course()?.courseCode }} - {{ course()?.courseLoad }} Unit(s)
@@ -39,15 +42,11 @@
     </div>
   </div>
 
-  <div class="flex justify-end mt-4">
-    <button
-      class="text-xs font-medium py-1.5 px-3 rounded transition-colors duration-200"
-      style="background-color: #7bf; color: white"
-      (click)="createResult()"
-      onmouseover="this.style.backgroundColor='#f1f1f1'; this.style.color='#333';"
-      onmouseout="this.style.backgroundColor='#7bf'; this.style.color='white';"
-    >
-      Create Result
-    </button>
+  <div class="flex justify-end mt-8">
+    <app-button
+      label="Create Result"
+      (clickEvent)="createResult()"
+      class="btn-md"
+    />
   </div>
 </div>

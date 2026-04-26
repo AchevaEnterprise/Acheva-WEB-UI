@@ -1,6 +1,22 @@
 #container {
   display: grid;
-  place-content: center;
-  height: 100%;
+  place-items: center;
+  min-height: 30vh;
   width: 100%;
+
+  img {
+    transition: all 2s ease-in-out;
+    animation: pulse 2s ease-out infinite;
+  }
+
+  @keyframes pulse {
+    0%,
+    100% {
+      transform: scale(1);
+    }
+
+    50% {
+      transform: scale(1.2);
+    }
+  }
 }

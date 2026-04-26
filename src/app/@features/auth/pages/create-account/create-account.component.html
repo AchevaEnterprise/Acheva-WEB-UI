@@ -29,40 +29,6 @@
 
       <div class="form-wrap">
         <div class="input-style-1 acheva-input w-full">
-          <p class="acva-para-2 fw-400 label-text">Full Name</p>
-
-          <mat-form-field [style.width.%]="100" appearance="outline">
-            <input
-              matInput
-              type="text"
-              placeholder="First Name &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Middle Name &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Surname"
-              formControlName="fullname"
-            />
-          </mat-form-field>
-        </div>
-
-        <div class="input-style-1 acheva-input w-full">
-          <p class="acva-para-2 fw-400 label-text">School Email</p>
-
-          <mat-form-field [style.width.%]="100" appearance="outline">
-            <span matPrefix mat-icon-button>
-              <app-svg
-                svgWidth="1rem"
-                svgHeight="1rem"
-                src="icons/general/email-icon.svg"
-              ></app-svg>
-            </span>
-
-            <input
-              matInput
-              type="text"
-              placeholder="Enter your email address"
-              formControlName="email"
-            />
-          </mat-form-field>
-        </div>
-
-        <div class="input-style-1 acheva-input w-full">
           <p class="acva-para-2 fw-400 label-text">School</p>
 
           <mat-form-field [style.width.%]="100" appearance="outline">
@@ -87,57 +53,65 @@
         </div>
 
         <div class="input-style-1 acheva-input w-full">
-          <p class="acva-para-2 fw-400 label-text">Faculty</p>
+          <p class="acva-para-2 fw-400 label-text">Account Type</p>
 
           <mat-form-field [style.width.%]="100" appearance="outline">
             <span matPrefix mat-icon-button>
               <app-svg
                 svgWidth="1rem"
                 svgHeight="1rem"
-                src="icons/general/faculty-icon.svg"
+                src="icons/general/role-icon.svg"
               ></app-svg>
             </span>
 
             <mat-select
-              placeholder="Select your faculty"
-              formControlName="faculty"
-              (selectionChange)="getDepartments($event)"
+              placeholder="Select your account"
+              formControlName="role"
             >
-              @for (faculty of facultiesOptions(); track $index) {
-                <mat-option [value]="faculty._id">{{
-                  faculty.name
-                }}</mat-option>
+              @for (role of roleOptions(); track $index) {
+                <mat-option [value]="role.value">{{ role.label }}</mat-option>
               }
             </mat-select>
           </mat-form-field>
         </div>
+
+        @if (form.get('role')?.value === RoleEnum.LECTURER) {
+          <div class="input-style-1 acheva-input w-full">
+            <p class="acva-para-2 fw-400 label-text">Full Name</p>
+
+            <mat-form-field [style.width.%]="100" appearance="outline">
+              <input
+                matInput
+                type="text"
+                placeholder="First Name &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Middle Name &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Surname"
+                formControlName="fullname"
+              />
+            </mat-form-field>
+          </div>
+        }
 
         <div class="input-style-1 acheva-input w-full">
-          <p class="acva-para-2 fw-400 label-text">Department</p>
+          <p class="acva-para-2 fw-400 label-text">School Email</p>
 
           <mat-form-field [style.width.%]="100" appearance="outline">
             <span matPrefix mat-icon-button>
               <app-svg
                 svgWidth="1rem"
                 svgHeight="1rem"
-                src="icons/general/department-icon.svg"
+                src="icons/general/email-icon.svg"
               ></app-svg>
             </span>
 
-            <mat-select
-              placeholder="Select your department"
-              formControlName="department"
-            >
-              @for (department of departmentsOptions(); track $index) {
-                <mat-option [value]="department._id">{{
-                  department.name
-                }}</mat-option>
-              }
-            </mat-select>
+            <input
+              matInput
+              type="text"
+              placeholder="Enter your email address"
+              formControlName="email"
+            />
           </mat-form-field>
         </div>
 
-        <div class="grid grid-cols-2 gap-3 w-full">
+        @if (form.get('role')?.value === RoleEnum.LECTURER) {
           <div class="input-style-1 acheva-input w-full">
             <p class="acva-para-2 fw-400 label-text">Title</p>
 
@@ -162,29 +136,70 @@
               </mat-select>
             </mat-form-field>
           </div>
+        }
 
-          <div class="input-style-1 acheva-input w-full">
-            <p class="acva-para-2 fw-400 label-text">Account Type</p>
+        <div class="grid grid-cols-2 gap-3 w-full">
+          @if (
+            form.get('role')?.value === RoleEnum.LECTURER ||
+            form.get('role')?.value === RoleEnum.HOD ||
+            form.get('role')?.value === RoleEnum.DEAN
+          ) {
+            <div class="input-style-1 acheva-input w-full">
+              <p class="acva-para-2 fw-400 label-text">Faculty</p>
 
-            <mat-form-field [style.width.%]="100" appearance="outline">
-              <span matPrefix mat-icon-button>
-                <app-svg
-                  svgWidth="1rem"
-                  svgHeight="1rem"
-                  src="icons/general/role-icon.svg"
-                ></app-svg>
-              </span>
+              <mat-form-field [style.width.%]="100" appearance="outline">
+                <span matPrefix mat-icon-button>
+                  <app-svg
+                    svgWidth="1rem"
+                    svgHeight="1rem"
+                    src="icons/general/faculty-icon.svg"
+                  ></app-svg>
+                </span>
 
-              <mat-select
-                placeholder="Select your account"
-                formControlName="role"
-              >
-                @for (role of roleOptions(); track $index) {
-                  <mat-option [value]="role.value">{{ role.label }}</mat-option>
-                }
-              </mat-select>
-            </mat-form-field>
-          </div>
+                <mat-select
+                  placeholder="Select your faculty"
+                  formControlName="faculty"
+                  (selectionChange)="getDepartments($event)"
+                >
+                  @for (faculty of facultiesOptions(); track $index) {
+                    <mat-option [value]="faculty._id">{{
+                      faculty.name
+                    }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            </div>
+          }
+
+          @if (
+            form.get('role')?.value === RoleEnum.LECTURER ||
+            form.get('role')?.value === RoleEnum.HOD
+          ) {
+            <div class="input-style-1 acheva-input w-full">
+              <p class="acva-para-2 fw-400 label-text">Department</p>
+
+              <mat-form-field [style.width.%]="100" appearance="outline">
+                <span matPrefix mat-icon-button>
+                  <app-svg
+                    svgWidth="1rem"
+                    svgHeight="1rem"
+                    src="icons/general/department-icon.svg"
+                  ></app-svg>
+                </span>
+
+                <mat-select
+                  placeholder="Select your department"
+                  formControlName="department"
+                >
+                  @for (department of departmentsOptions(); track $index) {
+                    <mat-option [value]="department._id">{{
+                      department.name
+                    }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            </div>
+          }
         </div>
 
         <div class="input-style-1 acheva-input w-full">

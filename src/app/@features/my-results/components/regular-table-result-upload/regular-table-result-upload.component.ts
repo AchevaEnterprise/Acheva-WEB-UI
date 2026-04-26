@@ -1,31 +1,79 @@
-import { CommonModule } from '@angular/common';
-import { Component, input, output, effect, untracked } from '@angular/core';
+import { TitleCasePipe } from '@angular/common';
+import {
+  Component,
+  DestroyRef,
+  effect,
+  inject,
+  input,
+  output,
+  signal,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import {
+  FormArray,
+  FormBuilder,
+  FormControl,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatTableModule } from '@angular/material/table';
+import { ActivatedRoute } from '@angular/router';
+import {
+  debounceTime,
+  finalize,
+  interval,
+  Subject,
+  switchMap,
+  take,
+  tap,
+} from 'rxjs';
+import { UtilityService } from '../../../../@core/utility/utility.service';
 import { EmptyStateComponent } from '../../../../@shared/components/empty-state/empty-state.component';
-import { PaginatorComponent } from '../../../../@shared/components/paginator/paginator.component';
 import { StatusBadgeComponent } from '../../../../@shared/components/status-badge/status-badge.component';
-import { IStudentGrade } from '../../../courses/models/student-grade.model';
+import { IStudentGrade } from '../../../students/models/student.model';
 
 @Component({
   selector: 'app-regular-table-result-upload',
   imports: [
-    CommonModule,
-    PaginatorComponent,
+    ReactiveFormsModule,
     MatTableModule,
     MatCheckboxModule,
     StatusBadgeComponent,
     EmptyStateComponent,
+    MatMenuModule,
   ],
   templateUrl: './regular-table-result-upload.component.html',
   styleUrl: './regular-table-result-upload.component.scss',
   exportAs: 'regularTableResultUploadRef',
+  providers: [TitleCasePipe],
 })
 export class RegularTableResultUploadComponent {
-  students = input<any>();
-  tableUpdateEvent = output<Partial<IStudentGrade>[]>();
+  private readonly fb = inject(FormBuilder);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly route = inject(ActivatedRoute);
+  private readonly titlecasePipe = inject(TitleCasePipe);
+  private readonly utilsService = inject(UtilityService);
 
-  displayedColumns: string[] = [
+  students = input<Partial<IStudentGrade>[]>([]);
+  searchValue = input<string | null>(null);
+  refreshTable = input<boolean>(false);
+
+  hasChangesEvent = output<boolean>();
+  uploadResultEvent = output<IStudentGrade[]>();
+
+  allRows = signal<FormGroup[]>([]);
+  dataSource = signal<FormGroup[]>([]);
+
+  private readonly COUNTDOWN_SECONDS: number = 5;
+  countdown = signal<number | null>(null);
+  readonly completedRows = new Set<number>();
+
+  readonly status: string = this.route.snapshot.queryParamMap.get('status')!;
+  readonly displayedColumns = [
+    'sn',
     'registrationNumber',
     'fullName',
     'test',
@@ -36,49 +84,225 @@ export class RegularTableResultUploadComponent {
     'status',
   ];
 
-  private studentsData: Partial<IStudentGrade>[] = [];
+  form = this.fb.group({
+    rows: this.fb.array<FormGroup>([]),
+  });
+
+  private readonly inputSubject = new Subject<{
+    index: number;
+    control?: string;
+  }>();
+  private readonly typeSubject = new Subject<void>();
 
   constructor() {
-    // Watch for input changes without causing re-renders
     effect(() => {
       const students = this.students();
+      const refresh = this.refreshTable();
 
-      untracked(() => {
-        if (students) {
-          this.studentsData = students;
-        }
+      console.warn('Students: ', students);
+
+      if (refresh) {
+        this.initializeFormRows(students);
+      } else if (students?.length > 0 && this.rows.length === 0) {
+        // Initializing rows for the first time
+        this.initializeFormRows(students);
+      }
+    });
+
+    // Search Implementation
+    effect(() => {
+      const term = (this.searchValue() ?? '').trim().toLowerCase();
+      const rows = this.allRows();
+
+      if (!term) {
+        this.dataSource.set(rows);
+        return;
+      }
+
+      const filtered = rows.filter((row) => {
+        const { registrationNumber, fullName } =
+          row.getRawValue() as Partial<IStudentGrade>;
+        return (
+          registrationNumber?.toLowerCase().includes(term) ||
+          fullName?.toLowerCase().includes(term)
+        );
       });
+
+      this.dataSource.set(filtered);
+    });
+
+    this.setupTypingCountdown();
+
+    this.inputSubject
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(({ index }) => this.handleRowInput(index));
+
+    this.formListener();
+  }
+
+  get rows(): FormArray<FormGroup> {
+    return this.form.get('rows') as FormArray<FormGroup>;
+  }
+
+  private initializeFormRows(students: Partial<IStudentGrade>[]): void {
+    this.completedRows.clear();
+    this.rows.clear({ emitEvent: false });
+
+    const sortedStudents = [...students].sort((a, b) =>
+      (a.fullName ?? '').localeCompare(b.fullName ?? '')
+    );
+
+    // Temporarily disable emitting for batch add
+    const newRows = sortedStudents.map((stu) => this.buildStudentRow(stu));
+    newRows.forEach((row) => this.rows.push(row, { emitEvent: false }));
+
+    this.rows.markAsPristine();
+
+    this.allRows.set([...this.rows.controls]);
+    this.dataSource.set([...this.rows.controls]);
+  }
+
+  private buildStudentRow(student: Partial<IStudentGrade>): FormGroup {
+    const numberValidator = [
+      Validators.required,
+      Validators.min(0),
+      Validators.max(100),
+    ];
+
+    // disabled when user is not a lecturer or a course-cordinator
+    // and when staus is not draft, if there is a status
+    const isDisabled = this.status && this.status !== 'DRAFT';
+
+    const createNumberControl = (value: number | undefined) =>
+      new FormControl(
+        { value, disabled: isDisabled || false },
+        numberValidator
+      );
+
+    return this.fb.group({
+      registrationNumber: [student.registrationNumber, Validators.required],
+      fullName: [
+        this.titlecasePipe.transform(student.fullName),
+        Validators.required,
+      ],
+
+      test: createNumberControl(student.test),
+      lab: createNumberControl(student.lab),
+      exam: createNumberControl(student.exam),
+
+      total: [student.total, numberValidator],
+      grade: [student.grade],
+      status: [student.status],
+      isEdited: [student.isEdited || false],
     });
   }
 
-  dataSource() {
-    return this.studentsData;
+  onControlInput(index: number, controlName: string): void {
+    const row = this.rows.at(index);
+
+    const ctrl = row.get(controlName);
+    if (!ctrl) return;
+
+    if (ctrl.invalid && (ctrl.dirty || ctrl.touched)) {
+      ctrl.reset();
+      ctrl.markAsTouched();
+      ctrl.markAsDirty();
+      ctrl.updateValueAndValidity();
+      return;
+    }
+
+    const { test, lab, exam } = row.getRawValue() as IStudentGrade;
+    const total = (test ?? 0) + (lab ?? 0) + (exam ?? 0);
+
+    if (total > 100) {
+      ctrl.reset();
+      return;
+    }
+
+    this.inputSubject.next({ index, control: controlName });
+    this.typeSubject.next();
   }
 
-  updateField(element: any, field: string, event: Event) {
-    const input = event.target as HTMLInputElement;
-    const value = input.value.trim();
-    element[field] = value === '' ? '-' : value;
-    
-    // Calculate total when any field changes
-    this.calculateTotal(element);
+  handleRowInput(index: number): void {
+    const row = this.rows.at(index);
+    const controls = ['test', 'lab', 'exam'] as const;
+
+    const { test, lab, exam } = row.getRawValue() as IStudentGrade;
+    const total = (test ?? 0) + (lab ?? 0) + (exam ?? 0);
+
+    if (total > 100) {
+      for (const name of controls) row.get(name)?.reset();
+      row.get('total')?.reset();
+      return;
+    }
+
+    row.get('total')?.setValue(total);
+
+    if (row.valid) {
+      // Grade
+      if (total >= 70) row.get('grade')?.setValue('A');
+      else if (total >= 60) row.get('grade')?.setValue('B');
+      else if (total >= 50) row.get('grade')?.setValue('C');
+      else if (total >= 45) row.get('grade')?.setValue('D');
+      else if (total >= 40) row.get('grade')?.setValue('E');
+      else row.get('grade')?.setValue('F');
+
+      // Status
+      if (total >= 40) row.get('status')?.setValue('PASS');
+      else row.get('status')?.setValue('FAIL');
+
+      this.hasChangesEvent.emit(true);
+      this.completedRows.add(index);
+    }
   }
 
-  private calculateTotal(element: any) {
-    const test = element.test !== '-' && element.test !== '' && !isNaN(Number(element.test)) ? Number(element.test) : 0;
-    const lab = element.lab !== '-' && element.lab !== '' && !isNaN(Number(element.lab)) ? Number(element.lab) : 0;
-    const exam = element.exam !== '-' && element.exam !== '' && !isNaN(Number(element.exam)) ? Number(element.exam) : 0;
-    
-    // Check if any field has valid numeric input
-    const hasValidInput = (element.test !== '-' && element.test !== '' && !isNaN(Number(element.test))) ||
-                          (element.lab !== '-' && element.lab !== '' && !isNaN(Number(element.lab))) ||
-                          (element.exam !== '-' && element.exam !== '' && !isNaN(Number(element.exam)));
-    
-    element.total = hasValidInput ? test + lab + exam : '-';
+  formListener() {
+    this.form.controls['rows'].valueChanges
+      .pipe(
+        debounceTime(this.COUNTDOWN_SECONDS * 1000),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe(async () => {
+        if (this.completedRows.size === 0) return;
+
+        const changedResults: IStudentGrade[] = [];
+
+        for (const index of this.completedRows) {
+          const row = this.rows.at(index);
+          if (!row || row.invalid) continue;
+
+          changedResults.push(row.getRawValue() as IStudentGrade);
+        }
+
+        if (changedResults.length === 0) return;
+
+        const cleaned = await this.utilsService.cleanUpResult(changedResults);
+
+        this.uploadResultEvent.emit(cleaned);
+        this.hasChangesEvent.emit(false);
+
+        this.completedRows.clear();
+      });
   }
 
-  onInputBlur() {
-    // Only emit when user leaves the input
-    this.tableUpdateEvent.emit(this.studentsData);
+  private setupTypingCountdown(): void {
+    this.typeSubject
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        switchMap(() => {
+          this.countdown.set(this.COUNTDOWN_SECONDS);
+
+          return interval(1000).pipe(
+            take(this.COUNTDOWN_SECONDS),
+            tap((tick) => {
+              this.countdown.set(this.COUNTDOWN_SECONDS - tick - 1);
+            }),
+            finalize(() => {
+              this.countdown.set(null);
+            })
+          );
+        })
+      )
+      .subscribe();
   }
 }

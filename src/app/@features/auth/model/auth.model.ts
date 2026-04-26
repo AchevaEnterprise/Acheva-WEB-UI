@@ -1,3 +1,9 @@
+import {
+  IDepartment,
+  IFaculty,
+  ISchool,
+} from '../../../@core/models/school.model';
+
 export interface ILogIn {
   email: string;
   password: string;
@@ -13,8 +19,8 @@ export enum RoleEnum {
 }
 
 export interface ISignUp {
-  firstname: string;
-  lastname: string;
+  firstname: string | null;
+  lastname: string | null;
   email: string;
   password: string;
   confirmPassword: string;
@@ -30,29 +36,29 @@ export interface IAuthProfile {
   firstname: string;
   lastname: string;
   email: string;
-  school: string;
-  faculty: string;
-  department: string;
+  school: ISchool;
+  faculty: IFaculty;
+  department: IDepartment;
   role: RoleEnum;
+  otherRoles: RoleEnum[];
   accountType: 'LECTURER';
   emailVerified: boolean;
   accessToken: string;
   refreshToken: string;
 }
 
-export interface IAccount {
-  id: string;
-  firstname: string;
-  lastname: string;
-  school: string;
-  faculty: string;
-  department: string;
-  email: string;
-  role: RoleEnum;
+export interface IAccount
+  extends Omit<IAuthProfile, 'accessToken' | 'refreshToken'> {
+  middlename: string;
+  titles: string[];
+  accessLevel: string;
+  assignedLevel: string;
+  assignedLevelAdmissionYear: string;
+  masterUserId: string;
 }
 
 export interface IResetPassword {
-  // token: string;
+  token: string;
   password: string;
   confirmPassword: string;
 }

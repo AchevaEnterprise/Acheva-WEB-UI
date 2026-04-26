@@ -34,12 +34,6 @@ export class SchoolsService {
     );
   }
 
-  getSchool(schoolId: string): Observable<IAPIResponse<ISchool>> {
-    return this.http.get<IAPIResponse<ISchool>>(
-      `${this.schoolsUrl}/${schoolId}`
-    );
-  }
-
   getFaculty(facultyId: string): Observable<IAPIResponse<ISchool>> {
     return this.http.get<IAPIResponse<ISchool>>(
       `${this.schoolsUrl}/faculties/${facultyId}`

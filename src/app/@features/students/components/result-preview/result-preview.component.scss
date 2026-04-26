@@ -1,0 +1,6 @@
+.inactive {
+  pointer-events: none;
+  touch-action: none;
+  filter: blur(2px);
+  cursor: not-allowed;
+}

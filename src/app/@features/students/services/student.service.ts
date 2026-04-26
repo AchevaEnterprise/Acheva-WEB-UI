@@ -3,6 +3,12 @@ import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { IAPIResponse } from '../../../@core/models/api-response.model';
+import {
+  ICreateStudent,
+  IStudent,
+  IStudentPerformance,
+  IStudentQuery,
+} from '../models/student.model';
 
 @Injectable({
   providedIn: 'root',
@@ -10,26 +16,66 @@ import { IAPIResponse } from '../../../@core/models/api-response.model';
 export class StudentService {
   private readonly http = inject(HttpClient);
   private readonly studentUrl = `${environment.BASE_URL}/students`;
+  private readonly lecturerUrl = `${environment.BASE_URL}/lecturers`;
 
-  getStudentsInDepartmentAndLevel(
-    departmentId: string,
-    level: string
-  ): Observable<IAPIResponse<any>> {
+  createStudent(payload: ICreateStudent): Observable<IAPIResponse<unknown>> {
+    return this.http.post<IAPIResponse<unknown>>(
+      `${this.lecturerUrl}/students`,
+      payload
+    );
+  }
+
+  getStudents(
+    query: Partial<IStudentQuery>
+  ): Observable<IAPIResponse<IStudent[]>> {
     let params = new HttpParams();
-    params = params.append('level', level);
-    return this.http.get<IAPIResponse<any>>(
-      `${this.studentUrl}/${departmentId}`,
+    if (query) {
+      if (query.school) params = params.append('school', query.school);
+      if (query.department)
+        params = params.append('department', query.department);
+      if (query.level) params = params.append('level', query.level);
+    }
+    return this.http.get<IAPIResponse<IStudent[]>>(
+      `${this.studentUrl}/school`,
+      {
+        params,
+      }
+    );
+  }
+
+  getStudentByRegNo(
+    regNo: string,
+    schoolId: string
+  ): Observable<IAPIResponse<IStudent>> {
+    let params = new HttpParams();
+    params = params.append('registrationNumber', regNo);
+    params = params.append('school', schoolId);
+    return this.http.get<IAPIResponse<IStudent>>(`${this.studentUrl}`, {
+      params,
+    });
+  }
+
+  getStudentProfile(): Observable<IAPIResponse<IStudent>> {
+    return this.http.get<IAPIResponse<IStudent>>(`${this.studentUrl}/profile`);
+  }
+
+  getStudentPerformance(
+    session: string,
+    semester: string
+  ): Observable<IAPIResponse<IStudentPerformance>> {
+    let params = new HttpParams();
+    params = params.append('session', session);
+    params = params.append('semester', semester);
+
+    return this.http.get<IAPIResponse<IStudentPerformance>>(
+      `${this.studentUrl}/performance`,
       { params }
     );
   }
 
-  getStudentByRegNo(regNo: string): Observable<IAPIResponse<any>> {
-    let params = new HttpParams();
-    params = params.append('registrationNumber', regNo);
-    return this.http.get<IAPIResponse<any>>(`${this.studentUrl}`, { params });
-  }
-
-  getStudentsBySchool(): Observable<IAPIResponse<any>> {
-    return this.http.get<IAPIResponse<any>>(`${this.studentUrl}/school`);
+  getStudentAnalytics(): Observable<IAPIResponse<IStudentPerformance>> {
+    return this.http.get<IAPIResponse<IStudentPerformance>>(
+      `${this.studentUrl}/analytics`
+    );
   }
 }

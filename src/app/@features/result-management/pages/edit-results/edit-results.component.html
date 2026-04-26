@@ -1,0 +1,123 @@
+<header class="mb-4 flex gap-4 justify-between">
+  <app-back-button />
+
+  <app-button
+    [label]="tableExpanded() ? 'Collapse Table' : 'Expand Table'"
+    class="btn-sm"
+    type="clear"
+    (clickEvent)="toggleTableView()"
+  />
+</header>
+
+@if (!tableExpanded()) {
+  @if (loadingResult()) {
+    <div
+      class="rounded-[8px] border border-neutral-300 bg-white p-6 flex flex-col items-center justify-center min-h-[14rem]"
+    >
+      <app-loader />
+      <p class="acva-para-1 text-neutral-500 mt-4 text-center">
+        Loading result summary…
+      </p>
+    </div>
+  } @else {
+    <app-card label="Result Analtyics" [showDivider]="true" dividerClass="!mt-4">
+      <p rightHeaderContent class="acva-para-1 text-neutral-500">
+        Average Grade
+        <span class="text-neutral-800"
+          >{{ result()?.analytics?.averageTotal?.toFixed(2) || '0.0' }}%</span
+        >
+      </p>
+
+      <div content>
+        <app-analytics-chart [data]="analyticsChartData()" />
+
+        <div class="leading-[1.5rem] acva-caption text text-neutral-500 p-4">
+          <p class="flex items-center gap-2 w-full">
+            <span class="w-[15%] font-medium">Total Students:</span>
+            <span>{{ totalStudent() || 0 }}</span>
+          </p>
+          <p class="flex items-center gap-2 w-full">
+            <span class="w-[15%] font-medium">Total Pass:</span>
+            <span>{{ totalStudentPass() || 0 }}</span>
+          </p>
+          <p class="flex items-center gap-2 w-full">
+            <span class="w-[15%] font-medium">Total Fail:</span>
+            <span>{{ totalStudentFail() || 0 }}</span>
+          </p>
+        </div>
+      </div>
+    </app-card>
+  }
+
+  <mat-divider class="!my-4"></mat-divider>
+}
+
+<div>
+  <h4 class="acva-heading-6 fw-500 mt-4 mb-3">Student Grade</h4>
+
+  <div class="flex gap-3 items-start justify-between">
+    <app-search-input placeholder="Search students" />
+
+    <!--
+      Approve / reject actions intentionally live on the Result Management
+      list view (`view-results`) where a user selects the result(s) they want
+      to act on. The computation page is view-only for those transitions.
+    -->
+  </div>
+
+  @if (loadingResult()) {
+    <div
+      class="mt-4 rounded-[8px] border border-neutral-200 bg-white p-6 flex flex-col items-center"
+    >
+      <app-loader />
+      <p class="acva-para-1 text-neutral-500 mt-4 text-center">
+        Loading student grades…
+      </p>
+    </div>
+  } @else {
+    <div class="flex flex-wrap items-center justify-between">
+      <app-segment-switcher
+        [activeSegment]="activeSegment()"
+        [segments]="segments()"
+        (switchEvent)="switchSegment($event)"
+      />
+
+      @if (uploadingResult()) {
+        <p
+          class="flex gap-2 items text-blue-600 px-3 py-1 text-sm bg-blue-100 rounded-[50px]"
+        >
+          <app-loader /> Saving result...
+        </p>
+      }
+    </div>
+
+    <div class="mt-4">
+      @switch (activeSegment().value) {
+        @case ('REGULAR') {
+          <app-regular-table-result-upload
+            #regularTableResultUploadRef
+            [students]="students()['REGULAR']"
+            (hasChangesEvent)="updateChanges($event)"
+            (uploadResultEvent)="uploadBulkResult($event)"
+          />
+        }
+        @case ('REFERENCE') {
+          <app-regular-table-result-upload
+            #regularTableResultUploadRef
+            [students]="students()['REFERENCE']"
+            (hasChangesEvent)="updateChanges($event)"
+            (uploadResultEvent)="uploadBulkResult($event)"
+          />
+        }
+        @case ('UNREGISTERED') {
+          <app-regular-table-result-upload
+            #regularTableResultUploadRef
+            [students]="students()['UNREGISTERED']"
+            (hasChangesEvent)="updateChanges($event)"
+            (uploadResultEvent)="uploadBulkResult($event)"
+          />
+        }
+      }
+    </div>
+  }
+</div>

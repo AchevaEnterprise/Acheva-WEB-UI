@@ -1,11 +1,11 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
-import { NotificationService } from '../utility/toast.service';
+import { ToastService } from '../utility/toast.service';
 import { AuthenticationService } from '../../@features/auth/service/auth.service';
 
 export const authGuard: CanActivateFn = (route, state) => {
   const authService = inject(AuthenticationService);
-  const notification = inject(NotificationService);
+  const toast = inject(ToastService);
   const router = inject(Router);
 
   const isAuthenticated = authService.isAuthenticated;
@@ -15,11 +15,7 @@ export const authGuard: CanActivateFn = (route, state) => {
     router.navigate(['/login'], {
       queryParams: { redirect: state.url },
     });
-    notification.showNotification(
-      'warning',
-      'Unauthorized',
-      'You are unauthorized'
-    );
+    toast.showNotification('warning', 'Unauthorized', 'You are unauthorized');
     return false;
   }
 };

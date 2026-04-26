@@ -1,0 +1,26 @@
+<app-back-button />
+
+@if (student()) {
+  <div class="grid grid-cols-[23%_1fr] gap-4 mt-4">
+    <app-result-list
+      [studentId]="student()?._id"
+      (viewSessionResultEvent)="viewResult($event)"
+    />
+
+    <div class="grid lg:grid-cols-[1fr_22%] grid-cols-1 gap-4 h-full">
+      <app-result-view
+        [student]="student()"
+        [results]="preview()"
+        [gpa]="GPA()"
+        [semester]="semester()"
+        [loading]="loading()"
+      />
+      <app-result-preview
+        [studentResults]="results()"
+        (semsterEvent)="getSemesterResult($event)"
+      />
+    </div>
+  </div>
+} @else {
+  <app-loader />
+}

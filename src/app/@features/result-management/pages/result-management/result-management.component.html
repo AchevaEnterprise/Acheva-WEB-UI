@@ -3,7 +3,7 @@
 
   <!-- SEGMENTS -->
   <div class="mt-8">
-    <div class="flex justify-between items-center">
+    <div class="flex justify-between flex-wrap gap-4 items-center">
       <app-segment-switcher
         [activeSegment]="activeSegment()"
         [segments]="segments()"
@@ -11,35 +11,151 @@
       />
 
       <div class="flex gap-2">
-        <app-button
-          *appRoleAccess="[RoleEnum.LECTURER]"
-          [label]="sendingToCC() ? 'Sending...' : 'Send to CC'"
-          [disabled]="sendingToCC()"
-          class="btn-md"
-          matTooltip="Send to Course Cordinator"
-          (clickEvent)="sendToCC()"
-        />
-        <app-button
-          *appRoleAccess="[RoleEnum.COURSE_COORDINATOR]"
-          label="Send to HOD"
-          class="btn-md"
-          matTooltip="Send to Head of Department"
-          (clickEvent)="sendToHOD()"
-        />
-        <app-button
-          [label]="expandView() ? 'Collapse' : 'Expand'"
-          type="outline"
-          class="btn-md"
-          (clickEvent)="toggleView()"
-        />
+        @if (activeSegment().value === 'DRAFT') {
+          <app-button
+            *appRoleAccess="[RoleEnum.LECTURER]"
+            label="Send to CC"
+            class="btn-md"
+            matTooltip="Send to Course Cordinator"
+            [disabled]="!resultIsSelected"
+            [loading]="sendingToCC()"
+            (clickEvent)="confirmSendToCC()"
+          />
+        }
+
+        <!--
+          HOD actions on a PENDING result: reject back to the Course Coordinator
+          or approve and forward up to the Dean. Gated to PENDING so the pair
+          only shows on the first HOD pass — later workflow stages
+          (APPROVED / COMPLETE) have their own handoff buttons.
+        -->
+        @if (activeSegment().value === 'PENDING') {
+          <app-button
+            *appRoleAccess="[RoleEnum.HOD]"
+            label="Reject to CC"
+            type="outline"
+            class="btn-md btn-error"
+            matTooltip="Reject and send back to Course Coordinator"
+            [disabled]="!resultIsSelected"
+            [loading]="rejectingToCC()"
+            (clickEvent)="confirmRejectToCC()"
+          />
+
+          <app-button
+            *appRoleAccess="[RoleEnum.HOD]"
+            label="Approve to Dean"
+            class="btn-md"
+            matTooltip="Approve and send to the Dean"
+            [disabled]="!resultIsSelected"
+            [loading]="approvingToDean()"
+            (clickEvent)="confirmApproveToDean()"
+          />
+        }
+
+        <!--
+          Dean actions on an UNVERIFIED result: reject back to the HOD who
+          forwarded it, or approve and bounce it back to the HOD for the
+          second pass (moves the status UNVERIFIED → VERIFIED).
+        -->
+        @if (activeSegment().value === 'UNVERIFIED') {
+          <app-button
+            *appRoleAccess="[RoleEnum.DEAN]"
+            label="Reject to HOD"
+            type="outline"
+            class="btn-md btn-error"
+            matTooltip="Reject and return to Head of Department"
+            [disabled]="!resultIsSelected"
+            [loading]="rejectingToHOD()"
+            (clickEvent)="confirmRejectToHOD()"
+          />
+
+          <app-button
+            *appRoleAccess="[RoleEnum.DEAN]"
+            label="Approve to HOD"
+            class="btn-md"
+            matTooltip="Approve and send back to Head of Department"
+            [disabled]="!resultIsSelected"
+            [loading]="approvingToHOD()"
+            (clickEvent)="confirmApproveToHOD()"
+          />
+        }
+
+        <!--
+          HOD final approval. Routing is automatic:
+            VERIFIED tab  → internal cohort → Course Advisor (COMPLETE)
+                          → external cohort → students' dept HOD (APPROVED)
+            APPROVED tab  → offering-dept HOD → Course Advisor (COMPLETE)
+          The tooltip / confirmation dialog spell out the exact recipient.
+        -->
+        @if (
+          activeSegment().value === 'VERIFIED' ||
+          activeSegment().value === 'APPROVED'
+        ) {
+          <app-button
+            *appRoleAccess="[RoleEnum.HOD]"
+            label="Approve"
+            class="btn-md"
+            [matTooltip]="hodVerifiedForwardTooltip()"
+            [disabled]="!resultIsSelected"
+            [loading]="sendingToCA()"
+            (clickEvent)="confirmHodForwardAfterDean()"
+          />
+        }
+
+        @if (activeSegment().value === 'COMPLETE') {
+          <app-button
+            *appRoleAccess="[RoleEnum.COURSE_ADVISOR]"
+            label="Publish"
+            class="btn-md"
+            [loading]="publishing()"
+            [disabled]="!resultIsSelected"
+            (clickEvent)="confirmPublishResult()"
+          />
+        }
+
+        @if (activeSegment().value === 'IMPORTED') {
+          <app-button
+            *appRoleAccess="[RoleEnum.COURSE_ADVISOR]"
+            label="Import"
+            class="btn-md"
+            type="outline"
+            (clickEvent)="importResult()"
+          />
+        }
+
+        @if (activeSegment().value === 'DRAFT') {
+          <app-button
+            *appRoleAccess="[RoleEnum.LECTURER]"
+            label="Delete"
+            class="btn-md btn-error"
+            type="outline"
+            [disabled]="!resultIsSelected"
+            [loading]="deleting()"
+            (clickEvent)="deleteResults()"
+          />
+        }
+
+        @if (
+          !(
+            this.currentRole() === RoleEnum.COURSE_COORDINATOR &&
+            this.activeSegment().value === 'DRAFT'
+          )
+        ) {
+          <app-button
+            [label]="collapseView() ? 'Expand' : 'Collapse'"
+            type="outline"
+            class="btn-md"
+            (clickEvent)="toggleView()"
+          />
+        }
       </div>
     </div>
 
     <div
-      class="grid grid-cols-[1fr_30%] gap-4 mt-4"
+      class="grid grid-cols-[70%_1fr] gap-4 mt-4 items-start"
       [ngClass]="{
-        'grid-cols-1': expandView(),
-        'grid-cols-[1fr_30%]': !expandView(),
+        'grid-cols-1': collapseView(),
+        'grid-cols-[70%_1fr]': !collapseView(),
       }"
     >
       <app-card
@@ -48,33 +164,59 @@
         [iconSrc]="segmentCardIconSrc()"
       >
         <ng-container content>
-          <!-- LECTURER VIEW: Regular file table -->
-          <app-result-management-file-table 
-            *appRoleAccess="[RoleEnum.LECTURER]"
+          <app-result-management-file-table
+            *appRoleAccess="[
+              RoleEnum.LECTURER,
+              RoleEnum.HOD,
+              RoleEnum.DEAN,
+              RoleEnum.COURSE_ADVISOR,
+            ]"
             #fileTableRef
-            [expand]="expandView()"
+            [expand]="collapseView()"
+            [loading]="loadingResults()"
             [results]="results()"
-            [status]="activeSegment().value"
+            [pagination]="pagination()"
             (viewResultEvent)="viewResult($event)"
+            (trackResultEvent)="trackResult($event)"
+            (filterEvent)="filter($event)"
           />
-          
-          <!-- COURSE COORDINATOR VIEW: Folder table -->
-          <app-result-management-folder-table 
-            *appRoleAccess="[RoleEnum.COURSE_COORDINATOR]"
-            #folderTableRef
-            [expand]="expandView()"
-            [results]="results()"
-            [status]="activeSegment().value"
-            (viewResultEvent)="viewResult($event)"
-          />
+
+          <ng-container *appRoleAccess="[RoleEnum.COURSE_COORDINATOR]">
+            @if (activeSegment().value === 'DRAFT') {
+              <app-result-management-folder-table
+                #folderTableRef
+                [expand]="collapseView()"
+                [loading]="loadingResults()"
+                [groupedResults]="groupedResults()"
+                [pagination]="pagination()"
+                (viewFolderEvent)="viewFolder($event)"
+              />
+            } @else {
+              <app-result-management-file-table
+                #fileTableRef
+                [expand]="collapseView()"
+                [loading]="loadingResults()"
+                [results]="results()"
+                [pagination]="pagination()"
+                (viewResultEvent)="viewResult($event)"
+                (trackResultEvent)="trackResult($event)"
+              />
+            }
+          </ng-container>
         </ng-container>
       </app-card>
 
       <!-- RESULT STATUS TRACKING & COMMENT-->
-      @if (!expandView()) {
+      @if (!collapseView()) {
         <div class="flex flex-col gap-4">
-          <app-result-status-tracking />
-          <app-comment />
+          <app-result-status-tracking [result]="result()" />
+          <app-comment
+            [refresh]="refreshComments()"
+            [showSubmitBtn]="true"
+            [resultId]="result()?._id"
+            [disableComment]="!resultIsHighlighted"
+            (submitEvent)="sendComment($event)"
+          />
         </div>
       }
     </div>
