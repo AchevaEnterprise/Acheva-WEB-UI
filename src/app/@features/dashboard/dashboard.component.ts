@@ -348,7 +348,9 @@ export class DashboardComponent implements OnInit {
    */
   private resolveInitialSegment(): ISegmentSwitcher {
     const role = this.currentRole();
-    const preferredByRole: Partial<Record<RoleEnum, ISegmentSwitcher['value']>> = {
+    const preferredByRole: Partial<
+      Record<RoleEnum, ISegmentSwitcher['value']>
+    > = {
       [RoleEnum.HOD]: 'PENDING',
       [RoleEnum.DEAN]: 'UNVERIFIED',
       [RoleEnum.COURSE_ADVISOR]: 'COMPLETE',
@@ -359,7 +361,7 @@ export class DashboardComponent implements OnInit {
     const segments = this.segments();
     return (
       segments.find(
-        (s) => s.value === preferred && s.accessRole?.includes(role),
+        (s) => s.value === preferred && s.accessRole?.includes(role)
       ) ??
       segments.find((s) => s.accessRole?.includes(role)) ??
       segments[0]

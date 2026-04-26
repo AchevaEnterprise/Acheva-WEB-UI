@@ -1,10 +1,4 @@
-import {
-  Component,
-  HostListener,
-  inject,
-  OnInit,
-  signal,
-} from '@angular/core';
+import { Component, HostListener, inject, OnInit, signal } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatMenuModule } from '@angular/material/menu';

@@ -188,8 +188,8 @@ export class ResultManagementComponent implements OnInit {
 
   RoleEnum = RoleEnum;
 
-  private readonly resultManagementRouteTabs = new Set<ResultManagementDashboardTab>(
-    [
+  private readonly resultManagementRouteTabs =
+    new Set<ResultManagementDashboardTab>([
       'DRAFT',
       'PENDING',
       'UNVERIFIED',
@@ -198,8 +198,7 @@ export class ResultManagementComponent implements OnInit {
       'COMPLETE',
       'PUBLISHED',
       'IMPORTED',
-    ],
-  );
+    ]);
 
   ngOnInit(): void {
     const tabFromQuery = this.route.snapshot.queryParamMap.get('tab');
@@ -239,7 +238,7 @@ export class ResultManagementComponent implements OnInit {
 
     const role = this.currentRole();
     const segment = this.segments().find(
-      (s) => s.value === key && s.accessRole?.includes(role),
+      (s) => s.value === key && s.accessRole?.includes(role)
     );
     if (!segment) return false;
 
@@ -256,7 +255,9 @@ export class ResultManagementComponent implements OnInit {
    */
   private resolveInitialSegment(): ISegmentSwitcher {
     const role = this.currentRole();
-    const preferredByRole: Partial<Record<RoleEnum, ISegmentSwitcher['value']>> = {
+    const preferredByRole: Partial<
+      Record<RoleEnum, ISegmentSwitcher['value']>
+    > = {
       [RoleEnum.HOD]: 'PENDING',
       [RoleEnum.DEAN]: 'UNVERIFIED',
       [RoleEnum.COURSE_ADVISOR]: 'COMPLETE',
@@ -267,7 +268,7 @@ export class ResultManagementComponent implements OnInit {
     const segments = this.segments();
     return (
       segments.find(
-        (s) => s.value === preferred && s.accessRole?.includes(role),
+        (s) => s.value === preferred && s.accessRole?.includes(role)
       ) ??
       segments.find((s) => s.accessRole?.includes(role)) ??
       segments[0]
@@ -533,7 +534,7 @@ export class ResultManagementComponent implements OnInit {
 
   private validateHodForwardRecipients(
     selected: IResult[],
-    tab: 'VERIFIED' | 'APPROVED',
+    tab: 'VERIFIED' | 'APPROVED'
   ): boolean {
     if (tab === 'APPROVED') {
       const missing = selected.filter((r) => !r.roles.COURSE_ADVISOR);
@@ -541,7 +542,7 @@ export class ResultManagementComponent implements OnInit {
         this.toast.showNotification(
           'error',
           'Missing Course Advisor',
-          'One or more results do not have a Course Advisor assigned.',
+          'One or more results do not have a Course Advisor assigned.'
         );
         return false;
       }
@@ -555,7 +556,7 @@ export class ResultManagementComponent implements OnInit {
       this.toast.showNotification(
         'error',
         'Missing Course Advisor',
-        'One or more internal-cohort results do not have a Course Advisor assigned.',
+        'One or more internal-cohort results do not have a Course Advisor assigned.'
       );
       return false;
     }
@@ -563,7 +564,7 @@ export class ResultManagementComponent implements OnInit {
       this.toast.showNotification(
         'error',
         'Missing HOD',
-        'One or more external-cohort results do not have a students’ department HOD assigned.',
+        'One or more external-cohort results do not have a students’ department HOD assigned.'
       );
       return false;
     }
@@ -572,7 +573,7 @@ export class ResultManagementComponent implements OnInit {
 
   private hodForwardConfirmationCopy(
     selected: IResult[],
-    tab: 'VERIFIED' | 'APPROVED',
+    tab: 'VERIFIED' | 'APPROVED'
   ): string {
     const n = selected.length;
     if (tab === 'APPROVED') {
@@ -598,8 +599,8 @@ export class ResultManagementComponent implements OnInit {
         this.buildApproveThenSend$(
           internal,
           (r) => r.roles.COURSE_ADVISOR ?? '',
-          RoleEnum.COURSE_ADVISOR,
-        ),
+          RoleEnum.COURSE_ADVISOR
+        )
       );
     }
     if (external.length) {
@@ -607,8 +608,8 @@ export class ResultManagementComponent implements OnInit {
         this.buildApproveThenSend$(
           external,
           (r) => r.roles.HOD_OFFERING_DEPT ?? '',
-          RoleEnum.HOD,
-        ),
+          RoleEnum.HOD
+        )
       );
     }
     if (!batches.length) return;
@@ -622,7 +623,7 @@ export class ResultManagementComponent implements OnInit {
             this.toast.showNotification(
               'success',
               'Result Sent',
-              'Selected result(s) have been approved and forwarded',
+              'Selected result(s) have been approved and forwarded'
             );
             this.getResults();
             selected.forEach((r) => this.fileTableRef()!.selection.deselect(r));
@@ -632,7 +633,7 @@ export class ResultManagementComponent implements OnInit {
           this.toast.showNotification(
             'error',
             'Error Occured',
-            error?.error?.message ?? 'Unable to complete approval and send',
+            error?.error?.message ?? 'Unable to complete approval and send'
           );
         },
       });
@@ -643,7 +644,7 @@ export class ResultManagementComponent implements OnInit {
     this.buildApproveThenSend$(
       selected,
       (r) => r.roles.COURSE_ADVISOR ?? '',
-      RoleEnum.COURSE_ADVISOR,
+      RoleEnum.COURSE_ADVISOR
     )
       .pipe(finalize(() => this.sendingToCA.set(false)))
       .subscribe({
@@ -652,7 +653,7 @@ export class ResultManagementComponent implements OnInit {
             this.toast.showNotification(
               'success',
               'Result Sent',
-              'Result has been sent to the Course Advisor',
+              'Result has been sent to the Course Advisor'
             );
             this.getResults();
             selected.forEach((r) => this.fileTableRef()!.selection.deselect(r));
@@ -662,7 +663,8 @@ export class ResultManagementComponent implements OnInit {
           this.toast.showNotification(
             'error',
             'Error Occured',
-            error?.error?.message ?? 'Unable to send result to the Course Advisor',
+            error?.error?.message ??
+              'Unable to send result to the Course Advisor'
           );
         },
       });
@@ -675,10 +677,10 @@ export class ResultManagementComponent implements OnInit {
   private buildApproveThenSend$(
     results: IResult[],
     getRecipient: (r: IResult) => string,
-    sendRole: RoleEnum,
+    sendRole: RoleEnum
   ): Observable<{ status: boolean }> {
     const approveReq$ = results.map((result) =>
-      this.resultService.approveResult(result._id),
+      this.resultService.approveResult(result._id)
     );
     const payload: ISendSelectedResult[] = results.map((result) => ({
       resultId: result._id,
@@ -688,8 +690,8 @@ export class ResultManagementComponent implements OnInit {
       switchMap((resp) =>
         resp.every((res) => res.status)
           ? this.resultService.sendSelectedResult(payload, sendRole)
-          : throwError(() => new Error('Failed to approve result')),
-      ),
+          : throwError(() => new Error('Failed to approve result'))
+      )
     );
   }
 

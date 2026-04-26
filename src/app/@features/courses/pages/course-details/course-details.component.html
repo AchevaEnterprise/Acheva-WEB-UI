@@ -176,7 +176,9 @@
                   [compareWith]="compareFacultyFn"
                 >
                   @for (faculty of facultiesOptions(); track $index) {
-                    <mat-option [value]="faculty">{{ faculty.name }}</mat-option>
+                    <mat-option [value]="faculty">{{
+                      faculty.name
+                    }}</mat-option>
                   }
                 </mat-select>
               </mat-form-field>
