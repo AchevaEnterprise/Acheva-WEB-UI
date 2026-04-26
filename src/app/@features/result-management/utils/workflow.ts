@@ -49,7 +49,7 @@ export const RESULT_STATUS_ORDER: readonly ResultStatusEnum[] = [
 /** Returns true if `a` comes at or after `b` in the workflow. */
 export function isStatusAtLeast(
   a: ResultStatusEnum,
-  b: ResultStatusEnum,
+  b: ResultStatusEnum
 ): boolean {
   return RESULT_STATUS_ORDER.indexOf(a) >= RESULT_STATUS_ORDER.indexOf(b);
 }
@@ -80,7 +80,7 @@ export interface IHandoff {
  */
 export function getApprovalHandoff(
   result: IResult,
-  currentUserRole: RoleEnum,
+  currentUserRole: RoleEnum
 ): IHandoff | null {
   const { roles, status } = result;
 
@@ -134,7 +134,7 @@ export function getApprovalHandoff(
  */
 export function getRejectionHandoff(
   result: IResult,
-  currentUserRole: RoleEnum,
+  currentUserRole: RoleEnum
 ): IHandoff | null {
   const { roles, uploadedBy } = result;
   const uploadedById =
@@ -143,7 +143,9 @@ export function getRejectionHandoff(
   switch (currentUserRole) {
     case RoleEnum.COURSE_COORDINATOR:
       // CC rejects → back to the uploading lecturer (status DRAFT, unsent).
-      return uploadedById ? { role: RoleEnum.LECTURER, recipientId: uploadedById } : null;
+      return uploadedById
+        ? { role: RoleEnum.LECTURER, recipientId: uploadedById }
+        : null;
 
     case RoleEnum.HOD:
       // HOD (1st pass) rejects → back to the Course Coordinator.
@@ -180,6 +182,9 @@ export function canReject(result: IResult, role: RoleEnum): boolean {
   return true;
 }
 
-function toHandoff(role: RoleEnum, recipientId: string | null): IHandoff | null {
+function toHandoff(
+  role: RoleEnum,
+  recipientId: string | null
+): IHandoff | null {
   return recipientId ? { role, recipientId } : null;
 }

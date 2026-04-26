@@ -1,11 +1,10 @@
 <div
   class="rounded-[12px] border border-neutral-200 overflow-hidden bg-white w-full"
->  <!-- Blue gradient header -->
+>
+  <!-- Blue gradient header -->
   <div
     class="px-5 py-5 text-white relative flex flex-col gap-3"
-    style="
-      background: linear-gradient(135deg, #2793ff 0%, #134980 100%);
-    "
+    style="background: linear-gradient(135deg, #2793ff 0%, #134980 100%)"
   >
     @if (courseCode()) {
       <span
@@ -22,7 +21,7 @@
     }
 
     <h3 class="acva-heading-5 fw-500 text-white leading-tight">
-      {{ (template()?.courseTitle || '—') | titlecase }}
+      {{ template()?.courseTitle || '—' | titlecase }}
     </h3>
 
     @if (dateLabel()) {

@@ -142,8 +142,10 @@ export class MyResultsComponent implements OnInit {
     if (role === RoleEnum.COURSE_ADVISOR) {
       return (
         segments.find(
-          (s) => s.value === 'COMPLETE' && s.accessRole?.includes(role),
-        ) ?? segments.find((s) => s.accessRole?.includes(role)) ?? segments[0]
+          (s) => s.value === 'COMPLETE' && s.accessRole?.includes(role)
+        ) ??
+        segments.find((s) => s.accessRole?.includes(role)) ??
+        segments[0]
       );
     }
     return segments[0];

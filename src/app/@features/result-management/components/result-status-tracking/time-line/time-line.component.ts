@@ -2,10 +2,7 @@ import { DatePipe } from '@angular/common';
 import { Component, computed, input } from '@angular/core';
 import { SvgComponent } from '../../../../../@shared/components/svg/svg.component';
 import { IResult, ResultStatusEnum } from '../../../models/results.model';
-import {
-  isInternalCohort,
-  isStatusAtLeast,
-} from '../../../utils/workflow';
+import { isInternalCohort, isStatusAtLeast } from '../../../utils/workflow';
 
 interface ITimelineStep {
   label: string;
@@ -93,7 +90,7 @@ export class TimeLineComponent {
     return this.baseSteps
       .filter(
         (step) =>
-          step.reachedAt !== ResultStatusEnum.COMPLETE || showCrossDeptHop,
+          step.reachedAt !== ResultStatusEnum.COMPLETE || showCrossDeptHop
       )
       .map((step) => ({
         ...step,

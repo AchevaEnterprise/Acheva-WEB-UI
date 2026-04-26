@@ -15,6 +15,22 @@ const SEMESTER_LABELS: Record<string, string> = {
   [SemesterEnum.THIRD]: '3rd Semester',
 };
 
+/**
+ * Fields read by the preview template and computeds. Callers may pass a wider
+ * form value (e.g. `getRawValue()`); only these keys need to be structurally compatible.
+ */
+export interface CoursePreviewTemplate {
+  courseCode?: string | { courseCode?: string } | null;
+  courseTitle?: string | null;
+  courseCordinator?: string | null;
+  level?: string | number | null;
+  semester?: string | null;
+  courseLoad?: string | number | null;
+  session?: string | null;
+  department?: { name?: string } | null;
+  createdAt?: string | number | Date | null;
+}
+
 @Component({
   selector: 'app-course-preview',
   imports: [MatDividerModule, SvgComponent, TitleCasePipe, UpperCasePipe],
@@ -27,37 +43,39 @@ export class CoursePreviewComponent {
    * object). Kept as a loose object so both pages — lecturer "Create Result"
    * and HOD "Create Course" — can feed in their own form shapes.
    */
-  courseTemplate = input<any>();
+  courseTemplate = input<CoursePreviewTemplate | undefined>();
 
-  template = computed(() => this.courseTemplate() ?? {});
+  template = computed((): CoursePreviewTemplate => this.courseTemplate() ?? {});
 
   courseCode = computed(() => {
     const raw = this.template().courseCode;
-    if (!raw) return '';
-    return typeof raw === 'string' ? raw : raw.courseCode;
+    if (raw == null || raw === '') return '';
+    return typeof raw === 'string' ? raw : (raw.courseCode ?? '');
   });
 
   /** Preserve trailing "Level" suffix from the raw enum (e.g. `100` → `100L`). */
   levelLabel = computed(() => {
     const level = this.template().level;
-    if (!level) return '';
-    return /l/i.test(String(level)) ? level : `${level}L`;
+    if (level == null || level === '') return '';
+    const s = String(level);
+    return /l/i.test(s) ? s : `${s}L`;
   });
 
-  semesterLabel = computed(() =>
-    SEMESTER_LABELS[this.template().semester ?? ''] ?? '',
+  semesterLabel = computed(
+    () => SEMESTER_LABELS[this.template().semester ?? ''] ?? ''
   );
 
   courseLoadLabel = computed(() => {
     const load = this.template().courseLoad;
     if (load == null || load === '') return '—';
-    return `${load} Unit${Number(load) === 1 ? '' : 's'}`;
+    const n = Number(load);
+    return `${load} Unit${n === 1 ? '' : 's'}`;
   });
 
   /** Shows the latest timestamp we have for this course (createdAt or today). */
   dateLabel = computed(() => {
     const created = this.template().createdAt;
-    const date = created ? new Date(created) : new Date();
+    const date = created != null ? new Date(created) : new Date();
     return date.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',

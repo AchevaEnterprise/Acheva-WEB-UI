@@ -5,8 +5,8 @@
     box-shadow 0.15s ease;
 
   &:hover {
-    border-color: rgba(115, 115, 115, 0.45);
-    box-shadow: 0 1px 8px rgba(0, 0, 0, 0.06);
+    border-color: rgb(115 115 115 / 45%);
+    box-shadow: 0 1px 8px rgb(0 0 0 / 6%);
   }
 
   &:focus-visible {
