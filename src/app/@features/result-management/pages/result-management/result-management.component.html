@@ -23,17 +23,86 @@
           />
         }
 
-        @if (activeSegment().value === 'VERIFIED') {
+        <!--
+          HOD actions on a PENDING result: reject back to the Course Coordinator
+          or approve and forward up to the Dean. Gated to PENDING so the pair
+          only shows on the first HOD pass — later workflow stages
+          (APPROVED / COMPLETE) have their own handoff buttons.
+        -->
+        @if (activeSegment().value === 'PENDING') {
           <app-button
             *appRoleAccess="[RoleEnum.HOD]"
-            label="Send to CA"
-            class="btn-md"
-            matTooltip="Send to Course Adviser"
+            label="Reject to CC"
+            type="outline"
+            class="btn-md btn-error"
+            matTooltip="Reject and send back to Course Coordinator"
             [disabled]="!resultIsSelected"
-            [loading]="sendingToCA()"
-            (clickEvent)="confirmSendToCA()"
+            [loading]="rejectingToCC()"
+            (clickEvent)="confirmRejectToCC()"
           />
 
+          <app-button
+            *appRoleAccess="[RoleEnum.HOD]"
+            label="Approve to Dean"
+            class="btn-md"
+            matTooltip="Approve and send to the Dean"
+            [disabled]="!resultIsSelected"
+            [loading]="approvingToDean()"
+            (clickEvent)="confirmApproveToDean()"
+          />
+        }
+
+        <!--
+          Dean actions on an UNVERIFIED result: reject back to the HOD who
+          forwarded it, or approve and bounce it back to the HOD for the
+          second pass (moves the status UNVERIFIED → VERIFIED).
+        -->
+        @if (activeSegment().value === 'UNVERIFIED') {
+          <app-button
+            *appRoleAccess="[RoleEnum.DEAN]"
+            label="Reject to HOD"
+            type="outline"
+            class="btn-md btn-error"
+            matTooltip="Reject and return to Head of Department"
+            [disabled]="!resultIsSelected"
+            [loading]="rejectingToHOD()"
+            (clickEvent)="confirmRejectToHOD()"
+          />
+
+          <app-button
+            *appRoleAccess="[RoleEnum.DEAN]"
+            label="Approve to HOD"
+            class="btn-md"
+            matTooltip="Approve and send back to Head of Department"
+            [disabled]="!resultIsSelected"
+            [loading]="approvingToHOD()"
+            (clickEvent)="confirmApproveToHOD()"
+          />
+        }
+
+        <!--
+          HOD final approval. Routing is automatic:
+            VERIFIED tab  → internal cohort → Course Advisor (COMPLETE)
+                          → external cohort → students' dept HOD (APPROVED)
+            APPROVED tab  → offering-dept HOD → Course Advisor (COMPLETE)
+          The tooltip / confirmation dialog spell out the exact recipient.
+        -->
+        @if (
+          activeSegment().value === 'VERIFIED' ||
+          activeSegment().value === 'APPROVED'
+        ) {
+          <app-button
+            *appRoleAccess="[RoleEnum.HOD]"
+            label="Approve"
+            class="btn-md"
+            [matTooltip]="hodVerifiedForwardTooltip()"
+            [disabled]="!resultIsSelected"
+            [loading]="sendingToCA()"
+            (clickEvent)="confirmHodForwardAfterDean()"
+          />
+        }
+
+        @if (activeSegment().value === 'COMPLETE') {
           <app-button
             *appRoleAccess="[RoleEnum.COURSE_ADVISOR]"
             label="Publish"

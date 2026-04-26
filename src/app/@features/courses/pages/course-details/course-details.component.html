@@ -3,196 +3,225 @@
     <app-back-button />
   </header>
 
-  <!-- Header Section -->
   <header class="mb-8">
     <h3 class="acva-heading-3 fw-500">Course Details</h3>
     <p class="acva-para-1 text-neutral-500">
       Complete the fields below to set up your course and reach your students
     </p>
-    <p class="text-blue-500">
+    <p class="text-blue-500 acva-para-1">
       (!) The admission year of the result must tally with the admission year of
       the students
     </p>
   </header>
 
-  <!-- Main Grid Layout -->
-  <div class="grid lg:grid-cols-[1fr_40%] md:grid-cols-2 sm:grid-cols-1 gap-8">
-    <!-- Form Section -->
-    <form [formGroup]="form">
-      <!-- Session Selection -->
-      <div class="input-style-1 acheva-input w-full">
-        <p class="acva-para-2 fw-400 label-text">Session</p>
-        <mat-form-field [style.width.%]="100" appearance="outline">
-          <mat-select
-            placeholder="Select your session"
-            formControlName="session"
-          >
-            @for (session of sessionOptions(); track $index) {
-              <mat-option [value]="session">{{ session }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
-      </div>
+  <div class="grid lg:grid-cols-[1fr_340px] md:grid-cols-1 gap-6">
+    <form [formGroup]="form" class="flex flex-col gap-6">
+      <!-- Course Details section -->
+      <app-card
+        label="Course Details"
+        iconSrc="icons/general/course-icon.svg"
+        [showDivider]="true"
+        dividerClass="!mt-4"
+      >
+        <div content class="p-4 flex flex-col gap-4">
+          <!-- Course Code (autocomplete when creating a new result) -->
+          @if (isNew) {
+            <div class="input-style-1 acheva-input w-full">
+              <p class="acva-para-2 fw-400 label-text">Course Code</p>
+              <app-search-select
+                [options]="courses()"
+                [loading]="searchingCourseCodes()"
+                (searchEvent)="findCourseByCourseCode($event)"
+                formControlName="courseCode"
+              />
+            </div>
+          } @else {
+            <div class="input-style-1 acheva-input w-full">
+              <p class="acva-para-2 fw-400 label-text">Course Code</p>
+              <mat-form-field [style.width.%]="100" appearance="outline">
+                <input matInput type="text" formControlName="courseCode" />
+              </mat-form-field>
+            </div>
+          }
 
-      <div class="input-style-1 acheva-input w-full">
-        <p class="acva-para-2 fw-400 label-text">Admission Year</p>
-        <mat-form-field [style.width.%]="100" appearance="outline">
-          <mat-select
-            placeholder="Select your admission year"
-            formControlName="admissionYear"
-          >
-            @for (admissionYear of admissionYearOptions(); track $index) {
-              <mat-option [value]="admissionYear">{{
-                admissionYear
-              }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
-      </div>
+          <!-- Course Title -->
+          <div class="input-style-1 acheva-input w-full">
+            <p class="acva-para-2 fw-400 label-text">Course Title</p>
+            <mat-form-field [style.width.%]="100" appearance="outline">
+              <input
+                matInput
+                type="text"
+                placeholder="Course title"
+                formControlName="courseTitle"
+              />
+            </mat-form-field>
+          </div>
 
-      <!-- School Selection -->
-      <div class="input-style-1 acheva-input w-full">
-        <p class="acva-para-2 fw-400 label-text">School</p>
-        <mat-form-field [style.width.%]="100" appearance="outline">
-          <input matInput type="text" [value]="school()?.name" disabled />
-        </mat-form-field>
-      </div>
+          <!-- Course Coordinator + Semester -->
+          <div class="grid md:grid-cols-2 grid-cols-1 gap-4">
+            <div class="input-style-1 acheva-input w-full">
+              <p class="acva-para-2 fw-400 label-text">Course Coordinator</p>
+              <mat-form-field [style.width.%]="100" appearance="outline">
+                <input
+                  matInput
+                  type="text"
+                  placeholder="Course coordinator"
+                  formControlName="courseCordinator"
+                />
+              </mat-form-field>
+            </div>
 
-      <!-- Faculty Selection -->
-      <div class="input-style-1 acheva-input w-full">
-        <p class="acva-para-2 fw-400 label-text">Faculty</p>
-        <mat-form-field [style.width.%]="100" appearance="outline">
-          <mat-select
-            placeholder="Select your faculty"
-            formControlName="faculty"
-            (selectionChange)="getDepartments($event)"
-            [compareWith]="compareFacultyFn"
-          >
-            @for (faculty of facultiesOptions(); track $index) {
-              <mat-option [value]="faculty">{{ faculty.name }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
-      </div>
+            <div class="input-style-1 acheva-input w-full">
+              <p class="acva-para-2 fw-400 label-text">Semester</p>
+              <mat-form-field [style.width.%]="100" appearance="outline">
+                <mat-select
+                  placeholder="Select Semester"
+                  formControlName="semester"
+                >
+                  @for (semester of semesterOptions(); track $index) {
+                    <mat-option [value]="semester.value">{{
+                      semester.label
+                    }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            </div>
+          </div>
 
-      <!-- Department Selection -->
-      <div class="input-style-1 acheva-input w-full">
-        <p class="acva-para-2 fw-400 label-text">Department</p>
-        <mat-form-field [style.width.%]="100" appearance="outline">
-          <mat-select
-            placeholder="Select your department"
-            formControlName="department"
-            [compareWith]="compareDepartmentFn"
-          >
-            @for (department of departmentsOptions(); track $index) {
-              <mat-option [value]="department">{{
-                department.name
-              }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
-      </div>
+          <!-- Level + Course Load -->
+          <div class="grid md:grid-cols-2 grid-cols-1 gap-4">
+            <div class="input-style-1 acheva-input w-full">
+              <p class="acva-para-2 fw-400 label-text">Level</p>
+              <mat-form-field [style.width.%]="100" appearance="outline">
+                <mat-select placeholder="Select level" formControlName="level">
+                  @for (level of levelOptions(); track $index) {
+                    <mat-option [value]="level.value">{{
+                      level.label
+                    }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            </div>
 
-      <!-- Level Selection -->
-      <div class="input-style-1 acheva-input w-full">
-        <p class="acva-para-2 fw-400 label-text">Level</p>
-        <mat-form-field [style.width.%]="100" appearance="outline">
-          <mat-select placeholder="Select level" formControlName="level">
-            @for (level of levelOptions(); track $index) {
-              <mat-option [value]="level.value">{{ level.label }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
-      </div>
-
-      <!-- Semester Selection -->
-      <div class="input-style-1 acheva-input w-full">
-        <p class="acva-para-2 fw-400 label-text">Semester</p>
-        <mat-form-field [style.width.%]="100" appearance="outline">
-          <mat-select placeholder="Select Semester" formControlName="semester">
-            @for (semester of semesterOptions(); track $index) {
-              <mat-option [value]="semester.value">{{
-                semester.label
-              }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
-      </div>
-
-      <mat-divider class="mb-4!" />
-
-      @if (isNew) {
-        <div class="input-style-1 acheva-input w-full mb-4">
-          <p class="acva-para-2 fw-400 label-text">Course Code</p>
-          <app-search-select
-            [options]="courses()"
-            [loading]="searchingCourseCodes()"
-            (searchEvent)="findCourseByCourseCode($event)"
-            formControlName="courseCode"
-          />
+            <div class="input-style-1 acheva-input w-full md:max-w-[160px]">
+              <p class="acva-para-2 fw-400 label-text">Course Load</p>
+              <mat-form-field [style.width.%]="100" appearance="outline">
+                <input
+                  matInput
+                  type="text"
+                  formControlName="courseLoad"
+                  readonly
+                />
+              </mat-form-field>
+            </div>
+          </div>
         </div>
-      } @else {
-        <div class="input-style-1 acheva-input w-full">
-          <p class="acva-para-2 fw-400 label-text">Course Code</p>
-          <mat-form-field [style.width.%]="100" appearance="outline">
-            <input matInput type="text" formControlName="courseCode" />
-          </mat-form-field>
+      </app-card>
+
+      <!-- Academic Details section -->
+      <app-card
+        label="Academic Details"
+        iconSrc="icons/general/faculty-icon.svg"
+        [showDivider]="true"
+        dividerClass="!mt-4"
+      >
+        <div content class="p-4 flex flex-col gap-4">
+          <div class="grid md:grid-cols-2 grid-cols-1 gap-4">
+            <div class="input-style-1 acheva-input w-full">
+              <p class="acva-para-2 fw-400 label-text">Session</p>
+              <mat-form-field [style.width.%]="100" appearance="outline">
+                <mat-select
+                  placeholder="Select your session"
+                  formControlName="session"
+                >
+                  @for (session of sessionOptions(); track $index) {
+                    <mat-option [value]="session">{{ session }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            </div>
+
+            <div class="input-style-1 acheva-input w-full">
+              <p class="acva-para-2 fw-400 label-text">Admission Year</p>
+              <mat-form-field [style.width.%]="100" appearance="outline">
+                <mat-select
+                  placeholder="Select your admission year"
+                  formControlName="admissionYear"
+                >
+                  @for (year of admissionYearOptions(); track $index) {
+                    <mat-option [value]="year">{{ year }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            </div>
+          </div>
+
+          <div class="grid md:grid-cols-2 grid-cols-1 gap-4">
+            <div class="input-style-1 acheva-input w-full">
+              <p
+                class="acva-para-2 fw-400 label-text flex items-center gap-1.5"
+              >
+                Student faculty
+                <app-svg
+                  svgWidth="0.9rem"
+                  svgHeight="0.9rem"
+                  src="icons/general/info-icon.svg"
+                />
+              </p>
+              <mat-form-field [style.width.%]="100" appearance="outline">
+                <mat-select
+                  placeholder="Select your faculty"
+                  formControlName="faculty"
+                  (selectionChange)="getDepartments($event)"
+                  [compareWith]="compareFacultyFn"
+                >
+                  @for (faculty of facultiesOptions(); track $index) {
+                    <mat-option [value]="faculty">{{ faculty.name }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            </div>
+
+            <div class="input-style-1 acheva-input w-full">
+              <p
+                class="acva-para-2 fw-400 label-text flex items-center gap-1.5"
+              >
+                Student department
+                <app-svg
+                  svgWidth="0.9rem"
+                  svgHeight="0.9rem"
+                  src="icons/general/info-icon.svg"
+                />
+              </p>
+              <mat-form-field [style.width.%]="100" appearance="outline">
+                <mat-select
+                  placeholder="Select your department"
+                  formControlName="department"
+                  [compareWith]="compareDepartmentFn"
+                >
+                  @for (dept of departmentsOptions(); track $index) {
+                    <mat-option [value]="dept">{{ dept.name }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            </div>
+          </div>
         </div>
-      }
+      </app-card>
 
-      <!-- Course Title (Auto-filled) -->
-      <div class="input-style-1 acheva-input w-full">
-        <p class="acva-para-2 fw-400 label-text">Course Title</p>
-        <mat-form-field [style.width.%]="100" appearance="outline">
-          <input matInput type="text" formControlName="courseTitle" />
-        </mat-form-field>
-      </div>
-
-      <!-- Course Coordinator (Auto-filled) -->
-      <div class="input-style-1 acheva-input w-full">
-        <p class="acva-para-2 fw-400 label-text">Course Coordinator</p>
-        <mat-form-field [style.width.%]="100" appearance="outline">
-          <input matInput type="text" formControlName="courseCordinator" />
-        </mat-form-field>
-      </div>
-
-      <!-- Course Unit with Controls -->
-      <div class="flex items-center gap-3">
-        <div class="input-style-1 acheva-input">
-          <p class="acva-para-2 fw-400 label-text">Course Load</p>
-          <mat-form-field [style.width.%]="100" appearance="outline">
-            <input matInput type="text" formControlName="courseLoad" readonly />
-          </mat-form-field>
-        </div>
-
-        <!-- @if (isNew) {
-          <app-button
-            type="outline"
-            label="-"
-            class="btn-sm"
-            (clickEvent)="decreaseCourseUnit()"
-          />
-          <app-button
-            label="+"
-            class="btn-sm"
-            (clickEvent)="increaseCourseUnit()"
-          />
-        } -->
+      <!-- Action Buttons (kept inside the left column, beneath Academic Details) -->
+      <div class="flex gap-3 justify-end">
+        <app-button type="clear" label="Cancel" (clickEvent)="cancel()" />
+        <app-button
+          label="Create Result"
+          [loading]="isLoading()"
+          [disabled]="form.invalid"
+          (clickEvent)="submit()"
+        />
       </div>
     </form>
 
-    <!-- Course Preview Section -->
+    <!-- Right-side live preview -->
     <app-course-preview [courseTemplate]="getCourseTemplate" />
-  </div>
-
-  <!-- Action Buttons -->
-  <div class="flex gap-3 justify-end">
-    <app-button type="clear" label="Cancel" (clickEvent)="cancel()" />
-    <app-button
-      label="Create Result"
-      [loading]="isLoading()"
-      [disabled]="form.invalid"
-      (clickEvent)="submit()"
-    />
   </div>
 </div>

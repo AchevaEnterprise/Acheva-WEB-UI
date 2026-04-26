@@ -71,7 +71,8 @@ export class ViewResultsComponent implements OnInit {
     total: 0,
   });
 
-  loadingResult = signal<boolean>(false);
+  /** Start true so the file table shows a loader on first paint (before ngOnInit). */
+  loadingResult = signal<boolean>(true);
   sendingToHOD = signal<boolean>(false);
   sendingToLecturer = signal<boolean>(false);
   refreshComments = signal<boolean>(false);
@@ -202,9 +203,10 @@ export class ViewResultsComponent implements OnInit {
       this.resultsService.approveResult(result._id)
     );
 
+    // First HOD in the chain is always the course-owning department's HOD.
     const payload: ISendSelectedResult[] = results.map((result) => ({
       resultId: result._id,
-      recipient: result.roles.HOD,
+      recipient: result.roles.HOD_COURSE_DEPT ?? '',
     }));
 
     forkJoin(approveBulkReq)

@@ -30,6 +30,29 @@ export function isResultStatus(value: string): value is ResultStatusEnum {
   return RESULT_STATUS_VALUES.includes(value as ResultStatusEnum);
 }
 
+/**
+ * Role IDs attached to every result by the backend
+ * (see `ResultsService.attachRolesToResult` in the Nest API).
+ *
+ * The HOD field is split in two because a single result may route through
+ * both the course-owning department and the students' (offering) department:
+ *
+ *   HOD_COURSE_DEPT   — HOD of the department that OWNS the course
+ *                        (e.g. Mathematics for `MTH 101`)
+ *   HOD_OFFERING_DEPT — HOD of the department whose students wrote the course
+ *                        (e.g. Physics when Physics 100L sits `MTH 101`)
+ *
+ * When the cohort is internal (course dept === offering dept) both IDs point
+ * to the same lecturer.
+ */
+export interface IResultRoles {
+  HOD_COURSE_DEPT: string | null;
+  HOD_OFFERING_DEPT: string | null;
+  DEAN: string | null;
+  COURSE_COORDINATOR: string;
+  COURSE_ADVISOR: string | null;
+}
+
 export interface IResult {
   _id: string;
   course: ICourse;
@@ -37,16 +60,12 @@ export interface IResult {
   level: string;
   semester: string;
   department: IDepartment;
+  faculty?: IFaculty;
   school: ISchool;
   status: ResultStatusEnum;
   uploadedBy: string | { _id: string; firstname: string; lastname: string };
   isApproved: boolean | null;
-  roles: {
-    COURSE_ADVISOR: string;
-    COURSE_COORDINATOR: string;
-    DEAN: string;
-    HOD: string;
-  };
+  roles: IResultRoles;
   hasBeenSent: boolean;
   hasFinalApproval: boolean;
   currentHandler: string;
@@ -54,6 +73,7 @@ export interface IResult {
   previousAction: string;
   workflowHistory: Array<unknown>;
   receivingHandler: string;
+  rejectedBy?: string[];
   analytics: {
     total: number;
     totalPass: number;

@@ -1,11 +1,16 @@
-import { Component, HostListener, inject, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  HostListener,
+  inject,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ActivatedRoute, Router } from '@angular/router';
 import { finalize, forkJoin, switchMap, throwError } from 'rxjs';
-import { RoleAccessDirective } from '../../../../@core/directives/role-access.directive';
 import { CanComponentDeactivate } from '../../../../@core/guards/pending-changes.guard';
 import { ToastService } from '../../../../@core/utility/toast.service';
 import { BackButtonComponent } from '../../../../@shared/components/back-button/back-button.component';
@@ -33,6 +38,11 @@ import {
   SegmentValue,
 } from '../../models/results.model';
 import { ResultsService } from '../../services/results.service';
+import {
+  getApprovalHandoff,
+  getRejectionHandoff,
+  RECIPIENT_LABELS,
+} from '../../utils/workflow';
 
 @Component({
   selector: 'app-edit-results',
@@ -45,7 +55,6 @@ import { ResultsService } from '../../services/results.service';
     MatTooltipModule,
     CardComponent,
     ButtonComponent,
-    RoleAccessDirective,
     LoaderComponent,
     BackButtonComponent,
     MatMenuModule,
@@ -72,7 +81,8 @@ export class EditResultsComponent implements OnInit, CanComponentDeactivate {
   totalStudentFail = signal<number>(0);
   averageTotal = signal<number>(0);
 
-  loadingResult = signal<boolean>(false);
+  /** True while result + entries are loading; start true to avoid an empty first paint. */
+  loadingResult = signal<boolean>(true);
   uploadingResult = signal<boolean>(false);
   approvingResult = signal<boolean>(false);
   rejectingResult = signal<boolean>(false);
@@ -246,40 +256,46 @@ export class EditResultsComponent implements OnInit, CanComponentDeactivate {
   }
 
   confirmApproval() {
-    const role = this.authService.activeAccount()!.role as RoleEnum;
+    const result = this.result();
+    const user = this.authService.activeAccount();
+    if (!result || !user) return;
 
-    let message = `You're about to send this vetted result to the Course Advisor. This action is irreversible. Are you sure you want to continue?`;
-    if (role === RoleEnum.HOD)
-      message = `You're about to send this vetted result to the Dean. This action is irreversible. Are you sure you want to continue?`;
+    const handoff = getApprovalHandoff(result, user.role as RoleEnum);
+    if (!handoff) {
+      this.toast.showNotification(
+        'error',
+        'Cannot Forward',
+        'No valid recipient for this result at its current state.'
+      );
+      return;
+    }
 
-    if (this.result()?.isApproved === false) {
+    const nextLabel = RECIPIENT_LABELS[handoff.role] ?? 'the next approver';
+    const message = `You're about to send this vetted result to the ${nextLabel}. This action is irreversible. Are you sure you want to continue?`;
+
+    if (result.isApproved === false) {
       this.dialog
         .open(ResendToDeanComponent, {
           width: '600px',
           data: {
-            title:
-              role === RoleEnum.HOD
-                ? 'Resend to Dean'
-                : 'Resend to Course Advisor',
+            title: `Resend to ${nextLabel}`,
             resultId: this.resultId,
           },
         })
         .afterClosed()
         .subscribe({
-          next: (result: {
+          next: (outcome: {
             issueStatus: 'RESOLVED' | 'UNRESOLVED';
             comment: string;
           }) => {
-            if (result) this.approve(result);
+            if (outcome) this.approve(outcome);
           },
         });
     } else {
       this.dialog
         .open(ConfirmationComponent, {
           width: '600px',
-          data: {
-            message: message,
-          },
+          data: { message },
         })
         .afterClosed()
         .subscribe({
@@ -291,9 +307,20 @@ export class EditResultsComponent implements OnInit, CanComponentDeactivate {
   }
 
   approve(meta?: { issueStatus: 'RESOLVED' | 'UNRESOLVED'; comment: string }) {
-    this.approvingResult.set(true);
-    const { roles } = this.result() as IResult;
+    const result = this.result() as IResult;
     const user = this.authService.activeAccount()!;
+    const handoff = getApprovalHandoff(result, user.role as RoleEnum);
+
+    if (!handoff) {
+      this.toast.showNotification(
+        'error',
+        'Cannot Forward',
+        'No valid recipient for this result at its current state.'
+      );
+      return;
+    }
+
+    this.approvingResult.set(true);
 
     this.resultsService
       .approveResult(this.resultId, meta?.comment, meta?.issueStatus)
@@ -302,8 +329,8 @@ export class EditResultsComponent implements OnInit, CanComponentDeactivate {
           if (resp.status) {
             return this.resultsService.sendResult(
               this.resultId,
-              user.role === RoleEnum.HOD ? roles.DEAN : roles.HOD,
-              user.role === RoleEnum.HOD ? RoleEnum.DEAN : RoleEnum.HOD
+              handoff.recipientId,
+              handoff.role
             );
           }
 
@@ -369,9 +396,20 @@ export class EditResultsComponent implements OnInit, CanComponentDeactivate {
   }
 
   reject(reason: string) {
-    this.rejectingResult.set(true);
-    const { roles } = this.result() as IResult;
+    const result = this.result() as IResult;
     const user = this.authService.activeAccount()!;
+    const handoff = getRejectionHandoff(result, user.role as RoleEnum);
+
+    if (!handoff) {
+      this.toast.showNotification(
+        'error',
+        'Cannot Reject',
+        'You are not allowed to reject this result at its current state.'
+      );
+      return;
+    }
+
+    this.rejectingResult.set(true);
 
     this.resultsService
       .rejectResult(this.resultId, reason)
@@ -380,10 +418,8 @@ export class EditResultsComponent implements OnInit, CanComponentDeactivate {
           if (resp.status) {
             return this.resultsService.sendResult(
               this.resultId,
-              user.role === RoleEnum.HOD ? roles.COURSE_COORDINATOR : roles.HOD,
-              user.role === RoleEnum.HOD
-                ? RoleEnum.COURSE_COORDINATOR
-                : RoleEnum.HOD
+              handoff.recipientId,
+              handoff.role
             );
           }
 

@@ -1,17 +1,26 @@
 import { NgClass } from '@angular/common';
-import { Component, inject, OnInit, signal, viewChild } from '@angular/core';
+import {
+  Component,
+  inject,
+  OnInit,
+  signal,
+  viewChild,
+  WritableSignal,
+} from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ActivatedRoute, Router } from '@angular/router';
-import { finalize, forkJoin } from 'rxjs';
+import { finalize, forkJoin, Observable, switchMap, throwError } from 'rxjs';
 import { RoleAccessDirective } from '../../../../@core/directives/role-access.directive';
 import { IPaginator } from '../../../../@core/models/paginator.model';
+import { ResultManagementDashboardTab } from '../../../../@core/models/school.model';
 import { ToastService } from '../../../../@core/utility/toast.service';
 import { CardComponent } from '../../../../@shared/components/card/card.component';
 import { ConfirmationComponent } from '../../../../@shared/components/confirmation/confirmation.component';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
 import { CommentComponent } from '../../../../@shared/components/forms/comment/comment.component';
+import { RejectReasonComponent } from '../../../../@shared/components/reject-reason/reject-reason.component';
 import {
   ISegmentSwitcher,
   SegmentSwitcherComponent,
@@ -33,6 +42,7 @@ import {
   ISendSelectedResult,
 } from '../../models/results.model';
 import { ResultsService } from '../../services/results.service';
+import { isInternalCohort } from '../../utils/workflow';
 
 @Component({
   selector: 'app-result-management',
@@ -79,12 +89,19 @@ export class ResultManagementComponent implements OnInit {
 
   loadingResults = signal<boolean>(false);
   sendingToCC = signal<boolean>(false);
-  sendingToHOD = signal<boolean>(false);
   sendingToCA = signal<boolean>(false);
   resending = signal<boolean>(false);
   publishing = signal<boolean>(false);
   deleting = signal<boolean>(false);
   refreshComments = signal<boolean>(false);
+  /** HOD → Dean: approve + forward (PENDING first pass). */
+  approvingToDean = signal<boolean>(false);
+  /** HOD → CC: reject + route back for rework (PENDING first pass). */
+  rejectingToCC = signal<boolean>(false);
+  /** Dean → HOD: approve + forward back to HOD for the second pass. */
+  approvingToHOD = signal<boolean>(false);
+  /** Dean → HOD: reject + route back to the HOD who sent it up. */
+  rejectingToHOD = signal<boolean>(false);
 
   segments = signal<ISegmentSwitcher[]>([
     {
@@ -111,13 +128,16 @@ export class ResultManagementComponent implements OnInit {
         RoleEnum.LECTURER,
       ],
     },
+    // Course Advisor only enters the workflow at COMPLETE — the HOD → CA
+    // handoff always lands results in COMPLETE (internal cohort directly,
+    // external cohort via the offering-dept HOD). CA is therefore deliberately
+    // absent from DRAFT / PENDING / UNVERIFIED / VERIFIED / APPROVED.
     {
       label: 'Verified',
       value: 'VERIFIED',
       accessRole: [
         RoleEnum.DEAN,
         RoleEnum.HOD,
-        RoleEnum.COURSE_ADVISOR,
         RoleEnum.COURSE_COORDINATOR,
         RoleEnum.LECTURER,
       ],
@@ -128,7 +148,6 @@ export class ResultManagementComponent implements OnInit {
       accessRole: [
         RoleEnum.DEAN,
         RoleEnum.HOD,
-        RoleEnum.COURSE_ADVISOR,
         RoleEnum.COURSE_COORDINATOR,
         RoleEnum.LECTURER,
       ],
@@ -161,15 +180,7 @@ export class ResultManagementComponent implements OnInit {
       accessRole: [RoleEnum.DEAN, RoleEnum.HOD, RoleEnum.COURSE_ADVISOR],
     },
   ]);
-  activeSegment = signal<ISegmentSwitcher>(
-    this.currentRole() === RoleEnum.HOD
-      ? this.segments()[1]
-      : this.currentRole() === RoleEnum.DEAN
-        ? this.segments()[2]
-        : this.currentRole() === RoleEnum.COURSE_ADVISOR
-          ? this.segments()[3]
-          : this.segments()[0]
-  );
+  activeSegment = signal<ISegmentSwitcher>(this.resolveInitialSegment());
   segmentCardLabel = signal<string>('Access your recent drafts from here');
   segmentCardIconSrc = signal<string>('icons/general/draft-icon.svg');
 
@@ -177,10 +188,90 @@ export class ResultManagementComponent implements OnInit {
 
   RoleEnum = RoleEnum;
 
+  private readonly resultManagementRouteTabs = new Set<ResultManagementDashboardTab>(
+    [
+      'DRAFT',
+      'PENDING',
+      'UNVERIFIED',
+      'VERIFIED',
+      'APPROVED',
+      'COMPLETE',
+      'PUBLISHED',
+      'IMPORTED',
+    ],
+  );
+
   ngOnInit(): void {
-    if (this.currentRole() === RoleEnum.COURSE_COORDINATOR)
-      this.getGroupedResults();
-    else this.getResults();
+    const tabFromQuery = this.route.snapshot.queryParamMap.get('tab');
+    const appliedQueryTab = this.applyTabFromRouteQuery(tabFromQuery);
+
+    if (appliedQueryTab) {
+      void this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { tab: null },
+        queryParamsHandling: 'merge',
+        replaceUrl: true,
+      });
+    }
+
+    if (this.currentRole() === RoleEnum.COURSE_COORDINATOR) {
+      if (this.activeSegment().value === 'DRAFT') {
+        this.getGroupedResults();
+      } else {
+        this.getResults();
+      }
+    } else {
+      if (!appliedQueryTab) {
+        this.applySegmentChrome(this.activeSegment().value);
+      }
+      this.getResults();
+    }
+  }
+
+  /**
+   * Dashboard cards link here with `?tab=PENDING` (etc.). Applies the segment
+   * when the current role is allowed to see that tab.
+   */
+  private applyTabFromRouteQuery(raw: string | null): boolean {
+    if (!raw?.trim()) return false;
+    const key = raw.trim().toUpperCase() as ResultManagementDashboardTab;
+    if (!this.resultManagementRouteTabs.has(key)) return false;
+
+    const role = this.currentRole();
+    const segment = this.segments().find(
+      (s) => s.value === key && s.accessRole?.includes(role),
+    );
+    if (!segment) return false;
+
+    this.activeSegment.set(segment);
+    this.applySegmentChrome(key);
+    return true;
+  }
+
+  /**
+   * Landing tab per role, mirroring where each role first acts in the chain:
+   *   Lecturer / CC → DRAFT   HOD → PENDING   DEAN → UNVERIFIED
+   *   CA            → COMPLETE (CA never sees earlier stages post-refactor)
+   * Falls back to the first accessible segment if the ideal one is hidden.
+   */
+  private resolveInitialSegment(): ISegmentSwitcher {
+    const role = this.currentRole();
+    const preferredByRole: Partial<Record<RoleEnum, ISegmentSwitcher['value']>> = {
+      [RoleEnum.HOD]: 'PENDING',
+      [RoleEnum.DEAN]: 'UNVERIFIED',
+      [RoleEnum.COURSE_ADVISOR]: 'COMPLETE',
+      [RoleEnum.LECTURER]: 'DRAFT',
+      [RoleEnum.COURSE_COORDINATOR]: 'DRAFT',
+    };
+    const preferred = preferredByRole[role];
+    const segments = this.segments();
+    return (
+      segments.find(
+        (s) => s.value === preferred && s.accessRole?.includes(role),
+      ) ??
+      segments.find((s) => s.accessRole?.includes(role)) ??
+      segments[0]
+    );
   }
 
   get resultIsSelected() {
@@ -249,6 +340,12 @@ export class ResultManagementComponent implements OnInit {
         )!
     );
 
+    this.applySegmentChrome(switchValue);
+    this.getResults();
+  }
+
+  /** Card subtitle + icon for the active status tab (also used on first load). */
+  private applySegmentChrome(switchValue: ISegmentSwitcher['value']) {
     switch (switchValue) {
       case 'DRAFT': {
         this.segmentCardLabel.set('Access your recent drafts from here');
@@ -291,8 +388,6 @@ export class ResultManagementComponent implements OnInit {
         break;
       }
     }
-
-    this.getResults();
   }
 
   confirmSendResult(role: RoleEnum[]) {
@@ -370,61 +465,283 @@ export class ResultManagementComponent implements OnInit {
       });
   }
 
-  confirmSendToCA() {
+  /**
+   * HOD: second pass after the Dean (VERIFIED) or offering-dept hop (APPROVED).
+   * Must call `approve` before `send` so the backend bumps status:
+   *   internal cohort VERIFIED  → COMPLETE → CA
+   *   external cohort VERIFIED → APPROVED → students' dept HOD
+   *   offering HOD    APPROVED → COMPLETE → CA
+   */
+  confirmHodForwardAfterDean() {
     const selectedResults = this.fileTableRef()?.selection.selected;
+    if (!this.ensureSelection(selectedResults)) return;
 
-    if (!selectedResults || selectedResults.length < 1) {
-      this.toast.showNotification(
-        'error',
-        'No Result(s) Selected',
-        'You have not selected any result(s) to be sent'
-      );
-      return;
-    }
+    const tab = this.activeSegment().value;
+    if (tab !== 'VERIFIED' && tab !== 'APPROVED') return;
+
+    if (!this.validateHodForwardRecipients(selectedResults, tab)) return;
 
     this.dialog
       .open(ConfirmationComponent, {
         width: '600px',
         data: {
-          message: `You're about to send ${selectedResults.length} results to the Course Advisor. This action is irreversible, Are you sure you want to continue?`,
+          message: this.hodForwardConfirmationCopy(selectedResults, tab),
         },
       })
       .afterClosed()
       .subscribe({
         next: (confirmed: boolean) => {
-          if (confirmed) this.sendToCA(selectedResults);
+          if (!confirmed) return;
+          if (tab === 'APPROVED') {
+            this.executeHodOfferingDeptApproveAndSendToCA(selectedResults);
+          } else {
+            this.executeCourseDeptHodSecondPass(selectedResults);
+          }
         },
       });
   }
 
-  sendToCA(selectedResults: IResult[]) {
+  /**
+   * Tooltip for the HOD "Approve" button on the VERIFIED / APPROVED tabs.
+   * The button label is deliberately generic — the tooltip (and the
+   * confirmation dialog in `hodForwardConfirmationCopy`) disclose the real
+   * recipient(s) based on the selection and current tab.
+   */
+  hodVerifiedForwardTooltip(): string {
+    const selected = this.fileTableRef()?.selection.selected ?? [];
+    const tab = this.activeSegment().value;
+
+    if (tab === 'APPROVED') {
+      return 'Approve and send to the Course Advisor (result moves to Complete)';
+    }
+
+    if (!selected.length) {
+      return 'Approve and forward the selected result(s) to the next approver';
+    }
+
+    const hasInternal = selected.some((r) => isInternalCohort(r));
+    const hasExternal = selected.some((r) => !isInternalCohort(r));
+
+    if (hasInternal && hasExternal) {
+      return 'Approves and forwards: internal cohorts to the Course Advisor; external cohorts to the students’ department HOD';
+    }
+    if (hasExternal) {
+      return 'Approve and send to the Head of Department for the students’ home department';
+    }
+    return 'Approve and send to the Course Advisor (result moves to Complete)';
+  }
+
+  private validateHodForwardRecipients(
+    selected: IResult[],
+    tab: 'VERIFIED' | 'APPROVED',
+  ): boolean {
+    if (tab === 'APPROVED') {
+      const missing = selected.filter((r) => !r.roles.COURSE_ADVISOR);
+      if (missing.length) {
+        this.toast.showNotification(
+          'error',
+          'Missing Course Advisor',
+          'One or more results do not have a Course Advisor assigned.',
+        );
+        return false;
+      }
+      return true;
+    }
+
+    const internal = selected.filter((r) => isInternalCohort(r));
+    const external = selected.filter((r) => !isInternalCohort(r));
+
+    if (internal.some((r) => !r.roles.COURSE_ADVISOR)) {
+      this.toast.showNotification(
+        'error',
+        'Missing Course Advisor',
+        'One or more internal-cohort results do not have a Course Advisor assigned.',
+      );
+      return false;
+    }
+    if (external.some((r) => !r.roles.HOD_OFFERING_DEPT)) {
+      this.toast.showNotification(
+        'error',
+        'Missing HOD',
+        'One or more external-cohort results do not have a students’ department HOD assigned.',
+      );
+      return false;
+    }
+    return true;
+  }
+
+  private hodForwardConfirmationCopy(
+    selected: IResult[],
+    tab: 'VERIFIED' | 'APPROVED',
+  ): string {
+    const n = selected.length;
+    if (tab === 'APPROVED') {
+      return `You're about to approve and send ${n} result(s) to the Course Advisor for publication. This action is irreversible. Continue?`;
+    }
+    const internal = selected.filter((r) => isInternalCohort(r));
+    const external = selected.filter((r) => !isInternalCohort(r));
+    if (internal.length && external.length) {
+      return `You're about to approve and forward ${n} result(s): internal cohort(s) go to the Course Advisor (Complete); external cohort(s) go to the students’ department HOD (Approved). This action is irreversible. Continue?`;
+    }
+    if (external.length) {
+      return `You're about to approve and send ${n} result(s) to the students’ department Head of Department. This action is irreversible. Continue?`;
+    }
+    return `You're about to approve and send ${n} result(s) to the Course Advisor. The result will move to Complete. This action is irreversible. Continue?`;
+  }
+
+  private executeCourseDeptHodSecondPass(selected: IResult[]) {
+    const internal = selected.filter((r) => isInternalCohort(r));
+    const external = selected.filter((r) => !isInternalCohort(r));
+    const batches: Observable<{ status: boolean }>[] = [];
+    if (internal.length) {
+      batches.push(
+        this.buildApproveThenSend$(
+          internal,
+          (r) => r.roles.COURSE_ADVISOR ?? '',
+          RoleEnum.COURSE_ADVISOR,
+        ),
+      );
+    }
+    if (external.length) {
+      batches.push(
+        this.buildApproveThenSend$(
+          external,
+          (r) => r.roles.HOD_OFFERING_DEPT ?? '',
+          RoleEnum.HOD,
+        ),
+      );
+    }
+    if (!batches.length) return;
+
     this.sendingToCA.set(true);
-
-    const payload: ISendSelectedResult[] = selectedResults.map((result) => ({
-      resultId: result._id,
-      recipient: result.roles.COURSE_ADVISOR,
-    }));
-
-    this.resultService
-      .sendSelectedResult(payload, RoleEnum.COURSE_ADVISOR)
+    forkJoin(batches)
       .pipe(finalize(() => this.sendingToCA.set(false)))
       .subscribe({
-        next: (resp) => {
+        next: (responses: { status: boolean }[]) => {
+          if (responses.every((r) => r.status)) {
+            this.toast.showNotification(
+              'success',
+              'Result Sent',
+              'Selected result(s) have been approved and forwarded',
+            );
+            this.getResults();
+            selected.forEach((r) => this.fileTableRef()!.selection.deselect(r));
+          }
+        },
+        error: (error: { error?: { message?: string } }) => {
+          this.toast.showNotification(
+            'error',
+            'Error Occured',
+            error?.error?.message ?? 'Unable to complete approval and send',
+          );
+        },
+      });
+  }
+
+  private executeHodOfferingDeptApproveAndSendToCA(selected: IResult[]) {
+    this.sendingToCA.set(true);
+    this.buildApproveThenSend$(
+      selected,
+      (r) => r.roles.COURSE_ADVISOR ?? '',
+      RoleEnum.COURSE_ADVISOR,
+    )
+      .pipe(finalize(() => this.sendingToCA.set(false)))
+      .subscribe({
+        next: (resp: { status: boolean }) => {
           if (resp.status) {
             this.toast.showNotification(
               'success',
               'Result Sent',
-              'Result has been sent to the Course Advisor'
+              'Result has been sent to the Course Advisor',
             );
-
             this.getResults();
-            // Unselect selected result
-            selectedResults.forEach((result) => {
-              this.fileTableRef()!.selection.deselect(result);
-            });
+            selected.forEach((r) => this.fileTableRef()!.selection.deselect(r));
           }
         },
+        error: (error: { error?: { message?: string } }) => {
+          this.toast.showNotification(
+            'error',
+            'Error Occured',
+            error?.error?.message ?? 'Unable to send result to the Course Advisor',
+          );
+        },
       });
+  }
+
+  /**
+   * One batch: parallel PATCH approve on every row, then one POST selected send.
+   * Matches the HOD→Dean / Dean→HOD pattern used elsewhere in this feature.
+   */
+  private buildApproveThenSend$(
+    results: IResult[],
+    getRecipient: (r: IResult) => string,
+    sendRole: RoleEnum,
+  ): Observable<{ status: boolean }> {
+    const approveReq$ = results.map((result) =>
+      this.resultService.approveResult(result._id),
+    );
+    const payload: ISendSelectedResult[] = results.map((result) => ({
+      resultId: result._id,
+      recipient: getRecipient(result),
+    }));
+    return forkJoin(approveReq$).pipe(
+      switchMap((resp) =>
+        resp.every((res) => res.status)
+          ? this.resultService.sendSelectedResult(payload, sendRole)
+          : throwError(() => new Error('Failed to approve result')),
+      ),
+    );
+  }
+
+  // -----------------------------------------------------------------------
+  // Workflow handoff actions
+  //
+  // Each button on this page (Approve-to-Dean, Reject-to-CC, Approve-to-HOD,
+  // Reject-to-HOD, …) is a thin configuration over one of two shared engines
+  // below: {@link runApprovalHandoff} and {@link runRejectionHandoff}. This
+  // keeps new handoffs declarative — adding a role only needs a new signal
+  // and a new `confirm*` one-liner, not another 80-line copy of the same
+  // approve/reject → send pipeline.
+  // -----------------------------------------------------------------------
+
+  /** HOD → Dean: approve (PENDING → UNVERIFIED) and forward to the Dean. */
+  confirmApproveToDean() {
+    this.runApprovalHandoff({
+      loadingSignal: this.approvingToDean,
+      recipientRole: RoleEnum.DEAN,
+      recipientLabel: 'Dean',
+      getRecipient: (result) => result.roles.DEAN ?? '',
+    });
+  }
+
+  /** HOD → CC: reject and route back to the Course Coordinator. */
+  confirmRejectToCC() {
+    this.runRejectionHandoff({
+      loadingSignal: this.rejectingToCC,
+      recipientRole: RoleEnum.COURSE_COORDINATOR,
+      recipientLabel: 'Course Coordinator',
+      getRecipient: (result) => result.roles.COURSE_COORDINATOR ?? '',
+    });
+  }
+
+  /** Dean → HOD: approve (UNVERIFIED → VERIFIED) and forward back to HOD. */
+  confirmApproveToHOD() {
+    this.runApprovalHandoff({
+      loadingSignal: this.approvingToHOD,
+      recipientRole: RoleEnum.HOD,
+      recipientLabel: 'Head of Department',
+      getRecipient: (result) => result.roles.HOD_COURSE_DEPT ?? '',
+    });
+  }
+
+  /** Dean → HOD: reject and return to the HOD who sent it up for rework. */
+  confirmRejectToHOD() {
+    this.runRejectionHandoff({
+      loadingSignal: this.rejectingToHOD,
+      recipientRole: RoleEnum.HOD,
+      recipientLabel: 'Head of Department',
+      getRecipient: (result) => result.roles.HOD_COURSE_DEPT ?? '',
+    });
   }
 
   confirmPublishResult() {
@@ -543,7 +860,7 @@ export class ResultManagementComponent implements OnInit {
 
     const payload: ISendSelectedResult[] = selectedResults.map((result) => ({
       resultId: result._id,
-      recipient: result.roles.DEAN,
+      recipient: result.roles.DEAN ?? '',
     }));
 
     this.resultService
@@ -655,4 +972,180 @@ export class ResultManagementComponent implements OnInit {
       },
     });
   }
+
+  // -----------------------------------------------------------------------
+  // Shared workflow-handoff engines
+  // -----------------------------------------------------------------------
+
+  /**
+   * Validates that at least one row is selected; if not, shows a toast and
+   * returns false. Narrows the type so call-sites can safely use the array.
+   */
+  private ensureSelection(
+    selected: IResult[] | undefined
+  ): selected is IResult[] {
+    if (!selected || selected.length < 1) {
+      this.toast.showNotification(
+        'error',
+        'No Result(s) Selected',
+        'You have not selected any result(s) to be sent'
+      );
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * Generic approval handoff: confirm → bulk approve → bulk send. Role-specific
+   * callers supply a {@link HandoffConfig} describing which loading signal to
+   * flip, where the result is going, and how to derive the recipient id.
+   */
+  private runApprovalHandoff(config: HandoffConfig) {
+    const selectedResults = this.fileTableRef()?.selection.selected;
+    if (!this.ensureSelection(selectedResults)) return;
+
+    this.dialog
+      .open(ConfirmationComponent, {
+        width: '600px',
+        data: {
+          message: `You're about to send ${selectedResults.length} result(s) to the ${config.recipientLabel}. This action is irreversible, Are you sure you want to continue?`,
+        },
+      })
+      .afterClosed()
+      .subscribe({
+        next: (confirmed: boolean) => {
+          if (confirmed) this.approveAndSend(selectedResults, config);
+        },
+      });
+  }
+
+  /**
+   * Generic rejection handoff: capture reason → bulk reject → bulk send.
+   */
+  private runRejectionHandoff(config: HandoffConfig) {
+    const selectedResults = this.fileTableRef()?.selection.selected;
+    if (!this.ensureSelection(selectedResults)) return;
+
+    this.dialog
+      .open(RejectReasonComponent, {
+        width: '600px',
+        data: { resultId: selectedResults[0]._id },
+      })
+      .afterClosed()
+      .subscribe({
+        next: (comment: string) => {
+          if (comment) this.rejectAndSend(selectedResults, comment, config);
+        },
+      });
+  }
+
+  private approveAndSend(selectedResults: IResult[], config: HandoffConfig) {
+    config.loadingSignal.set(true);
+
+    const approveBulkReq = selectedResults.map((result) =>
+      this.resultService.approveResult(result._id)
+    );
+    const payload: ISendSelectedResult[] = selectedResults.map((result) => ({
+      resultId: result._id,
+      recipient: config.getRecipient(result),
+    }));
+
+    forkJoin(approveBulkReq)
+      .pipe(
+        switchMap((resp) =>
+          resp.every((res) => res.status)
+            ? this.resultService.sendSelectedResult(
+                payload,
+                config.recipientRole
+              )
+            : throwError(() => new Error('Failed to approve result'))
+        ),
+        finalize(() => config.loadingSignal.set(false))
+      )
+      .subscribe({
+        next: (resp) =>
+          this.handleHandoffSuccess(resp, selectedResults, config),
+        error: (error) => this.handleHandoffError(error, config),
+      });
+  }
+
+  private rejectAndSend(
+    selectedResults: IResult[],
+    comment: string,
+    config: HandoffConfig
+  ) {
+    config.loadingSignal.set(true);
+
+    const rejectBulkReq = selectedResults.map((result) =>
+      this.resultService.rejectResult(result._id, comment)
+    );
+    const payload: ISendSelectedResult[] = selectedResults.map((result) => ({
+      resultId: result._id,
+      recipient: config.getRecipient(result),
+    }));
+
+    forkJoin(rejectBulkReq)
+      .pipe(
+        switchMap((resp) =>
+          resp.every((res) => res.status)
+            ? this.resultService.sendSelectedResult(
+                payload,
+                config.recipientRole
+              )
+            : throwError(() => new Error('Failed to reject result'))
+        ),
+        finalize(() => config.loadingSignal.set(false))
+      )
+      .subscribe({
+        next: (resp) =>
+          this.handleHandoffSuccess(resp, selectedResults, config),
+        error: (error) => this.handleHandoffError(error, config),
+      });
+  }
+
+  private handleHandoffSuccess(
+    resp: { status: boolean },
+    selectedResults: IResult[],
+    config: HandoffConfig
+  ) {
+    if (!resp.status) return;
+
+    this.toast.showNotification(
+      'success',
+      'Result Sent',
+      `Result has been sent to the ${config.recipientLabel}`
+    );
+    this.getResults();
+    selectedResults.forEach((result) => {
+      this.fileTableRef()!.selection.deselect(result);
+    });
+  }
+
+  private handleHandoffError(
+    error: { error?: { message?: string } },
+    config: HandoffConfig
+  ) {
+    this.toast.showNotification(
+      'error',
+      'Error Occured',
+      error?.error?.message ??
+        `Unable to send result to the ${config.recipientLabel}`
+    );
+  }
+}
+
+/**
+ * Description of a single workflow handoff. Callers declare *what* should
+ * happen (where the result goes, which spinner to flip) and the generic
+ * engines own *how* the network orchestration is performed.
+ */
+interface HandoffConfig {
+  /** Spinner bound to the triggering button. */
+  loadingSignal: WritableSignal<boolean>;
+  /** Role passed to `/results/selected?role=…` so the backend fans it out. */
+  recipientRole: RoleEnum;
+  /** Human-friendly label used in confirmation / toast copy. */
+  recipientLabel: string;
+  /** Extracts the recipient id (a lecturer id) from the result. */
+  getRecipient: (result: IResult) => string;
 }

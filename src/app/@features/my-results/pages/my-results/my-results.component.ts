@@ -14,6 +14,7 @@ import {
   SegmentSwitcherComponent,
 } from '../../../../@shared/components/segment-switcher/segment-switcher.component';
 import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
+import { AuthenticationService } from '../../../auth/service/auth.service';
 import { RoleEnum } from '../../../auth/model/auth.model';
 import { IResult } from '../../../result-management/models/results.model';
 import { ResultsService } from '../../../result-management/services/results.service';
@@ -43,6 +44,7 @@ export class MyResultsComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly resultService = inject(ResultsService);
+  private readonly authService = inject(AuthenticationService);
   private readonly dialog = inject(MatDialog);
   private readonly toast = inject(ToastService);
 
@@ -79,9 +81,30 @@ export class MyResultsComponent implements OnInit {
         RoleEnum.LECTURER,
       ],
     },
+    // Course Advisor only enters the workflow at COMPLETE.
     {
       label: 'Verified',
       value: 'VERIFIED',
+      accessRole: [
+        RoleEnum.DEAN,
+        RoleEnum.HOD,
+        RoleEnum.COURSE_COORDINATOR,
+        RoleEnum.LECTURER,
+      ],
+    },
+    {
+      label: 'Approved',
+      value: 'APPROVED',
+      accessRole: [
+        RoleEnum.DEAN,
+        RoleEnum.HOD,
+        RoleEnum.COURSE_COORDINATOR,
+        RoleEnum.LECTURER,
+      ],
+    },
+    {
+      label: 'Complete',
+      value: 'COMPLETE',
       accessRole: [
         RoleEnum.DEAN,
         RoleEnum.HOD,
@@ -107,7 +130,24 @@ export class MyResultsComponent implements OnInit {
       accessRole: [RoleEnum.DEAN, RoleEnum.HOD, RoleEnum.COURSE_ADVISOR],
     },
   ]);
-  activeSegment = signal<ISegmentSwitcher>(this.segments()[0]);
+  activeSegment = signal<ISegmentSwitcher>(this.resolveInitialSegment());
+
+  /**
+   * Landing tab per role. CA lands on COMPLETE (the only pre-publish state
+   * they can see after the HOD → CA handoff).
+   */
+  private resolveInitialSegment(): ISegmentSwitcher {
+    const role = this.authService.activeAccount()?.role;
+    const segments = this.segments();
+    if (role === RoleEnum.COURSE_ADVISOR) {
+      return (
+        segments.find(
+          (s) => s.value === 'COMPLETE' && s.accessRole?.includes(role),
+        ) ?? segments.find((s) => s.accessRole?.includes(role)) ?? segments[0]
+      );
+    }
+    return segments[0];
+  }
 
   ngOnInit(): void {
     this.getResults();

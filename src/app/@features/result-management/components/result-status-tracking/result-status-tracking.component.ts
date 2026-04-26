@@ -12,5 +12,5 @@ import { TimeLineComponent } from './time-line/time-line.component';
   styleUrl: './result-status-tracking.component.scss',
 })
 export class ResultStatusTrackingComponent {
-  result = input<IResult | null>();
+  result = input<IResult | null>(null);
 }

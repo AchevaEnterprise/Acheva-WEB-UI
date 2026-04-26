@@ -86,6 +86,7 @@ export class DashboardComponent implements OnInit {
       iconSrc: 'images/general/dash-card-draft.svg',
       infoLabel: 'Results that are being compiled',
       accessRole: [RoleEnum.LECTURER, RoleEnum.COURSE_COORDINATOR],
+      resultTab: 'DRAFT',
     },
     {
       label: 'Pending',
@@ -97,6 +98,7 @@ export class DashboardComponent implements OnInit {
         RoleEnum.COURSE_COORDINATOR,
         RoleEnum.LECTURER,
       ],
+      resultTab: 'PENDING',
     },
     {
       label: 'Unverified',
@@ -109,7 +111,9 @@ export class DashboardComponent implements OnInit {
         RoleEnum.COURSE_COORDINATOR,
         RoleEnum.LECTURER,
       ],
+      resultTab: 'UNVERIFIED',
     },
+    // Course Advisor only enters the workflow at COMPLETE; see segments below.
     {
       label: 'Verified',
       count: 0,
@@ -118,23 +122,23 @@ export class DashboardComponent implements OnInit {
       accessRole: [
         RoleEnum.DEAN,
         RoleEnum.HOD,
-        RoleEnum.COURSE_ADVISOR,
         RoleEnum.COURSE_COORDINATOR,
         RoleEnum.LECTURER,
       ],
+      resultTab: 'VERIFIED',
     },
     {
       label: 'Approved',
       count: 0,
       iconSrc: 'images/general/dash-card-pending.svg',
-      infoLabel: 'Results in post-Dean approval (workflow)',
+      infoLabel: 'Results awaiting the offering department HOD',
       accessRole: [
         RoleEnum.DEAN,
         RoleEnum.HOD,
-        RoleEnum.COURSE_ADVISOR,
         RoleEnum.COURSE_COORDINATOR,
         RoleEnum.LECTURER,
       ],
+      resultTab: 'APPROVED',
     },
     {
       label: 'Complete',
@@ -148,6 +152,7 @@ export class DashboardComponent implements OnInit {
         RoleEnum.COURSE_COORDINATOR,
         RoleEnum.LECTURER,
       ],
+      resultTab: 'COMPLETE',
     },
     {
       label: 'Published',
@@ -161,6 +166,7 @@ export class DashboardComponent implements OnInit {
         RoleEnum.COURSE_COORDINATOR,
         RoleEnum.LECTURER,
       ],
+      resultTab: 'PUBLISHED',
     },
     {
       label: 'Imported',
@@ -168,6 +174,7 @@ export class DashboardComponent implements OnInit {
       iconSrc: 'images/general/dash-card-imported.svg',
       infoLabel: 'Results imported / manually processed',
       accessRole: [RoleEnum.DEAN, RoleEnum.HOD, RoleEnum.COURSE_ADVISOR],
+      resultTab: 'IMPORTED',
     },
   ]);
 
@@ -216,7 +223,6 @@ export class DashboardComponent implements OnInit {
       accessRole: [
         RoleEnum.DEAN,
         RoleEnum.HOD,
-        RoleEnum.COURSE_ADVISOR,
         RoleEnum.COURSE_COORDINATOR,
         RoleEnum.LECTURER,
       ],
@@ -227,7 +233,6 @@ export class DashboardComponent implements OnInit {
       accessRole: [
         RoleEnum.DEAN,
         RoleEnum.HOD,
-        RoleEnum.COURSE_ADVISOR,
         RoleEnum.COURSE_COORDINATOR,
         RoleEnum.LECTURER,
       ],
@@ -260,15 +265,7 @@ export class DashboardComponent implements OnInit {
       accessRole: [RoleEnum.DEAN, RoleEnum.HOD, RoleEnum.COURSE_ADVISOR],
     },
   ]);
-  activeSegment = signal<ISegmentSwitcher>(
-    this.currentRole() === RoleEnum.HOD
-      ? this.segments()[1]
-      : this.currentRole() === RoleEnum.DEAN
-        ? this.segments()[2]
-        : this.currentRole() === RoleEnum.COURSE_ADVISOR
-          ? this.segments()[3]
-          : this.segments()[0]
-  );
+  activeSegment = signal<ISegmentSwitcher>(this.resolveInitialSegment());
   segmentCardLabel = signal<string>('Access your recent drafts from here');
   segmentCardIconSrc = signal<string>('icons/general/draft-icon.svg');
   chart = signal<{ courseCode: string; passRate: number; failRate: number }[]>(
@@ -338,9 +335,35 @@ export class DashboardComponent implements OnInit {
     this.getFirstFiveResultCharts();
     this.getActivities();
 
-    if (this.currentRole() === RoleEnum.COURSE_COORDINATOR)
+    if (this.currentRole() === RoleEnum.COURSE_COORDINATOR) {
       this.getGroupedResults();
-    else this.getResults();
+    } else {
+      this.switchSegment(this.activeSegment().value);
+    }
+  }
+
+  /**
+   * Landing tab per role. CA always lands on COMPLETE because that is the
+   * only pre-publish state they can act on after the HOD → CA handoff.
+   */
+  private resolveInitialSegment(): ISegmentSwitcher {
+    const role = this.currentRole();
+    const preferredByRole: Partial<Record<RoleEnum, ISegmentSwitcher['value']>> = {
+      [RoleEnum.HOD]: 'PENDING',
+      [RoleEnum.DEAN]: 'UNVERIFIED',
+      [RoleEnum.COURSE_ADVISOR]: 'COMPLETE',
+      [RoleEnum.LECTURER]: 'DRAFT',
+      [RoleEnum.COURSE_COORDINATOR]: 'DRAFT',
+    };
+    const preferred = preferredByRole[role];
+    const segments = this.segments();
+    return (
+      segments.find(
+        (s) => s.value === preferred && s.accessRole?.includes(role),
+      ) ??
+      segments.find((s) => s.accessRole?.includes(role)) ??
+      segments[0]
+    );
   }
 
   getDashboardAnalytics() {

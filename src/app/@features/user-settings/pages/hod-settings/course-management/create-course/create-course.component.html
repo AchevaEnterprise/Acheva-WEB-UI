@@ -6,149 +6,165 @@
     </p>
   </header>
 
-  <div class="grid lg:grid-cols-[1fr_40%] md:grid-cols-2 sm:grid-cols-1 gap-8">
-    <form [formGroup]="form">
-      <!-- Semester -->
-      <div class="input-style-1 acheva-input w-full">
-        <p class="acva-para-2 fw-400 label-text">Semester</p>
-        <mat-form-field [style.width.%]="100" appearance="outline">
-          <mat-select placeholder="Select Semester" formControlName="semester">
-            @for (semester of semesterOptions(); track $index) {
-              <mat-option [value]="semester.value">
-                {{ semester.label }}
-              </mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
-      </div>
+  <div class="grid lg:grid-cols-[1fr_340px] md:grid-cols-1 gap-6">
+    <form [formGroup]="form" class="flex flex-col gap-6">
+      <!-- Course Details section -->
+      <app-card
+        label="Course Details"
+        iconSrc="icons/general/course-icon.svg"
+        [showDivider]="true"
+        dividerClass="!mt-4"
+      >
+        <div content class="p-4 flex flex-col gap-4">
+          <!-- Course Title -->
+          <div class="input-style-1 acheva-input w-full">
+            <p class="acva-para-2 fw-400 label-text">Course Title</p>
+            <mat-form-field [style.width.%]="100" appearance="outline">
+              <input
+                matInput
+                type="text"
+                formControlName="courseTitle"
+                placeholder="Fill a course title"
+              />
+            </mat-form-field>
+          </div>
 
-      <!-- School -->
-      <div class="input-style-1 acheva-input w-full">
-        <p class="acva-para-2 fw-400 label-text">School</p>
-        <mat-form-field [style.width.%]="100" appearance="outline">
-          <mat-select
-            placeholder="Select your school"
-            formControlName="school"
-            (selectionChange)="getFaculties($event)"
-            [compareWith]="compareSchoolFn"
-          >
-            @for (school of schoolsOptions(); track $index) {
-              <mat-option [value]="school">{{ school.name }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
-      </div>
-
-      <!-- Faculty -->
-      <div class="input-style-1 acheva-input w-full">
-        <p class="acva-para-2 fw-400 label-text">Faculty</p>
-        <mat-form-field [style.width.%]="100" appearance="outline">
-          <mat-select
-            placeholder="Select your faculty"
-            [compareWith]="compareFacultyFn"
-            formControlName="faculty"
-          >
-            @for (faculty of facultiesOptions(); track $index) {
-              <mat-option [value]="faculty">{{ faculty.name }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
-      </div>
-
-      <!-- Department -->
-      <div class="input-style-1 acheva-input w-full">
-        <p class="acva-para-2 fw-400 label-text">Department</p>
-        <mat-form-field [style.width.%]="100" appearance="outline">
-          <mat-select
-            placeholder="Select your department"
-            formControlName="department"
-            [compareWith]="compareDepartmentFn"
-          >
-            @for (department of departmentsOptions(); track $index) {
-              <mat-option [value]="department">{{
-                department.name
-              }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
-      </div>
-
-      <!-- Level -->
-      <div class="input-style-1 acheva-input w-full">
-        <p class="acva-para-2 fw-400 label-text">Level</p>
-        <mat-form-field [style.width.%]="100" appearance="outline">
-          <mat-select placeholder="Select level" formControlName="level">
-            @for (level of levelOptions(); track $index) {
-              <mat-option [value]="level.value">{{ level.label }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
-      </div>
-
-      <!-- Course Code with Autocomplete - FIXED -->
-      <div class="flex items-center gap-3">
-        <div class="input-style-1 acheva-input">
-          <p class="acva-para-2 fw-400 label-text">Course Code</p>
-          <app-autocomplete-input
-            [formControl]="courseCodeControl"
-            [items]="courseCodes"
-            [minChars]="2"
-            placeholder="Input Course Codes..."
-            [customError]="invalidCourseCodeError"
-            [showCustomError]="showCourseCodeError"
-            (itemSelected)="onCodeSelected($event)"
-            (textChanged)="onCourseCodeChanged($event)"
-          ></app-autocomplete-input>
+          <!-- Course Code -->
+          <div class="input-style-1 acheva-input w-full">
+            <p class="acva-para-2 fw-400 label-text">Course Code</p>
+            <app-autocomplete-input
+              [formControl]="courseCodeControl"
+              [items]="courseCodes"
+              [minChars]="2"
+              placeholder="Fill a course code"
+              [customError]="invalidCourseCodeError"
+              [showCustomError]="showCourseCodeError"
+              (itemSelected)="onCodeSelected($event)"
+              (textChanged)="onCourseCodeChanged($event)"
+            />
+          </div>
         </div>
-      </div>
+      </app-card>
 
-      <!-- Course Title - Auto-filled -->
-      <div class="input-style-1 acheva-input w-full">
-        <p class="acva-para-2 fw-400 label-text">Course Title</p>
-        <mat-form-field [style.width.%]="100" appearance="outline">
-          <input
-            matInput
-            type="text"
-            formControlName="courseTitle"
-            placeholder="Enter Course title"
-          />
-        </mat-form-field>
-      </div>
+      <!-- Academic Details section -->
+      <app-card
+        label="Academic Details"
+        iconSrc="icons/general/faculty-icon.svg"
+        [showDivider]="true"
+        dividerClass="!mt-4"
+      >
+        <div content class="p-4 flex flex-col gap-4">
+          <!-- Semester + Level -->
+          <div class="grid md:grid-cols-2 grid-cols-1 gap-4">
+            <div class="input-style-1 acheva-input w-full">
+              <p class="acva-para-2 fw-400 label-text">Semester</p>
+              <mat-form-field [style.width.%]="100" appearance="outline">
+                <mat-select
+                  placeholder="Choose a semester"
+                  formControlName="semester"
+                >
+                  @for (semester of semesterOptions(); track $index) {
+                    <mat-option [value]="semester.value">
+                      {{ semester.label }}
+                    </mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            </div>
 
-      <!-- Course Load -->
-      <div class="flex items-center gap-3">
-        <div class="input-style-1 acheva-input">
-          <p class="acva-para-2 fw-400 label-text">Course Load</p>
-          <mat-form-field [style.width.%]="100" appearance="outline">
-            <input matInput type="text" formControlName="courseLoad" readonly />
-          </mat-form-field>
+            <div class="input-style-1 acheva-input w-full">
+              <p class="acva-para-2 fw-400 label-text">Level</p>
+              <mat-form-field [style.width.%]="100" appearance="outline">
+                <mat-select
+                  placeholder="Choose a Level"
+                  formControlName="level"
+                >
+                  @for (level of levelOptions(); track $index) {
+                    <mat-option [value]="level.value">
+                      {{ level.label }}
+                    </mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            </div>
+          </div>
+
+          <!-- Faculty + Department -->
+          <div class="grid md:grid-cols-2 grid-cols-1 gap-4">
+            <div class="input-style-1 acheva-input w-full">
+              <p class="acva-para-2 fw-400 label-text">Faculty</p>
+              <mat-form-field [style.width.%]="100" appearance="outline">
+                <mat-select
+                  placeholder="Choose a faculty"
+                  [compareWith]="compareFacultyFn"
+                  formControlName="faculty"
+                >
+                  @for (faculty of facultiesOptions(); track $index) {
+                    <mat-option [value]="faculty">{{ faculty.name }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            </div>
+
+            <div class="input-style-1 acheva-input w-full">
+              <p class="acva-para-2 fw-400 label-text">Department</p>
+              <mat-form-field [style.width.%]="100" appearance="outline">
+                <mat-select
+                  placeholder="Choose a department"
+                  formControlName="department"
+                  [compareWith]="compareDepartmentFn"
+                >
+                  @for (dept of departmentsOptions(); track $index) {
+                    <mat-option [value]="dept">{{ dept.name }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            </div>
+          </div>
+
+          <!-- Course Load with +/- stepper -->
+          <div>
+            <p class="acva-para-2 fw-400 label-text">Course Load</p>
+            <div class="flex items-center gap-2">
+              <div class="input-style-1 acheva-input max-w-[160px]">
+                <mat-form-field [style.width.%]="100" appearance="outline">
+                  <input
+                    matInput
+                    type="text"
+                    formControlName="courseLoad"
+                    readonly
+                  />
+                </mat-form-field>
+              </div>
+
+              <app-button
+                type="outline"
+                label="-"
+                class="btn-sm"
+                (clickEvent)="decreaseCourseUnit()"
+              />
+              <app-button
+                label="+"
+                class="btn-sm"
+                (clickEvent)="increaseCourseUnit()"
+              />
+            </div>
+          </div>
         </div>
+      </app-card>
 
+      <!-- Action Buttons (kept inside the left column, beneath Academic Details) -->
+      <div class="flex gap-3 justify-end">
+        <app-button type="clear" label="Cancel" (clickEvent)="cancel()" />
         <app-button
-          type="outline"
-          label="-"
-          class="btn-sm"
-          (clickEvent)="decreaseCourseUnit()"
-        />
-        <app-button
-          label="+"
-          class="btn-sm"
-          (clickEvent)="increaseCourseUnit()"
+          label="Create"
+          [loading]="isLoading()"
+          (clickEvent)="submit()"
         />
       </div>
     </form>
 
-    <!-- Preview -->
-    <app-course-preview [preview]="form.getRawValue()" />
-  </div>
-
-  <!-- Buttons -->
-  <div class="flex gap-3 justify-end">
-    <app-button type="clear" label="Cancel" (clickEvent)="cancel()" />
-    <app-button
-      label="Create"
-      [loading]="isLoading()"
-      (clickEvent)="submit()"
-    />
+    <!-- Right-side live preview -->
+    <app-course-preview [courseTemplate]="previewTemplate" />
   </div>
 </div>

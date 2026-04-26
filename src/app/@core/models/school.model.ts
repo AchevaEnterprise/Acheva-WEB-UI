@@ -35,10 +35,23 @@ export enum SemesterEnum {
   THIRD = '3RD SEMESTER',
 }
 
+/** Result Management segment value; used by dashboard cards for deep-linking. */
+export type ResultManagementDashboardTab =
+  | 'DRAFT'
+  | 'PENDING'
+  | 'UNVERIFIED'
+  | 'VERIFIED'
+  | 'APPROVED'
+  | 'COMPLETE'
+  | 'PUBLISHED'
+  | 'IMPORTED';
+
 export interface IAnalytics {
   label: string;
   count: number;
   iconSrc: string;
   infoLabel: string;
   accessRole: RoleEnum[];
+  /** When set, the dashboard card navigates to Result Management on this tab. */
+  resultTab?: ResultManagementDashboardTab;
 }

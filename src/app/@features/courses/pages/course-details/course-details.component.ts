@@ -15,7 +15,6 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { finalize, map } from 'rxjs';
 
-import { MatDivider } from '@angular/material/divider';
 import {
   IDepartment,
   IFaculty,
@@ -36,8 +35,10 @@ import {
 import { ToastService } from '../../../../@core/utility/toast.service';
 import { UtilityService } from '../../../../@core/utility/utility.service';
 import { BackButtonComponent } from '../../../../@shared/components/back-button/back-button.component';
+import { CardComponent } from '../../../../@shared/components/card/card.component';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
 import { SearchSelectComponent } from '../../../../@shared/components/forms/search-select/search-select.component';
+import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
 import { AuthenticationService } from '../../../auth/service/auth.service';
 import {
   ICreateResult,
@@ -59,9 +60,10 @@ import { CoursesService } from '../../services/courses.service';
     MatSelectModule,
     ReactiveFormsModule,
     ButtonComponent,
-    MatDivider,
     SearchSelectComponent,
     BackButtonComponent,
+    CardComponent,
+    SvgComponent,
   ],
   templateUrl: './course-details.component.html',
   styleUrl: './course-details.component.scss',

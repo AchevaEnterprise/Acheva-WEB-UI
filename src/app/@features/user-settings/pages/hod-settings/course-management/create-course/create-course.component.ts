@@ -38,15 +38,16 @@ import {
   schoolsSelector,
 } from '../../../../../../@core/store/school/school.selector';
 import { ToastService } from '../../../../../../@core/utility/toast.service';
+import { CardComponent } from '../../../../../../@shared/components/card/card.component';
 import { AutocompleteInputComponent } from '../../../../../../@shared/components/forms/autocomplete-input/autocomplete-input.component';
 import { ButtonComponent } from '../../../../../../@shared/components/forms/button/button.component';
 import { AuthenticationService } from '../../../../../auth/service/auth.service';
+import { CoursePreviewComponent } from '../../../../../courses/components/course-preview/course-preview.component';
 import {
   ICourse,
   ICreateCourse,
 } from '../../../../../courses/models/course.model';
 import { CoursesService } from '../../../../../courses/services/courses.service';
-import { CoursePreviewComponent } from '../../../../components/course-preview/course-preview.component';
 
 @Component({
   selector: 'app-create-course',
@@ -58,6 +59,7 @@ import { CoursePreviewComponent } from '../../../../components/course-preview/co
     MatFormFieldModule,
     MatInputModule,
     ButtonComponent,
+    CardComponent,
   ],
   templateUrl: './create-course.component.html',
   styleUrl: './create-course.component.scss',
@@ -206,6 +208,19 @@ export class CreateCourseComponent implements OnInit, OnDestroy {
 
   get courseCodeControl(): FormControl<string> {
     return this.form.get('courseCode') as FormControl<string>;
+  }
+
+  /**
+   * Shape the form value for the shared `CoursePreviewComponent`.
+   * The preview component reads `school/faculty/department` as objects, so
+   * we surface the current user's school from the active account to avoid
+   * showing a blank row during course creation.
+   */
+  get previewTemplate() {
+    return {
+      ...this.form.getRawValue(),
+      school: this.authService.activeAccount()?.school,
+    };
   }
 
   // ========================================
