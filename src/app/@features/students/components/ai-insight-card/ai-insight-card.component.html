@@ -1,0 +1,21 @@
+<div
+  class="insight-card"
+  [class]="variantClass()"
+  [class.insight-card--interactive]="interactive()"
+  [attr.role]="interactive() ? 'button' : null"
+  [attr.tabindex]="interactive() ? 0 : null"
+  [attr.aria-label]="interactive() ? title() : null"
+  (click)="onActivate()"
+  (keydown)="onKeydown($event)"
+>
+  <span class="insight-card__icon">
+    <mat-icon>{{ icon() }}</mat-icon>
+  </span>
+
+  <div class="insight-card__body">
+    <h5 class="insight-card__title">{{ title() }}</h5>
+    @if (description()) {
+      <p class="insight-card__description">{{ description() }}</p>
+    }
+  </div>
+</div>

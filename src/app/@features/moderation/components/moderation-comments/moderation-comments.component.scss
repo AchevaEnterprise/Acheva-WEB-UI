@@ -1,0 +1,108 @@
+.moderation-comments {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.875rem;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  &__header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+
+  &__title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0;
+  }
+
+  &__subtitle {
+    font-size: 0.8125rem;
+    color: #6b7280;
+    margin: 0;
+  }
+
+  &__thread {
+    max-height: 24rem;
+    overflow: auto;
+    padding-right: 0.25rem;
+  }
+
+  &__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  &__item {
+    display: flex;
+    justify-content: flex-start;
+
+    &--mine {
+      justify-content: flex-end;
+    }
+  }
+
+  &__bubble {
+    background: #f3f4f6;
+    border-radius: 0.75rem;
+    padding: 0.625rem 0.875rem;
+    max-width: 85%;
+    color: #1f2937;
+  }
+
+  &__item--mine &__bubble {
+    background: #dbeafe;
+    color: #1e3a8a;
+  }
+
+  &__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-bottom: 0.25rem;
+  }
+
+  &__author {
+    font-weight: 600;
+    color: #111827;
+  }
+
+  &__item--mine &__author {
+    color: #1e3a8a;
+  }
+
+  &__role {
+    text-transform: lowercase;
+  }
+
+  &__time {
+    margin-left: auto;
+  }
+
+  &__body {
+    font-size: 0.9rem;
+    margin: 0;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+  }
+
+  &__composer {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+  }
+
+  &__field {
+    flex: 1;
+  }
+}

@@ -1,0 +1,24 @@
+<ol class="moderation-timeline">
+  @for (step of steps(); track step.label) {
+    <li
+      class="moderation-timeline__step"
+      [class.moderation-timeline__step--completed]="step.completed"
+      [class.moderation-timeline__step--active]="step.active"
+    >
+      <span class="moderation-timeline__dot" aria-hidden="true"></span>
+      <div class="moderation-timeline__copy">
+        <p class="moderation-timeline__label">{{ step.label }}</p>
+        <p class="moderation-timeline__role">{{ step.role }}</p>
+        <p class="moderation-timeline__state">
+          @if (step.active) {
+            In progress
+          } @else if (step.completed) {
+            Done
+          } @else {
+            Pending
+          }
+        </p>
+      </div>
+    </li>
+  }
+</ol>

@@ -43,6 +43,11 @@ export interface IStudentQuery {
   level: string;
 }
 
+/** Response from GET `/students/school/academic-flags`. */
+export interface IStudentAcademicFlags {
+  studentIdsWithFailedCourses: string[];
+}
+
 export interface IStudentPerformance {
   _id: string;
   courseCode: string;

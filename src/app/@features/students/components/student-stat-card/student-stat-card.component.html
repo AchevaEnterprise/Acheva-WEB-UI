@@ -1,0 +1,11 @@
+<div class="stat-card" [class]="accentClass()">
+  <div class="stat-card__head">
+    <p class="stat-card__label acva-para-2">{{ label() }}</p>
+
+    <span class="stat-card__icon-chip">
+      <mat-icon>{{ icon() }}</mat-icon>
+    </span>
+  </div>
+
+  <h2 class="stat-card__value acva-heading-4 fw-600">{{ value() }}</h2>
+</div>

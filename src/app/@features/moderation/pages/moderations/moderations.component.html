@@ -1,0 +1,114 @@
+<div class="moderations-shell">
+  <div class="moderations-card">
+    <header class="moderations-card__header">
+      <div>
+        <h2 class="acva-heading-5 fw-600 m-0">Result moderation</h2>
+        <p class="moderations-card__sub acva-para-1 text-neutral-500 m-0 mt-1">
+          {{ activeTab().hint }}
+        </p>
+      </div>
+      <div class="moderations-card__actions">
+        <app-button
+          label="Refresh"
+          type="outline"
+          class="btn-md"
+          [loading]="loading()"
+          (clickEvent)="refresh()"
+        />
+      </div>
+    </header>
+
+    <nav class="moderations-tabs" role="tablist" aria-label="Moderation status">
+      @for (tab of tabs; track tab.id) {
+        <button
+          type="button"
+          role="tab"
+          class="moderations-tab"
+          [class.moderations-tab--active]="tab.id === activeTabId()"
+          [attr.aria-selected]="tab.id === activeTabId()"
+          (click)="switchTab(tab.id)"
+        >
+          {{ tab.label }}
+        </button>
+      }
+    </nav>
+
+    <div class="moderations-card__body">
+      @if (loading()) {
+        <div class="moderations-empty">
+          <app-loader />
+        </div>
+      } @else if (rows().length === 0) {
+        <div class="moderations-empty moderations-empty--dashed">
+          <p class="acva-para-1 text-neutral-500 m-0">
+            Nothing here yet. New requests will show up automatically.
+          </p>
+        </div>
+      } @else {
+        <div class="moderations-table-wrap">
+          <table class="moderations-table">
+            <thead>
+              <tr>
+                <th>Course</th>
+                <th>Student</th>
+                <th>Scope</th>
+                <th>Status</th>
+                <th>Updated</th>
+                <th class="moderations-table__action-col"></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (mod of rows(); track trackRow($index, mod)) {
+                <tr
+                  [class.moderations-table__row--mine]="isMyTurn(mod)"
+                  (click)="open(mod)"
+                  (keydown.enter)="open(mod)"
+                  tabindex="0"
+                >
+                  <td>
+                    <span class="moderations-table__primary">
+                      {{ courseLabel(mod) }}
+                    </span>
+                    <span class="moderations-table__secondary">
+                      {{ mod.session }} · {{ mod.level }}LVL ·
+                      {{ mod.semester }}
+                    </span>
+                  </td>
+                  <td>
+                    <span class="moderations-table__primary">
+                      {{ studentLabel(mod) | titlecase }}
+                    </span>
+                  </td>
+                  <td>
+                    <span class="moderations-scope-chip">
+                      {{ scopeLabel(mod) }}
+                    </span>
+                  </td>
+                  <td>
+                    <span
+                      class="moderations-status"
+                      [attr.data-variant]="mod | moderationStatusVariant"
+                    >
+                      {{ mod | moderationStatus }}
+                    </span>
+                  </td>
+                  <td>
+                    {{ mod.updatedAt | date: 'MMM d, y' }}
+                  </td>
+                  <td class="moderations-table__action-col">
+                    <app-button
+                      label="Open"
+                      class="btn-sm"
+                      type="outline"
+                      (clickEvent)="open(mod)"
+                    />
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  </div>
+</div>

@@ -1,0 +1,113 @@
+// Fills the scrollable main area under the toolbar (layout uses ~5rem header + padding).
+$shell-min-height: calc(100dvh - 9rem);
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+.carryovers-shell {
+  min-height: $shell-min-height;
+  display: flex;
+  flex-direction: column;
+
+  &--centered {
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+.carryovers-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: $shell-min-height;
+  background: #fff;
+  border: 1px solid rgb(229 231 235);
+  border-radius: 12px;
+  padding: 1.5rem 1.75rem 1.75rem;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 4%);
+
+  &__body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    margin-top: 1.25rem;
+  }
+}
+
+.carryovers-page__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.carryovers-page__sub {
+  max-width: 48rem;
+}
+
+.carryovers-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  border: 1px dashed rgb(229 231 235);
+  border-radius: 10px;
+  background: #f4f7fa;
+}
+
+.carryovers-table-wrap {
+  flex: 1;
+  width: 100%;
+  overflow: auto;
+  border: 1px solid rgb(229 231 235);
+  border-radius: 10px;
+  background: #fff;
+}
+
+.carryovers-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+
+  th {
+    text-align: left;
+    padding: 12px 14px;
+    background: #f4f7fa;
+    color: rgb(107 114 128);
+    font-weight: 500;
+    font-size: 0.75rem;
+    letter-spacing: 0.02em;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+
+  td {
+    padding: 12px 14px;
+    border-top: 1px solid rgb(229 231 235);
+    vertical-align: middle;
+  }
+
+  &__code {
+    display: block;
+    font-weight: 600;
+    color: rgb(17 24 39);
+  }
+
+  &__title {
+    display: block;
+    font-size: 0.8rem;
+    color: rgb(107 114 128);
+    margin-top: 2px;
+  }
+
+  &__actions {
+    text-align: right;
+    white-space: nowrap;
+  }
+}

@@ -72,6 +72,19 @@ export const MENU: IMenu[] = [
       // RoleEnum.LECTURER,
     ],
   },
+  {
+    label: 'Moderation',
+    active_icon: 'icons/menu/result-chart-active.svg',
+    inactive_icon: 'icons/menu/result-chart-inactive.svg',
+    route: 'moderation',
+    isActive: true,
+    accessRole: [
+      RoleEnum.DEAN,
+      RoleEnum.HOD,
+      RoleEnum.COURSE_ADVISOR,
+      RoleEnum.LECTURER,
+    ],
+  },
   // {
   //   label: 'History',
   //   active_icon: 'icons/menu/history-active.svg',
