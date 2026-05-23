@@ -1,0 +1,93 @@
+.insight-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  background-color: #fff;
+  border: 1px solid rgb(229 231 235);
+  border-left-width: 4px;
+  border-radius: 10px;
+
+  &__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    flex-shrink: 0;
+    margin-top: 2px;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  &__body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin: 0 0 2px;
+    color: rgb(31 41 55);
+  }
+
+  &__description {
+    font-size: 0.78rem;
+    line-height: 1.35;
+    color: rgb(107 114 128);
+    margin: 0;
+  }
+
+  &--interactive {
+    cursor: pointer;
+    transition:
+      box-shadow 0.15s ease,
+      transform 0.15s ease;
+
+    &:hover {
+      box-shadow: 0 1px 8px rgb(0 0 0 / 8%);
+      transform: translateY(-1px);
+    }
+
+    &:focus-visible {
+      outline: 2px solid #2793ff;
+      outline-offset: 2px;
+    }
+  }
+}
+
+// ── Variants ──
+// Mirrors the design: red warning, green success, blue informational.
+
+.variant-warning {
+  border-left-color: #b4294c;
+
+  .insight-card__icon {
+    background-color: #fdecef;
+    color: #b4294c;
+  }
+}
+
+.variant-success {
+  border-left-color: #06a561;
+
+  .insight-card__icon {
+    background-color: #e6f7ed;
+    color: #06a561;
+  }
+}
+
+.variant-info {
+  border-left-color: #2793ff;
+
+  .insight-card__icon {
+    background-color: #e0eaff;
+    color: #2793ff;
+  }
+}

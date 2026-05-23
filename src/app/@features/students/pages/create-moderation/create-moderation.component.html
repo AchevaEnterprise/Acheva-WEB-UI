@@ -1,0 +1,111 @@
+@if (loading()) {
+  <div class="moderation-shell moderation-shell--centered">
+    <app-loader />
+  </div>
+} @else {
+  @if (student(); as stu) {
+    @if (result(); as res) {
+      <div class="moderation-shell">
+        <div class="moderation-card">
+          <div class="moderation-create">
+            <header class="moderation-create__header">
+              <div>
+                <h2 class="acva-heading-5 fw-600 m-0">
+                  Request result moderation
+                </h2>
+                <p class="acva-para-1 text-neutral-500 m-0 mt-1">
+                  {{ stu.fullName | titlecase }} · {{ courseCode() }} —
+                  {{ courseTitle() }}
+                </p>
+              </div>
+              <app-button
+                label="Cancel"
+                type="outline"
+                class="btn-md"
+                [disabled]="saving()"
+                (clickEvent)="cancel()"
+              />
+            </header>
+
+            <section class="moderation-create__meta">
+              <div class="meta-chip">
+                <span class="meta-chip__label">Session</span>
+                <span class="meta-chip__value">{{ res.session }}</span>
+              </div>
+              <div class="meta-chip">
+                <span class="meta-chip__label">Level</span>
+                <span class="meta-chip__value">{{ res.level }}</span>
+              </div>
+              <div class="meta-chip">
+                <span class="meta-chip__label">Semester</span>
+                <span class="meta-chip__value">{{ res.semester }}</span>
+              </div>
+            </section>
+
+            <section class="moderation-create__letter">
+              <label class="moderation-create__label" for="letter-body">
+                Letter / justification
+                <span class="moderation-create__required" aria-hidden="true"
+                  >*</span
+                >
+              </label>
+              <textarea
+                id="letter-body"
+                class="moderation-create__textarea"
+                [class.moderation-create__textarea--invalid]="
+                  letterBody.invalid && letterBody.touched
+                "
+                rows="10"
+                placeholder="Explain why this result should be moderated (policy, error, compassionate grounds, etc.). This letter is required."
+                [formControl]="letterBody"
+              ></textarea>
+              @if (letterBody.invalid && letterBody.touched) {
+                @if (letterBody.hasError('required')) {
+                  <p class="moderation-create__error" role="alert">
+                    Please enter a justification letter.
+                  </p>
+                }
+                @if (letterBody.hasError('maxlength')) {
+                  <p class="moderation-create__error" role="alert">
+                    Letter is too long (max 8,000 characters).
+                  </p>
+                }
+              }
+            </section>
+
+            <footer class="moderation-create__footer">
+              <app-button
+                label="Save draft"
+                type="outline"
+                class="btn-md"
+                [disabled]="saving() || letterBody.invalid"
+                [loading]="saving()"
+                (clickEvent)="saveDraft()"
+              />
+              <app-button
+                label="Submit to HOD"
+                class="btn-md"
+                [disabled]="saving() || letterBody.invalid"
+                [loading]="saving()"
+                (clickEvent)="submitRequest()"
+              />
+            </footer>
+          </div>
+        </div>
+      </div>
+    } @else {
+      <div class="moderation-shell moderation-shell--centered">
+        <p class="acva-para-1 text-neutral-500 moderation-fallback">
+          Unable to load this result. Use the back button in your browser or
+          open carryovers from the student profile again.
+        </p>
+      </div>
+    }
+  } @else {
+    <div class="moderation-shell moderation-shell--centered">
+      <p class="acva-para-1 text-neutral-500 moderation-fallback">
+        Student not found.
+      </p>
+    </div>
+  }
+}

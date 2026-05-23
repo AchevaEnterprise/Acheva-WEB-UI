@@ -1,0 +1,72 @@
+<section class="moderation-comments">
+  <header class="moderation-comments__header">
+    <h3 class="moderation-comments__title">Conversation</h3>
+    <p class="moderation-comments__subtitle">
+      Notes shared between everyone reviewing this moderation.
+    </p>
+  </header>
+
+  <div class="moderation-comments__thread" #thread>
+    @if (comments.isLoading()) {
+      <app-loader />
+    } @else if (comments.error()) {
+      <app-empty-state
+        description="Could not load comments. Please refresh and try again."
+      />
+    } @else if (comments.hasValue()) {
+      @let resp = comments.value();
+      @if (!resp || resp.data.length === 0) {
+        <app-empty-state
+          description="No comments yet. Start the conversation below."
+        />
+      } @else {
+        <ul class="moderation-comments__list">
+          @for (comment of resp.data; track comment._id) {
+            <li
+              class="moderation-comments__item"
+              [class.moderation-comments__item--mine]="
+                authorId(comment) === myId
+              "
+            >
+              <div class="moderation-comments__bubble">
+                <header class="moderation-comments__meta">
+                  <span class="moderation-comments__author">
+                    {{ authorName(comment) }}
+                  </span>
+                  <span class="moderation-comments__role">
+                    [{{ authorRole(comment) }}]
+                  </span>
+                  <span class="moderation-comments__time">
+                    {{ comment.createdAt | date: 'MMM d, y · h:mm a' }}
+                  </span>
+                </header>
+                <p class="moderation-comments__body">{{ comment.comment }}</p>
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    }
+  </div>
+
+  <form class="moderation-comments__composer" (ngSubmit)="send()">
+    <mat-form-field appearance="outline" class="moderation-comments__field">
+      <mat-label>Add a comment</mat-label>
+      <textarea
+        matInput
+        rows="2"
+        maxlength="2000"
+        [formControl]="commentCtrl"
+        placeholder="Type your message…"
+      ></textarea>
+    </mat-form-field>
+    <app-button
+      label="Send"
+      class="btn-md"
+      type="fill"
+      [loading]="posting()"
+      [disabled]="commentCtrl.invalid || posting()"
+      (clickEvent)="send()"
+    />
+  </form>
+</section>

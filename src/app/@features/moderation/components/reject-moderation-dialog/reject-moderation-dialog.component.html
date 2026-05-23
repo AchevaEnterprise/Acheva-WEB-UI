@@ -1,0 +1,56 @@
+<div class="reject-moderation">
+  <header class="reject-moderation__header">
+    <h2 class="reject-moderation__title">{{ data.title }}</h2>
+    <p class="reject-moderation__description">{{ data.description }}</p>
+  </header>
+
+  <form [formGroup]="form" class="reject-moderation__form">
+    <mat-form-field appearance="outline" class="reject-moderation__field">
+      <mat-label>Reason for rejection</mat-label>
+      <textarea
+        matInput
+        rows="4"
+        maxlength="2000"
+        formControlName="reason"
+        placeholder="Be specific so the recipient knows what to fix or why this can’t proceed."
+        required
+      ></textarea>
+      @if (
+        form.controls.reason.touched &&
+        form.controls.reason.errors?.['required']
+      ) {
+        <mat-error>Please provide a reason.</mat-error>
+      }
+      @if (form.controls.reason.errors?.['maxlength']) {
+        <mat-error>Reason is too long.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="reject-moderation__field">
+      <mat-label>Additional comment (optional)</mat-label>
+      <textarea
+        matInput
+        rows="2"
+        maxlength="500"
+        formControlName="comment"
+        placeholder="Optional internal note that goes into the moderation history."
+      ></textarea>
+    </mat-form-field>
+  </form>
+
+  <footer class="reject-moderation__footer">
+    <app-button
+      label="Cancel"
+      type="outline"
+      class="btn-md"
+      (clickEvent)="cancel()"
+    />
+    <app-button
+      [label]="data.confirmLabel || 'Reject'"
+      type="fill"
+      class="btn-md btn-danger"
+      [disabled]="form.invalid"
+      (clickEvent)="confirm()"
+    />
+  </footer>
+</div>

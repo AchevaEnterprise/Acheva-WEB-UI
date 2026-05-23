@@ -1,0 +1,259 @@
+@if (loading()) {
+  <div class="moderation-detail moderation-detail--centered">
+    <app-loader />
+  </div>
+} @else {
+  @if (moderation(); as mod) {
+    <div class="moderation-detail">
+      <div class="moderation-detail__back-row">
+        <app-button
+          label="Back"
+          type="outline"
+          class="btn-sm"
+          icon="images/general/arrow-left.svg"
+          (clickEvent)="goBack()"
+        />
+      </div>
+
+      <header class="moderation-detail__header">
+        <div class="moderation-detail__header-left">
+          <div class="moderation-detail__heading">
+            <h2 class="acva-heading-5 fw-600 m-0">{{ courseSummary(mod) }}</h2>
+            <p class="moderation-detail__sub acva-para-1 text-neutral-500 m-0">
+              {{ studentSummary(mod) | titlecase }}
+              @if (studentRegNo(mod)) {
+                <span class="moderation-detail__regno"
+                  >· {{ studentRegNo(mod) }}</span
+                >
+              }
+            </p>
+          </div>
+        </div>
+        <div class="moderation-detail__header-right">
+          <span
+            class="moderation-detail__status"
+            [attr.data-variant]="mod | moderationStatusVariant"
+          >
+            {{ mod | moderationStatus }}
+          </span>
+          <span class="moderation-detail__scope-chip">
+            {{ scopeLabel(mod) }}
+          </span>
+        </div>
+      </header>
+
+      @if (actions().length > 0) {
+        <section class="moderation-detail__actions">
+          <p class="moderation-detail__actions-hint">
+            @if (isMyTurn()) {
+              <span class="moderation-detail__actions-mine">
+                It's your turn.
+              </span>
+            }
+            Choose an action to move this request forward.
+          </p>
+          <div class="moderation-detail__action-buttons">
+            @for (action of actions(); track trackAction($index, action)) {
+              <app-button
+                [label]="action.label"
+                class="btn-md"
+                [type]="action.tone === 'destructive' ? 'outline' : 'fill'"
+                [loading]="acting()"
+                [disabled]="acting()"
+                (clickEvent)="runAction(action)"
+              />
+            }
+          </div>
+        </section>
+      } @else if (isMyTurn()) {
+        <section class="moderation-detail__actions">
+          <p class="moderation-detail__actions-hint">
+            This request is assigned to you, but no actions are available in its
+            current state. Please refresh the page in a moment.
+          </p>
+        </section>
+      }
+
+      <div class="moderation-detail__body">
+        <div class="moderation-detail__main">
+          <section class="moderation-detail__card">
+            <header class="moderation-detail__card-header">
+              <h3 class="moderation-detail__card-title">Request summary</h3>
+            </header>
+            <dl class="moderation-detail__meta">
+              <div class="moderation-detail__meta-item">
+                <dt>Session</dt>
+                <dd>{{ mod.session }}</dd>
+              </div>
+              <div class="moderation-detail__meta-item">
+                <dt>Level</dt>
+                <dd>{{ mod.level }}LVL</dd>
+              </div>
+              <div class="moderation-detail__meta-item">
+                <dt>Semester</dt>
+                <dd>{{ mod.semester }}</dd>
+              </div>
+              <div class="moderation-detail__meta-item">
+                <dt>Home department</dt>
+                <dd>{{ homeDeptName(mod) }}</dd>
+              </div>
+              <div class="moderation-detail__meta-item">
+                <dt>Offering department</dt>
+                <dd>{{ offeringDeptName(mod) }}</dd>
+              </div>
+              <div class="moderation-detail__meta-item">
+                <dt>Current handler</dt>
+                <dd>{{ currentHandlerName(mod) }}</dd>
+              </div>
+              <div class="moderation-detail__meta-item">
+                <dt>Assigned moderator</dt>
+                <dd>{{ assignedModeratorName(mod) }}</dd>
+              </div>
+              <div class="moderation-detail__meta-item">
+                <dt>Created</dt>
+                <dd>{{ mod.createdAt | date: 'MMM d, y · h:mm a' }}</dd>
+              </div>
+            </dl>
+          </section>
+
+          <section class="moderation-detail__card">
+            <header class="moderation-detail__card-header">
+              <h3 class="moderation-detail__card-title">
+                Letter / justification
+              </h3>
+            </header>
+            @if (mod.letterBody.trim()) {
+              <p class="moderation-detail__letter">{{ mod.letterBody }}</p>
+            } @else {
+              <p class="moderation-detail__muted">No letter provided.</p>
+            }
+          </section>
+
+          @if (mod.rejectionReason) {
+            <section
+              class="moderation-detail__card moderation-detail__card--alert"
+            >
+              <header class="moderation-detail__card-header">
+                <h3 class="moderation-detail__card-title">Rejection reason</h3>
+              </header>
+              <p class="moderation-detail__letter">{{ mod.rejectionReason }}</p>
+            </section>
+          }
+
+          @if (mod.moderationOutcome; as outcome) {
+            <section class="moderation-detail__card">
+              <header class="moderation-detail__card-header">
+                <h3 class="moderation-detail__card-title">Moderated outcome</h3>
+              </header>
+              <div
+                class="moderation-detail__outcome"
+                [class.moderation-detail__outcome--fail]="
+                  outcome.status === 'FAIL'
+                "
+              >
+                <div class="moderation-detail__outcome-block">
+                  <span>Test</span>
+                  <strong>{{ outcome.test }}</strong>
+                </div>
+                <div class="moderation-detail__outcome-block">
+                  <span>Lab</span>
+                  <strong>{{ outcome.lab }}</strong>
+                </div>
+                <div class="moderation-detail__outcome-block">
+                  <span>Exam</span>
+                  <strong>{{ outcome.exam }}</strong>
+                </div>
+                <div class="moderation-detail__outcome-block">
+                  <span>Total</span>
+                  <strong>{{ outcome.total }}</strong>
+                </div>
+                <div class="moderation-detail__outcome-block">
+                  <span>Grade</span>
+                  <strong>{{ outcome.grade }}</strong>
+                </div>
+                <div class="moderation-detail__outcome-block">
+                  <span>Status</span>
+                  <strong>{{ outcome.status | titlecase }}</strong>
+                </div>
+              </div>
+              <p
+                class="moderation-detail__muted moderation-detail__outcome-foot"
+              >
+                Submitted {{ outcome.submittedAt | date: 'MMM d, y · h:mm a' }}
+              </p>
+            </section>
+          }
+
+          @if (showScoreForm()) {
+            <section class="moderation-detail__card" id="moderation-score-form">
+              <header class="moderation-detail__card-header">
+                <h3 class="moderation-detail__card-title">
+                  Submit moderated scores
+                </h3>
+                <p class="moderation-detail__muted">
+                  Enter your scores below — the totals and grade are calculated
+                  automatically.
+                </p>
+              </header>
+              <app-moderator-score-form
+                [saving]="acting()"
+                (submitEvent)="submitScore($event)"
+              />
+            </section>
+          }
+
+          <section class="moderation-detail__card">
+            <header class="moderation-detail__card-header">
+              <h3 class="moderation-detail__card-title">Workflow history</h3>
+            </header>
+            @if (mod.workflowHistory.length === 0) {
+              <p class="moderation-detail__muted">No history yet.</p>
+            } @else {
+              <ul class="moderation-detail__history">
+                @for (
+                  entry of mod.workflowHistory;
+                  track trackHistory($index)
+                ) {
+                  <li class="moderation-detail__history-item">
+                    <span class="moderation-detail__history-action">
+                      {{ entry.action | titlecase }}
+                    </span>
+                    <span class="moderation-detail__history-role">
+                      by {{ entry.lecturerRole }}
+                    </span>
+                    <span class="moderation-detail__history-time">
+                      {{ entry.timestamp | date: 'MMM d, y · h:mm a' }}
+                    </span>
+                  </li>
+                }
+              </ul>
+            }
+          </section>
+        </div>
+
+        <aside class="moderation-detail__rail">
+          <section class="moderation-detail__card">
+            <header class="moderation-detail__card-header">
+              <h3 class="moderation-detail__card-title">Workflow</h3>
+              <p class="moderation-detail__muted">
+                Where this request is in the approval chain.
+              </p>
+            </header>
+            <app-moderation-timeline [moderation]="mod" />
+          </section>
+
+          <app-moderation-comments
+            [moderationId]="mod._id"
+            [refresh]="refreshComments()"
+          />
+        </aside>
+      </div>
+    </div>
+  } @else {
+    <div class="moderation-detail moderation-detail--centered">
+      <p class="acva-para-1 text-neutral-500">
+        We couldn't load this moderation. It may have been removed.
+      </p>
+    </div>
+  }
+}

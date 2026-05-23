@@ -1,0 +1,468 @@
+// Brand tokens (kept locally so this page reads cleanly without forcing a
+// global token rename). Aligned with existing app-wide hex usage.
+$brand-blue: #2793ff;
+$brand-blue-soft: #e0eaff;
+$danger-red: #b4294c;
+$danger-red-soft: #fdecef;
+$muted-bg: #f4f7fa;
+$border: rgb(229 231 235);
+$text-strong: rgb(17 24 39);
+$text-muted: rgb(107 114 128);
+
+.profile-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+// ── Header ────────────────────────────────────────────────────────────────
+
+.profile-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 20px;
+  background-color: #fff;
+  border: 1px solid $border;
+  border-radius: 12px;
+  padding: 18px 20px;
+
+  &__avatar {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background-color: $brand-blue-soft;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+
+    mat-icon {
+      font-size: 64px;
+      width: 64px;
+      height: 64px;
+      color: $brand-blue;
+    }
+  }
+
+  &__main {
+    flex: 1;
+    min-width: 240px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  &__chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__session {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background-color: #f3f4f6;
+    color: rgb(55 65 81);
+    font-size: 0.78rem;
+
+    mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  &__meta {
+    margin: 4px 0 0;
+    color: $text-muted;
+    font-size: 0.85rem;
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+  }
+
+  &__sep {
+    color: rgb(209 213 219);
+    margin: 0 8px;
+  }
+
+  &__dept {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: $brand-blue;
+    text-decoration: underline;
+
+    mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  &__deactivate {
+    ::ng-deep button {
+      background-color: $danger-red !important;
+      color: #fff !important;
+    }
+  }
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  line-height: 1.2;
+
+  &--blue {
+    background-color: $brand-blue;
+    color: #fff;
+  }
+
+  &--dark {
+    background-color: rgb(31 41 55);
+    color: #fff;
+  }
+}
+
+// ── Stats grid ────────────────────────────────────────────────────────────
+
+.profile-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+// ── Body grid ─────────────────────────────────────────────────────────────
+
+.profile-body {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+
+  @media (width >= 1080px) {
+    // Sidebar was 320px; +15% width for the AI / actions rail.
+    grid-template-columns: 1fr 368px;
+  }
+}
+
+// ── Results card ──────────────────────────────────────────────────────────
+
+.results-card {
+  background-color: #fff;
+  border: 1px solid $border;
+  border-radius: 12px;
+  padding: 18px;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  &__filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  &__loader {
+    min-height: 200px;
+    display: grid;
+    place-content: center;
+  }
+}
+
+// Level tabs
+
+.level-tabs {
+  display: inline-flex;
+  background-color: $muted-bg;
+  padding: 4px;
+  border-radius: 10px;
+  gap: 2px;
+  flex-wrap: wrap;
+}
+
+.level-tab {
+  border: none;
+  background: transparent;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: $text-muted;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease;
+
+  &:hover:not(.level-tab--active) {
+    color: $text-strong;
+  }
+
+  &--active {
+    background-color: #fff;
+    color: $brand-blue;
+    box-shadow: 0 1px 3px rgb(0 0 0 / 8%);
+  }
+}
+
+.semester-select {
+  min-width: 196px;
+  width: auto;
+
+  ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+    display: none;
+  }
+
+  ::ng-deep .mat-mdc-text-field-wrapper {
+    height: 40px;
+  }
+
+  ::ng-deep .mat-mdc-form-field-infix {
+    min-height: 40px;
+    padding: 8px 18px !important;
+
+    // Extra horizontal room so the selected semester label does not feel cramped.
+  }
+
+  ::ng-deep .mat-mdc-select-arrow-wrapper {
+    padding-right: 6px;
+  }
+
+  ::ng-deep .mat-mdc-select-value {
+    padding-inline: 4px;
+  }
+}
+
+// Results table
+
+.results-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.results-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.85rem;
+
+  th {
+    text-align: left;
+    padding: 10px 12px;
+    font-weight: 500;
+    color: $text-muted;
+    background-color: $muted-bg;
+    font-size: 0.75rem;
+    letter-spacing: 0.02em;
+
+    &:first-child {
+      border-top-left-radius: 8px;
+      border-bottom-left-radius: 8px;
+    }
+
+    &:last-child {
+      border-top-right-radius: 8px;
+      border-bottom-right-radius: 8px;
+    }
+  }
+
+  td {
+    padding: 12px;
+    border-bottom: 1px solid $border;
+    color: $text-strong;
+    vertical-align: middle;
+  }
+
+  &__code {
+    font-weight: 500;
+  }
+
+  &__grade {
+    font-weight: 600;
+  }
+
+  &__empty {
+    text-align: center;
+    color: $text-muted;
+    padding: 32px 12px !important;
+  }
+}
+
+.score-cell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  padding: 4px 10px;
+  border: 1px solid $border;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  background-color: #fff;
+}
+
+// ── Side rail ─────────────────────────────────────────────────────────────
+
+.profile-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tool-card {
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+  overflow: hidden;
+
+  &__title {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin: 0;
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  &__description {
+    margin: 0;
+    font-size: 0.8rem;
+    line-height: 1.4;
+    opacity: 0.85;
+  }
+
+  &__cta {
+    border: none;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+
+    &:hover {
+      opacity: 0.92;
+    }
+
+    &--ghost {
+      background-color: #fff;
+      color: rgb(31 41 55);
+    }
+
+    &--solid {
+      background-color: #fff;
+      color: $brand-blue;
+    }
+  }
+
+  &--dark {
+    background-color: rgb(31 41 55);
+    color: #fff;
+  }
+
+  &--blue {
+    background: linear-gradient(135deg, #2793ff 0%, #4ca6ff 60%, #7bf 100%);
+    color: #fff;
+
+    // Subtle decorative sparkle, kept inside the card.
+
+    &::after {
+      content: '';
+      position: absolute;
+      width: 120px;
+      height: 120px;
+      background: radial-gradient(
+        closest-side,
+        rgb(255 255 255 / 18%),
+        transparent 70%
+      );
+      top: -40px;
+      right: -40px;
+      pointer-events: none;
+    }
+  }
+}
+
+.manual-fix-btn {
+  width: 100%;
+  background-color: #fff;
+  border: 1px solid $border;
+  border-radius: 12px;
+  padding: 12px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: rgb(31 41 55);
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+
+  &:hover {
+    border-color: rgb(156 163 175);
+  }
+}
+
+.profile-rail__insights {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+
+  &-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: rgb(31 41 55);
+    margin: 4px 0;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      color: rgb(107 114 128);
+    }
+  }
+}
+
+// ── Print: hide chrome that doesn't belong on a printed result sheet ──────
+@media print {
+  .profile-header__actions,
+  .profile-rail,
+  .results-card__filters {
+    display: none !important;
+  }
+}

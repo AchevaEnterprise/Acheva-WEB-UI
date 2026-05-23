@@ -6,6 +6,7 @@ import { IAPIResponse } from '../../../@core/models/api-response.model';
 import {
   ICreateStudent,
   IStudent,
+  IStudentAcademicFlags,
   IStudentPerformance,
   IStudentQuery,
 } from '../models/student.model';
@@ -40,6 +41,22 @@ export class StudentService {
       {
         params,
       }
+    );
+  }
+
+  getAcademicIssueFlags(
+    query: Partial<IStudentQuery>
+  ): Observable<IAPIResponse<IStudentAcademicFlags>> {
+    let params = new HttpParams();
+    if (query) {
+      if (query.school) params = params.append('school', query.school);
+      if (query.department)
+        params = params.append('department', query.department);
+      if (query.level) params = params.append('level', query.level);
+    }
+    return this.http.get<IAPIResponse<IStudentAcademicFlags>>(
+      `${this.studentUrl}/school/academic-flags`,
+      { params }
     );
   }
 

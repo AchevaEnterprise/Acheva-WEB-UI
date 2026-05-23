@@ -1,0 +1,68 @@
+.stat-card {
+  background-color: #fff;
+  border: 1px solid rgb(229 231 235);
+  border-radius: 12px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 100px;
+
+  &__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  &__label {
+    color: rgb(107 114 128);
+    font-size: 0.85rem;
+    line-height: 1.2;
+  }
+
+  &__icon-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    flex-shrink: 0;
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  &__value {
+    margin: 0;
+    color: rgb(17 24 39);
+    line-height: 1;
+  }
+}
+
+// ── Accent themes ──
+// Each accent provides a tinted chip background and a matching icon color.
+
+.accent-amber .stat-card__icon-chip {
+  background-color: #fff4e0;
+  color: #d97706;
+}
+
+.accent-green .stat-card__icon-chip {
+  background-color: #e6f7ed;
+  color: #06a561;
+}
+
+.accent-purple .stat-card__icon-chip {
+  background-color: #f3e8ff;
+  color: #7c3aed;
+}
+
+.accent-indigo .stat-card__icon-chip {
+  background-color: #e0eaff;
+  color: #2793ff;
+}

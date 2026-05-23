@@ -1,0 +1,51 @@
+// Issue column: narrow, no header label (tooltip on rows explains the dot).
+
+.students-table__issues-head,
+.students-table__issues-cell {
+  width: 2rem;
+  max-width: 2.5rem;
+  padding-inline: 8px !important;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.student-issue-indicator {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #fb7185 0%, #e11d48 100%);
+  box-shadow:
+    0 0 0 0 rgb(225 29 72 / 35%),
+    inset 0 1px 0 rgb(255 255 255 / 35%);
+  animation: student-issue-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes student-issue-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    box-shadow:
+      0 0 0 0 rgb(225 29 72 / 32%),
+      inset 0 1px 0 rgb(255 255 255 / 35%);
+  }
+
+  50% {
+    opacity: 0.92;
+    transform: scale(1.12);
+    box-shadow:
+      0 0 0 7px rgb(225 29 72 / 0%),
+      inset 0 1px 0 rgb(255 255 255 / 25%);
+  }
+}
+
+// Light row tint so attention rows read clearly without shouting.
+
+::ng-deep .students-table__row--issues.mat-mdc-row {
+  background-color: rgb(254 242 242 / 55%);
+}
+
+::ng-deep .students-table__row--issues.mat-mdc-row:hover {
+  background-color: rgb(254 226 226 / 65%);
+}

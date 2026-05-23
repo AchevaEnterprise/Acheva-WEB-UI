@@ -27,3 +27,37 @@
   border-radius: 50%;
   display: inline-block;
 }
+
+/* Matches primary UI blues — readable without harsh “alert” red */
+
+.side-nav__menu-badge {
+  font-size: 0.625rem;
+  font-weight: 700;
+  line-height: 1;
+  min-width: 1.125rem;
+  padding: 0.125rem 0.3125rem;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #d4e9ff 0%, #b8dcff 100%);
+  color: #134980;
+  border: 1px solid rgb(39 147 255 / 35%);
+  text-align: center;
+  box-shadow: 0 0 0 2px #f4f7fa;
+}
+
+.side-nav__link.router-link-active .side-nav__menu-badge {
+  background: rgb(255 255 255 / 92%);
+  color: #134980;
+  border-color: rgb(255 255 255 / 55%);
+  box-shadow: 0 0 0 2px #2793ff;
+}
+
+.side-nav__menu-badge--collapsed {
+  position: absolute;
+  top: -0.125rem;
+  right: -0.375rem;
+  z-index: 1;
+}
+
+.side-nav__menu-badge--expanded {
+  flex-shrink: 0;
+}

@@ -3,8 +3,17 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { MatTableModule } from '@angular/material/table';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { ActivatedRoute, Router } from '@angular/router';
-import { debounceTime, distinctUntilChanged, finalize } from 'rxjs';
+import {
+  catchError,
+  debounceTime,
+  distinctUntilChanged,
+  finalize,
+  forkJoin,
+  of,
+} from 'rxjs';
+import { IAPIResponse } from '../../../../@core/models/api-response.model';
 import { ToastService } from '../../../../@core/utility/toast.service';
 import { EmptyStateComponent } from '../../../../@shared/components/empty-state/empty-state.component';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
@@ -14,7 +23,7 @@ import { UploadDialogComponent } from '../../../../@shared/components/upload-dia
 import { AuthenticationService } from '../../../auth/service/auth.service';
 import { LecturersService } from '../../../user-settings/service/lecturer.service';
 import { AddStudentDialogComponent } from '../../components/add-student-dialog/add-student-dialog.component';
-import { IStudent } from '../../models/student.model';
+import { IStudent, IStudentAcademicFlags } from '../../models/student.model';
 import { StudentService } from '../../services/student.service';
 
 @Component({
@@ -24,6 +33,7 @@ import { StudentService } from '../../services/student.service';
     SearchInputComponent,
     ButtonComponent,
     MatTableModule,
+    MatTooltipModule,
     LoaderComponent,
     EmptyStateComponent,
     TitleCasePipe,
@@ -42,12 +52,15 @@ export class StudentsComponent implements OnInit {
 
   displayedColumns: string[] = [
     'sn',
+    'issues',
     'registrationNumber',
     'fullName',
     // 'actions',
   ];
   dataSource = signal<IStudent[]>([]);
   students = signal<IStudent[]>([]);
+  /** Students with at least one failed course on a published result. */
+  studentsWithIssues = signal<ReadonlySet<string>>(new Set());
 
   searchCtrl: FormControl = new FormControl<string>('');
 
@@ -85,23 +98,44 @@ export class StudentsComponent implements OnInit {
     const { school, department, assignedLevel } =
       this.authService.activeAccount()!;
 
-    this.studentService
-      .getStudents({
-        school: school?._id,
-        department: department?._id,
-        level: assignedLevel,
-      })
+    const query = {
+      school: school?._id,
+      department: department?._id,
+      level: assignedLevel,
+    };
+
+    forkJoin({
+      list: this.studentService.getStudents(query),
+      flags: this.studentService.getAcademicIssueFlags(query).pipe(
+        catchError(() =>
+          of<IAPIResponse<IStudentAcademicFlags>>({
+            status: false,
+            statusCode: '',
+            data: { studentIdsWithFailedCourses: [] },
+            message: '',
+          })
+        )
+      ),
+    })
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
-        next: (resp) => {
-          const sortedStudents = resp.data.sort((a, b) =>
+        next: ({ list, flags }) => {
+          const sortedStudents = list.data.sort((a, b) =>
             (a.fullName ?? '').localeCompare(b.fullName ?? '')
           );
 
           this.dataSource.set(sortedStudents);
           this.students.set(sortedStudents);
+          this.studentsWithIssues.set(
+            new Set(flags.data.studentIdsWithFailedCourses ?? [])
+          );
         },
       });
+  }
+
+  hasAcademicIssues(studentId: string | undefined): boolean {
+    if (!studentId) return false;
+    return this.studentsWithIssues().has(String(studentId));
   }
 
   uploadFile() {
@@ -155,8 +189,8 @@ export class StudentsComponent implements OnInit {
       });
   }
 
-  viewStudentResult(regNo: string) {
-    this.router.navigate([`${regNo}/result`], { relativeTo: this.route });
+  viewStudentProfile(regNo: string) {
+    this.router.navigate([regNo], { relativeTo: this.route });
   }
 
   toggleActivateDeactivate(student: IStudent) {}

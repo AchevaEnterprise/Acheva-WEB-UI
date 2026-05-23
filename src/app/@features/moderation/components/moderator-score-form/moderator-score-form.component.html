@@ -1,0 +1,83 @@
+<form [formGroup]="form" class="score-form">
+  <div class="score-form__grid">
+    <mat-form-field appearance="outline" class="score-form__field">
+      <mat-label>Test (out of 30)</mat-label>
+      <input
+        matInput
+        type="number"
+        min="0"
+        max="30"
+        formControlName="test"
+        required
+      />
+      @if (form.controls.test.touched && form.controls.test.invalid) {
+        <mat-error>Enter a value between 0 and 30.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="score-form__field">
+      <mat-label>Lab (optional, out of 30)</mat-label>
+      <input matInput type="number" min="0" max="30" formControlName="lab" />
+      @if (form.controls.lab.touched && form.controls.lab.invalid) {
+        <mat-error>Enter a value between 0 and 30.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="score-form__field">
+      <mat-label>Exam (out of 70)</mat-label>
+      <input
+        matInput
+        type="number"
+        min="0"
+        max="70"
+        formControlName="exam"
+        required
+      />
+      @if (form.controls.exam.touched && form.controls.exam.invalid) {
+        <mat-error>Enter a value between 0 and 70.</mat-error>
+      }
+    </mat-form-field>
+  </div>
+
+  <div
+    class="score-form__preview"
+    [class.score-form__preview--fail]="!passed()"
+  >
+    <div class="score-form__preview-block">
+      <span class="score-form__preview-label">Total</span>
+      <span class="score-form__preview-value">{{ total() }}</span>
+    </div>
+    <div class="score-form__preview-block">
+      <span class="score-form__preview-label">Grade</span>
+      <span class="score-form__preview-value">{{ grade() }}</span>
+    </div>
+    <div class="score-form__preview-block">
+      <span class="score-form__preview-label">Status</span>
+      <span class="score-form__preview-value">
+        {{ passed() ? 'Pass' : 'Fail' }}
+      </span>
+    </div>
+  </div>
+
+  <mat-form-field appearance="outline" class="score-form__field">
+    <mat-label>Comment (optional)</mat-label>
+    <textarea
+      matInput
+      rows="2"
+      maxlength="500"
+      formControlName="comment"
+      placeholder="A short note on what you observed during moderation."
+    ></textarea>
+  </mat-form-field>
+
+  <div class="score-form__actions">
+    <app-button
+      label="Submit moderation"
+      type="fill"
+      class="btn-md"
+      [loading]="saving()"
+      [disabled]="form.invalid || saving()"
+      (clickEvent)="submit()"
+    />
+  </div>
+</form>

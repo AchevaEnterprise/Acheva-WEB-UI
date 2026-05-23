@@ -1,0 +1,275 @@
+@if (loadingStudent()) {
+  <div class="min-h-[40vh] grid place-content-center">
+    <app-loader />
+  </div>
+} @else {
+  @if (student(); as s) {
+    <div class="profile-page">
+      <!-- ── Profile header ─────────────────────────────────────────────────── -->
+      <section class="profile-header">
+        <div class="profile-header__avatar">
+          <mat-icon>account_circle</mat-icon>
+        </div>
+
+        <div class="profile-header__main">
+          <h2 class="acva-heading-4 fw-600 m-0">
+            {{ s.fullName | titlecase }}
+          </h2>
+
+          <div class="profile-header__chips">
+            <span class="chip chip--blue">{{ levelLabel() }}</span>
+            <span class="chip chip--dark">
+              @switch (activeSemester()) {
+                @case (SemesterEnum.FIRST) {
+                  First Semester
+                }
+                @case (SemesterEnum.SECOND) {
+                  Second Semester
+                }
+                @default {
+                  {{ activeSemester() }}
+                }
+              }
+            </span>
+            @if (studentSession()) {
+              <span class="profile-header__session">
+                <mat-icon>event</mat-icon>
+                <span>{{ studentSession() }}</span>
+              </span>
+            }
+          </div>
+
+          <p class="profile-header__meta">
+            REG NO:
+            <span class="text-gray-800">{{ s.registrationNumber }}</span>
+            <span class="profile-header__sep">|</span>
+            <span class="profile-header__dept">
+              <mat-icon class="text-blue-500">school</mat-icon>
+              {{ departmentName() }}
+            </span>
+          </p>
+        </div>
+
+        <div class="profile-header__actions">
+          <app-button
+            label="Edit Profile"
+            type="outline"
+            class="btn-md"
+            icon="icons/general/pen-icon.svg"
+            (clickEvent)="editProfile()"
+          />
+          <app-button
+            label="Deactivate"
+            class="btn-md profile-header__deactivate"
+            (clickEvent)="toggleDeactivate()"
+          />
+        </div>
+      </section>
+
+      <!-- ── Stat cards ─────────────────────────────────────────────────────── -->
+      <section class="profile-stats">
+        <app-student-stat-card
+          label="CGPA"
+          [value]="(gpa() | number: '1.2-2') ?? '—'"
+          icon="emoji_events"
+          accent="amber"
+        />
+        <app-student-stat-card
+          label="Courses enrolled"
+          [value]="coursesEnrolled()"
+          icon="folder"
+          accent="green"
+        />
+        <app-student-stat-card
+          label="Departmental Dues"
+          value="—"
+          icon="credit_card"
+          accent="purple"
+        />
+        <app-student-stat-card
+          label="Current Unit Load"
+          [value]="unitLoadCurrent() || '—'"
+          icon="dashboard"
+          accent="indigo"
+        />
+      </section>
+
+      <!-- ── Two-column body ────────────────────────────────────────────────── -->
+      <section class="profile-body">
+        <!-- Left: All Results ── -->
+        <div class="results-card">
+          <header class="results-card__header">
+            <h3 class="acva-heading-6 fw-600 m-0">All Results</h3>
+
+            <app-button
+              label="Print"
+              type="outline"
+              class="btn-sm"
+              (clickEvent)="printResults()"
+            />
+          </header>
+
+          <div class="results-card__filters">
+            <div class="level-tabs" role="tablist" aria-label="Level">
+              @for (lvl of levelTabs; track lvl.value) {
+                <button
+                  type="button"
+                  role="tab"
+                  class="level-tab"
+                  [class.level-tab--active]="activeLevel() === lvl.value"
+                  [attr.aria-selected]="activeLevel() === lvl.value"
+                  (click)="setLevel(lvl.value)"
+                >
+                  {{ lvl.label }}
+                </button>
+              }
+            </div>
+
+            <mat-form-field appearance="outline" class="semester-select">
+              <mat-select
+                [value]="activeSemester()"
+                (selectionChange)="setSemester($event.value)"
+              >
+                <mat-option [value]="SemesterEnum.FIRST"
+                  >1st Semester</mat-option
+                >
+                <mat-option [value]="SemesterEnum.SECOND"
+                  >2nd Semester</mat-option
+                >
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          @if (loadingResults()) {
+            <div class="results-card__loader">
+              <app-loader />
+            </div>
+          } @else {
+            <div class="results-table-wrapper">
+              <table class="results-table">
+                <thead>
+                  <tr>
+                    <th>COURSE CODE</th>
+                    <th>TEST</th>
+                    <th>LAB</th>
+                    <th>EXAM</th>
+                    <th>TOTAL</th>
+                    <th>FINAL GRADE</th>
+                    <th>STATUS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (
+                    result of semesterResults();
+                    track trackEntry($index, result)
+                  ) {
+                    <tr>
+                      <td class="results-table__code">
+                        {{ result.courseCode }}
+                      </td>
+                      <td>
+                        <span class="score-cell">{{ result.test }}</span>
+                      </td>
+                      <td>
+                        <span class="score-cell">{{ result.lab }}</span>
+                      </td>
+                      <td>
+                        <span class="score-cell">{{ result.exam }}</span>
+                      </td>
+                      <td>
+                        <span class="score-cell">{{ result.total }}</span>
+                      </td>
+                      <td class="results-table__grade">{{ result.grade }}</td>
+                      <td>
+                        <app-status-badge [status]="result.status" />
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr>
+                      <td colspan="7" class="results-table__empty">
+                        No results for this level and semester.
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
+
+        <!-- Right: side rail ── -->
+        <aside class="profile-rail">
+          <!-- Registered courses (dark) -->
+          <div class="tool-card tool-card--dark">
+            <h4 class="tool-card__title">
+              <mat-icon>book</mat-icon>
+              Registered Courses
+            </h4>
+            <p class="tool-card__description">
+              Manage registered courses for the current session
+            </p>
+            <button
+              type="button"
+              class="tool-card__cta tool-card__cta--ghost"
+              (click)="viewRegisteredCourses()"
+            >
+              View Registered Courses
+            </button>
+          </div>
+
+          <!-- AI Smart Fix (blue) -->
+          <div class="tool-card tool-card--blue">
+            <h4 class="tool-card__title">
+              <mat-icon>bolt</mat-icon>
+              AI Smart Fix
+            </h4>
+            <p class="tool-card__description">
+              Automatically optimize this student's registration based on
+              carryovers, pre-requisites, and graduation paths.
+            </p>
+            <button
+              type="button"
+              class="tool-card__cta tool-card__cta--solid"
+              (click)="runAiSmartFix()"
+            >
+              Run AI Smart Fix
+            </button>
+          </div>
+
+          <!-- Manual Fix -->
+          <button type="button" class="manual-fix-btn" (click)="manualFix()">
+            Manual Fix
+          </button>
+
+          <!-- AI Insights -->
+          <div class="profile-rail__insights">
+            <h4 class="profile-rail__insights-title">
+              <mat-icon>lightbulb</mat-icon>
+              AI Insights
+            </h4>
+
+            <app-ai-insight-card
+              variant="warning"
+              title="Carryover Warning"
+              [description]="carryoverDescription()"
+              [interactive]="carryoverCount() > 0"
+              (clickEvent)="openCarryovers()"
+            />
+
+            <app-ai-insight-card
+              variant="success"
+              title="Optimal Load"
+              description="18 units is the recommended balance for maintaining a 3.7+ CGPA based on previous performance."
+            />
+
+            <app-ai-insight-card
+              variant="info"
+              title="Graduation Path"
+              description="Student is currently tracking for a First Class (3.5+ requirement)."
+            />
+          </div>
+        </aside>
+      </section>
+    </div>
+  }
+}

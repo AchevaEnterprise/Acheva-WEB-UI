@@ -1,9 +1,22 @@
-import { Component, computed, inject, output, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  effect,
+  inject,
+  output,
+  signal,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatDividerModule } from '@angular/material/divider';
 
 import { MatMenuModule } from '@angular/material/menu';
-import { Router, RouterLink, RouterLinkActive } from '@angular/router';
-import { finalize } from 'rxjs';
+import {
+  NavigationEnd,
+  Router,
+  RouterLink,
+  RouterLinkActive,
+} from '@angular/router';
+import { filter, finalize } from 'rxjs';
 import { MENU } from '../../@core/constant/menu';
 import { ImageFallbackDirective } from '../../@core/directives/image-fallback.directive';
 import { RoleAccessDirective } from '../../@core/directives/role-access.directive';
@@ -12,6 +25,7 @@ import { ToastService } from '../../@core/utility/toast.service';
 import { UtilityService } from '../../@core/utility/utility.service';
 import { RoleEnum } from '../../@features/auth/model/auth.model';
 import { AuthenticationService } from '../../@features/auth/service/auth.service';
+import { ModerationInboxBadgeService } from '../../@features/moderation/services/moderation-inbox-badge.service';
 import { SvgComponent } from '../../@shared/components/svg/svg.component';
 
 @Component({
@@ -34,6 +48,7 @@ export class SideBarComponent {
   private readonly router = inject(Router);
   private readonly utils = inject(UtilityService);
   private readonly toast = inject(ToastService);
+  readonly moderationInbox = inject(ModerationInboxBadgeService);
 
   appMenu = signal<IMenu[]>(MENU);
   activeAccount = this.authService.activeAccount;
@@ -84,6 +99,20 @@ export class SideBarComponent {
 
   expanded = signal<boolean>(window.innerWidth > 768);
   toggleSideNav = output<{ expanded: boolean }>();
+
+  constructor() {
+    effect(() => {
+      void [this.activeRole(), this.activeAccount()?.id];
+      this.moderationInbox.refresh();
+    });
+
+    this.router.events
+      .pipe(
+        filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+        takeUntilDestroyed()
+      )
+      .subscribe(() => this.moderationInbox.refresh());
+  }
 
   isActiveRoute(menu: IMenu): boolean {
     return this.router.url.includes(menu.route);
