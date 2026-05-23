@@ -40,6 +40,27 @@
   }
 }
 
+// Clickable row — hover affordance + keyboard focus ring.
+// The transition keeps it feeling smooth; the pale-blue tint uses the brand
+// primary (#2793FF) at near-zero opacity so it never fights the content.
+
+::ng-deep .mat-mdc-row {
+  transition:
+    background-color 0.15s ease,
+    box-shadow 0.15s ease;
+  outline: none;
+}
+
+::ng-deep .mat-mdc-row:hover {
+  background-color: rgb(39 147 255 / 5%);
+  box-shadow: inset 3px 0 0 #2793ff;
+}
+
+::ng-deep .mat-mdc-row:focus-visible {
+  background-color: rgb(39 147 255 / 8%);
+  box-shadow: inset 3px 0 0 #2793ff;
+}
+
 // Light row tint so attention rows read clearly without shouting.
 
 ::ng-deep .students-table__row--issues.mat-mdc-row {
@@ -47,5 +68,6 @@
 }
 
 ::ng-deep .students-table__row--issues.mat-mdc-row:hover {
-  background-color: rgb(254 226 226 / 65%);
+  background-color: rgb(254 226 226 / 70%);
+  box-shadow: inset 3px 0 0 #e11d48;
 }
