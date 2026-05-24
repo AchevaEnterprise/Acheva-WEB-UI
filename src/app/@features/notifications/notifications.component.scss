@@ -66,13 +66,13 @@
       color 0.15s ease;
     white-space: nowrap;
 
-    &:hover:not(:disabled) {
-      background: rgb(39 147 255 / 8%);
-    }
-
     &:disabled {
       color: #9ca3af;
       cursor: not-allowed;
+    }
+
+    &:hover:not(:disabled) {
+      background: rgb(39 147 255 / 8%);
     }
   }
 
@@ -143,15 +143,6 @@
       &:hover {
         background: rgb(39 147 255 / 8%);
       }
-
-      .notif-panel__item-accent {
-        background: #2793ff;
-      }
-
-      .notif-panel__item-title {
-        font-weight: 600;
-        color: #111827;
-      }
     }
   }
 
@@ -160,6 +151,10 @@
     flex-shrink: 0;
     background: transparent;
     transition: background-color 0.15s ease;
+
+    .notif-panel__item--unread & {
+      background: #2793ff;
+    }
   }
 
   &__item-body {
@@ -184,6 +179,11 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+
+    .notif-panel__item--unread & {
+      font-weight: 600;
+      color: #111827;
+    }
   }
 
   &__item-time {

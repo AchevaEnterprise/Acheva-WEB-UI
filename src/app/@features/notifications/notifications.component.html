@@ -2,7 +2,9 @@
   <!-- Header -->
   <div class="notif-panel__header">
     <div class="notif-panel__title-group">
-      <span class="notif-panel__title acva-heading-6 fw-600">Notifications</span>
+      <span class="notif-panel__title acva-heading-6 fw-600"
+        >Notifications</span
+      >
       @if (unreadCount() > 0) {
         <span class="notif-panel__unread-badge">{{ unreadCount() }}</span>
       }
@@ -58,7 +60,9 @@
           <div class="notif-panel__item-accent"></div>
           <div class="notif-panel__item-body">
             <div class="notif-panel__item-meta">
-              <span class="notif-panel__item-title">{{ notification.title }}</span>
+              <span class="notif-panel__item-title">{{
+                notification.title
+              }}</span>
               <span class="notif-panel__item-time">{{
                 relativeTime(notification.createdAt)
               }}</span>

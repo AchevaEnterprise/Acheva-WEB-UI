@@ -58,7 +58,9 @@ export class NotificationsComponent implements OnInit {
 
     // Optimistic update
     this.notifications.update((list) =>
-      list.map((n) => (n.id === notification.id ? { ...n, status: 'READ' as const } : n))
+      list.map((n) =>
+        n.id === notification.id ? { ...n, status: 'READ' as const } : n
+      )
     );
 
     this.notificationService
