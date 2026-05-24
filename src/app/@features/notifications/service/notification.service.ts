@@ -31,9 +31,16 @@ export class NotificationService {
     );
   }
 
-  markAsRead(notificationId: string): Observable<IAPIResponse<any>> {
-    return this.http.patch<IAPIResponse<any>>(
+  markAsRead(notificationId: string): Observable<IAPIResponse<unknown>> {
+    return this.http.patch<IAPIResponse<unknown>>(
       `${this.notificationUrl}/${notificationId}/read`,
+      {}
+    );
+  }
+
+  markAllAsRead(): Observable<IAPIResponse<unknown>> {
+    return this.http.patch<IAPIResponse<unknown>>(
+      `${this.notificationUrl}/read-all`,
       {}
     );
   }

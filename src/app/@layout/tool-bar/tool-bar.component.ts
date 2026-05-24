@@ -145,12 +145,11 @@ export class ToolBarComponent implements OnInit {
 
   openNotification() {
     this.dialog.open(NotificationsComponent, {
-      width: '30%',
+      width: '400px',
+      maxWidth: '95vw',
       height: '98%',
       position: { right: '10px' },
-      data: {
-        notifications: this.notifications(),
-      },
+      panelClass: 'notification-panel',
     });
   }
 

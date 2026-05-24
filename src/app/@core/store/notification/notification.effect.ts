@@ -20,9 +20,15 @@ export class NotificationEffects {
       mergeMap(() =>
         this.notificationService.getNotifications().pipe(
           map((resp) => {
-            if (resp.status)
-              return saveNotification({ notifications: resp.data });
-            else return saveNotificationError({ error: resp.message });
+            if (resp.status) {
+              // Normalize MongoDB _id → id so all consumers can use notification.id
+              const notifications = resp.data.map((n: any) => ({
+                ...n,
+                id: n._id?.toString() ?? n.id,
+              }));
+              return saveNotification({ notifications });
+            }
+            return saveNotificationError({ error: resp.message });
           }),
           catchError((error) =>
             of(saveNotificationError({ error: error.message as string }))
