@@ -387,7 +387,8 @@ export class DashboardComponent implements OnInit {
                 const label = analytics.label.toLowerCase();
 
                 if (label.includes('draft')) count = statusCounts.DRAFT;
-                else if (label.includes('pending')) count = statusCounts.PENDING;
+                else if (label.includes('pending'))
+                  count = statusCounts.PENDING;
                 else if (label.includes('unverified'))
                   count = statusCounts.UNVERIFIED;
                 else if (label.includes('verified'))
