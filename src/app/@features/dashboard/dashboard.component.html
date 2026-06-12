@@ -9,8 +9,14 @@
 
 <!-- ANALYTICS -->
 <div class="grid grid-cols-[repeat(auto-fit,_minmax(0,_1fr))] gap-4 mt-4">
-  @for (data of analtyics(); track data.label) {
-    <app-analytics-card [analtyics]="data" *appRoleAccess="data.accessRole" />
+  @if (loadingAnalytics()) {
+    <div class="col-span-full flex justify-center py-8">
+      <app-loader />
+    </div>
+  } @else {
+    @for (data of analtyics(); track data.label) {
+      <app-analytics-card [analtyics]="data" *appRoleAccess="data.accessRole" />
+    }
   }
 </div>
 
@@ -26,7 +32,13 @@
     </div> -->
 
     <div content class="p-4">
-      <app-chart [chart]="chart()" />
+      @if (loadingChart()) {
+        <div class="flex justify-center py-12">
+          <app-loader />
+        </div>
+      } @else {
+        <app-chart [chart]="chart()" />
+      }
     </div>
   </app-card>
 </div>

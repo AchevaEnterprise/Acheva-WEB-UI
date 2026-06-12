@@ -1,5 +1,5 @@
 <div
-  class="rounded-[12px] border border-neutral-200 overflow-hidden bg-white w-full"
+  class="rounded-xl border border-neutral-200 overflow-hidden bg-white w-full"
 >
   <!-- Blue gradient header -->
   <div
@@ -8,20 +8,20 @@
   >
     @if (courseCode()) {
       <span
-        class="inline-flex items-center self-start px-2 py-1 rounded-[6px] bg-white/25 text-[0.75rem] fw-500 tracking-wide"
+        class="inline-flex items-center self-start px-2 py-1 rounded-md bg-white/25 text-[0.75rem] fw-500 tracking-wide"
       >
         {{ courseCode() | uppercase }}
       </span>
     } @else {
       <span
-        class="inline-flex items-center self-start px-3 py-1 rounded-[6px] bg-white/20 text-[0.75rem]"
+        class="inline-flex items-center self-start px-3 py-1 rounded-md bg-white/20 text-[0.75rem]"
       >
         —
       </span>
     }
 
     <h3 class="acva-heading-5 fw-500 text-white leading-tight">
-      {{ template()?.courseTitle || '—' | titlecase }}
+      {{ template().courseTitle || '—' | titlecase }}
     </h3>
 
     @if (dateLabel()) {
@@ -34,7 +34,7 @@
     <div class="flex items-center justify-between">
       <span class="acva-para-1 text-neutral-500">Course Coordinator</span>
       <span class="acva-para-2 fw-500 text-neutral-800 text-right">
-        {{ template()?.courseCordinator || '—' | titlecase }}
+        {{ template().courseCordinator || '—' | titlecase }}
       </span>
     </div>
 
@@ -48,14 +48,14 @@
     <div class="flex items-center justify-between">
       <span class="acva-para-1 text-neutral-500">Course Load</span>
       <span
-        class="inline-flex items-center px-2 py-1 rounded-[6px] bg-[#E7F1FF] text-[#2793FF] acva-caption fw-500"
+        class="inline-flex items-center px-2 py-1 rounded-md bg-[#E7F1FF] text-[#2793FF] acva-caption fw-500"
       >
         {{ courseLoadLabel() }}
       </span>
     </div>
   </div>
 
-  <mat-divider class="!mx-5"></mat-divider>
+  <mat-divider class="mx-5!"></mat-divider>
 
   <!-- Icon meta rows -->
   <div class="px-5 py-4 flex flex-col gap-3">
@@ -65,7 +65,7 @@
         svgHeight="1rem"
         src="icons/general/calendar-icon.svg"
       />
-      <span>{{ template()?.session || '—' }} Session</span>
+      <span>{{ template().session || '—' }} Session</span>
     </div>
 
     <div class="flex items-center gap-2 text-neutral-600 acva-para-2">
@@ -75,8 +75,8 @@
         src="icons/general/building-icon.svg"
       />
       <span>
-        @if (template()?.department?.name) {
-          {{ template()?.department?.name | titlecase }} Department
+        @if (template().department?.name) {
+          {{ template().department?.name | titlecase }} Department
         } @else {
           —
         }

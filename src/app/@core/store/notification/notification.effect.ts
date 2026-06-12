@@ -26,7 +26,7 @@ export class NotificationEffects {
             if (resp.status) {
               // Normalize MongoDB _id → id so all consumers can use notification.id
               const notifications: INotification[] = (
-                resp.data as RawNotification[]
+                resp.data as unknown as RawNotification[]
               ).map((n) => ({
                 ...n,
                 id: n._id,

@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { LayoutComponent } from './layout.component';
+import { lecturerOnlyGuard } from '../@core/guards/role.guard';
 
 export const routes: Routes = [
   {
@@ -100,6 +101,7 @@ export const routes: Routes = [
       },
       {
         path: 'moderation',
+        canActivate: [lecturerOnlyGuard],
         data: {
           title: 'Moderation',
         },
