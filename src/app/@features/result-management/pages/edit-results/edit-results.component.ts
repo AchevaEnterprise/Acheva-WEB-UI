@@ -35,6 +35,7 @@ import { ResultsService } from '../../services/results.service';
 import {
   getApprovalHandoff,
   getRejectionHandoff,
+  isResultReadonlyForLecturer,
   RECIPIENT_LABELS,
 } from '../../utils/workflow';
 
@@ -83,6 +84,14 @@ export class EditResultsComponent implements OnInit, CanComponentDeactivate {
   resending = signal<boolean>(false);
   tableExpanded = signal<boolean>(false);
   hasChanges = signal<boolean>(false);
+
+  /**
+   * A lecturer can open a result that has left their editable custody —
+   * including a "second draft" forwarded to the CC while still in DRAFT status
+   * — but only to view it. In that case the grade table is rendered read-only.
+   * See `isResultReadonlyForLecturer` for the exact rule.
+   */
+  readOnly = signal<boolean>(false);
 
   userRole = this.authService.activeAccount()?.role;
 
@@ -149,7 +158,13 @@ export class EditResultsComponent implements OnInit, CanComponentDeactivate {
       .pipe(finalize(() => this.loadingResult.set(false)))
       .subscribe({
         next: ([result, resultEntries]) => {
-          if (result.status) this.result.set(result.data);
+          if (result.status) {
+            this.result.set(result.data);
+            this.readOnly.set(
+              this.userRole === RoleEnum.LECTURER &&
+                isResultReadonlyForLecturer(result.data)
+            );
+          }
           if (resultEntries.status)
             this.setResultEntriesDetails(resultEntries.data);
         },

@@ -149,7 +149,7 @@ $shell-min-height: calc(100dvh - 9rem);
     gap: 1rem;
     align-items: start;
 
-    @media (width <= 1080px) {
+    @media (width <= 1024px) {
       grid-template-columns: 1fr;
     }
   }

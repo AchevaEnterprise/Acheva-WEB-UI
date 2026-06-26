@@ -188,3 +188,20 @@ function toHandoff(
 ): IHandoff | null {
   return recipientId ? { role, recipientId } : null;
 }
+
+/**
+ * Whether a result is read-only for the lecturer who uploaded it.
+ *
+ * A lecturer may edit a result only while it is a draft still in their custody
+ * and not yet sent. Once forwarded to the Course Coordinator it flips
+ * `hasBeenSent` and becomes read-only — including the "second draft" that stays
+ * in DRAFT status. Rejections route the result back down the chain (HOD → CC →
+ * lecturer); the CC's rejection resets `hasBeenSent` to false when the result
+ * finally returns to the lecturer, making it editable again.
+ */
+export function isResultReadonlyForLecturer(
+  result: Pick<IResult, 'status' | 'hasBeenSent'> | null | undefined
+): boolean {
+  if (!result) return false;
+  return result.status !== ResultStatusEnum.DRAFT || !!result.hasBeenSent;
+}

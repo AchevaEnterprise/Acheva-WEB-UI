@@ -1,5 +1,7 @@
 import { AsyncPipe, NgIf } from '@angular/common';
-import { Component, inject, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatDivider } from '@angular/material/divider';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
@@ -13,6 +15,7 @@ import {
   switchMap,
 } from 'rxjs';
 import { LevelsEnum } from '../../../../@core/models/school.model';
+import { ToastService } from '../../../../@core/utility/toast.service';
 import { CardComponent } from '../../../../@shared/components/card/card.component';
 import { EmptyStateComponent } from '../../../../@shared/components/empty-state/empty-state.component';
 import { SearchInputComponent } from '../../../../@shared/components/forms/search-input/search-input.component';
@@ -23,6 +26,9 @@ import { AuthenticationService } from '../../../auth/service/auth.service';
 import { CourseCardComponent } from '../../components/course-card/course-card.component';
 import { ICourse, ICourseTemplate } from '../../models/course.model';
 import { CoursesService } from '../../services/courses.service';
+
+/** How many templates the collapsed "Suggested Template" preview shows. */
+const SUGGESTED_TEMPLATE_LIMIT = 6;
 
 @Component({
   selector: 'app-courses',
@@ -45,6 +51,8 @@ export class CoursesComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly authService = inject(AuthenticationService);
   private readonly courseService = inject(CoursesService);
+  private readonly toast = inject(ToastService);
+  private readonly destroyRef = inject(DestroyRef);
 
   courseTemplates = signal<Partial<ICourseTemplate>[]>([]);
   RoleEnum = RoleEnum;
@@ -71,10 +79,12 @@ export class CoursesComponent {
     );
 
   isloadingCourses = signal(true);
-  courses$: Observable<ICourse[]> = this.courseService.getCourses().pipe(
-    map((resp) => resp.data['courses']),
-    finalize(() => this.isloadingCourses.set(false))
-  );
+  courses$: Observable<ICourse[]> = this.courseService
+    .getCourses({ limit: SUGGESTED_TEMPLATE_LIMIT })
+    .pipe(
+      map((resp) => resp.data['courses']),
+      finalize(() => this.isloadingCourses.set(false))
+    );
 
   // Search stream
   searchResults$ = this.searchSubject.pipe(
@@ -160,24 +170,36 @@ export class CoursesComponent {
   }
 
   viewAllCourses() {
+    // "View less" — collapse back to the suggested preview.
     if (this.showAllCourses()) {
       this.showAllCourses.set(false);
       return;
     }
 
     this.showAllCourses.set(true);
+
+    // Already loaded once — reuse the cached catalogue instead of refetching.
+    if (this.allCourses().length > 0) {
+      return;
+    }
+
     this.isLoadingAllCourses.set(true);
 
-    // Fetch all courses without filters
-    this.courseService.getCourses().subscribe({
-      next: (resp) => {
-        this.allCourses.set(resp.data['courses'] || []);
-        this.isLoadingAllCourses.set(false);
-      },
-      error: (error) => {
-        this.isLoadingAllCourses.set(false);
-      },
-    });
+    this.courseService
+      .getAllCourses()
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => this.isLoadingAllCourses.set(false))
+      )
+      .subscribe({
+        next: (courses) => this.allCourses.set(courses),
+        error: (err: HttpErrorResponse) =>
+          this.toast.showNotification(
+            'error',
+            'Could not load courses',
+            err.error?.message ?? 'Failed to load all courses'
+          ),
+      });
   }
 
   hideAllCourses() {

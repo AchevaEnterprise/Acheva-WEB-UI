@@ -152,10 +152,10 @@
     </div>
 
     <div
-      class="grid grid-cols-[70%_1fr] gap-4 mt-4 items-start"
+      class="grid lg:grid-cols-[70%_1fr] grid-cols-1 gap-4 mt-4 items-start"
       [ngClass]="{
         'grid-cols-1': collapseView(),
-        'grid-cols-[70%_1fr]': !collapseView(),
+        'lg:grid-cols-[70%_1fr]': !collapseView(),
       }"
     >
       <app-card

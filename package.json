@@ -10,7 +10,8 @@
     "lint": "ng lint",
     "prepare": "husky",
     "screenshot": "node scripts/screenshot.mjs",
-    "pw:install": "npx playwright install chromium --with-deps"
+    "pw:install": "npx playwright install chromium --with-deps",
+    "verify:responsive": "node scripts/verify-responsive.mjs"
   },
   "private": true,
   "dependencies": {

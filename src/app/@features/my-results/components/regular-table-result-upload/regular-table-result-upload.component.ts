@@ -60,6 +60,8 @@ export class RegularTableResultUploadComponent {
   students = input<Partial<IStudentGrade>[]>([]);
   searchValue = input<string | null>(null);
   refreshTable = input<boolean>(false);
+  /** When true the grade inputs render as read-only text (no editing). */
+  readonly = input<boolean>(false);
 
   hasChangesEvent = output<boolean>();
   uploadResultEvent = output<IStudentGrade[]>();
@@ -169,9 +171,10 @@ export class RegularTableResultUploadComponent {
       Validators.max(100),
     ];
 
-    // disabled when user is not a lecturer or a course-cordinator
-    // and when staus is not draft, if there is a status
-    const isDisabled = this.status && this.status !== 'DRAFT';
+    // Read-only when the parent says so (e.g. a lecturer's result already sent
+    // to the Course Coordinator) or when the result has moved past DRAFT.
+    const isDisabled =
+      this.readonly() || (!!this.status && this.status !== 'DRAFT');
 
     const createNumberControl = (value: number | undefined) =>
       new FormControl(

@@ -36,10 +36,13 @@ const outputPath = resolve(__dirname, '..', outputFile);
 mkdirSync(dirname(outputPath), { recursive: true });
 
 // ─── Viewports to capture ──────────────────────────────────────────────────────
-// We default to 1440 px (design baseline) but also save a 375 px mobile snap
-// when a second --mobile flag is passed.
+// We default to 1440 px (design baseline) but support --width for custom sizes
+// Also save a 375 px mobile snap when --mobile flag is passed.
+const widthArg = process.argv.find(arg => arg.startsWith('--width='));
+const customWidth = widthArg ? parseInt(widthArg.split('=')[1]) : 1440;
+
 const VIEWPORTS = [
-  { name: 'desktop', width: 1440, height: 900 },
+  { name: 'desktop', width: customWidth, height: 1200 },
   ...(process.argv.includes('--mobile')
     ? [{ name: 'mobile', width: 375, height: 812 }]
     : []),

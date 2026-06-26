@@ -33,6 +33,7 @@
     </app-card>
 
     <app-card
+      class="min-w-0"
       [label]="'Recently used courses'"
       [showDivider]="true"
       [dividerClass]="'!mt-4'"
@@ -44,17 +45,17 @@
 
         <ng-container *ngIf="recentCourses$ | async as recentCourses">
           @if (recentCourses.length > 0) {
-            <div
-              class="grid lg:grid-cols-4 grid-cols-2 gap-4 overflow-x-auto pb-2"
-            >
-              @for (course of recentCourses; track $index) {
-                <div class="flex-shrink-0" style="width: 280px">
-                  <app-course-card
-                    [course]="course"
-                    (useTemplateEvent)="createResult($event)"
-                  />
-                </div>
-              }
+            <div class="overflow-x-auto pb-2">
+              <div class="flex gap-4">
+                @for (course of recentCourses; track $index) {
+                  <div class="w-[280px] flex-shrink-0">
+                    <app-course-card
+                      [course]="course"
+                      (useTemplateEvent)="createResult($event)"
+                    />
+                  </div>
+                }
+              </div>
             </div>
           } @else {
             <app-empty-state
@@ -89,7 +90,7 @@
           <app-loader />
         } @else {
           @if (searchResults().length > 0) {
-            <div class="grid lg:grid-cols-3 sm:grid-cols-2 gap-4">
+            <div class="grid lg:grid-cols-3 md:grid-cols-3 sm:grid-cols-2 gap-4">
               @for (course of searchResults(); track $index) {
                 <app-course-card
                   [course]="course"

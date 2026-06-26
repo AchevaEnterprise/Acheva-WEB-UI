@@ -150,14 +150,24 @@
     />
 
     <div class="flex flex-wrap justify-end gap-3 items-center">
-      <app-button
-        label="Save Changes"
-        icon="icons/general/save-btn-icon.svg"
-        class="btn-md"
-        [disabled]="!resultEntryCompleted()"
-        (clickEvent)="saveChanges()"
-        *appRoleAccess="[RoleEnum.LECTURER]"
-      />
+      @if (readOnly()) {
+        <span
+          class="flex items-center gap-2 text-[#6B7280] bg-[#F3F4F6] border border-[#E5E7EB] px-3 py-1.5 rounded-full acva-caption fw-500"
+        >
+          View only — already sent to the Course Coordinator
+        </span>
+      }
+
+      @if (!readOnly()) {
+        <app-button
+          label="Save Changes"
+          icon="icons/general/save-btn-icon.svg"
+          class="btn-md"
+          [disabled]="!resultEntryCompleted()"
+          (clickEvent)="saveChanges()"
+          *appRoleAccess="[RoleEnum.LECTURER]"
+        />
+      }
 
       <app-button
         *appRoleAccess="[RoleEnum.COURSE_ADVISOR]"
@@ -167,7 +177,7 @@
         (clickEvent)="confirmPublish()"
       />
 
-      @if (!isUploaded()) {
+      @if (!isUploaded() && !readOnly()) {
         <app-button
           [label]="
             userRole === RoleEnum.LECTURER ? 'Upload Results' : 'Import Results'
@@ -203,6 +213,7 @@
         <app-regular-table-result-upload
           #regularTableResultUploadRef
           [refreshTable]="isUploaded()"
+          [readonly]="readOnly()"
           [students]="students()['REGULAR']"
           (hasChangesEvent)="updateChanges($event)"
           (uploadResultEvent)="uploadBulkResult($event)"
@@ -212,6 +223,7 @@
         <app-reference-table-result-upload
           #referenceTableResultUploadRef
           [refreshTable]="isUploaded()"
+          [readonly]="readOnly()"
           [students]="students()['REFERENCE']"
           (hasChangesEvent)="updateChanges($event)"
           (uploadResultEvent)="uploadBulkResult($event)"
@@ -221,6 +233,7 @@
         <app-unregistered-table-result-upload
           #unregisteredTableResultUploadRef
           [refreshTable]="isUploaded()"
+          [readonly]="readOnly()"
           [students]="students()['UNREGISTERED']"
           (hasChangesEvent)="updateChanges($event)"
           (uploadResultEvent)="uploadBulkResult($event)"

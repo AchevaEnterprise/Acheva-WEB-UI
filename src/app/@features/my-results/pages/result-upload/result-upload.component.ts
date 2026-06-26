@@ -40,6 +40,7 @@ import {
   SegmentValue,
 } from '../../../result-management/models/results.model';
 import { ResultsService } from '../../../result-management/services/results.service';
+import { isResultReadonlyForLecturer } from '../../../result-management/utils/workflow';
 import { IStudentGrade } from '../../../students/models/student.model';
 import { AnalyticsChartComponent } from '../../components/analytics-chart/analytics-chart.component';
 import { ReferenceTableResultUploadComponent } from '../../components/reference-table-result-upload/reference-table-result-upload.component';
@@ -161,6 +162,14 @@ export class ResultUploadComponent implements OnInit, CanComponentDeactivate {
   tableExpanded = signal<boolean>(false);
   hasChanges = signal<boolean>(false);
 
+  /**
+   * A lecturer may open a result that has been forwarded to the Course
+   * Coordinator (the "second draft" — forwarded while still in DRAFT status),
+   * but only to view it. In that case every editing control is disabled.
+   * See `isResultReadonlyForLecturer` for the exact rule.
+   */
+  readOnly = signal<boolean>(false);
+
   averageTotal = signal<number>(0);
 
   ngOnInit(): void {
@@ -198,6 +207,14 @@ export class ResultUploadComponent implements OnInit, CanComponentDeactivate {
     });
 
     this.averageTotal.set(analytics.averageTotal);
+
+    // A lecturer can only edit a result that is still a draft in their custody
+    // and hasn't been forwarded for review. Once sent to the Course Coordinator
+    // it is read-only, even while it still reads as a DRAFT ("second draft").
+    this.readOnly.set(
+      this.userRole === RoleEnum.LECTURER &&
+        isResultReadonlyForLecturer(result)
+    );
   }
 
   setResultEntriesDetails(resultEntries: unknown) {

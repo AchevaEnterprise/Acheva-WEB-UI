@@ -82,10 +82,10 @@
 </div>
 
 <div
-  class="grid grid-cols-1 gap-4 mt-4 items-start"
+  class="grid lg:grid-cols-[1fr_30%] grid-cols-1 gap-4 mt-4 items-start"
   [ngClass]="{
     'grid-cols-1': collapseView(),
-    'grid-cols-[1fr_30%]': !collapseView(),
+    'lg:grid-cols-[1fr_30%]': !collapseView(),
   }"
 >
   <app-result-management-file-table

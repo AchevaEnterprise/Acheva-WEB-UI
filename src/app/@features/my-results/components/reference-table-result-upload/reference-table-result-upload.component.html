@@ -18,7 +18,7 @@
       <ng-container matColumnDef="registrationNumber">
         <th mat-header-cell *matHeaderCellDef>REG NO</th>
         <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
-          @if (row.value.registrationNumber) {
+          @if (row.value.registrationNumber || readonly()) {
             <input
               type="text"
               class="border border-neutral-300 rounded-[8px] p-2 my-4 w-full bg-white"
@@ -53,51 +53,63 @@
           class="text-center"
           [formGroupName]="i"
         >
-          <input
-            type="number"
-            min="0"
-            max="100"
-            class="border border-neutral-300 rounded-[8px] p-2 my-4 w-full bg-white"
-            [class.border-red-500]="
-              row.get('test').invalid && row.get('test').touched
-            "
-            formControlName="test"
-            (input)="onControlInput(i, 'test')"
-          />
+          @if (readonly()) {
+            {{ row.getRawValue().test }}
+          } @else {
+            <input
+              type="number"
+              min="0"
+              max="100"
+              class="border border-neutral-300 rounded-[8px] p-2 my-4 w-full bg-white"
+              [class.border-red-500]="
+                row.get('test').invalid && row.get('test').touched
+              "
+              formControlName="test"
+              (input)="onControlInput(i, 'test')"
+            />
+          }
         </td>
       </ng-container>
 
       <ng-container matColumnDef="lab">
         <th mat-header-cell *matHeaderCellDef>LAB</th>
         <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
-          <input
-            type="number"
-            min="0"
-            max="100"
-            class="border border-neutral-300 rounded-[8px] p-2 w-full bg-white"
-            [class.border-red-500]="
-              row.get('lab').invalid && row.get('lab').touched
-            "
-            formControlName="lab"
-            (input)="onControlInput(i, 'lab')"
-          />
+          @if (readonly()) {
+            {{ row.getRawValue().lab }}
+          } @else {
+            <input
+              type="number"
+              min="0"
+              max="100"
+              class="border border-neutral-300 rounded-[8px] p-2 w-full bg-white"
+              [class.border-red-500]="
+                row.get('lab').invalid && row.get('lab').touched
+              "
+              formControlName="lab"
+              (input)="onControlInput(i, 'lab')"
+            />
+          }
         </td>
       </ng-container>
 
       <ng-container matColumnDef="exam">
         <th mat-header-cell *matHeaderCellDef>EXAM</th>
         <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
-          <input
-            type="number"
-            min="0"
-            max="100"
-            class="border border-neutral-300 rounded-[8px] p-2 w-full bg-white"
-            [class.border-red-500]="
-              row.get('exam').invalid && row.get('exam').touched
-            "
-            formControlName="exam"
-            (input)="onControlInput(i, 'exam')"
-          />
+          @if (readonly()) {
+            {{ row.getRawValue().exam }}
+          } @else {
+            <input
+              type="number"
+              min="0"
+              max="100"
+              class="border border-neutral-300 rounded-[8px] p-2 w-full bg-white"
+              [class.border-red-500]="
+                row.get('exam').invalid && row.get('exam').touched
+              "
+              formControlName="exam"
+              (input)="onControlInput(i, 'exam')"
+            />
+          }
         </td>
       </ng-container>
 
@@ -144,6 +156,8 @@
     </table>
   </div>
 </form>
-<div class="flex justify-end mt-4">
-  <app-button label="Add row" (clickEvent)="addRow()" />
-</div>
+@if (!readonly()) {
+  <div class="flex justify-end mt-4">
+    <app-button label="Add row" (clickEvent)="addRow()" />
+  </div>
+}

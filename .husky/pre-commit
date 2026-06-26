@@ -1,4 +1,8 @@
 # ng test
 ng lint --fix
 npx stylelint "**/*.scss" --fix
+
+# Responsive layout changes: Run visual verification
+# npm run verify:responsive (requires dev server running on port 4200)
+
 git add ${added_files}
