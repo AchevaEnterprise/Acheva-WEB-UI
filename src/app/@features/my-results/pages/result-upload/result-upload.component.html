@@ -108,13 +108,6 @@
       [showDivider]="true"
       dividerClass="!mt-4"
     >
-      <p rightHeaderContent class="acva-para-1 text-neutral-500">
-        Average Grade
-        <span class="text-neutral-800"
-          >{{ averageTotal().toFixed(2) || '0.0' }}%</span
-        >
-      </p>
-
       <div content>
         <app-analytics-chart [data]="analyticsChartData()" />
 
@@ -130,6 +123,24 @@
           <p class="flex items-center gap-2 w-full">
             <span class="w-[15%] font-medium">Total Fail:</span>
             <span>{{ totalStudentFail() || 0 }}</span>
+          </p>
+          <p class="flex items-center gap-2 w-full">
+            <span class="w-[15%] font-medium">Average Grade:</span>
+            <span class="text-neutral-800 fw-600">
+              {{ averageTotal().toFixed(1) }}%
+            </span>
+          </p>
+          <p class="flex items-center gap-2 w-full">
+            <span class="w-[15%] font-medium">Pass Rate:</span>
+            <span class="text-[#2793FF] fw-600">
+              {{ percentagePass().toFixed(1) }}%
+            </span>
+          </p>
+          <p class="flex items-center gap-2 w-full">
+            <span class="w-[15%] font-medium">Fail Rate:</span>
+            <span class="text-[#D8315B] fw-600">
+              {{ percentageFail().toFixed(1) }}%
+            </span>
           </p>
         </div>
       </div>

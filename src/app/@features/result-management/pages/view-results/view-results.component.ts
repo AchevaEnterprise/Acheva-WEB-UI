@@ -63,7 +63,12 @@ export class ViewResultsComponent implements OnInit {
   totalStudent = signal<number>(0);
   totalStudentPass = signal<number>(0);
   totalStudentFail = signal<number>(0);
+  averageTotal = signal<number>(0);
   tableExpanded = signal<boolean>(false);
+
+  /** Pass/fail rate — calculated on the backend, set from the analytics response. */
+  percentagePass = signal<number>(0);
+  percentageFail = signal<number>(0);
 
   pagination = signal<IPaginator>({
     page: 1,
@@ -122,18 +127,33 @@ export class ViewResultsComponent implements OnInit {
           }
 
           if (analyticsResp.status) {
-            const { A, B, C, D, E, F, total, totalPass, totalFail } =
-              analyticsResp.data as {
-                A: number;
-                B: number;
-                C: number;
-                D: number;
-                E: number;
-                F: number;
-                total: number;
-                totalPass: number;
-                totalFail: number;
-              };
+            const {
+              A,
+              B,
+              C,
+              D,
+              E,
+              F,
+              total,
+              totalPass,
+              totalFail,
+              averageTotal,
+              percentagePass,
+              percentageFail,
+            } = analyticsResp.data as {
+              A: number;
+              B: number;
+              C: number;
+              D: number;
+              E: number;
+              F: number;
+              total: number;
+              totalPass: number;
+              totalFail: number;
+              averageTotal: number;
+              percentagePass: number;
+              percentageFail: number;
+            };
 
             const analyticsData = [
               A || 0,
@@ -148,6 +168,9 @@ export class ViewResultsComponent implements OnInit {
             this.totalStudent.set(total);
             this.totalStudentPass.set(totalPass || 0);
             this.totalStudentFail.set(totalFail || 0);
+            this.averageTotal.set(averageTotal || 0);
+            this.percentagePass.set(percentagePass || 0);
+            this.percentageFail.set(percentageFail || 0);
           }
         },
       });

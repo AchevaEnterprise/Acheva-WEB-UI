@@ -173,8 +173,7 @@ export class ResultManagementFileTableComponent implements OnInit, OnDestroy {
   //** Whether the lecturer may select this row for an action (send/resend). */
   isRowDisabled(result: IResult): boolean {
     return (
-      this.userRole === RoleEnum.LECTURER &&
-      isResultReadonlyForLecturer(result)
+      this.userRole === RoleEnum.LECTURER && isResultReadonlyForLecturer(result)
     );
   }
 
@@ -184,9 +183,7 @@ export class ResultManagementFileTableComponent implements OnInit, OnDestroy {
    * Course Coordinator's not-yet-received results stay blurred.
    */
   isBlurred(result: IResult): boolean {
-    return (
-      this.userRole === RoleEnum.COURSE_COORDINATOR && !result.hasBeenSent
-    );
+    return this.userRole === RoleEnum.COURSE_COORDINATOR && !result.hasBeenSent;
   }
 
   /** Whether the number of selected enabled elements matches the total number of enabled rows. */

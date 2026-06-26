@@ -137,6 +137,10 @@ export class ResultUploadComponent implements OnInit, CanComponentDeactivate {
   totalStudentPass = signal<number>(0);
   totalStudentFail = signal<number>(0);
 
+  /** Pass/fail rate — calculated on the backend, set from the entries response. */
+  percentagePass = signal<number>(0);
+  percentageFail = signal<number>(0);
+
   loadingResult = signal<boolean>(false);
   resultEntryCompleted = signal<boolean>(false);
 
@@ -212,21 +216,29 @@ export class ResultUploadComponent implements OnInit, CanComponentDeactivate {
     // and hasn't been forwarded for review. Once sent to the Course Coordinator
     // it is read-only, even while it still reads as a DRAFT ("second draft").
     this.readOnly.set(
-      this.userRole === RoleEnum.LECTURER &&
-        isResultReadonlyForLecturer(result)
+      this.userRole === RoleEnum.LECTURER && isResultReadonlyForLecturer(result)
     );
   }
 
   setResultEntriesDetails(resultEntries: unknown) {
-    const { analytics, totalPass, totalFail, entries, studentsWithoutEntries } =
-      resultEntries as {
-        analytics: Record<string, number>;
-        total: number;
-        totalPass: number;
-        totalFail: number;
-        entries: Partial<IStudentGrade>[];
-        studentsWithoutEntries?: Partial<IStudentGrade>[];
-      };
+    const {
+      analytics,
+      totalPass,
+      totalFail,
+      percentagePass,
+      percentageFail,
+      entries,
+      studentsWithoutEntries,
+    } = resultEntries as {
+      analytics: Record<string, number>;
+      total: number;
+      totalPass: number;
+      totalFail: number;
+      percentagePass: number;
+      percentageFail: number;
+      entries: Partial<IStudentGrade>[];
+      studentsWithoutEntries?: Partial<IStudentGrade>[];
+    };
 
     const analyticsData = [
       analytics['A'] || 0,
@@ -249,6 +261,8 @@ export class ResultUploadComponent implements OnInit, CanComponentDeactivate {
     this.totalStudent.set(studentResultEntries.length);
     this.totalStudentPass.set(totalPass || 0);
     this.totalStudentFail.set(totalFail || 0);
+    this.percentagePass.set(percentagePass || 0);
+    this.percentageFail.set(percentageFail || 0);
 
     // Set student's result entries
     const activeCategory = this.activeSegment().value as SegmentValue;
