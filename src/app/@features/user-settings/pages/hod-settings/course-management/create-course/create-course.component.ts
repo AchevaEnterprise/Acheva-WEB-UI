@@ -330,13 +330,13 @@ export class CreateCourseComponent implements OnInit, OnDestroy {
 
     if (matched) {
       this.updateFormWithMatchedCourse(matched);
-      this.invalidCourseCodeError = null;
-      this.showCourseCodeError = false;
-    } else {
-      this.clearAutoFillFields();
-      this.invalidCourseCodeError = 'The entered course code is not valid.';
-      this.showCourseCodeError = true;
     }
+
+    // On a create-course page a non-matching code is the normal case (the HOD
+    // is entering a brand-new code), so never clear the title they typed or
+    // flag an error — auto-fill only ever *helps* when an existing code matches.
+    this.invalidCourseCodeError = null;
+    this.showCourseCodeError = false;
   }
 
   private updateFormWithMatchedCourse(course: ICourse): void {
@@ -357,13 +357,6 @@ export class CreateCourseComponent implements OnInit, OnDestroy {
     // Clear errors
     this.invalidCourseCodeError = null;
     this.showCourseCodeError = false;
-  }
-
-  private clearAutoFillFields(): void {
-    this.form.patchValue({
-      courseTitle: '',
-      courseLoad: 1,
-    });
   }
 
   get courseCodes(): string[] {
