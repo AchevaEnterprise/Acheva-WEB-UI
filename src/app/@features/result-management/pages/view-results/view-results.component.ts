@@ -83,7 +83,14 @@ export class ViewResultsComponent implements OnInit {
   refreshComments = signal<boolean>(false);
   RoleEnum = RoleEnum;
 
-  collapseView = signal<boolean>(true);
+  /**
+   * Show the result status-tracking / comment side panel by default. This is the
+   * page reached by opening a folder, where an individual result can be
+   * highlighted to view its timeline and comment on it — the level the Course
+   * Coordinator's DRAFT folder list could not support. Other roles can still
+   * collapse it to a full-width table via the toggle.
+   */
+  collapseView = signal<boolean>(false);
 
   resultTableRef =
     viewChild<ResultManagementFileTableComponent>('resultTableRef');
