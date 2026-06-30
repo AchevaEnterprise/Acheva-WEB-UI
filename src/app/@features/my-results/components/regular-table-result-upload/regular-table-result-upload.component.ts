@@ -1,15 +1,15 @@
 import { TitleCasePipe } from '@angular/common';
 import {
   Component,
-  DestroyRef,
   effect,
+  ElementRef,
   inject,
   input,
   output,
   signal,
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
+  AbstractControl,
   FormArray,
   FormBuilder,
   FormControl,
@@ -17,33 +17,28 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatMenuModule } from '@angular/material/menu';
 import { MatTableModule } from '@angular/material/table';
 import { ActivatedRoute } from '@angular/router';
-import {
-  debounceTime,
-  finalize,
-  interval,
-  Subject,
-  switchMap,
-  take,
-  tap,
-} from 'rxjs';
-import { UtilityService } from '../../../../@core/utility/utility.service';
+
 import { EmptyStateComponent } from '../../../../@shared/components/empty-state/empty-state.component';
 import { StatusBadgeComponent } from '../../../../@shared/components/status-badge/status-badge.component';
 import { IStudentGrade } from '../../../students/models/student.model';
+import {
+  ILocalResultEntry,
+  SyncStatus,
+} from '../../sync/models/local-entry.model';
+import { ResultEntryStore } from '../../sync/result-entry-store.service';
+import { ResultSyncService } from '../../sync/result-sync.service';
+
+type GradeColumn = 'test' | 'lab' | 'exam';
 
 @Component({
   selector: 'app-regular-table-result-upload',
   imports: [
     ReactiveFormsModule,
     MatTableModule,
-    MatCheckboxModule,
     StatusBadgeComponent,
     EmptyStateComponent,
-    MatMenuModule,
   ],
   templateUrl: './regular-table-result-upload.component.html',
   styleUrl: './regular-table-result-upload.component.scss',
@@ -52,26 +47,25 @@ import { IStudentGrade } from '../../../students/models/student.model';
 })
 export class RegularTableResultUploadComponent {
   private readonly fb = inject(FormBuilder);
-  private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
   private readonly titlecasePipe = inject(TitleCasePipe);
-  private readonly utilsService = inject(UtilityService);
+  private readonly host = inject(ElementRef);
+  private readonly store = inject(ResultEntryStore);
+  private readonly sync = inject(ResultSyncService);
 
   students = input<Partial<IStudentGrade>[]>([]);
   searchValue = input<string | null>(null);
   refreshTable = input<boolean>(false);
+  /** The result these entries belong to — enables local-first persistence. */
+  resultId = input<string>('');
   /** When true the grade inputs render as read-only text (no editing). */
   readonly = input<boolean>(false);
 
+  /** Kept for back-compat with the parent's "unsaved changes" guard. */
   hasChangesEvent = output<boolean>();
-  uploadResultEvent = output<IStudentGrade[]>();
 
   allRows = signal<FormGroup[]>([]);
   dataSource = signal<FormGroup[]>([]);
-
-  private readonly COUNTDOWN_SECONDS: number = 5;
-  countdown = signal<number | null>(null);
-  readonly completedRows = new Set<number>();
 
   readonly status: string = this.route.snapshot.queryParamMap.get('status')!;
   readonly displayedColumns = [
@@ -90,28 +84,31 @@ export class RegularTableResultUploadComponent {
     rows: this.fb.array<FormGroup>([]),
   });
 
-  private readonly inputSubject = new Subject<{
-    index: number;
-    control?: string;
-  }>();
-  private readonly typeSubject = new Subject<void>();
+  private readonly GRADE_COLUMNS: readonly GradeColumn[] = [
+    'test',
+    'lab',
+    'exam',
+  ];
+
+  /** Last value a score cell held before the current keystroke, for clean undo. */
+  private readonly lastAccepted = new Map<AbstractControl, number | null>();
 
   constructor() {
+    // Build rows when students arrive, then hydrate from the durable store.
     effect(() => {
       const students = this.students();
       const refresh = this.refreshTable();
 
-      console.warn('Students: ', students);
-
       if (refresh) {
         this.initializeFormRows(students);
+        void this.hydrateAndActivate();
       } else if (students?.length > 0 && this.rows.length === 0) {
-        // Initializing rows for the first time
         this.initializeFormRows(students);
+        void this.hydrateAndActivate();
       }
     });
 
-    // Search Implementation
+    // Search filter.
     effect(() => {
       const term = (this.searchValue() ?? '').trim().toLowerCase();
       const rows = this.allRows();
@@ -121,25 +118,17 @@ export class RegularTableResultUploadComponent {
         return;
       }
 
-      const filtered = rows.filter((row) => {
-        const { registrationNumber, fullName } =
-          row.getRawValue() as Partial<IStudentGrade>;
-        return (
-          registrationNumber?.toLowerCase().includes(term) ||
-          fullName?.toLowerCase().includes(term)
-        );
-      });
-
-      this.dataSource.set(filtered);
+      this.dataSource.set(
+        rows.filter((row) => {
+          const { registrationNumber, fullName } =
+            row.getRawValue() as Partial<IStudentGrade>;
+          return (
+            registrationNumber?.toLowerCase().includes(term) ||
+            fullName?.toLowerCase().includes(term)
+          );
+        })
+      );
     });
-
-    this.setupTypingCountdown();
-
-    this.inputSubject
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(({ index }) => this.handleRowInput(index));
-
-    this.formListener();
   }
 
   get rows(): FormArray<FormGroup> {
@@ -147,19 +136,17 @@ export class RegularTableResultUploadComponent {
   }
 
   private initializeFormRows(students: Partial<IStudentGrade>[]): void {
-    this.completedRows.clear();
     this.rows.clear({ emitEvent: false });
 
-    const sortedStudents = [...students].sort((a, b) =>
+    const sorted = [...students].sort((a, b) =>
       (a.fullName ?? '').localeCompare(b.fullName ?? '')
     );
 
-    // Temporarily disable emitting for batch add
-    const newRows = sortedStudents.map((stu) => this.buildStudentRow(stu));
-    newRows.forEach((row) => this.rows.push(row, { emitEvent: false }));
+    sorted
+      .map((stu) => this.buildStudentRow(stu))
+      .forEach((row) => this.rows.push(row, { emitEvent: false }));
 
     this.rows.markAsPristine();
-
     this.allRows.set([...this.rows.controls]);
     this.dataSource.set([...this.rows.controls]);
   }
@@ -176,9 +163,9 @@ export class RegularTableResultUploadComponent {
     const isDisabled =
       this.readonly() || (!!this.status && this.status !== 'DRAFT');
 
-    const createNumberControl = (value: number | undefined) =>
+    const createNumberControl = (value: number | null | undefined) =>
       new FormControl(
-        { value, disabled: isDisabled || false },
+        { value: value ?? null, disabled: isDisabled },
         numberValidator
       );
 
@@ -200,49 +187,70 @@ export class RegularTableResultUploadComponent {
     });
   }
 
+  /** Remember a cell's value when focused, so we can cleanly undo a bad keystroke. */
+  onScoreFocus(index: number, controlName: string): void {
+    const ctrl = this.dataSource()[index]?.get(controlName);
+    if (ctrl) this.lastAccepted.set(ctrl, ctrl.value as number | null);
+  }
+
   onControlInput(index: number, controlName: string): void {
-    const row = this.rows.at(index);
+    // Operate on the DISPLAYED row, not a positional FormArray index — this is
+    // what keeps editing correct while a search filter is active.
+    const row = this.dataSource()[index];
+    if (!row) return;
 
     const ctrl = row.get(controlName);
     if (!ctrl) return;
 
-    if (ctrl.invalid && (ctrl.dirty || ctrl.touched)) {
-      ctrl.reset();
+    const value = ctrl.value as number | null;
+
+    // Undo ONLY the offending keystroke — revert THIS cell to its last accepted
+    // value and leave the other scores untouched (no data loss).
+    const revert = (): void => {
+      ctrl.setValue(this.lastAccepted.get(ctrl) ?? null, { emitEvent: false });
       ctrl.markAsTouched();
       ctrl.markAsDirty();
-      ctrl.updateValueAndValidity();
+    };
+
+    // A single score outside 0–100.
+    if (value !== null && (value < 0 || value > 100)) {
+      revert();
+      this.handleRowInput(index);
       return;
     }
 
-    const { test, lab, exam } = row.getRawValue() as IStudentGrade;
-    const total = (test ?? 0) + (lab ?? 0) + (exam ?? 0);
-
-    if (total > 100) {
-      ctrl.reset();
+    // The new keystroke pushes the row total over 100.
+    const { test, lab, exam } = row.getRawValue() as Partial<IStudentGrade>;
+    if ((test ?? 0) + (lab ?? 0) + (exam ?? 0) > 100) {
+      revert();
+      this.handleRowInput(index);
       return;
     }
 
-    this.inputSubject.next({ index, control: controlName });
-    this.typeSubject.next();
+    // Accepted — this is now the value we'd revert to next time.
+    this.lastAccepted.set(ctrl, value);
+    this.handleRowInput(index);
   }
 
   handleRowInput(index: number): void {
-    const row = this.rows.at(index);
-    const controls = ['test', 'lab', 'exam'] as const;
+    const row = this.dataSource()[index];
+    if (!row) return;
 
-    const { test, lab, exam } = row.getRawValue() as IStudentGrade;
+    const { test, lab, exam } = row.getRawValue() as Partial<IStudentGrade>;
+
+    const isEmpty = (value: number | null | undefined): boolean =>
+      value === null || value === undefined;
+    const allEmpty = isEmpty(test) && isEmpty(lab) && isEmpty(exam);
+
     const total = (test ?? 0) + (lab ?? 0) + (exam ?? 0);
 
-    if (total > 100) {
-      for (const name of controls) row.get(name)?.reset();
-      row.get('total')?.reset();
-      return;
-    }
+    // onControlInput already prevents committing a >100 sum, so just bail
+    // defensively — never wipe the row's other scores.
+    if (total > 100) return;
 
-    row.get('total')?.setValue(total);
+    row.get('total')?.setValue(allEmpty ? null : total);
 
     if (row.valid) {
-      // Grade
       if (total >= 70) row.get('grade')?.setValue('A');
       else if (total >= 60) row.get('grade')?.setValue('B');
       else if (total >= 50) row.get('grade')?.setValue('C');
@@ -250,62 +258,171 @@ export class RegularTableResultUploadComponent {
       else if (total >= 40) row.get('grade')?.setValue('E');
       else row.get('grade')?.setValue('F');
 
-      // Status
-      if (total >= 40) row.get('status')?.setValue('PASS');
-      else row.get('status')?.setValue('FAIL');
-
+      row.get('status')?.setValue(total >= 40 ? 'PASS' : 'FAIL');
       this.hasChangesEvent.emit(true);
-      this.completedRows.add(index);
+    } else {
+      // Incomplete row — drop stale grade/status so the display stays honest.
+      row.get('grade')?.setValue(null);
+      row.get('status')?.setValue(null);
     }
+
+    this.persistRow(row);
   }
 
-  formListener() {
-    this.form.controls['rows'].valueChanges
-      .pipe(
-        debounceTime(this.COUNTDOWN_SECONDS * 1000),
-        takeUntilDestroyed(this.destroyRef)
-      )
-      .subscribe(async () => {
-        if (this.completedRows.size === 0) return;
+  /**
+   * Durably save the row to IndexedDB (the "save to disk") and queue a
+   * background sync. A complete, valid row is `dirty` (eligible to sync); an
+   * incomplete row is `local` — still durable, but not sent until finished.
+   */
+  private persistRow(row: FormGroup): void {
+    const rid = this.resultId();
+    if (!rid) return;
 
-        const changedResults: IStudentGrade[] = [];
+    const raw = row.getRawValue() as Partial<IStudentGrade>;
+    const reg = raw.registrationNumber;
+    if (!reg) return;
 
-        for (const index of this.completedRows) {
-          const row = this.rows.at(index);
-          if (!row || row.invalid) continue;
+    const syncStatus: SyncStatus = row.valid ? 'dirty' : 'local';
+    const entry: ILocalResultEntry = {
+      key: ResultEntryStore.buildKey(rid, reg),
+      resultId: rid,
+      category: 'REGULAR',
+      registrationNumber: reg,
+      fullName: raw.fullName ?? '',
+      test: raw.test ?? null,
+      lab: raw.lab ?? null,
+      exam: raw.exam ?? null,
+      total: raw.total ?? null,
+      grade: raw.grade ?? null,
+      status: raw.status ?? null,
+      syncStatus,
+      updatedAt: Date.now(),
+    };
 
-          changedResults.push(row.getRawValue() as IStudentGrade);
+    void this.sync.saveLocal(entry);
+  }
+
+  /**
+   * On load, merge the durable store with the freshly-fetched server data:
+   * unsynced local edits win; otherwise the server snapshot seeds a baseline.
+   * Then bind the sync engine to this result so any leftovers drain.
+   */
+  private async hydrateAndActivate(): Promise<void> {
+    const rid = this.resultId();
+    if (!rid) return;
+
+    const locals = await this.store.getByResult(rid);
+    const byReg = new Map(locals.map((l) => [l.registrationNumber, l]));
+    const toSeed: ILocalResultEntry[] = [];
+
+    for (const row of this.rows.controls) {
+      const raw = row.getRawValue() as Partial<IStudentGrade>;
+      const reg = raw.registrationNumber;
+      if (!reg) continue;
+
+      const local = byReg.get(reg);
+
+      if (local && local.syncStatus !== 'synced') {
+        // Unsynced local edits win over the server snapshot.
+        row.patchValue(
+          {
+            test: local.test,
+            lab: local.lab,
+            exam: local.exam,
+            total: local.total,
+            grade: local.grade,
+            status: local.status,
+          },
+          { emitEvent: false }
+        );
+      } else if (!local && raw.total !== null && raw.total !== undefined) {
+        // Seed a synced baseline from server-provided scores.
+        toSeed.push({
+          key: ResultEntryStore.buildKey(rid, reg),
+          resultId: rid,
+          category: 'REGULAR',
+          registrationNumber: reg,
+          fullName: raw.fullName ?? '',
+          test: raw.test ?? null,
+          lab: raw.lab ?? null,
+          exam: raw.exam ?? null,
+          total: raw.total ?? null,
+          grade: raw.grade ?? null,
+          status: raw.status ?? null,
+          serverId: raw._id ?? null,
+          syncStatus: 'synced',
+          updatedAt: Date.now(),
+        });
+      }
+    }
+
+    if (toSeed.length) await this.store.bulkPut(toSeed);
+    this.dataSource.set([...this.rows.controls]);
+    this.sync.setActiveResult(rid);
+  }
+
+  /**
+   * Spreadsheet-style keyboard navigation across the grade inputs so lecturers
+   * can move between cells without a mouse. Arrow keys move in all four
+   * directions (left/right wrap into the adjacent row); Enter moves down. The
+   * native number-spinner increment and implicit form submit are suppressed.
+   */
+  onGradeKeydown(
+    event: KeyboardEvent,
+    rowIndex: number,
+    column: GradeColumn
+  ): void {
+    const navKeys = [
+      'ArrowUp',
+      'ArrowDown',
+      'ArrowLeft',
+      'ArrowRight',
+      'Enter',
+    ];
+    if (!navKeys.includes(event.key)) return;
+
+    event.preventDefault();
+
+    const colIndex = this.GRADE_COLUMNS.indexOf(column);
+    let targetRow = rowIndex;
+    let targetCol = colIndex;
+
+    switch (event.key) {
+      case 'ArrowUp':
+        targetRow = rowIndex - 1;
+        break;
+      case 'ArrowDown':
+      case 'Enter':
+        targetRow = rowIndex + 1;
+        break;
+      case 'ArrowLeft':
+        targetCol = colIndex - 1;
+        if (targetCol < 0) {
+          targetCol = this.GRADE_COLUMNS.length - 1;
+          targetRow = rowIndex - 1;
         }
+        break;
+      case 'ArrowRight':
+        targetCol = colIndex + 1;
+        if (targetCol > this.GRADE_COLUMNS.length - 1) {
+          targetCol = 0;
+          targetRow = rowIndex + 1;
+        }
+        break;
+    }
 
-        if (changedResults.length === 0) return;
-
-        const cleaned = await this.utilsService.cleanUpResult(changedResults);
-
-        this.uploadResultEvent.emit(cleaned);
-        this.hasChangesEvent.emit(false);
-
-        this.completedRows.clear();
-      });
+    this.focusGradeCell(targetRow, this.GRADE_COLUMNS[targetCol]);
   }
 
-  private setupTypingCountdown(): void {
-    this.typeSubject
-      .pipe(
-        takeUntilDestroyed(this.destroyRef),
-        switchMap(() => {
-          this.countdown.set(this.COUNTDOWN_SECONDS);
+  private focusGradeCell(rowIndex: number, column: GradeColumn): void {
+    if (rowIndex < 0 || rowIndex >= this.dataSource().length) return;
 
-          return interval(1000).pipe(
-            take(this.COUNTDOWN_SECONDS),
-            tap((tick) => {
-              this.countdown.set(this.COUNTDOWN_SECONDS - tick - 1);
-            }),
-            finalize(() => {
-              this.countdown.set(null);
-            })
-          );
-        })
-      )
-      .subscribe();
+    const input = this.host.nativeElement.querySelector(
+      `input[data-row="${rowIndex}"][data-col="${column}"]`
+    ) as HTMLInputElement | null;
+    if (!input) return;
+
+    input.focus();
+    input.select();
   }
 }

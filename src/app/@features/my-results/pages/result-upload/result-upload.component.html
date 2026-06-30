@@ -161,6 +161,29 @@
     />
 
     <div class="flex flex-wrap justify-end gap-3 items-center">
+      @if (!readOnly()) {
+        @if (!sync.online()) {
+          <span
+            class="flex items-center gap-2 bg-[#FEF3C7] text-[#92400E] border border-[#FDE68A] px-3 py-1.5 rounded-full acva-caption fw-500"
+          >
+            Offline — your work is saved on this device
+          </span>
+        } @else if (sync.failedCount() > 0) {
+          <span
+            class="flex items-center gap-2 bg-[#FDE2E7] text-[#D8315B] border border-[#F8B4C4] px-3 py-1.5 rounded-full acva-caption fw-500"
+          >
+            {{ sync.failedCount() }} row(s) not synced
+            <button class="underline" (click)="sync.retryNow()">Retry</button>
+          </span>
+        } @else if (sync.pendingCount() > 0) {
+          <span
+            class="flex items-center gap-2 bg-[#E6F0FF] text-[#2793FF] border border-[#BFDBFE] px-3 py-1.5 rounded-full acva-caption fw-500"
+          >
+            Saving… ({{ sync.pendingCount() }} left)
+          </span>
+        }
+      }
+
       @if (readOnly()) {
         <span
           class="flex items-center gap-2 text-[#6B7280] bg-[#F3F4F6] border border-[#E5E7EB] px-3 py-1.5 rounded-full acva-caption fw-500"
@@ -174,7 +197,11 @@
           label="Save Changes"
           icon="icons/general/save-btn-icon.svg"
           class="btn-md"
-          [disabled]="!resultEntryCompleted()"
+          [disabled]="
+            !resultEntryCompleted() ||
+            sync.pendingCount() > 0 ||
+            sync.failedCount() > 0
+          "
           (clickEvent)="saveChanges()"
           *appRoleAccess="[RoleEnum.LECTURER]"
         />
@@ -225,9 +252,10 @@
           #regularTableResultUploadRef
           [refreshTable]="isUploaded()"
           [readonly]="readOnly()"
+          [resultId]="resultId || ''"
+          [searchValue]="searchStudentValue()"
           [students]="students()['REGULAR']"
           (hasChangesEvent)="updateChanges($event)"
-          (uploadResultEvent)="uploadBulkResult($event)"
         />
       }
       @case ('REFERENCE') {
@@ -235,9 +263,10 @@
           #referenceTableResultUploadRef
           [refreshTable]="isUploaded()"
           [readonly]="readOnly()"
+          [resultId]="resultId || ''"
+          [searchValue]="searchStudentValue()"
           [students]="students()['REFERENCE']"
           (hasChangesEvent)="updateChanges($event)"
-          (uploadResultEvent)="uploadBulkResult($event)"
         />
       }
       @case ('UNREGISTERED') {
@@ -245,9 +274,10 @@
           #unregisteredTableResultUploadRef
           [refreshTable]="isUploaded()"
           [readonly]="readOnly()"
+          [resultId]="resultId || ''"
+          [searchValue]="searchStudentValue()"
           [students]="students()['UNREGISTERED']"
           (hasChangesEvent)="updateChanges($event)"
-          (uploadResultEvent)="uploadBulkResult($event)"
         />
       }
     }

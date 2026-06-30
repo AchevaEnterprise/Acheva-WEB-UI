@@ -11,7 +11,8 @@
     "prepare": "husky",
     "screenshot": "node scripts/screenshot.mjs",
     "pw:install": "npx playwright install chromium --with-deps",
-    "verify:responsive": "node scripts/verify-responsive.mjs"
+    "verify:responsive": "node scripts/verify-responsive.mjs",
+    "test:localfirst": "node scripts/localfirst-harness.mjs"
   },
   "private": true,
   "dependencies": {
@@ -37,6 +38,7 @@
     "file-saver": "^2.0.5",
     "highcharts": "^12.2.0",
     "highcharts-angular": "^5.1.0",
+    "idb": "^8.0.3",
     "ngx-mat-select-search": "^8.0.2",
     "postcss": "^8.5.6",
     "rxjs": "~7.8.0",

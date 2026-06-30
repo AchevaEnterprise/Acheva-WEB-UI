@@ -120,27 +120,27 @@
           <app-regular-table-result-upload
             #regularTableResultUploadRef
             [readonly]="readOnly()"
+            [resultId]="resultId"
             [students]="students()['REGULAR']"
             (hasChangesEvent)="updateChanges($event)"
-            (uploadResultEvent)="uploadBulkResult($event)"
           />
         }
         @case ('REFERENCE') {
           <app-regular-table-result-upload
             #regularTableResultUploadRef
             [readonly]="readOnly()"
+            [resultId]="resultId"
             [students]="students()['REFERENCE']"
             (hasChangesEvent)="updateChanges($event)"
-            (uploadResultEvent)="uploadBulkResult($event)"
           />
         }
         @case ('UNREGISTERED') {
           <app-regular-table-result-upload
             #regularTableResultUploadRef
             [readonly]="readOnly()"
+            [resultId]="resultId"
             [students]="students()['UNREGISTERED']"
             (hasChangesEvent)="updateChanges($event)"
-            (uploadResultEvent)="uploadBulkResult($event)"
           />
         }
       }
