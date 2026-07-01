@@ -25,13 +25,6 @@
       [showDivider]="true"
       dividerClass="!mt-4"
     >
-      <p rightHeaderContent class="acva-para-1 text-neutral-500">
-        Average Grade
-        <span class="text-neutral-800"
-          >{{ result()?.analytics?.averageTotal?.toFixed(2) || '0.0' }}%</span
-        >
-      </p>
-
       <div content>
         <app-analytics-chart [data]="analyticsChartData()" />
 
@@ -48,6 +41,24 @@
             <span class="w-[15%] font-medium">Total Fail:</span>
             <span>{{ totalStudentFail() || 0 }}</span>
           </p>
+          <p class="flex items-center gap-2 w-full">
+            <span class="w-[15%] font-medium">Average Grade:</span>
+            <span class="text-neutral-800 fw-600">
+              {{ result()?.analytics?.averageTotal?.toFixed(1) || '0.0' }}%
+            </span>
+          </p>
+          <p class="flex items-center gap-2 w-full">
+            <span class="w-[15%] font-medium">Pass Rate:</span>
+            <span class="text-[#2793FF] fw-600">
+              {{ percentagePass().toFixed(1) }}%
+            </span>
+          </p>
+          <p class="flex items-center gap-2 w-full">
+            <span class="w-[15%] font-medium">Fail Rate:</span>
+            <span class="text-[#D8315B] fw-600">
+              {{ percentageFail().toFixed(1) }}%
+            </span>
+          </p>
         </div>
       </div>
     </app-card>
@@ -61,6 +72,14 @@
 
   <div class="flex gap-3 items-start justify-between">
     <app-search-input placeholder="Search students" />
+
+    @if (readOnly()) {
+      <span
+        class="flex items-center gap-2 text-[#6B7280] bg-[#F3F4F6] border border-[#E5E7EB] px-3 py-1.5 rounded-full acva-caption fw-500 whitespace-nowrap"
+      >
+        View only — already sent for approval
+      </span>
+    }
 
     <!--
       Approve / reject actions intentionally live on the Result Management
@@ -100,25 +119,28 @@
         @case ('REGULAR') {
           <app-regular-table-result-upload
             #regularTableResultUploadRef
+            [readonly]="readOnly()"
+            [resultId]="resultId"
             [students]="students()['REGULAR']"
             (hasChangesEvent)="updateChanges($event)"
-            (uploadResultEvent)="uploadBulkResult($event)"
           />
         }
         @case ('REFERENCE') {
           <app-regular-table-result-upload
             #regularTableResultUploadRef
+            [readonly]="readOnly()"
+            [resultId]="resultId"
             [students]="students()['REFERENCE']"
             (hasChangesEvent)="updateChanges($event)"
-            (uploadResultEvent)="uploadBulkResult($event)"
           />
         }
         @case ('UNREGISTERED') {
           <app-regular-table-result-upload
             #regularTableResultUploadRef
+            [readonly]="readOnly()"
+            [resultId]="resultId"
             [students]="students()['UNREGISTERED']"
             (hasChangesEvent)="updateChanges($event)"
-            (uploadResultEvent)="uploadBulkResult($event)"
           />
         }
       }

@@ -1,12 +1,11 @@
 <div
   class="bg-white border border-[#E5E7EB] rounded-[8px] w-full h-full shadow-sm cursor-pointer"
-  [class.disabled]="result()!.hasBeenSent | resultDisabled"
   (click)="viewResult()"
   (keydown)="viewResult()"
 >
   <div class="p-4">
     <!-- Header with title and status -->
-    <div class="flex justify-between items-start mb-3">
+    <div class="flex justify-between items-start gap-2 mb-3">
       <div class="flex-1">
         <h4 class="acva-para-2 fw-500 text-[#111827] mb-1 line-clamp-2">
           {{ result()?.course?.courseTitle }}
@@ -17,6 +16,14 @@
           Units
         </p>
       </div>
+
+      @if (isViewOnly()) {
+        <span
+          class="text-[10px] fw-500 text-[#6B7280] bg-[#F3F4F6] border border-[#E5E7EB] px-2 py-0.5 rounded-full whitespace-nowrap"
+        >
+          View only
+        </span>
+      }
     </div>
 
     <!-- Course details -->

@@ -1,6 +1,7 @@
 import { NgClass } from '@angular/common';
 import {
   Component,
+  computed,
   inject,
   OnInit,
   signal,
@@ -185,6 +186,18 @@ export class ResultManagementComponent implements OnInit {
   segmentCardIconSrc = signal<string>('icons/general/draft-icon.svg');
 
   collapseView = signal<boolean>(false);
+
+  /**
+   * The Course Coordinator's DRAFT tab shows a folder of grouped courses, not a
+   * single result — so there is nothing to track or comment on at this level.
+   * The status-tracking / comment side panel only makes sense once a folder is
+   * opened (the view-results page), where an individual result can be highlighted.
+   */
+  isCoordinatorDraftFolderView = computed(
+    () =>
+      this.currentRole() === RoleEnum.COURSE_COORDINATOR &&
+      this.activeSegment().value === 'DRAFT'
+  );
 
   RoleEnum = RoleEnum;
 

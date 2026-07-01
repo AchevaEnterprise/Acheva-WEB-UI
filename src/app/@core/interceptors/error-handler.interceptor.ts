@@ -97,37 +97,50 @@ export const errorHandlerInterceptor: HttpInterceptorFn = (req, next) => {
         );
       }
 
+      // Requests tagged with X-Silent-Error skip all toasts — used for
+      // background enrichment calls where a failure should be invisible to users.
+      const silent = req.headers.has('X-Silent-Error');
+      if (silent) return throwError(() => error);
+
       if (error.status === HttpStatusCode.Forbidden) {
         toast.showNotification(
           'error',
-          'Unauthorized',
-          error.error.message || 'You are unauthorized'
+          'Access Denied',
+          "You don't have permission to do that. If you think this is a mistake, contact your administrator."
         );
       }
 
       if (error.status === HttpStatusCode.BadRequest) {
-        toast.showNotification('error', 'Error Occured', error.error.message);
+        toast.showNotification(
+          'error',
+          'Invalid Request',
+          error.error?.message ||
+            'Some of the information you provided is not valid. Please check and try again.'
+        );
       }
 
       if (error.status === HttpStatusCode.Conflict) {
-        toast.showNotification('error', 'Error Occured', error.error.message);
+        toast.showNotification(
+          'error',
+          'Already Exists',
+          error.error?.message ||
+            'A record with this information already exists.'
+        );
       }
 
       if (error.status === HttpStatusCode.NotFound) {
         toast.showNotification(
           'error',
-          'Resource Not Found',
-          error.error.message ||
-            'The resource you are trying to access does not exist'
+          'Not Found',
+          'The information you requested could not be found. It may have been removed or the link may be incorrect.'
         );
       }
 
       if (error.status === HttpStatusCode.InternalServerError) {
         toast.showNotification(
           'error',
-          'Internal Server Error',
-          error.error.message ||
-            'An error occurred while processing your request. Please try again later.'
+          'Something Went Wrong',
+          'An unexpected error occurred on our end. Please try again in a moment. If the problem continues, contact support.'
         );
       }
 

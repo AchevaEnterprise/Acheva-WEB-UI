@@ -108,13 +108,6 @@
       [showDivider]="true"
       dividerClass="!mt-4"
     >
-      <p rightHeaderContent class="acva-para-1 text-neutral-500">
-        Average Grade
-        <span class="text-neutral-800"
-          >{{ averageTotal().toFixed(2) || '0.0' }}%</span
-        >
-      </p>
-
       <div content>
         <app-analytics-chart [data]="analyticsChartData()" />
 
@@ -130,6 +123,24 @@
           <p class="flex items-center gap-2 w-full">
             <span class="w-[15%] font-medium">Total Fail:</span>
             <span>{{ totalStudentFail() || 0 }}</span>
+          </p>
+          <p class="flex items-center gap-2 w-full">
+            <span class="w-[15%] font-medium">Average Grade:</span>
+            <span class="text-neutral-800 fw-600">
+              {{ averageTotal().toFixed(1) }}%
+            </span>
+          </p>
+          <p class="flex items-center gap-2 w-full">
+            <span class="w-[15%] font-medium">Pass Rate:</span>
+            <span class="text-[#2793FF] fw-600">
+              {{ percentagePass().toFixed(1) }}%
+            </span>
+          </p>
+          <p class="flex items-center gap-2 w-full">
+            <span class="w-[15%] font-medium">Fail Rate:</span>
+            <span class="text-[#D8315B] fw-600">
+              {{ percentageFail().toFixed(1) }}%
+            </span>
           </p>
         </div>
       </div>
@@ -150,14 +161,51 @@
     />
 
     <div class="flex flex-wrap justify-end gap-3 items-center">
-      <app-button
-        label="Save Changes"
-        icon="icons/general/save-btn-icon.svg"
-        class="btn-md"
-        [disabled]="!resultEntryCompleted()"
-        (clickEvent)="saveChanges()"
-        *appRoleAccess="[RoleEnum.LECTURER]"
-      />
+      @if (!readOnly()) {
+        @if (!sync.online()) {
+          <span
+            class="flex items-center gap-2 bg-[#FEF3C7] text-[#92400E] border border-[#FDE68A] px-3 py-1.5 rounded-full acva-caption fw-500"
+          >
+            Offline — your work is saved on this device
+          </span>
+        } @else if (sync.failedCount() > 0) {
+          <span
+            class="flex items-center gap-2 bg-[#FDE2E7] text-[#D8315B] border border-[#F8B4C4] px-3 py-1.5 rounded-full acva-caption fw-500"
+          >
+            {{ sync.failedCount() }} row(s) not synced
+            <button class="underline" (click)="sync.retryNow()">Retry</button>
+          </span>
+        } @else if (sync.pendingCount() > 0) {
+          <span
+            class="flex items-center gap-2 bg-[#E6F0FF] text-[#2793FF] border border-[#BFDBFE] px-3 py-1.5 rounded-full acva-caption fw-500"
+          >
+            Saving… ({{ sync.pendingCount() }} left)
+          </span>
+        }
+      }
+
+      @if (readOnly()) {
+        <span
+          class="flex items-center gap-2 text-[#6B7280] bg-[#F3F4F6] border border-[#E5E7EB] px-3 py-1.5 rounded-full acva-caption fw-500"
+        >
+          View only — already sent to the Course Coordinator
+        </span>
+      }
+
+      @if (!readOnly()) {
+        <app-button
+          label="Save Changes"
+          icon="icons/general/save-btn-icon.svg"
+          class="btn-md"
+          [disabled]="
+            !resultEntryCompleted() ||
+            sync.pendingCount() > 0 ||
+            sync.failedCount() > 0
+          "
+          (clickEvent)="saveChanges()"
+          *appRoleAccess="[RoleEnum.LECTURER]"
+        />
+      }
 
       <app-button
         *appRoleAccess="[RoleEnum.COURSE_ADVISOR]"
@@ -167,7 +215,7 @@
         (clickEvent)="confirmPublish()"
       />
 
-      @if (!isUploaded()) {
+      @if (!isUploaded() && !readOnly()) {
         <app-button
           [label]="
             userRole === RoleEnum.LECTURER ? 'Upload Results' : 'Import Results'
@@ -203,27 +251,33 @@
         <app-regular-table-result-upload
           #regularTableResultUploadRef
           [refreshTable]="isUploaded()"
+          [readonly]="readOnly()"
+          [resultId]="resultId || ''"
+          [searchValue]="searchStudentValue()"
           [students]="students()['REGULAR']"
           (hasChangesEvent)="updateChanges($event)"
-          (uploadResultEvent)="uploadBulkResult($event)"
         />
       }
       @case ('REFERENCE') {
         <app-reference-table-result-upload
           #referenceTableResultUploadRef
           [refreshTable]="isUploaded()"
+          [readonly]="readOnly()"
+          [resultId]="resultId || ''"
+          [searchValue]="searchStudentValue()"
           [students]="students()['REFERENCE']"
           (hasChangesEvent)="updateChanges($event)"
-          (uploadResultEvent)="uploadBulkResult($event)"
         />
       }
       @case ('UNREGISTERED') {
         <app-unregistered-table-result-upload
           #unregisteredTableResultUploadRef
           [refreshTable]="isUploaded()"
+          [readonly]="readOnly()"
+          [resultId]="resultId || ''"
+          [searchValue]="searchStudentValue()"
           [students]="students()['UNREGISTERED']"
           (hasChangesEvent)="updateChanges($event)"
-          (uploadResultEvent)="uploadBulkResult($event)"
         />
       }
     }

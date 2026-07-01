@@ -1,7 +1,7 @@
 <app-back-button />
 
 @if (student()) {
-  <div class="grid grid-cols-[23%_1fr] gap-4 mt-4">
+  <div class="grid lg:grid-cols-[23%_1fr] grid-cols-1 gap-4 mt-4">
     <app-result-list
       [studentId]="student()?._id"
       (viewSessionResultEvent)="viewResult($event)"

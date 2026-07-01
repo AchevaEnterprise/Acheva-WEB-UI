@@ -26,6 +26,7 @@ import { ToastService } from '../../@core/utility/toast.service';
 import { CardComponent } from '../../@shared/components/card/card.component';
 import { ConfirmationComponent } from '../../@shared/components/confirmation/confirmation.component';
 import { EmptyStateComponent } from '../../@shared/components/empty-state/empty-state.component';
+import { LoaderComponent } from '../../@shared/components/loader/loader.component';
 import {
   ISegmentSwitcher,
   SegmentSwitcherComponent,
@@ -55,6 +56,7 @@ import { ChartComponent } from './components/chart/chart.component';
     MatSelectModule,
     SegmentSwitcherComponent,
     EmptyStateComponent,
+    LoaderComponent,
     MatDatepickerModule,
     MatTableModule,
     MatMenuModule,
@@ -77,6 +79,8 @@ export class DashboardComponent implements OnInit {
 
   currentRole = signal<RoleEnum>(this.authService.activeAccount()?.role!);
   loadingResults = signal<boolean>(false);
+  loadingAnalytics = signal<boolean>(true);
+  loadingChart = signal<boolean>(true);
   RoleEnum = RoleEnum;
 
   analtyics = signal<IAnalytics[]>([
@@ -369,42 +373,46 @@ export class DashboardComponent implements OnInit {
   }
 
   getDashboardAnalytics() {
-    this.resultService.getResultStatusCounts().subscribe({
-      next: (resp) => {
-        if (resp.status) {
-          const { statusCounts } = resp.data;
+    this.resultService
+      .getResultStatusCounts()
+      .pipe(finalize(() => this.loadingAnalytics.set(false)))
+      .subscribe({
+        next: (resp) => {
+          if (resp.status) {
+            const { statusCounts } = resp.data;
 
-          const updatedAnalytics = this.analtyics().map(
-            (analytics: IAnalytics) => {
-              let count = analytics.count;
-              const label = analytics.label.toLowerCase();
+            const updatedAnalytics = this.analtyics().map(
+              (analytics: IAnalytics) => {
+                let count = analytics.count;
+                const label = analytics.label.toLowerCase();
 
-              if (label.includes('draft')) count = statusCounts.DRAFT;
-              else if (label.includes('pending')) count = statusCounts.PENDING;
-              else if (label.includes('unverified'))
-                count = statusCounts.UNVERIFIED;
-              else if (label.includes('verified'))
-                count = statusCounts.VERIFIED;
-              else if (label.includes('approved'))
-                count = statusCounts.APPROVED ?? 0;
-              else if (label.includes('complete'))
-                count = statusCounts.COMPLETE ?? 0;
-              else if (label.includes('published'))
-                count = statusCounts.PUBLISHED;
-              else if (label.includes('imported'))
-                count = statusCounts.IMPORTED;
+                if (label.includes('draft')) count = statusCounts.DRAFT;
+                else if (label.includes('pending'))
+                  count = statusCounts.PENDING;
+                else if (label.includes('unverified'))
+                  count = statusCounts.UNVERIFIED;
+                else if (label.includes('verified'))
+                  count = statusCounts.VERIFIED;
+                else if (label.includes('approved'))
+                  count = statusCounts.APPROVED ?? 0;
+                else if (label.includes('complete'))
+                  count = statusCounts.COMPLETE ?? 0;
+                else if (label.includes('published'))
+                  count = statusCounts.PUBLISHED;
+                else if (label.includes('imported'))
+                  count = statusCounts.IMPORTED;
 
-              return {
-                ...analytics,
-                count,
-              };
-            }
-          );
+                return {
+                  ...analytics,
+                  count,
+                };
+              }
+            );
 
-          this.analtyics.set(updatedAnalytics);
-        }
-      },
-    });
+            this.analtyics.set(updatedAnalytics);
+          }
+        },
+      });
   }
 
   getResults() {
@@ -467,7 +475,8 @@ export class DashboardComponent implements OnInit {
           );
 
           return forkJoin(requests);
-        })
+        }),
+        finalize(() => this.loadingChart.set(false))
       )
       .subscribe({
         next: (results) => {

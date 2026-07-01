@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { EMPTY, Observable, expand, reduce } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import {
   IAPIPaginatedResponse,
@@ -27,6 +27,8 @@ export class CoursesService {
         params = params.append('courseTitle', query.courseTitle);
       if (query.level) params = params.append('level', query.level);
       if (query.semester) params = params.append('semester', query.semester);
+      if (query.page) params = params.append('page', String(query.page));
+      if (query.limit) params = params.append('limit', String(query.limit));
     }
 
     return this.http.get<IAPIPaginatedResponse<ICourse[]>>(
@@ -34,6 +36,27 @@ export class CoursesService {
       {
         params,
       }
+    );
+  }
+
+  /**
+   * Fetches the full course catalogue across every page. The backend caps a
+   * single page at 100, so we walk the pages until we've collected `total`
+   * rather than silently truncating at the first page.
+   */
+  getAllCourses(): Observable<ICourse[]> {
+    const limit = 100;
+
+    return this.getCourses({ page: 1, limit }).pipe(
+      expand((resp) =>
+        resp.data.page * resp.data.limit < resp.data.total
+          ? this.getCourses({ page: resp.data.page + 1, limit })
+          : EMPTY
+      ),
+      reduce(
+        (all, resp) => all.concat(resp.data['courses'] ?? []),
+        [] as ICourse[]
+      )
     );
   }
 

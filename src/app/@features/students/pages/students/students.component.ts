@@ -101,7 +101,7 @@ export class StudentsComponent implements OnInit {
     const query = {
       school: school?._id,
       department: department?._id,
-      level: assignedLevel,
+      level: assignedLevel ?? undefined,
     };
 
     forkJoin({

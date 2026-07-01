@@ -82,7 +82,7 @@
                 [checked]="selection.isSelected(result)"
                 [aria-label]="checkboxLabel(result)"
                 [disabled]="
-                  (userRole === RoleEnum.LECTURER && result.hasBeenSent) ||
+                  isRowDisabled(result) ||
                   (userRole === RoleEnum.COURSE_COORDINATOR &&
                     !result.hasBeenSent)
                 "
@@ -216,7 +216,7 @@
               result.isApproved === true &&
               (result.rejectedBy | resultApprovedForMe)
             "
-            [class.disabled]="result.hasBeenSent | resultDisabled"
+            [class.disabled]="isBlurred(result)"
           ></tr>
         </table>
       </div>

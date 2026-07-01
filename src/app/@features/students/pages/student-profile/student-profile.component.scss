@@ -157,9 +157,8 @@ $text-muted: rgb(107 114 128);
   grid-template-columns: 1fr;
   gap: 16px;
 
-  @media (width >= 1080px) {
-    // Sidebar was 320px; +15% width for the AI / actions rail.
-    grid-template-columns: 1fr 368px;
+  @media (width >= 1024px) {
+    grid-template-columns: 1fr 328px;
   }
 }
 

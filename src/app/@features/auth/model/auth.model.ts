@@ -34,6 +34,7 @@ export interface ISignUp {
 export interface IAuthProfile {
   id: string;
   firstname: string;
+  middlename?: string;
   lastname: string;
   email: string;
   school: ISchool;
@@ -45,6 +46,8 @@ export interface IAuthProfile {
   emailVerified: boolean;
   accessToken: string;
   refreshToken: string;
+  assignedLevel?: string | null;
+  assignedLevelAdmissionYear?: string | null;
 }
 
 export interface IAccount
@@ -52,8 +55,8 @@ export interface IAccount
   middlename: string;
   titles: string[];
   accessLevel: string;
-  assignedLevel: string;
-  assignedLevelAdmissionYear: string;
+  assignedLevel: string | null;
+  assignedLevelAdmissionYear: string | null;
   masterUserId: string;
 }
 

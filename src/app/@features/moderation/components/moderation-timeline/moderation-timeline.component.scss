@@ -17,19 +17,19 @@
     &:not(:last-child)::after {
       content: '';
       position: absolute;
-      left: 11px;
-      top: 24px;
+      left: 8px;
+      top: 22px;
       bottom: -1.25rem;
       width: 2px;
       background: #e5e7eb;
     }
 
     &--completed::after {
-      background: #34d399;
+      background: #2793ff;
     }
 
     &--active::after {
-      background: linear-gradient(180deg, #2563eb 0%, #e5e7eb 100%);
+      background: linear-gradient(180deg, #2793ff 0%, #e5e7eb 100%);
     }
   }
 
@@ -40,20 +40,19 @@
     background: #e5e7eb;
     border: 3px solid #f9fafb;
     box-shadow: 0 0 0 1px #e5e7eb;
-    margin-top: 4px;
     transition:
       background-color 200ms ease,
       box-shadow 200ms ease;
   }
 
   &__step--completed &__dot {
-    background: #34d399;
-    box-shadow: 0 0 0 1px #34d399;
+    background: #2793ff;
+    box-shadow: 0 0 0 1px #2793ff;
   }
 
   &__step--active &__dot {
-    background: #2563eb;
-    box-shadow: 0 0 0 4px rgb(37 99 235 / 16%);
+    background: #2793ff;
+    box-shadow: 0 0 0 4px rgb(39 147 255 / 16%);
   }
 
   &__copy {
@@ -82,12 +81,12 @@
   }
 
   &__step--active &__state {
-    color: #2563eb;
+    color: #2793ff;
     font-weight: 600;
   }
 
   &__step--completed &__state {
-    color: #047857;
+    color: #0c4a96;
     font-weight: 600;
   }
 }

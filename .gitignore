@@ -40,3 +40,12 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# Claude Code harness
+CLAUDE.md
+
+# Generated screenshots (Claude UI verification)
+screenshots/*.png
+
+# Claude Code harness config
+.claude/

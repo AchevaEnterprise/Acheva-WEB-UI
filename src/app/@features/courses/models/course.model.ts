@@ -46,6 +46,8 @@ export interface ICourseQuery {
   courseTitle: string;
   level: LevelsEnum;
   semester: SemesterEnum | string;
+  page?: number;
+  limit?: number;
 }
 
 export interface ICourseTemplate {

@@ -29,10 +29,36 @@ export class ModerationService {
 
   /**
    * `POST /moderations` — server derives `moderationScope` from the course
-   * vs the CA's home department.
+   * vs the CA's home department. Use this when scope is unknown at call time.
    */
   create(payload: ICreateModerationPayload): Observable<ModerationResponse> {
     return this.http.post<ModerationResponse>(this.baseUrl, payload);
+  }
+
+  /**
+   * `POST /moderations/internal` — course must be in the CA's own department.
+   * Returns a clearer error than the generic endpoint when the scope is wrong.
+   */
+  createInternal(
+    payload: ICreateModerationPayload
+  ): Observable<ModerationResponse> {
+    return this.http.post<ModerationResponse>(
+      `${this.baseUrl}/internal`,
+      payload
+    );
+  }
+
+  /**
+   * `POST /moderations/cross-department` — course must be in a different dept.
+   * Returns a clearer error than the generic endpoint when the scope is wrong.
+   */
+  createCrossDepartment(
+    payload: ICreateModerationPayload
+  ): Observable<ModerationResponse> {
+    return this.http.post<ModerationResponse>(
+      `${this.baseUrl}/cross-department`,
+      payload
+    );
   }
 
   // ── Read ─────────────────────────────────────────────────────────────────

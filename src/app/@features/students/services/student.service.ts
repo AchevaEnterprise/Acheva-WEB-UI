@@ -54,9 +54,12 @@ export class StudentService {
         params = params.append('department', query.department);
       if (query.level) params = params.append('level', query.level);
     }
+    // X-Silent-Error tells the global error interceptor to skip the toast for
+    // this call. Flags are a background enrichment — a failure should be
+    // invisible to the user; the list still renders without indicators.
     return this.http.get<IAPIResponse<IStudentAcademicFlags>>(
       `${this.studentUrl}/school/academic-flags`,
-      { params }
+      { params, headers: { 'X-Silent-Error': 'true' } }
     );
   }
 

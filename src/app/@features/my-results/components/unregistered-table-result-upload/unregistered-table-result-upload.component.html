@@ -1,35 +1,11 @@
-@if (countdown() !== null) {
-  <p
-    class="text-center text-blue-500 px-3 bg-blue-200 rounded-full w-fit mx-auto mb-2"
-  >
-    Saving in {{ countdown() }}s...
-  </p>
-}
-<form [formGroup]="form" class="w-full overflow-auto max-h-[50vh]">
-  <div formArrayName="rows">
-    <table mat-table [dataSource]="dataSource()">
-      <ng-container matColumnDef="registrationNumber">
-        <th mat-header-cell *matHeaderCellDef>REG NO</th>
-        <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
-          <!-- <app-search-select
-            formControlName="registrationNumber"
-            placeholder="Reg No."
-            [loading]="searchingStudent()"
-            [options]="filterdStudentRegNumber()"
-            (searchEvent)="searchStudentsByRegNo($event)"
-            (selectEvent)="onSelect($event, i)"
-          /> -->
-          <ng-container matColumnDef="sn">
-            <th mat-header-cell *matHeaderCellDef>S/N</th>
-            <td
-              mat-cell
-              *matCellDef="let row; let i = index"
-              [formGroupName]="i"
-            >
-              {{ i + 1 }}.
-            </td>
-          </ng-container>
-
+<div class="w-full overflow-auto max-h-[50vh]">
+  <table mat-table [dataSource]="dataSource()">
+    <ng-container matColumnDef="registrationNumber">
+      <th mat-header-cell *matHeaderCellDef>REG NO</th>
+      <td mat-cell *matCellDef="let row; let i = index" [formGroup]="row">
+        @if (readonly()) {
+          {{ row.getRawValue().registrationNumber }}
+        } @else {
           <input
             type="text"
             class="border border-neutral-300 rounded-[8px] p-2 my-4 w-full bg-white"
@@ -38,13 +14,18 @@
               row.get('registrationNumber').touched
             "
             formControlName="registrationNumber"
+            (change)="onIdentityChange(i)"
           />
-        </td>
-      </ng-container>
+        }
+      </td>
+    </ng-container>
 
-      <ng-container matColumnDef="fullName">
-        <th mat-header-cell *matHeaderCellDef>NAME</th>
-        <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+    <ng-container matColumnDef="fullName">
+      <th mat-header-cell *matHeaderCellDef>NAME</th>
+      <td mat-cell *matCellDef="let row; let i = index" [formGroup]="row">
+        @if (readonly()) {
+          {{ row.getRawValue().fullName | titlecase }}
+        } @else {
           <input
             type="text"
             class="border border-neutral-300 rounded-[8px] p-2 my-4 w-full bg-white"
@@ -52,18 +33,23 @@
               row.get('fullName').invalid && row.get('fullName').touched
             "
             formControlName="fullName"
+            (change)="onIdentityChange(i)"
           />
-        </td>
-      </ng-container>
+        }
+      </td>
+    </ng-container>
 
-      <ng-container matColumnDef="test">
-        <th mat-header-cell *matHeaderCellDef>TEST</th>
-        <td
-          mat-cell
-          *matCellDef="let row; let i = index"
-          class="text-center"
-          [formGroupName]="i"
-        >
+    <ng-container matColumnDef="test">
+      <th mat-header-cell *matHeaderCellDef>TEST</th>
+      <td
+        mat-cell
+        *matCellDef="let row; let i = index"
+        class="text-center"
+        [formGroup]="row"
+      >
+        @if (readonly()) {
+          {{ row.getRawValue().test }}
+        } @else {
           <input
             type="number"
             min="0"
@@ -73,14 +59,22 @@
               row.get('test').invalid && row.get('test').touched
             "
             formControlName="test"
+            [attr.data-row]="i"
+            data-col="test"
+            (focus)="onScoreFocus(i, 'test')"
             (input)="onControlInput(i, 'test')"
+            (keydown)="onGradeKeydown($event, i, 'test')"
           />
-        </td>
-      </ng-container>
+        }
+      </td>
+    </ng-container>
 
-      <ng-container matColumnDef="lab">
-        <th mat-header-cell *matHeaderCellDef>LAB</th>
-        <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+    <ng-container matColumnDef="lab">
+      <th mat-header-cell *matHeaderCellDef>LAB</th>
+      <td mat-cell *matCellDef="let row; let i = index" [formGroup]="row">
+        @if (readonly()) {
+          {{ row.getRawValue().lab }}
+        } @else {
           <input
             type="number"
             min="0"
@@ -90,14 +84,22 @@
               row.get('lab').invalid && row.get('lab').touched
             "
             formControlName="lab"
+            [attr.data-row]="i"
+            data-col="lab"
+            (focus)="onScoreFocus(i, 'lab')"
             (input)="onControlInput(i, 'lab')"
+            (keydown)="onGradeKeydown($event, i, 'lab')"
           />
-        </td>
-      </ng-container>
+        }
+      </td>
+    </ng-container>
 
-      <ng-container matColumnDef="exam">
-        <th mat-header-cell *matHeaderCellDef>EXAM</th>
-        <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+    <ng-container matColumnDef="exam">
+      <th mat-header-cell *matHeaderCellDef>EXAM</th>
+      <td mat-cell *matCellDef="let row; let i = index" [formGroup]="row">
+        @if (readonly()) {
+          {{ row.getRawValue().exam }}
+        } @else {
           <input
             type="number"
             min="0"
@@ -107,54 +109,43 @@
               row.get('exam').invalid && row.get('exam').touched
             "
             formControlName="exam"
+            [attr.data-row]="i"
+            data-col="exam"
+            (focus)="onScoreFocus(i, 'exam')"
             (input)="onControlInput(i, 'exam')"
+            (keydown)="onGradeKeydown($event, i, 'exam')"
           />
-        </td>
-      </ng-container>
+        }
+      </td>
+    </ng-container>
 
-      <ng-container matColumnDef="total">
-        <th mat-header-cell *matHeaderCellDef>TOTAL</th>
-        <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
-          {{ row.value.total }}
-        </td>
-      </ng-container>
+    <ng-container matColumnDef="total">
+      <th mat-header-cell *matHeaderCellDef>TOTAL</th>
+      <td mat-cell *matCellDef="let row">{{ row.value.total }}</td>
+    </ng-container>
 
-      <ng-container matColumnDef="grade">
-        <th mat-header-cell *matHeaderCellDef>FINAL GRADE</th>
-        <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
-          {{ row.value.grade }}
-        </td>
-      </ng-container>
+    <ng-container matColumnDef="grade">
+      <th mat-header-cell *matHeaderCellDef>FINAL GRADE</th>
+      <td mat-cell *matCellDef="let row">{{ row.value.grade }}</td>
+    </ng-container>
 
-      <ng-container matColumnDef="status">
-        <th mat-header-cell *matHeaderCellDef>STATUS</th>
-        <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
-          <app-status-badge [status]="row.value.status" />
-        </td>
-      </ng-container>
+    <ng-container matColumnDef="status">
+      <th mat-header-cell *matHeaderCellDef>STATUS</th>
+      <td mat-cell *matCellDef="let row">
+        <app-status-badge [status]="row.value.status" />
+      </td>
+    </ng-container>
 
-      <!-- <ng-container matColumnDef="action">
-        <th mat-header-cell *matHeaderCellDef>ACTION</th>
-        <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
-          <app-button
-            label="Remove"
-            type="outline"
-            class="btn-sm btn-error"
-            (clickEvent)="removeRow(i)"
-          />
-        </td>
-      </ng-container> -->
-
-      <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-      <tr
-        mat-row
-        *matRowDef="let row; let i = index; columns: displayedColumns"
-        [class.completed]="completedRows.has(i)"
-        [class.edited]="row.value.isEdited === true"
-      ></tr>
-    </table>
-  </div>
-</form>
-<div class="flex justify-end mt-4">
-  <app-button label="Add row" (clickEvent)="addRow()" />
+    <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+    <tr
+      mat-row
+      *matRowDef="let row; let i = index; columns: displayedColumns"
+      [class.edited]="row.value.isEdited === true"
+    ></tr>
+  </table>
 </div>
+@if (!readonly()) {
+  <div class="flex justify-end mt-4">
+    <app-button label="Add row" (clickEvent)="addRow()" />
+  </div>
+}

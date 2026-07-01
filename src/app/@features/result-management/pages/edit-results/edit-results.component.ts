@@ -35,6 +35,7 @@ import { ResultsService } from '../../services/results.service';
 import {
   getApprovalHandoff,
   getRejectionHandoff,
+  isResultReadonlyForLecturer,
   RECIPIENT_LABELS,
 } from '../../utils/workflow';
 
@@ -75,6 +76,10 @@ export class EditResultsComponent implements OnInit, CanComponentDeactivate {
   totalStudentFail = signal<number>(0);
   averageTotal = signal<number>(0);
 
+  /** Pass/fail rate — calculated on the backend, set from the entries response. */
+  percentagePass = signal<number>(0);
+  percentageFail = signal<number>(0);
+
   /** True while result + entries are loading; start true to avoid an empty first paint. */
   loadingResult = signal<boolean>(true);
   uploadingResult = signal<boolean>(false);
@@ -83,6 +88,14 @@ export class EditResultsComponent implements OnInit, CanComponentDeactivate {
   resending = signal<boolean>(false);
   tableExpanded = signal<boolean>(false);
   hasChanges = signal<boolean>(false);
+
+  /**
+   * A lecturer can open a result that has left their editable custody —
+   * including a "second draft" forwarded to the CC while still in DRAFT status
+   * — but only to view it. In that case the grade table is rendered read-only.
+   * See `isResultReadonlyForLecturer` for the exact rule.
+   */
+  readOnly = signal<boolean>(false);
 
   userRole = this.authService.activeAccount()?.role;
 
@@ -149,7 +162,13 @@ export class EditResultsComponent implements OnInit, CanComponentDeactivate {
       .pipe(finalize(() => this.loadingResult.set(false)))
       .subscribe({
         next: ([result, resultEntries]) => {
-          if (result.status) this.result.set(result.data);
+          if (result.status) {
+            this.result.set(result.data);
+            this.readOnly.set(
+              this.userRole === RoleEnum.LECTURER &&
+                isResultReadonlyForLecturer(result.data)
+            );
+          }
           if (resultEntries.status)
             this.setResultEntriesDetails(resultEntries.data);
         },
@@ -157,15 +176,24 @@ export class EditResultsComponent implements OnInit, CanComponentDeactivate {
   }
 
   setResultEntriesDetails(resultEntries: unknown) {
-    const { analytics, totalPass, totalFail, entries, studentsWithoutEntries } =
-      resultEntries as {
-        analytics: Record<string, number>;
-        total: number;
-        totalPass: number;
-        totalFail: number;
-        entries: Partial<IStudentGrade>[];
-        studentsWithoutEntries?: Partial<IStudentGrade>[];
-      };
+    const {
+      analytics,
+      totalPass,
+      totalFail,
+      percentagePass,
+      percentageFail,
+      entries,
+      studentsWithoutEntries,
+    } = resultEntries as {
+      analytics: Record<string, number>;
+      total: number;
+      totalPass: number;
+      totalFail: number;
+      percentagePass: number;
+      percentageFail: number;
+      entries: Partial<IStudentGrade>[];
+      studentsWithoutEntries?: Partial<IStudentGrade>[];
+    };
 
     const analyticsData = [
       analytics['A'] || 0,
@@ -185,6 +213,8 @@ export class EditResultsComponent implements OnInit, CanComponentDeactivate {
     this.totalStudent.set(studentResultEntries.length);
     this.totalStudentPass.set(totalPass || 0);
     this.totalStudentFail.set(totalFail || 0);
+    this.percentagePass.set(percentagePass || 0);
+    this.percentageFail.set(percentageFail || 0);
 
     // Set student's result entries
     const activeCategory = this.activeSegment().value as SegmentValue;

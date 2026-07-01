@@ -16,7 +16,7 @@ import { MatRadioModule } from '@angular/material/radio';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
 import { ActivatedRoute, Router } from '@angular/router';
-import { finalize, forkJoin } from 'rxjs';
+import { finalize, firstValueFrom, forkJoin } from 'rxjs';
 import { ToastService } from '../../../../@core/utility/toast.service';
 import { CardComponent } from '../../../../@shared/components/card/card.component';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
@@ -40,7 +40,9 @@ import {
   SegmentValue,
 } from '../../../result-management/models/results.model';
 import { ResultsService } from '../../../result-management/services/results.service';
+import { isResultReadonlyForLecturer } from '../../../result-management/utils/workflow';
 import { IStudentGrade } from '../../../students/models/student.model';
+import { ResultSyncService } from '../../sync/result-sync.service';
 import { AnalyticsChartComponent } from '../../components/analytics-chart/analytics-chart.component';
 import { ReferenceTableResultUploadComponent } from '../../components/reference-table-result-upload/reference-table-result-upload.component';
 import { RegularTableResultUploadComponent } from '../../components/regular-table-result-upload/regular-table-result-upload.component';
@@ -80,6 +82,7 @@ export class ResultUploadComponent implements OnInit, CanComponentDeactivate {
   private readonly dialog = inject(MatDialog);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  readonly sync = inject(ResultSyncService);
 
   readonly resultId = this.route.snapshot.queryParamMap.get('resultId');
   readonly userRole = this.authService.activeAccount()?.role as RoleEnum;
@@ -136,6 +139,10 @@ export class ResultUploadComponent implements OnInit, CanComponentDeactivate {
   totalStudentPass = signal<number>(0);
   totalStudentFail = signal<number>(0);
 
+  /** Pass/fail rate — calculated on the backend, set from the entries response. */
+  percentagePass = signal<number>(0);
+  percentageFail = signal<number>(0);
+
   loadingResult = signal<boolean>(false);
   resultEntryCompleted = signal<boolean>(false);
 
@@ -160,6 +167,14 @@ export class ResultUploadComponent implements OnInit, CanComponentDeactivate {
   isUploaded = signal(false);
   tableExpanded = signal<boolean>(false);
   hasChanges = signal<boolean>(false);
+
+  /**
+   * A lecturer may open a result that has been forwarded to the Course
+   * Coordinator (the "second draft" — forwarded while still in DRAFT status),
+   * but only to view it. In that case every editing control is disabled.
+   * See `isResultReadonlyForLecturer` for the exact rule.
+   */
+  readOnly = signal<boolean>(false);
 
   averageTotal = signal<number>(0);
 
@@ -198,18 +213,34 @@ export class ResultUploadComponent implements OnInit, CanComponentDeactivate {
     });
 
     this.averageTotal.set(analytics.averageTotal);
+
+    // A lecturer can only edit a result that is still a draft in their custody
+    // and hasn't been forwarded for review. Once sent to the Course Coordinator
+    // it is read-only, even while it still reads as a DRAFT ("second draft").
+    this.readOnly.set(
+      this.userRole === RoleEnum.LECTURER && isResultReadonlyForLecturer(result)
+    );
   }
 
   setResultEntriesDetails(resultEntries: unknown) {
-    const { analytics, totalPass, totalFail, entries, studentsWithoutEntries } =
-      resultEntries as {
-        analytics: Record<string, number>;
-        total: number;
-        totalPass: number;
-        totalFail: number;
-        entries: Partial<IStudentGrade>[];
-        studentsWithoutEntries?: Partial<IStudentGrade>[];
-      };
+    const {
+      analytics,
+      totalPass,
+      totalFail,
+      percentagePass,
+      percentageFail,
+      entries,
+      studentsWithoutEntries,
+    } = resultEntries as {
+      analytics: Record<string, number>;
+      total: number;
+      totalPass: number;
+      totalFail: number;
+      percentagePass: number;
+      percentageFail: number;
+      entries: Partial<IStudentGrade>[];
+      studentsWithoutEntries?: Partial<IStudentGrade>[];
+    };
 
     const analyticsData = [
       analytics['A'] || 0,
@@ -232,6 +263,8 @@ export class ResultUploadComponent implements OnInit, CanComponentDeactivate {
     this.totalStudent.set(studentResultEntries.length);
     this.totalStudentPass.set(totalPass || 0);
     this.totalStudentFail.set(totalFail || 0);
+    this.percentagePass.set(percentagePass || 0);
+    this.percentageFail.set(percentageFail || 0);
 
     // Set student's result entries
     const activeCategory = this.activeSegment().value as SegmentValue;
@@ -253,15 +286,8 @@ export class ResultUploadComponent implements OnInit, CanComponentDeactivate {
   }
 
   switchSegment(value: ISegmentSwitcher['value']): void {
-    if (this.hasChanges()) {
-      this.toast.showNotification(
-        'error',
-        'Changes not saved',
-        'Please wait until changes has been saved'
-      );
-      return;
-    }
-
+    // Switching tabs never loses data — every edit is already saved locally and
+    // the sync engine keeps draining in the background regardless of tab.
     const selectedSegment: ISegmentSwitcher = this.segments()?.find(
       (segment: ISegmentSwitcher) => segment.value === value
     )!;
@@ -498,19 +524,33 @@ export class ResultUploadComponent implements OnInit, CanComponentDeactivate {
     this.hasChanges.set(hasChanges);
   }
 
-  canDeactivate(): boolean {
-    if (!this.hasChanges()) {
+  /** With local-first, "unsaved" means rows not yet confirmed on the server. */
+  private hasUnsyncedWork(): boolean {
+    return this.sync.pendingCount() > 0 || this.sync.failedCount() > 0;
+  }
+
+  canDeactivate(): boolean | Promise<boolean> {
+    if (!this.hasUnsyncedWork()) {
       return true;
     }
 
-    return confirm(
-      'You have unsaved changes. Are you sure you want to leave this page?'
+    const dialogRef = this.dialog.open(ConfirmationComponent, {
+      width: '600px',
+      data: {
+        message:
+          'Some scores haven’t finished syncing. They’re saved on this device and will sync automatically later. Leave this page anyway?',
+        subTitle: 'Kindly confirm this action',
+      },
+    });
+
+    return firstValueFrom(dialogRef.afterClosed()).then(
+      (confirmed) => confirmed === true
     );
   }
 
   @HostListener('window:beforeunload', ['$event'])
   beforeUnloadHandler(event: BeforeUnloadEvent): void {
-    if (this.hasChanges()) {
+    if (this.hasUnsyncedWork()) {
       event.preventDefault();
       event.returnValue = '';
     }

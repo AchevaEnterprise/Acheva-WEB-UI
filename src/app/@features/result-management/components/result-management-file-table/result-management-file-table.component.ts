@@ -31,7 +31,6 @@ import { Store } from '@ngrx/store';
 import { IPaginator } from '../../../../@core/models/paginator.model';
 import { IDepartment, IFaculty } from '../../../../@core/models/school.model';
 import { ResultApprovedForMePipe } from '../../../../@core/pipes/result-approved-for-me.pipe';
-import { ResultDisabledPipe } from '../../../../@core/pipes/result-disabled.pipe';
 import { AppState } from '../../../../@core/store/app.state';
 import {
   loadDepartments,
@@ -48,6 +47,7 @@ import { PaginatorComponent } from '../../../../@shared/components/paginator/pag
 import { RoleEnum } from '../../../auth/model/auth.model';
 import { AuthenticationService } from '../../../auth/service/auth.service';
 import { IResult } from '../../models/results.model';
+import { isResultReadonlyForLecturer } from '../../utils/workflow';
 
 export interface FileTableFilter {
   faculty: string;
@@ -69,7 +69,6 @@ export interface FileTableFilter {
     ButtonComponent,
     ReactiveFormsModule,
     ResultApprovedForMePipe,
-    ResultDisabledPipe,
   ],
   templateUrl: './result-management-file-table.component.html',
   styleUrl: './result-management-file-table.component.scss',
@@ -171,9 +170,20 @@ export class ResultManagementFileTableComponent implements OnInit, OnDestroy {
     return numSelected === numRows;
   }
 
-  //** Check if a result row is disabled */
+  //** Whether the lecturer may select this row for an action (send/resend). */
   isRowDisabled(result: IResult): boolean {
-    return this.userRole === RoleEnum.LECTURER && result.hasBeenSent;
+    return (
+      this.userRole === RoleEnum.LECTURER && isResultReadonlyForLecturer(result)
+    );
+  }
+
+  /**
+   * Rows we still grey out + blur. A lecturer can now open a result that has
+   * left their custody (read-only), so they are no longer blurred — only the
+   * Course Coordinator's not-yet-received results stay blurred.
+   */
+  isBlurred(result: IResult): boolean {
+    return this.userRole === RoleEnum.COURSE_COORDINATOR && !result.hasBeenSent;
   }
 
   /** Whether the number of selected enabled elements matches the total number of enabled rows. */
@@ -232,7 +242,8 @@ export class ResultManagementFileTableComponent implements OnInit, OnDestroy {
   }
 
   viewResult(result: IResult) {
-    if (this.userRole === RoleEnum.LECTURER && result.hasBeenSent) return;
+    // A lecturer may open a result that has left their custody — the
+    // edit-results page renders it read-only.
     this.viewResultEvent.emit(result);
   }
 
