@@ -3,51 +3,67 @@ import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, finalize } from 'rxjs';
-import { ToastService } from '../../../../@core/utility/toast.service';
 import { IAPIResponse } from '../../../../@core/models/api-response.model';
-import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
-import { ConfirmationComponent } from '../../../../@shared/components/confirmation/confirmation.component';
-import { LoaderComponent } from '../../../../@shared/components/loader/loader.component';
-import { AuthenticationService } from '../../../auth/service/auth.service';
-import { RoleEnum } from '../../../auth/model/auth.model';
-import { ICourse } from '../../../courses/models/course.model';
-import { IStudent } from '../../../students/models/student.model';
 import { IDepartment } from '../../../../@core/models/school.model';
-import { AssignModeratorDialogComponent } from '../../components/assign-moderator-dialog/assign-moderator-dialog.component';
-import { ModeratorScoreFormComponent } from '../../components/moderator-score-form/moderator-score-form.component';
+import { ToastService } from '../../../../@core/utility/toast.service';
+import { ConfirmationComponent } from '../../../../@shared/components/confirmation/confirmation.component';
+import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
+import { LoaderComponent } from '../../../../@shared/components/loader/loader.component';
+import { RoleEnum } from '../../../auth/model/auth.model';
+import { AuthenticationService } from '../../../auth/service/auth.service';
+import { ICourse } from '../../../courses/models/course.model';
+import { ResultsService } from '../../../result-management/services/results.service';
+import { IStudent } from '../../../students/models/student.model';
 import { ModerationCommentsComponent } from '../../components/moderation-comments/moderation-comments.component';
 import { ModerationTimelineComponent } from '../../components/moderation-timeline/moderation-timeline.component';
+import { ModeratorScoreFormComponent } from '../../components/moderator-score-form/moderator-score-form.component';
 import { RejectModerationDialogComponent } from '../../components/reject-moderation-dialog/reject-moderation-dialog.component';
 import {
-  IAssignModeratorPayload,
   IRejectPayload,
   IResultModeration,
   ISubmitOutcomePayload,
   ModerationStatus,
 } from '../../models/moderation.model';
-import { ModerationInboxBadgeService } from '../../services/moderation-inbox-badge.service';
-import { ModerationService } from '../../services/moderation.service';
 import {
   ModerationStatusPipe,
   ModerationStatusVariantPipe,
 } from '../../pipes/moderation-status.pipe';
+import { ModerationInboxBadgeService } from '../../services/moderation-inbox-badge.service';
+import { ModerationService } from '../../services/moderation.service';
 import {
   IModerationAction,
   ModerationActionKind,
   getAvailableActions,
-  isAssignedModerator,
   isCross,
   isMyTurn,
   refId,
 } from '../../utils/moderation-workflow';
+import { normalizeSessionGroups } from '../../utils/session-results';
+
+/** One session-worth of the student's published history (accordion row). */
+interface IHistorySession {
+  session: string;
+  entries: Array<{
+    courseCode: string;
+    courseTitle: string;
+    level: string;
+    test: number;
+    lab: number;
+    exam: number;
+    total: number;
+    grade: string;
+    status: string;
+    moderated?: boolean;
+    isTarget: boolean;
+  }>;
+}
 
 /**
  * Moderation detail / action page.
  *
- * The page is presentation-only: every state mutation goes through
- * `ModerationService` and the available actions come from
- * `getAvailableActions()` so the buttons stay aligned with the backend rules
- * by construction.
+ * Presentation-only: every state mutation goes through `ModerationService`
+ * and the available actions come from `getAvailableActions()` so the buttons
+ * stay aligned with the backend rules by construction.
  */
 @Component({
   selector: 'app-moderation-detail',
@@ -68,6 +84,7 @@ import {
 })
 export class ModerationDetailComponent implements OnInit {
   private readonly moderationService = inject(ModerationService);
+  private readonly resultsService = inject(ResultsService);
   private readonly authService = inject(AuthenticationService);
   private readonly toast = inject(ToastService);
   private readonly route = inject(ActivatedRoute);
@@ -80,6 +97,12 @@ export class ModerationDetailComponent implements OnInit {
   moderation = signal<IResultModeration | null>(null);
   /** Toggled to `true` after every successful action so the comments panel reloads. */
   refreshComments = signal<boolean>(false);
+
+  /** The student's full published history, grouped by session (for HOD/Dean review). */
+  historySessions = signal<IHistorySession[]>([]);
+  historyLoading = signal<boolean>(false);
+  /** Which session accordions are open (session string keys). */
+  openSessions = signal<Set<string>>(new Set());
 
   myUserId = this.authService.activeAccount()?.id ?? '';
   myRole: RoleEnum =
@@ -101,20 +124,15 @@ export class ModerationDetailComponent implements OnInit {
     return mod ? isMyTurn(mod, this.myUserId) : false;
   });
 
-  isAssignedModerator = computed(() => {
-    const mod = this.moderation();
-    return mod ? isAssignedModerator(mod, this.myUserId) : false;
-  });
+  /** The moderate panel shows when the action list contains `hodModerate`. */
+  showScoreForm = computed(() =>
+    this.actions().some((a) => a.kind === 'hodModerate')
+  );
 
-  showScoreForm = computed(() => {
-    const mod = this.moderation();
-    if (!mod) return false;
-    return (
-      mod.status === ModerationStatus.PENDING_MODERATION &&
-      this.isAssignedModerator() &&
-      this.isMyTurn()
-    );
-  });
+  /** Dean review: side-by-side old vs new with a MODERATED tag. */
+  isDeanStage = computed(
+    () => this.moderation()?.status === ModerationStatus.PENDING_DEAN
+  );
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
@@ -137,7 +155,10 @@ export class ModerationDetailComponent implements OnInit {
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: (resp) => {
-          if (resp.status) this.moderation.set(resp.data);
+          if (resp.status) {
+            this.moderation.set(resp.data);
+            this.loadHistory(resp.data);
+          }
         },
         error: () => {
           this.toast.showNotification(
@@ -147,6 +168,74 @@ export class ModerationDetailComponent implements OnInit {
           );
         },
       });
+  }
+
+  /**
+   * The student's published results from first year to date — the evidence
+   * the HODs and Dean use to judge eligibility. The failing course under
+   * moderation is highlighted.
+   */
+  private loadHistory(mod: IResultModeration): void {
+    const studentId = refId(mod.student);
+    if (!studentId) return;
+
+    this.historyLoading.set(true);
+    this.resultsService
+      .getStudentResultsBySessions(studentId)
+      .pipe(finalize(() => this.historyLoading.set(false)))
+      .subscribe({
+        next: (resp) => {
+          const targetCourseId = refId(mod.course);
+
+          // Merge same-session groups (one session can span level groups).
+          const bySession = new Map<string, IHistorySession>();
+          for (const group of normalizeSessionGroups(resp.data)) {
+            const bucket = bySession.get(group.session) ?? {
+              session: group.session,
+              entries: [],
+            };
+            bucket.entries.push(
+              ...group.entries.map((e) => ({
+                courseCode: String(e['courseCode'] ?? ''),
+                courseTitle: String(e['courseTitle'] ?? ''),
+                level: group.level,
+                test: Number(e['test'] ?? 0),
+                lab: Number(e['lab'] ?? 0),
+                exam: Number(e['exam'] ?? 0),
+                total: Number(e['total'] ?? 0),
+                grade: String(e['grade'] ?? ''),
+                status: String(e['status'] ?? ''),
+                moderated: Boolean(e['moderated']),
+                isTarget: String(e['courseId']) === targetCourseId,
+              }))
+            );
+            bySession.set(group.session, bucket);
+          }
+          const sessions = [...bySession.values()].sort((a, b) =>
+            a.session.localeCompare(b.session)
+          );
+
+          this.historySessions.set(sessions);
+          // Open the session containing the course under moderation.
+          const target = sessions.find((s) =>
+            s.entries.some((e) => e.isTarget)
+          );
+          if (target) this.openSessions.set(new Set([target.session]));
+        },
+      });
+  }
+
+  toggleSession(session: string): void {
+    this.openSessions.update((current) => {
+      const next = new Set(current);
+      if (next.has(session)) next.delete(session);
+      else next.add(session);
+      return next;
+    });
+  }
+
+  isSessionOpen(session: string): boolean {
+    return this.openSessions().has(session);
   }
 
   goBack(): void {
@@ -166,21 +255,41 @@ export class ModerationDetailComponent implements OnInit {
       case 'reject':
         this.runReject(action, mod);
         return;
-      case 'assign-moderator':
-        this.runAssign(action, mod);
-        return;
       case 'score':
-        // Inline form on the page — clicking the button just scrolls there.
+        // Inline panel on the page — clicking the button just scrolls there.
         this.scrollToScoreForm();
+        return;
+      case 'navigate':
+        this.openDraftEditor(mod);
         return;
     }
   }
 
-  /** Score form emits its payload directly. */
+  /** Draft editing happens on the letter page, in edit mode. */
+  private openDraftEditor(mod: IResultModeration): void {
+    const regNo =
+      typeof mod.student === 'object'
+        ? ((mod.student as IStudent).registrationNumber ?? '')
+        : '';
+    const courseId = refId(mod.course);
+    if (!regNo || !courseId) {
+      this.toast.showNotification(
+        'error',
+        'Cannot edit',
+        'Missing student or course details on this draft.'
+      );
+      return;
+    }
+    void this.router.navigate(['/students', regNo, 'moderate', courseId], {
+      queryParams: { moderationId: mod._id },
+    });
+  }
+
+  /** Moderation panel emits its payload directly. */
   submitScore(payload: ISubmitOutcomePayload): void {
     const mod = this.moderation();
     if (!mod) return;
-    this.execute(this.moderationService.moderatorSubmit(mod._id, payload));
+    this.execute(this.moderationService.hodModerate(mod._id, payload));
   }
 
   // ── Confirm-style actions ─────────────────────────────────────────────────
@@ -217,8 +326,6 @@ export class ModerationDetailComponent implements OnInit {
         return this.moderationService.homeHodForwardToCa(mod._id);
       case 'offeringHodForwardAfterDean':
         return this.moderationService.offeringHodForwardAfterDean(mod._id);
-      case 'hodForwardToDean':
-        return this.moderationService.hodForwardToDean(mod._id);
       case 'deanApprove':
         return this.moderationService.deanApprove(mod._id);
       default:
@@ -259,54 +366,6 @@ export class ModerationDetailComponent implements OnInit {
       default:
         return null;
     }
-  }
-
-  // ── Assign moderator flow ─────────────────────────────────────────────────
-
-  private runAssign(action: IModerationAction, mod: IResultModeration): void {
-    const departmentId = this.assignmentDepartmentId(action.kind, mod);
-    if (!departmentId) {
-      this.toast.showNotification(
-        'error',
-        'Could not open picker',
-        'Department information is missing for this moderation.'
-      );
-      return;
-    }
-
-    const dialogRef = this.dialog.open(AssignModeratorDialogComponent, {
-      data: {
-        title: action.label,
-        subtitle: this.courseSummary(mod) + ' · ' + this.studentSummary(mod),
-        departmentId,
-      },
-      width: '32rem',
-    });
-
-    dialogRef
-      .afterClosed()
-      .subscribe((payload: IAssignModeratorPayload | null) => {
-        if (!payload) return;
-        const call =
-          action.kind === 'homeHodApproveInternal'
-            ? this.moderationService.homeHodApproveInternal(mod._id, payload)
-            : this.moderationService.offeringHodApprove(mod._id, payload);
-        this.execute(call);
-      });
-  }
-
-  /**
-   * Internal approval picks from the home dept; cross approval picks from the
-   * offering (course-owning) dept. Falls back to the moderation's homeDept
-   * for safety so the dialog never opens with an empty list.
-   */
-  private assignmentDepartmentId(
-    kind: ModerationActionKind,
-    mod: IResultModeration
-  ): string {
-    if (kind === 'homeHodApproveInternal') return refId(mod.homeDepartment);
-    if (kind === 'offeringHodApprove') return refId(mod.offeringDepartment);
-    return refId(mod.homeDepartment);
   }
 
   // ── Network helper ────────────────────────────────────────────────────────
@@ -382,19 +441,16 @@ export class ModerationDetailComponent implements OnInit {
     return `${h.firstname ?? ''} ${h.lastname ?? ''}`.trim() || '—';
   }
 
-  assignedModeratorName(mod: IResultModeration): string {
-    if (!mod.assignedModerator) return '—';
-    if (typeof mod.assignedModerator === 'string') return '—';
-    const m = mod.assignedModerator;
-    return `${m.firstname ?? ''} ${m.lastname ?? ''}`.trim() || '—';
-  }
-
   trackAction(_index: number, action: IModerationAction): string {
     return action.kind;
   }
 
   trackHistory(index: number): number {
     return index;
+  }
+
+  trackSession(_index: number, session: IHistorySession): string {
+    return session.session;
   }
 
   private scrollToScoreForm(): void {

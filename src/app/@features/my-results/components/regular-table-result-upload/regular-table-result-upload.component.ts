@@ -184,6 +184,7 @@ export class RegularTableResultUploadComponent {
       grade: [student.grade],
       status: [student.status],
       isEdited: [student.isEdited || false],
+      moderated: [student.moderated || false],
     });
   }
 

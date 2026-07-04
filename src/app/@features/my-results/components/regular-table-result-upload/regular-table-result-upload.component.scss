@@ -13,3 +13,17 @@
 .edited {
   background: #cde6f86e;
 }
+
+// Chip shown beside the status badge when a score came from moderation.
+.moderated-chip {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.5625rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  background: #f3e8ff;
+  color: #7e22ce;
+  border: 1px solid #e9d5ff;
+  white-space: nowrap;
+}

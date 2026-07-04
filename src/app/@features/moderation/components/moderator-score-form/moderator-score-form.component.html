@@ -1,4 +1,41 @@
 <form [formGroup]="form" class="score-form">
+  <!-- Original failing score being replaced -->
+  @if (originalScores(); as old) {
+    <div class="score-form__old">
+      <span class="score-form__old-label">Failing score being moderated</span>
+      <div class="score-form__old-values">
+        <span
+          >Test <strong>{{ old.test }}</strong></span
+        >
+        <span
+          >Lab <strong>{{ old.lab }}</strong></span
+        >
+        <span
+          >Exam <strong>{{ old.exam }}</strong></span
+        >
+        <span class="score-form__old-total">
+          Total <strong>{{ old.total }} ({{ old.grade }})</strong>
+        </span>
+      </div>
+    </div>
+  }
+
+  <div class="score-form__generate">
+    <div>
+      <p class="acva-para-2 fw-600 m-0">New moderated scores</p>
+      <p class="acva-caption text-neutral-500 m-0">
+        Moderation always awards the minimum pass — the total must be a grade E
+        ({{ bandMin }}–{{ bandMax }}).
+      </p>
+    </div>
+    <app-button
+      type="outline"
+      label="⚡ Generate scores"
+      class="btn-md"
+      (clickEvent)="generate()"
+    />
+  </div>
+
   <div class="score-form__grid">
     <mat-form-field appearance="outline" class="score-form__field">
       <mat-label>Test (out of 30)</mat-label>
@@ -41,7 +78,7 @@
 
   <div
     class="score-form__preview"
-    [class.score-form__preview--fail]="!passed()"
+    [class.score-form__preview--fail]="hasValues() && !withinBand()"
   >
     <div class="score-form__preview-block">
       <span class="score-form__preview-label">Total</span>
@@ -51,10 +88,16 @@
       <span class="score-form__preview-label">Grade</span>
       <span class="score-form__preview-value">{{ grade() }}</span>
     </div>
-    <div class="score-form__preview-block">
-      <span class="score-form__preview-label">Status</span>
-      <span class="score-form__preview-value">
-        {{ passed() ? 'Pass' : 'Fail' }}
+    <div class="score-form__preview-block score-form__preview-block--wide">
+      <span class="score-form__preview-label">Moderation rule</span>
+      <span class="score-form__preview-value score-form__preview-value--small">
+        @if (!hasValues()) {
+          Generate or enter scores
+        } @else if (withinBand()) {
+          ✓ Valid — grade E
+        } @else {
+          Total must be {{ bandMin }}–{{ bandMax }}
+        }
       </span>
     </div>
   </div>
@@ -66,17 +109,17 @@
       rows="2"
       maxlength="500"
       formControlName="comment"
-      placeholder="A short note on what you observed during moderation."
+      placeholder="A short note for the Dean on why this moderation is justified."
     ></textarea>
   </mat-form-field>
 
   <div class="score-form__actions">
     <app-button
-      label="Submit moderation"
+      label="Moderate & forward to Dean"
       type="fill"
       class="btn-md"
       [loading]="saving()"
-      [disabled]="form.invalid || saving()"
+      [disabled]="form.invalid || !withinBand() || saving()"
       (clickEvent)="submit()"
     />
   </div>

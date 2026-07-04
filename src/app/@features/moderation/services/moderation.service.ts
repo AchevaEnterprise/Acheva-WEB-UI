@@ -5,14 +5,15 @@ import { environment } from '../../../../environments/environment';
 import { IAPIResponse } from '../../../@core/models/api-response.model';
 import {
   IAddAttachmentPayload,
-  IAssignModeratorPayload,
   ICreateModerationPayload,
   IListModerationsQuery,
   IModerationComment,
+  IModerationEligibility,
   IModerationListPage,
   IRejectPayload,
   IResultModeration,
   ISubmitOutcomePayload,
+  IUpdateDraftPayload,
   IWithCommentPayload,
 } from '../models/moderation.model';
 
@@ -88,12 +89,37 @@ export class ModerationService {
     return this.http.get<ModerationResponse>(`${this.baseUrl}/${id}`);
   }
 
+  /** Duplicate-initiation guard: can a fresh moderation be started? */
+  eligibility(
+    studentId: string,
+    courseId: string
+  ): Observable<IAPIResponse<IModerationEligibility>> {
+    const params = new HttpParams()
+      .append('studentId', studentId)
+      .append('courseId', courseId);
+    return this.http.get<IAPIResponse<IModerationEligibility>>(
+      `${this.baseUrl}/eligibility`,
+      { params }
+    );
+  }
+
   // ── CA actions ───────────────────────────────────────────────────────────
 
   submit(id: string): Observable<ModerationResponse> {
     return this.http.patch<ModerationResponse>(
       `${this.baseUrl}/${id}/submit`,
       {}
+    );
+  }
+
+  /** Edit a DRAFT's letter (submitting CA only). */
+  updateDraft(
+    id: string,
+    body: IUpdateDraftPayload
+  ): Observable<ModerationResponse> {
+    return this.http.patch<ModerationResponse>(
+      `${this.baseUrl}/${id}/draft`,
+      body
     );
   }
 
@@ -124,17 +150,6 @@ export class ModerationService {
     );
   }
 
-  /** INTERNAL only. */
-  homeHodApproveInternal(
-    id: string,
-    body: IAssignModeratorPayload
-  ): Observable<ModerationResponse> {
-    return this.http.patch<ModerationResponse>(
-      `${this.baseUrl}/${id}/home-hod/approve-internal`,
-      body
-    );
-  }
-
   homeHodReject(
     id: string,
     body: IRejectPayload
@@ -158,16 +173,6 @@ export class ModerationService {
 
   // ── Offering HOD ─────────────────────────────────────────────────────────
 
-  offeringHodApprove(
-    id: string,
-    body: IAssignModeratorPayload
-  ): Observable<ModerationResponse> {
-    return this.http.patch<ModerationResponse>(
-      `${this.baseUrl}/${id}/offering-hod/approve`,
-      body
-    );
-  }
-
   offeringHodReject(
     id: string,
     body: IRejectPayload
@@ -188,26 +193,19 @@ export class ModerationService {
     );
   }
 
-  // ── HOD review (shared) ──────────────────────────────────────────────────
+  // ── HOD moderates inline (both scopes) ───────────────────────────────────
 
-  hodForwardToDean(
-    id: string,
-    body: IWithCommentPayload = {}
-  ): Observable<ModerationResponse> {
-    return this.http.patch<ModerationResponse>(
-      `${this.baseUrl}/${id}/hod/forward-to-dean`,
-      body
-    );
-  }
-
-  // ── Moderator ────────────────────────────────────────────────────────────
-
-  moderatorSubmit(
+  /**
+   * The reviewing HOD enters/generates the moderated scores themselves.
+   * Internal → home HOD at PENDING_HOME_HOD; cross → offering HOD at
+   * PENDING_OFFERING_HOD. Scores must total a grade of E (40–44).
+   */
+  hodModerate(
     id: string,
     body: ISubmitOutcomePayload
   ): Observable<ModerationResponse> {
     return this.http.patch<ModerationResponse>(
-      `${this.baseUrl}/${id}/moderator/submit`,
+      `${this.baseUrl}/${id}/hod/moderate`,
       body
     );
   }

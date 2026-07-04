@@ -3,6 +3,51 @@
   flex-direction: column;
   gap: 1rem;
 
+  // ── Original failing score strip ───────────────────────────────────────────
+  &__old {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.875rem 1rem;
+    border-radius: 8px;
+    background: #fde8ee;
+    border: 1px solid #f8b4c4;
+  }
+
+  &__old-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #b4294c;
+  }
+
+  &__old-values {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    font-size: 0.875rem;
+    color: #6b7280;
+
+    strong {
+      color: #111827;
+      margin-left: 0.25rem;
+    }
+  }
+
+  &__old-total strong {
+    color: #b4294c;
+  }
+
+  // ── Generate row ─────────────────────────────────────────────────────────────
+  &__generate {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
   &__grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -17,15 +62,16 @@
     width: 100%;
   }
 
+  // Valid state uses brand blue (green is off-brand).
   &__preview {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 1rem;
     padding: 0.875rem 1rem;
-    border-radius: 0.75rem;
-    background: #ecfdf5;
-    border: 1px solid #a7f3d0;
-    color: #047857;
+    border-radius: 8px;
+    background: #e8f3ff;
+    border: 1px solid #bfdbfe;
+    color: #134980;
 
     &--fail {
       background: #fef2f2;
@@ -38,6 +84,10 @@
     display: flex;
     flex-direction: column;
     gap: 0.125rem;
+
+    &--wide {
+      min-width: 0;
+    }
   }
 
   &__preview-label {
@@ -50,6 +100,10 @@
   &__preview-value {
     font-size: 1.125rem;
     font-weight: 600;
+
+    &--small {
+      font-size: 0.875rem;
+    }
   }
 
   &__actions {

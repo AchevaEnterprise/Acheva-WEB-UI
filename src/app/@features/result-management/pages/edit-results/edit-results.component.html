@@ -77,7 +77,11 @@
       <span
         class="flex items-center gap-2 text-[#6B7280] bg-[#F3F4F6] border border-[#E5E7EB] px-3 py-1.5 rounded-full acva-caption fw-500 whitespace-nowrap"
       >
-        View only — already sent for approval
+        {{
+          isRestrictedViewer()
+            ? 'View only — published result shared with you for your students'
+            : 'View only — already sent for approval'
+        }}
       </span>
     }
 

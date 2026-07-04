@@ -1,18 +1,10 @@
 import { TitleCasePipe } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ActivatedRoute, Router } from '@angular/router';
-import {
-  catchError,
-  debounceTime,
-  distinctUntilChanged,
-  finalize,
-  forkJoin,
-  of,
-} from 'rxjs';
+import { catchError, finalize, forkJoin, of } from 'rxjs';
 import { IAPIResponse } from '../../../../@core/models/api-response.model';
 import { ToastService } from '../../../../@core/utility/toast.service';
 import { EmptyStateComponent } from '../../../../@shared/components/empty-state/empty-state.component';
@@ -29,7 +21,6 @@ import { StudentService } from '../../services/student.service';
 @Component({
   selector: 'app-students',
   imports: [
-    ReactiveFormsModule,
     SearchInputComponent,
     ButtonComponent,
     MatTableModule,
@@ -57,40 +48,46 @@ export class StudentsComponent implements OnInit {
     'fullName',
     // 'actions',
   ];
+  /** Table rows — the current view (filtered when a search term is active). */
   dataSource = signal<IStudent[]>([]);
+  /** Immutable master list; the search always filters from here. */
   students = signal<IStudent[]>([]);
   /** Students with at least one failed course on a published result. */
   studentsWithIssues = signal<ReadonlySet<string>>(new Set());
-
-  searchCtrl: FormControl = new FormControl<string>('');
+  /** The active, trimmed search term (drives the "no matches" empty state). */
+  searchTerm = signal('');
+  /** Empty-state copy shown when a search returns no rows. */
+  readonly noMatchesMessage = computed(
+    () => `No students match "${this.searchTerm()}"`
+  );
 
   loading = signal(false);
   uploading = signal(false);
 
   ngOnInit(): void {
     this.getStudents();
-    this.onStudentSearch();
   }
 
-  onStudentSearch() {
-    this.searchCtrl.valueChanges
-      .pipe(debounceTime(800), distinctUntilChanged())
-      .subscribe({
-        next: (search: string) => {
-          const term = (search ?? '').toLowerCase().trim();
+  /**
+   * Filters the list by student name OR registration number. The debounce
+   * lives in `SearchInputComponent`, which emits the term via `searchEvent`.
+   */
+  onStudentSearch(search: string): void {
+    const term = (search ?? '').toLowerCase().trim();
+    this.searchTerm.set(term);
 
-          if (!term) {
-            this.dataSource.set(this.students());
-            return;
-          }
+    if (!term) {
+      this.dataSource.set(this.students());
+      return;
+    }
 
-          const searchedStudents = this.students().filter((student) =>
-            student.fullName.toLowerCase().includes(term)
-          );
-
-          this.dataSource.set(searchedStudents);
-        },
-      });
+    this.dataSource.set(
+      this.students().filter(
+        (student) =>
+          student.fullName.toLowerCase().includes(term) ||
+          student.registrationNumber.toLowerCase().includes(term)
+      )
+    );
   }
 
   getStudents() {
@@ -124,8 +121,10 @@ export class StudentsComponent implements OnInit {
             (a.fullName ?? '').localeCompare(b.fullName ?? '')
           );
 
-          this.dataSource.set(sortedStudents);
           this.students.set(sortedStudents);
+          // Re-apply any active search term so a reload (upload/add) keeps
+          // the current filter in sync with the search box.
+          this.onStudentSearch(this.searchTerm());
           this.studentsWithIssues.set(
             new Set(flags.data.studentIdsWithFailedCourses ?? [])
           );

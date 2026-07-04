@@ -181,7 +181,17 @@
                       </td>
                       <td class="results-table__grade">{{ result.grade }}</td>
                       <td>
-                        <app-status-badge [status]="result.status" />
+                        <div class="flex items-center gap-1.5">
+                          <app-status-badge [status]="result.status" />
+                          @if (result.moderated) {
+                            <span
+                              class="moderated-chip"
+                              title="This score was replaced through the moderation workflow"
+                            >
+                              MODERATED
+                            </span>
+                          }
+                        </div>
                       </td>
                     </tr>
                   } @empty {

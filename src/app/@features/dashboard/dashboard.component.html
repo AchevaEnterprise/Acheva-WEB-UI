@@ -144,7 +144,16 @@
       <div content class="p-4 h-[35vh] overflow-y-auto">
         @if (activities().length > 0) {
           @for (activity of activities(); track $index) {
-            <app-activity [activity]="activity" />
+            <button
+              type="button"
+              class="w-full text-left rounded-[8px] transition-colors"
+              [class.cursor-pointer]="isActivityNavigable(activity)"
+              [class.hover:bg-neutral-100]="isActivityNavigable(activity)"
+              [class.cursor-default]="!isActivityNavigable(activity)"
+              (click)="openActivity(activity)"
+            >
+              <app-activity [activity]="activity" />
+            </button>
           }
         } @else {
           <app-empty-state

@@ -5,8 +5,8 @@
     <!-- SEARCH FILTERS -->
     <div class="flex flex-wrap justify-between gap-3">
       <app-search-input
-        placeholder="Search student name"
-        [formControl]="searchCtrl"
+        placeholder="Search by name or reg. number"
+        (searchEvent)="onStudentSearch($event)"
       />
 
       <div class="flex gap-3">
@@ -115,6 +115,11 @@
             ></tr>
           </table>
         </div>
+      } @else if (searchTerm()) {
+        <app-empty-state
+          iconSrc="images/general/empty-doc.svg"
+          [description]="noMatchesMessage()"
+        />
       } @else {
         <app-empty-state
           iconSrc="images/general/empty-doc.svg"
