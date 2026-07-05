@@ -1,0 +1,324 @@
+@if (loading()) {
+  <div class="reg-detail reg-detail--centered"><app-loader /></div>
+} @else {
+  @if (registration(); as reg) {
+    <div class="reg-detail">
+      <div>
+        <app-button
+          label="Back"
+          type="outline"
+          class="btn-sm"
+          icon="images/general/arrow-left.svg"
+          (clickEvent)="goBack()"
+        />
+      </div>
+
+      <!-- ── Header ────────────────────────────────────────────────────── -->
+      <header class="rd-card rd-header">
+        <div>
+          <h2 class="acva-heading-5 fw-600 m-0">
+            {{ student()?.fullName | titlecase }}
+          </h2>
+          <p class="acva-para-1 text-neutral-500 m-0">
+            {{ student()?.registrationNumber }} · {{ reg.level }}LVL ·
+            {{ reg.session }} · {{ reg.semester | titlecase }}
+          </p>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="rd-status" [attr.data-status]="reg.status">
+            {{ statusLabel(reg.status) }}
+          </span>
+          @if (reg.status === RegistrationStatus.PENDING_CA_APPROVAL) {
+            <app-button
+              label="Approve overload"
+              class="btn-md"
+              [loading]="acting()"
+              (clickEvent)="approveOverload()"
+            />
+          }
+          <app-button
+            type="outline"
+            label="Reset"
+            class="btn-md"
+            [disabled]="acting()"
+            (clickEvent)="resetRegistration()"
+          />
+        </div>
+      </header>
+
+      <div class="rd-grid">
+        <div class="rd-main">
+          <!-- ── Load meter ─────────────────────────────────────────────── -->
+          <section class="rd-card">
+            <div class="rd-load">
+              <div class="rd-load__stat">
+                <span class="rd-load__label">Counted units</span>
+                <span class="rd-load__value">
+                  {{ reg.nonSiwesUnits
+                  }}<span class="rd-load__cap">/{{ unitCap() }}</span>
+                </span>
+              </div>
+              @if (siwesUnits() > 0) {
+                <div class="rd-load__stat">
+                  <span class="rd-load__label">SIWES (cap-exempt)</span>
+                  <span class="rd-load__value rd-load__value--siwes">
+                    +{{ siwesUnits() }}
+                  </span>
+                </div>
+              }
+              <div class="rd-load__stat">
+                <span class="rd-load__label">Total</span>
+                <span class="rd-load__value">{{ reg.totalUnits }}</span>
+              </div>
+              <div class="rd-load__bar-wrap">
+                <div class="rd-load__bar">
+                  <div
+                    class="rd-load__fill"
+                    [class.rd-load__fill--over]="reg.nonSiwesUnits > 24"
+                    [style.width.%]="(reg.nonSiwesUnits / unitCap()) * 100"
+                  ></div>
+                </div>
+                <span class="acva-caption text-neutral-500">
+                  15 minimum · 24 cap
+                  @if (unitCap() === 27) {
+                    · up to 27 with your approval (400L+)
+                  }
+                  · SIWES spills over freely
+                </span>
+              </div>
+            </div>
+          </section>
+
+          <!-- ── Unplaced carry-overs ───────────────────────────────────── -->
+          @if (reg.unplacedCarryOvers.length > 0) {
+            <section class="rd-card rd-card--attention">
+              <h4 class="rd-card__title mb-2">
+                Carry-overs the engine could not place
+              </h4>
+              @for (
+                unplaced of reg.unplacedCarryOvers;
+                track trackIndex($index)
+              ) {
+                <div class="rd-unplaced">
+                  <p class="acva-para-2 fw-600 m-0">
+                    {{ unplaced.courseCode }} ({{ unplaced.units }}u)
+                    @if (unplaced.failedInSession) {
+                      <span class="fw-400 text-neutral-500">
+                        — failed {{ unplaced.failedInSession }}</span
+                      >
+                    }
+                  </p>
+                  <p class="acva-caption text-neutral-500 mb-2">
+                    {{ unplaced.reason }}
+                  </p>
+                  <ul class="rd-suggestions">
+                    @for (
+                      suggestion of unplaced.suggestions;
+                      track trackIndex($index)
+                    ) {
+                      <li>{{ suggestion }}</li>
+                    }
+                  </ul>
+                </div>
+              }
+              <p class="acva-caption text-neutral-500 m-0">
+                Resolve by dropping a course below, then adding the carry-over.
+              </p>
+            </section>
+          }
+
+          <!-- ── Registered courses ─────────────────────────────────────── -->
+          <section class="rd-card">
+            <div class="rd-card__title-row">
+              <h4 class="rd-card__title">Registered courses</h4>
+              <span class="acva-caption text-neutral-500">
+                {{ activeEntries().length }} course(s)
+              </span>
+            </div>
+            <div class="rd-table-wrap">
+              <table class="rd-table">
+                <thead>
+                  <tr>
+                    <th>Course</th>
+                    <th>Title</th>
+                    <th>Units</th>
+                    <th>Type</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (
+                    entry of activeEntries();
+                    track trackEntry($index, entry)
+                  ) {
+                    <tr>
+                      <td class="fw-600">{{ entry.courseCode }}</td>
+                      <td>{{ entry.courseTitle }}</td>
+                      <td>{{ entry.units }}</td>
+                      <td>
+                        <span [class]="entryTypeClass(entry.type)">
+                          {{ entry.type }}
+                        </span>
+                        @if (entry.electiveGroup) {
+                          <span class="acva-caption text-neutral-500">
+                            {{ entry.electiveGroup }}</span
+                          >
+                        }
+                        @if (entry.note) {
+                          <span class="acva-caption text-neutral-500 block">{{
+                            entry.note
+                          }}</span>
+                        }
+                      </td>
+                      <td class="text-right">
+                        @if (entry.type !== 'SIWES') {
+                          <button
+                            type="button"
+                            class="rd-drop"
+                            [disabled]="acting()"
+                            (click)="dropEntry(entry)"
+                            aria-label="Drop course"
+                          >
+                            Drop
+                          </button>
+                        }
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Add course -->
+            <div class="rd-add">
+              <select
+                [formControl]="addCtrl"
+                class="rd-add__select"
+                aria-label="Course to add"
+              >
+                <option value="">Add a course…</option>
+                @for (candidate of addCandidates(); track candidate.courseId) {
+                  <option [value]="candidate.courseId">
+                    {{ candidate.label }}
+                  </option>
+                }
+              </select>
+              <app-button
+                type="outline"
+                label="Add"
+                class="btn-md"
+                [disabled]="!addCtrl.value || acting()"
+                (clickEvent)="addSelected()"
+              />
+            </div>
+
+            @if (droppedEntries().length > 0) {
+              <div class="rd-dropped">
+                <span class="acva-caption text-neutral-500 fw-600"
+                  >Dropped:</span
+                >
+                @for (
+                  entry of droppedEntries();
+                  track trackEntry($index, entry)
+                ) {
+                  <span class="rd-dropped__chip">
+                    {{ entry.courseCode }} ({{ entry.units }}u)
+                  </span>
+                }
+              </div>
+            }
+          </section>
+
+          <!-- ── Decision trace ─────────────────────────────────────────── -->
+          <section class="rd-card">
+            <button
+              type="button"
+              class="rd-trace-toggle"
+              (click)="toggleTrace()"
+            >
+              <span class="rd-card__title"
+                >Why these courses? (decision trace)</span
+              >
+              <span>{{ showTrace() ? '▾' : '▸' }}</span>
+            </button>
+            @if (showTrace()) {
+              <ol class="rd-trace">
+                @for (line of reg.decisionTrace; track trackIndex($index)) {
+                  <li>{{ line }}</li>
+                }
+              </ol>
+            }
+          </section>
+        </div>
+
+        <!-- ── Rail ─────────────────────────────────────────────────────── -->
+        <aside class="rd-rail">
+          <section class="rd-card">
+            <h4 class="rd-card__title mb-2">Academic standing</h4>
+            @if (cgpa(); as gpa) {
+              <div class="rd-cgpa">
+                <span class="rd-cgpa__value">{{ gpa.cgpa ?? '—' }}</span>
+                <span class="acva-caption text-neutral-500">
+                  CGPA · {{ gpa.totalUnits }} units taken
+                </span>
+              </div>
+              <ul class="rd-sessions">
+                @for (item of gpa.sessions; track item.session) {
+                  <li>
+                    <span>{{ item.session }}</span>
+                    <span class="fw-600">{{ item.gpa }}</span>
+                  </li>
+                }
+              </ul>
+            } @else {
+              <p class="acva-caption text-neutral-400">No published results.</p>
+            }
+          </section>
+
+          <section class="rd-card">
+            <h4 class="rd-card__title mb-2">Outstanding carry-overs</h4>
+            @if (ledger().length > 0) {
+              <ul class="rd-ledger">
+                @for (item of ledger(); track item.courseId) {
+                  <li>
+                    <div>
+                      <span class="fw-600">{{ item.courseCode }}</span>
+                      <span class="acva-caption text-neutral-500">
+                        {{ item.units }}u · failed {{ item.failedInSession }}
+                      </span>
+                    </div>
+                    <span class="acva-caption text-neutral-500">
+                      runs {{ item.courseSemester | titlecase }}
+                    </span>
+                  </li>
+                }
+              </ul>
+            } @else {
+              <p class="acva-caption text-neutral-400 m-0">
+                No outstanding failed courses.
+              </p>
+            }
+          </section>
+
+          @if (reg.overloadApproval) {
+            <section class="rd-card">
+              <h4 class="rd-card__title mb-2">Overload approval</h4>
+              <p class="acva-caption text-neutral-500 m-0">
+                Approved
+                {{
+                  reg.overloadApproval.approvedAt | date: 'MMM d, y · h:mm a'
+                }}
+              </p>
+            </section>
+          }
+        </aside>
+      </div>
+    </div>
+  } @else {
+    <div class="reg-detail reg-detail--centered">
+      <p class="acva-para-1 text-neutral-500">
+        This registration could not be loaded.
+      </p>
+    </div>
+  }
+}

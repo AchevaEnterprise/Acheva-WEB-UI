@@ -255,7 +255,9 @@
           [resultId]="resultId || ''"
           [searchValue]="searchStudentValue()"
           [students]="students()['REGULAR']"
+          [registeredRegNos]="registeredRegNos()"
           (hasChangesEvent)="updateChanges($event)"
+          (overrideEvent)="onRosterOverride($event)"
         />
       }
       @case ('REFERENCE') {

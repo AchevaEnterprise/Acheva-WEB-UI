@@ -1,0 +1,206 @@
+<div id="container">
+  <div class="flex flex-wrap items-start justify-between gap-4">
+    <div>
+      <h3 class="acva-heading-5 fw-500">Course Registration</h3>
+      <p class="acva-para-1 text-neutral-500">
+        Auto-register your cohort, then resolve carry-overs and overloads.
+      </p>
+    </div>
+    <div class="flex items-center gap-3">
+      <app-button
+        type="outline"
+        label="Import curriculum"
+        class="btn-md"
+        (clickEvent)="importCurriculum()"
+      />
+      <button
+        type="button"
+        class="reg-template-link"
+        (click)="downloadTemplate()"
+      >
+        Template
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Run controls ─────────────────────────────────────────────────── -->
+  <section class="reg-controls mt-6">
+    <div class="reg-controls__field">
+      <label class="acva-caption text-neutral-500" for="reg-session"
+        >Session</label
+      >
+      <input
+        id="reg-session"
+        type="text"
+        [formControl]="sessionCtrl"
+        placeholder="2026/2027"
+        (change)="load()"
+      />
+    </div>
+
+    <div class="reg-controls__field">
+      <span class="acva-caption text-neutral-500">Semester</span>
+      <div class="reg-controls__segments" role="tablist">
+        @for (option of semesters; track option) {
+          <button
+            type="button"
+            role="tab"
+            [attr.aria-selected]="semester() === option"
+            [class.reg-controls__segment--active]="semester() === option"
+            class="reg-controls__segment"
+            (click)="setSemester(option)"
+          >
+            {{ option | titlecase }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="flex-1"></div>
+
+    <app-button
+      label="Run auto-registration"
+      class="btn-md"
+      [loading]="running()"
+      (clickEvent)="runRegistration()"
+    />
+  </section>
+
+  <!-- ── Summary chips ────────────────────────────────────────────────── -->
+  @if (registrations().length > 0) {
+    <div class="reg-chips mt-4">
+      <span class="reg-chip reg-chip--active">
+        {{ counts().active }} registered
+      </span>
+      <span class="reg-chip reg-chip--pending">
+        {{ counts().pending }} awaiting approval
+      </span>
+      <span class="reg-chip reg-chip--attention">
+        {{ counts().attention }} need attention
+      </span>
+    </div>
+  }
+
+  <!-- ── Elective outcomes needing a decision ─────────────────────────── -->
+  @if (reviews().length > 0) {
+    <section class="reg-reviews mt-4">
+      <div class="reg-reviews__head">
+        <h4 class="acva-para-2 fw-600 m-0">
+          Elective outcomes needing your decision ({{ reviews().length }})
+        </h4>
+        <span class="acva-caption text-neutral-500">
+          Keep the grade, or unregister the course (voids the score — audited)
+        </span>
+      </div>
+      @for (review of reviews(); track review._id) {
+        <div class="reg-reviews__row">
+          <div>
+            <span class="fw-600">
+              {{ reviewStudent(review)?.fullName | titlecase }}
+            </span>
+            <span class="acva-caption text-neutral-500">
+              · {{ reviewStudent(review)?.registrationNumber }} ·
+              {{ review.courseCode }} ({{ review.units }}u) ·
+              {{ review.session }}
+            </span>
+          </div>
+          <div class="reg-reviews__actions">
+            <span
+              class="reg-reviews__grade"
+              [class.reg-reviews__grade--fail]="review.kind === 'FAILED'"
+            >
+              {{ review.grade }} · {{ review.total }}
+            </span>
+            <app-button
+              type="outline"
+              label="Keep"
+              class="btn-sm"
+              [disabled]="deciding()"
+              (clickEvent)="decide(review, 'KEEP')"
+            />
+            <app-button
+              label="Unregister"
+              class="btn-sm"
+              [disabled]="deciding()"
+              (clickEvent)="decide(review, 'UNREGISTER')"
+            />
+          </div>
+        </div>
+      }
+    </section>
+  }
+
+  <!-- ── Cohort table ─────────────────────────────────────────────────── -->
+  <div class="mt-4">
+    @if (loading()) {
+      <app-loader />
+    } @else if (registrations().length > 0) {
+      <div class="w-full overflow-auto">
+        <table mat-table [dataSource]="registrations()">
+          <ng-container matColumnDef="sn">
+            <th mat-header-cell *matHeaderCellDef>S/N</th>
+            <td mat-cell *matCellDef="let row; let i = index">{{ i + 1 }}.</td>
+          </ng-container>
+
+          <ng-container matColumnDef="regNo">
+            <th mat-header-cell *matHeaderCellDef>REG NO</th>
+            <td mat-cell *matCellDef="let row">
+              {{ studentOf(row)?.registrationNumber }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>NAME</th>
+            <td mat-cell *matCellDef="let row">
+              {{ studentOf(row)?.fullName | titlecase }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="units">
+            <th mat-header-cell *matHeaderCellDef>UNITS</th>
+            <td mat-cell *matCellDef="let row">
+              <span class="fw-600">{{ row.totalUnits }}</span>
+              @if (siwesUnits(row) > 0) {
+                <span class="acva-caption text-neutral-500">
+                  ({{ row.nonSiwesUnits }} + {{ siwesUnits(row) }}u SIWES)
+                </span>
+              }
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>STATUS</th>
+            <td mat-cell *matCellDef="let row">
+              <span class="reg-status" [attr.data-status]="row.status">
+                {{ statusLabel(row.status) }}
+              </span>
+              @if (row.unplacedCarryOvers?.length) {
+                <span class="acva-caption text-neutral-500">
+                  · {{ row.unplacedCarryOvers.length }} carry-over(s) unplaced
+                </span>
+              }
+            </td>
+          </ng-container>
+
+          <tr
+            mat-header-row
+            *matHeaderRowDef="displayedColumns; sticky: true"
+          ></tr>
+          <tr
+            mat-row
+            *matRowDef="let row; columns: displayedColumns"
+            class="cursor-pointer"
+            tabindex="0"
+            (click)="openDetail(row)"
+            (keydown.enter)="openDetail(row)"
+          ></tr>
+        </table>
+      </div>
+    } @else {
+      <app-empty-state
+        iconSrc="images/general/empty-doc.svg"
+        description="No registrations for this session and semester yet — run auto-registration to create them."
+      />
+    }
+  </div>
+</div>

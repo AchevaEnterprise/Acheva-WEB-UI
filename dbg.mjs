@@ -1,0 +1,22 @@
+import { chromium } from '@playwright/test';
+const RESULT_ID = '6a49a842e39f09cc6fd87d80';
+(async () => {
+  const b = await chromium.launch({ headless: true });
+  const p = await (await b.newContext({ viewport: { width: 1440, height: 1100 } })).newPage();
+  const errors = [];
+  p.on('console', (m) => { if (m.type() === 'error') errors.push(m.text().slice(0, 120)); });
+  p.on('response', (r) => { if (r.status() >= 400) errors.push(r.status() + ' ' + r.url().slice(-70)); });
+  await p.goto('http://localhost:4200/auth/login', { waitUntil: 'domcontentloaded' });
+  await p.waitForSelector('input[formcontrolname="email"]');
+  await p.fill('input[formcontrolname="email"]', 'danielchinemerem302+6@gmail.com');
+  await p.fill('input[formcontrolname="password"]', 'Password8@');
+  await p.getByRole('button', { name: /log in/i }).click();
+  await p.waitForFunction(() => !!localStorage.getItem('token'));
+  await p.goto('http://localhost:4200/my-result/upload-result?resultId=' + RESULT_ID + '&status=DRAFT', { waitUntil: 'domcontentloaded' });
+  await p.waitForTimeout(8000);
+  console.log('rows:', await p.locator('table tbody tr').count());
+  console.log('chips:', await p.locator('.unregistered-chip').count());
+  console.log('errors:', JSON.stringify(errors.slice(0, 6)));
+  await p.screenshot({ path: 'screenshots/s4-debug.png' });
+  await b.close();
+})();

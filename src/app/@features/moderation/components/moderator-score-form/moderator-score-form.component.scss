@@ -4,6 +4,7 @@
   gap: 1rem;
 
   // ── Original failing score strip ───────────────────────────────────────────
+
   &__old {
     display: flex;
     flex-direction: column;
@@ -40,6 +41,7 @@
   }
 
   // ── Generate row ─────────────────────────────────────────────────────────────
+
   &__generate {
     display: flex;
     align-items: center;
@@ -63,6 +65,7 @@
   }
 
   // Valid state uses brand blue (green is off-brand).
+
   &__preview {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
