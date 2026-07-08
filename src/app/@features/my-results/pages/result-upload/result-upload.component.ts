@@ -39,6 +39,7 @@ import {
   IResult,
   SegmentValue,
 } from '../../../result-management/models/results.model';
+import { RegistrationService } from '../../../registration/services/registration.service';
 import { ResultsService } from '../../../result-management/services/results.service';
 import { isResultReadonlyForLecturer } from '../../../result-management/utils/workflow';
 import { IStudentGrade } from '../../../students/models/student.model';
@@ -83,6 +84,7 @@ export class ResultUploadComponent implements OnInit, CanComponentDeactivate {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   readonly sync = inject(ResultSyncService);
+  private readonly registrationService = inject(RegistrationService);
 
   readonly resultId = this.route.snapshot.queryParamMap.get('resultId');
   readonly userRole = this.authService.activeAccount()?.role as RoleEnum;
@@ -175,10 +177,13 @@ export class ResultUploadComponent implements OnInit, CanComponentDeactivate {
    * See `isResultReadonlyForLecturer` for the exact rule.
    */
   readOnly = signal<boolean>(false);
+  /** Registration gating for the REGULAR table — null until roster known. */
+  registeredRegNos = signal<string[] | null>(null);
 
   averageTotal = signal<number>(0);
 
   ngOnInit(): void {
+    this.loadCourseRoster();
     this.categoryListener();
     this.getResultAndEntries();
   }
@@ -518,6 +523,49 @@ export class ResultUploadComponent implements OnInit, CanComponentDeactivate {
 
   onStudentSearch(value: string) {
     this.searchStudentValue.set(value);
+  }
+
+  /**
+   * Registration gating (Slice 4): disable + bottom-sort students who are
+   * not registered for this course. No-op for cohorts without registration
+   * data (legacy results behave exactly as before).
+   */
+  private loadCourseRoster(): void {
+    if (!this.resultId) return;
+    this.registrationService.courseRoster(this.resultId).subscribe({
+      next: (resp) => {
+        if (resp.data?.hasRegistrationData) {
+          this.registeredRegNos.set(resp.data.registeredRegNos ?? []);
+        }
+      },
+      error: () => {
+        // Gating is best-effort — entry keeps working without it.
+      },
+    });
+  }
+
+  /** Lecturer enabled an unregistered student's row — audit + notify the CA. */
+  onRosterOverride(event: {
+    registrationNumber: string;
+    fullName: string;
+  }): void {
+    if (!this.resultId) return;
+    this.registrationService
+      .rosterOverride({
+        resultId: this.resultId,
+        studentName: `${event.fullName} (${event.registrationNumber})`,
+      })
+      .subscribe({
+        next: () =>
+          this.toast.showNotification(
+            'success',
+            'Row enabled',
+            `${event.fullName} can now be scored — your Course Advisor has been notified.`
+          ),
+        error: () => {
+          /* best-effort */
+        },
+      });
   }
 
   updateChanges(hasChanges: boolean) {

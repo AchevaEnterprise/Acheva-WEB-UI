@@ -71,3 +71,22 @@
   background-color: rgb(254 226 226 / 70%);
   box-shadow: inset 3px 0 0 #e11d48;
 }
+
+// Deactivate/reactivate control — click toggles (with confirmation).
+.student-status-btn {
+  padding: 4px 14px;
+  border-radius: 999px;
+  border: 1px solid #bfdbfe;
+  background: #e8f3ff;
+  color: #134980;
+  font: inherit;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &--inactive {
+    background: #fee2e2;
+    border-color: #fecaca;
+    color: #b91c1c;
+  }
+}

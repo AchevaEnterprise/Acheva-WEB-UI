@@ -17,6 +17,9 @@ export interface IStudent {
   level: string;
   accountType: 'STUDENT';
   emailVerified: boolean;
+  /** false = withdrawn/suspended (read-only, skipped by registration). */
+  isActive?: boolean;
+  deactivatedAt?: string | null;
 }
 
 export interface ICreateStudent {
@@ -35,6 +38,8 @@ export interface IStudentGrade {
   grade: string;
   status: string;
   isEdited?: boolean;
+  /** Set when the score was replaced through the moderation workflow. */
+  moderated?: boolean;
 }
 
 export interface IStudentQuery {
@@ -64,6 +69,8 @@ export interface StudentResultType {
   status: string;
   courseLoad: number;
   courseCode: string;
+  /** Set when the score was replaced through the moderation workflow. */
+  moderated?: boolean;
 }
 
 export interface IStudentResult {

@@ -1,111 +1,153 @@
-@if (loading()) {
-  <div class="moderation-shell moderation-shell--centered">
-    <app-loader />
-  </div>
-} @else {
-  @if (student(); as stu) {
-    @if (result(); as res) {
-      <div class="moderation-shell">
-        <div class="moderation-card">
-          <div class="moderation-create">
-            <header class="moderation-create__header">
-              <div>
-                <h2 class="acva-heading-5 fw-600 m-0">
-                  Request result moderation
-                </h2>
-                <p class="acva-para-1 text-neutral-500 m-0 mt-1">
-                  {{ stu.fullName | titlecase }} · {{ courseCode() }} —
-                  {{ courseTitle() }}
-                </p>
-              </div>
+<div id="container">
+  <header class="mb-4">
+    <app-back-button />
+  </header>
+
+  @if (loading()) {
+    <div class="cm-loading">
+      <app-loader />
+      <p class="acva-para-1 text-neutral-500 mt-4">Preparing moderation…</p>
+    </div>
+  } @else {
+    <header class="mb-6">
+      <h3 class="acva-heading-3 fw-500">
+        {{ isEditingDraft() ? 'Edit Moderation Draft' : 'Moderation Request' }}
+      </h3>
+      <p class="acva-para-1 text-neutral-500">
+        Write a formal letter to your Head of Department justifying why this
+        student's failed course should be moderated.
+      </p>
+    </header>
+
+    @if (blocked()) {
+      <!-- Duplicate-initiation guard -->
+      <div class="cm-blocked">
+        <div class="cm-blocked__icon">!</div>
+        <div class="flex-1">
+          <h4 class="acva-para-2 fw-600 mb-1">
+            A moderation already exists for this course
+          </h4>
+          <p class="acva-para-1 text-neutral-500">
+            {{ eligibility()?.reason }}
+          </p>
+        </div>
+        @if (eligibility()?.existing) {
+          <app-button
+            label="Open existing request"
+            class="btn-md"
+            (clickEvent)="openExisting()"
+          />
+        }
+      </div>
+    } @else {
+      <div class="grid lg:grid-cols-[1fr_340px] grid-cols-1 gap-6 items-start">
+        <!-- ── Letter editor ─────────────────────────────────────────────── -->
+        <section class="cm-card">
+          <div class="cm-card__header">
+            <h4 class="acva-para-2 fw-600">Justification letter</h4>
+            <p class="acva-caption text-neutral-500">
+              Addressed to the Head of Department — state the student's case,
+              academic standing and why moderation is warranted.
+            </p>
+          </div>
+
+          <quill-editor
+            class="cm-editor"
+            [formControl]="letterBody"
+            [modules]="editorModules"
+            placeholder="Dear HOD, I write to request the moderation of…"
+          ></quill-editor>
+
+          @if (letterBody.touched && letterBody.invalid) {
+            <p class="acva-caption text-[#D8315B] mt-2">
+              The letter cannot be empty.
+            </p>
+          }
+
+          <div class="cm-card__footer">
+            <app-button
+              type="clear"
+              label="Cancel"
+              class="btn-md"
+              (clickEvent)="cancel()"
+            />
+            <div class="flex gap-3">
               <app-button
-                label="Cancel"
                 type="outline"
+                label="Save as draft"
                 class="btn-md"
+                [loading]="busyAction() === 'draft'"
                 [disabled]="saving()"
-                (clickEvent)="cancel()"
-              />
-            </header>
-
-            <section class="moderation-create__meta">
-              <div class="meta-chip">
-                <span class="meta-chip__label">Session</span>
-                <span class="meta-chip__value">{{ res.session }}</span>
-              </div>
-              <div class="meta-chip">
-                <span class="meta-chip__label">Level</span>
-                <span class="meta-chip__value">{{ res.level }}</span>
-              </div>
-              <div class="meta-chip">
-                <span class="meta-chip__label">Semester</span>
-                <span class="meta-chip__value">{{ res.semester }}</span>
-              </div>
-            </section>
-
-            <section class="moderation-create__letter">
-              <label class="moderation-create__label" for="letter-body">
-                Letter / justification
-                <span class="moderation-create__required" aria-hidden="true"
-                  >*</span
-                >
-              </label>
-              <textarea
-                id="letter-body"
-                class="moderation-create__textarea"
-                [class.moderation-create__textarea--invalid]="
-                  letterBody.invalid && letterBody.touched
-                "
-                rows="10"
-                placeholder="Explain why this result should be moderated (policy, error, compassionate grounds, etc.). This letter is required."
-                [formControl]="letterBody"
-              ></textarea>
-              @if (letterBody.invalid && letterBody.touched) {
-                @if (letterBody.hasError('required')) {
-                  <p class="moderation-create__error" role="alert">
-                    Please enter a justification letter.
-                  </p>
-                }
-                @if (letterBody.hasError('maxlength')) {
-                  <p class="moderation-create__error" role="alert">
-                    Letter is too long (max 8,000 characters).
-                  </p>
-                }
-              }
-            </section>
-
-            <footer class="moderation-create__footer">
-              <app-button
-                label="Save draft"
-                type="outline"
-                class="btn-md"
-                [disabled]="saving() || letterBody.invalid"
-                [loading]="saving()"
                 (clickEvent)="saveDraft()"
               />
               <app-button
                 label="Submit to HOD"
                 class="btn-md"
-                [disabled]="saving() || letterBody.invalid"
-                [loading]="saving()"
+                [loading]="busyAction() === 'submit'"
+                [disabled]="saving()"
                 (clickEvent)="submitRequest()"
               />
-            </footer>
+            </div>
           </div>
-        </div>
-      </div>
-    } @else {
-      <div class="moderation-shell moderation-shell--centered">
-        <p class="acva-para-1 text-neutral-500 moderation-fallback">
-          Unable to load this result. Use the back button in your browser or
-          open carryovers from the student profile again.
-        </p>
+        </section>
+
+        <!-- ── Context rail ──────────────────────────────────────────────── -->
+        <aside class="flex flex-col gap-4">
+          <section class="cm-card">
+            <h4 class="cm-rail-title">Student</h4>
+            <p class="acva-para-2 fw-600">
+              {{ student()?.fullName | titlecase }}
+            </p>
+            <p class="acva-caption text-neutral-500">
+              {{ student()?.registrationNumber }}
+            </p>
+          </section>
+
+          <section class="cm-card cm-card--danger">
+            <h4 class="cm-rail-title">Failed course being moderated</h4>
+            @if (failingEntry(); as fail) {
+              <p class="acva-para-2 fw-600">
+                {{ fail.courseCode }}
+                <span class="fw-400 text-neutral-500">
+                  · {{ fail.courseTitle }}</span
+                >
+              </p>
+              <p class="acva-caption text-neutral-500 mb-3">
+                {{ fail.session }} · {{ fail.level }}LVL
+              </p>
+              <div class="cm-scores">
+                <div class="cm-scores__item">
+                  <span>Test</span><strong>{{ fail.test }}</strong>
+                </div>
+                <div class="cm-scores__item">
+                  <span>Lab</span><strong>{{ fail.lab }}</strong>
+                </div>
+                <div class="cm-scores__item">
+                  <span>Exam</span><strong>{{ fail.exam }}</strong>
+                </div>
+                <div class="cm-scores__item cm-scores__item--total">
+                  <span>Total</span>
+                  <strong>{{ fail.total }} ({{ fail.grade }})</strong>
+                </div>
+              </div>
+            } @else {
+              <p class="acva-caption text-neutral-500">
+                Failing score details will appear here.
+              </p>
+            }
+          </section>
+
+          <section class="cm-card">
+            <h4 class="cm-rail-title">What happens next</h4>
+            <ol class="cm-steps">
+              <li>Your HOD reviews this letter and the student's records</li>
+              <li>The course-owning HOD moderates the score to a grade E</li>
+              <li>The Dean approves the moderated result</li>
+              <li>It returns to you to publish into the student's record</li>
+            </ol>
+          </section>
+        </aside>
       </div>
     }
-  } @else {
-    <div class="moderation-shell moderation-shell--centered">
-      <p class="acva-para-1 text-neutral-500 moderation-fallback">
-        Student not found.
-      </p>
-    </div>
   }
-}
+</div>

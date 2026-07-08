@@ -1,135 +1,186 @@
-$shell-min-height: calc(100dvh - 9rem);
-
 :host {
   display: block;
   width: 100%;
 }
 
-.moderation-shell {
-  min-height: $shell-min-height;
+.cm-loading {
   display: flex;
   flex-direction: column;
-
-  &--centered {
-    align-items: center;
-    justify-content: center;
-  }
+  align-items: center;
+  justify-content: center;
+  min-height: 40vh;
 }
 
-.moderation-fallback {
-  max-width: 28rem;
-  text-align: center;
-  padding: 2rem;
-}
+// ── Cards ────────────────────────────────────────────────────────────────────
 
-.moderation-card {
-  flex: 1;
-  min-height: $shell-min-height;
+.cm-card {
   background: #fff;
-  border: 1px solid rgb(229 231 235);
-  border-radius: 12px;
-  padding: 1.5rem 1.75rem 1.75rem;
-  box-shadow: 0 1px 2px rgb(0 0 0 / 4%);
-}
-
-.moderation-create {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-  min-height: calc(100dvh - 12rem);
-  max-width: 56rem;
-  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 8%);
+  padding: 24px;
 
   &__header {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 12px;
-  }
-
-  &__meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-
-  &__letter {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    min-height: 0;
-  }
-
-  &__label {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: rgb(55 65 81);
-  }
-
-  &__required {
-    color: #b4294c;
-    font-weight: 600;
-    margin-left: 2px;
-  }
-
-  &__textarea {
-    width: 100%;
-    flex: 1;
-    min-height: 220px;
-    border: 1px solid rgb(229 231 235);
-    border-radius: 10px;
-    padding: 14px 16px;
-    font-size: 0.9rem;
-    font-family: inherit;
-    resize: vertical;
-    line-height: 1.5;
-
-    &:focus {
-      outline: 2px solid #2793ff;
-      outline-offset: 1px;
-    }
-
-    &--invalid {
-      border-color: #f9a8b4;
-      background-color: rgb(254 242 242 / 40%);
-    }
-  }
-
-  &__error {
-    margin: 0;
-    font-size: 0.8rem;
-    color: #b4294c;
+    margin-bottom: 16px;
   }
 
   &__footer {
     display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    padding-top: 0.25rem;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid #e5e7eb;
+  }
+
+  &--danger {
+    border-left: 3px solid #d8315b;
   }
 }
 
-.meta-chip {
-  background: #fff;
-  border: 1px solid rgb(229 231 235);
-  border-radius: 10px;
-  padding: 8px 14px;
+.cm-rail-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+
+// ── Blocked banner (duplicate-initiation guard) ─────────────────────────────
+
+.cm-blocked {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 8px;
+  padding: 24px;
+
+  &__icon {
+    flex: 0 0 auto;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #ffedd5;
+    color: #c2410c;
+    font-weight: 700;
+    font-size: 1.25rem;
+    display: grid;
+    place-items: center;
+  }
+}
+
+// ── Failing-score summary ────────────────────────────────────────────────────
+
+.cm-scores {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+
+  &__item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 8px 12px;
+
+    span {
+      font-size: 0.75rem;
+      color: #6b7280;
+    }
+
+    strong {
+      font-size: 0.875rem;
+      color: #111827;
+    }
+
+    &--total {
+      grid-column: 1 / -1;
+      background: #fde8ee;
+      border-color: #f8b4c4;
+
+      strong {
+        color: #b4294c;
+      }
+    }
+  }
+}
+
+// ── Steps hint ───────────────────────────────────────────────────────────────
+
+.cm-steps {
+  list-style: none;
+  counter-reset: cm-step;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
 
-  &__label {
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: rgb(107 114 128);
+  li {
+    counter-increment: cm-step;
+    position: relative;
+    padding-left: 36px;
+    font-size: 0.8125rem;
+    color: #4b5563;
+    line-height: 1.5;
+
+    &::before {
+      content: counter(cm-step);
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #e8f3ff;
+      color: #134980;
+      font-weight: 600;
+      font-size: 0.75rem;
+      display: grid;
+      place-items: center;
+    }
   }
+}
 
-  &__value {
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: rgb(17 24 39);
+// ── Quill editor skin (match Acheva inputs) ──────────────────────────────────
+
+.cm-editor {
+  display: block;
+
+  ::ng-deep {
+    .ql-toolbar.ql-snow {
+      border: 1px solid #e5e7eb;
+      border-radius: 8px 8px 0 0;
+      background: #f9fafb;
+    }
+
+    .ql-container.ql-snow {
+      border: 1px solid #e5e7eb;
+      border-top: none;
+      border-radius: 0 0 8px 8px;
+      font-family: inherit;
+      font-size: 0.9375rem;
+    }
+
+    .ql-editor {
+      min-height: 320px;
+      line-height: 1.7;
+      color: #111827;
+
+      &.ql-blank::before {
+        color: #9ca3af;
+        font-style: normal;
+      }
+    }
+
+    .ql-container.ql-snow:focus-within {
+      border-color: #2793ff;
+    }
   }
 }

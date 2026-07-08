@@ -11,14 +11,16 @@ import {
  *   - `acheva-nestjs/src/moderation/services/moderation.service.ts`
  *   - `acheva-nestjs/src/moderation/moderation.enum.ts`
  *
- * Two flows depending on the moderation scope:
+ * Two flows depending on the moderation scope — the reviewing HOD moderates
+ * the score INLINE (no moderator assignment step):
+ *
  *   INTERNAL:
- *     CA → Home HOD → Assigned Lecturer → Home HOD review → Dean
+ *     CA (letter) → Home HOD (reviews history + moderates score) → Dean
  *        → Home HOD (post-dean) → CA (publish)
  *
  *   CROSS_DEPARTMENT:
- *     CA → Home HOD → Offering HOD → Assigned Lecturer
- *        → Offering HOD review → Dean → Offering HOD (return)
+ *     CA (letter) → Home HOD (eligibility review) → Offering HOD
+ *        (reviews history + moderates score) → Dean → Offering HOD (return)
  *        → Home HOD (return) → CA (publish)
  *
  * The backend tracks the active step on `currentHandler` — UI gating below
@@ -30,8 +32,8 @@ import {
 export const MODERATION_PENDING_STATUSES: readonly ModerationStatus[] = [
   ModerationStatus.PENDING_HOME_HOD,
   ModerationStatus.PENDING_OFFERING_HOD,
-  ModerationStatus.PENDING_MODERATION,
-  ModerationStatus.PENDING_OFFERING_HOD_REVIEW,
+  ModerationStatus.PENDING_MODERATION, // legacy docs only
+  ModerationStatus.PENDING_OFFERING_HOD_REVIEW, // legacy docs only
   ModerationStatus.PENDING_DEAN,
   ModerationStatus.PENDING_RETURN_HOME_HOD,
   ModerationStatus.PENDING_HOME_HOD_POST_DEAN,
@@ -53,8 +55,9 @@ const STATUS_LABELS: Record<ModerationStatus, string> = {
   [ModerationStatus.DRAFT]: 'Draft',
   [ModerationStatus.PENDING_HOME_HOD]: 'Awaiting Home HOD',
   [ModerationStatus.PENDING_OFFERING_HOD]: 'Awaiting Offering HOD',
-  [ModerationStatus.PENDING_MODERATION]: 'Awaiting Moderator',
-  [ModerationStatus.PENDING_OFFERING_HOD_REVIEW]: 'Awaiting HOD Review',
+  [ModerationStatus.PENDING_MODERATION]: 'Awaiting Moderator (legacy)',
+  [ModerationStatus.PENDING_OFFERING_HOD_REVIEW]:
+    'Awaiting HOD Review (legacy)',
   [ModerationStatus.PENDING_DEAN]: 'Awaiting Dean',
   [ModerationStatus.PENDING_RETURN_HOME_HOD]: 'Returning to Home HOD',
   [ModerationStatus.PENDING_HOME_HOD_POST_DEAN]: 'Awaiting Home HOD',
@@ -90,6 +93,48 @@ export function moderationStatusVariant(
   return 'pending';
 }
 
+// ─── Moderated score policy (grade E) ───────────────────────────────────────
+
+/** Inclusive band a moderated total must land in — grade E, the minimum pass. */
+export const MODERATED_TOTAL_MIN = 40;
+export const MODERATED_TOTAL_MAX = 44;
+
+export interface IGeneratedScores {
+  test: number;
+  lab?: number;
+  exam: number;
+  total: number;
+}
+
+/**
+ * Random scores summing to a grade-E total (40–44). The split mirrors a
+ * natural mark distribution (exam-heavy). Mirrors the backend rule in
+ * `ModerationService.hodModerate` — the server independently re-validates.
+ */
+export function generateModeratedScores(hasLab: boolean): IGeneratedScores {
+  const rand = (min: number, max: number) =>
+    Math.floor(Math.random() * (max - min + 1)) + min;
+
+  const total = rand(MODERATED_TOTAL_MIN, MODERATED_TOTAL_MAX);
+  if (hasLab) {
+    const lab = rand(3, 8);
+    const test = rand(6, 12);
+    return { test, lab, exam: total - lab - test, total };
+  }
+  const test = rand(8, 15);
+  return { test, exam: total - test, total };
+}
+
+/** True when test/lab/exam sum into the E band. */
+export function isModeratedTotalValid(
+  test: number,
+  lab: number | undefined,
+  exam: number
+): boolean {
+  const total = (test || 0) + (lab || 0) + (exam || 0);
+  return total >= MODERATED_TOTAL_MIN && total <= MODERATED_TOTAL_MAX;
+}
+
 // ─── Reference helpers ──────────────────────────────────────────────────────
 
 /** Extract a hex id from any populated/unpopulated reference field. */
@@ -122,18 +167,10 @@ export function isSubmitter(
   return refId(mod.submittedBy) === lecturerId;
 }
 
-export function isAssignedModerator(
-  mod: IResultModeration,
-  lecturerId: string | undefined
-): boolean {
-  if (!lecturerId) return false;
-  return refId(mod.assignedModerator) === lecturerId;
-}
-
 /**
  * For HODs we additionally need to know which department(s) they own —
  * `currentHandler` already tells us *if* they should act, but `homeDept` vs
- * `offeringDept` decides *which set of buttons* (cross-approval vs. internal).
+ * `offeringDept` decides *which set of buttons* (cross-approval vs. moderate).
  */
 export function lecturerDeptId(
   lecturer: Pick<IModerationLecturer, 'department'> | undefined | null
@@ -144,36 +181,23 @@ export function lecturerDeptId(
 
 // ─── Action descriptors used by the UI ──────────────────────────────────────
 
-/**
- * Each action represents a button the current user may click on a moderation
- * detail page. Pages compose the list by feeding the moderation, the user,
- * and the user's role through {@link getAvailableActions}.
- *
- * Tone:
- *   primary    — main forward step (approve, submit, publish, …)
- *   destructive — reject / cancel
- *   secondary  — neutral (forward, return)
- */
 export type ModerationActionTone = 'primary' | 'destructive' | 'secondary';
 
 export type ModerationActionKind =
   // CA
+  | 'editDraft'
   | 'submit'
   | 'cancel'
   | 'publish'
   // Home HOD
-  | 'homeHodApproveInternal'
   | 'homeHodApproveCross'
   | 'homeHodReject'
   | 'homeHodForwardToCa'
   // Offering HOD (cross only)
-  | 'offeringHodApprove'
   | 'offeringHodReject'
   | 'offeringHodForwardAfterDean'
-  // HOD review (after moderator submits)
-  | 'hodForwardToDean'
-  // Moderator
-  | 'moderatorSubmit'
+  // Reviewing HOD moderates inline (home HOD internal / offering HOD cross)
+  | 'hodModerate'
   // Dean
   | 'deanApprove'
   | 'deanReject';
@@ -185,10 +209,10 @@ export interface IModerationAction {
   /** Short blurb shown as a tooltip / help text. */
   description: string;
   /**
-   * `assign-moderator` opens the lecturer picker, `reject` opens the reason
-   * dialog, `score` opens the moderator outcome form, `confirm` is a yes/no.
+   * `reject` opens the reason dialog, `score` reveals the moderation score
+   * panel, `navigate` routes elsewhere (draft editing), `confirm` is a yes/no.
    */
-  flow: 'confirm' | 'assign-moderator' | 'reject' | 'score';
+  flow: 'confirm' | 'reject' | 'score' | 'navigate';
 }
 
 interface IRoleContext {
@@ -214,6 +238,13 @@ export function getAvailableActions(
   // CA handles draft + final publish + cancel from any cancellable state.
   if (ctx.role === RoleEnum.COURSE_ADVISOR && isSubmitter(mod, ctx.userId)) {
     if (mod.status === ModerationStatus.DRAFT) {
+      actions.push({
+        kind: 'editDraft',
+        label: 'Edit letter',
+        tone: 'secondary',
+        description: 'Open the letter editor to continue writing this draft.',
+        flow: 'navigate',
+      });
       actions.push(submit());
       actions.push(cancel('Cancel draft'));
       return actions;
@@ -246,67 +277,29 @@ export function getAvailableActions(
           label: 'Approve & forward to offering HOD',
           tone: 'primary',
           description:
-            'Approve and route this request to the HOD of the course-owning department.',
+            'The student is eligible — route this request to the HOD of the course-owning department, who will moderate the score.',
           flow: 'confirm',
         });
       } else {
-        actions.push({
-          kind: 'homeHodApproveInternal',
-          label: 'Assign moderator',
-          tone: 'primary',
-          description:
-            'Approve and assign a lecturer in your department to moderate this result.',
-          flow: 'assign-moderator',
-        });
+        actions.push(moderate());
       }
       actions.push(reject('homeHodReject', 'Reject to Course Advisor'));
       return actions;
     }
 
     case ModerationStatus.PENDING_OFFERING_HOD: {
-      actions.push({
-        kind: 'offeringHodApprove',
-        label: 'Assign moderator',
-        tone: 'primary',
-        description:
-          'Approve and assign a lecturer in this department to moderate the result.',
-        flow: 'assign-moderator',
-      });
+      actions.push(moderate());
       actions.push(reject('offeringHodReject', 'Reject to Course Advisor'));
-      return actions;
-    }
-
-    case ModerationStatus.PENDING_MODERATION: {
-      actions.push({
-        kind: 'moderatorSubmit',
-        label: 'Submit moderated scores',
-        tone: 'primary',
-        description:
-          'Enter the test, lab and exam scores for the student and submit for HOD review.',
-        flow: 'score',
-      });
-      return actions;
-    }
-
-    case ModerationStatus.PENDING_OFFERING_HOD_REVIEW: {
-      actions.push({
-        kind: 'hodForwardToDean',
-        label: 'Forward to Dean',
-        tone: 'primary',
-        description:
-          'Forward the moderated outcome to the Dean of the relevant faculty for approval.',
-        flow: 'confirm',
-      });
       return actions;
     }
 
     case ModerationStatus.PENDING_DEAN: {
       actions.push({
         kind: 'deanApprove',
-        label: 'Approve',
+        label: 'Approve moderated result',
         tone: 'primary',
         description:
-          'Approve the moderated result; it returns to the originating HOD chain.',
+          'Approve the moderated score; it returns through the HOD chain for publishing.',
         flow: 'confirm',
       });
       actions.push(reject('deanReject', 'Reject to HOD'));
@@ -340,6 +333,8 @@ export function getAvailableActions(
     }
 
     default:
+      // Legacy statuses (PENDING_MODERATION / PENDING_OFFERING_HOD_REVIEW)
+      // have no actions in the new flow — they render read-only.
       return actions;
   }
 }
@@ -374,8 +369,19 @@ function publish(): IModerationAction {
     label: 'Publish moderated result',
     tone: 'primary',
     description:
-      'Publish the moderated score so it appears in the student record.',
+      'Publish the moderated score. The failing grade in the original published result is replaced and marked as moderated.',
     flow: 'confirm',
+  };
+}
+
+function moderate(): IModerationAction {
+  return {
+    kind: 'hodModerate',
+    label: 'Moderate score',
+    tone: 'primary',
+    description:
+      'Generate (or enter) the moderated scores — the total must be a grade E — and forward to the Dean.',
+    flow: 'score',
   };
 }
 
@@ -385,7 +391,7 @@ function reject(kind: ModerationActionKind, label: string): IModerationAction {
     label,
     tone: 'destructive',
     description:
-      'Capture a reason and return the request to the previous stage.',
+      'Capture a reason and return the request to the Course Advisor.',
     flow: 'reject',
   };
 }
@@ -405,103 +411,55 @@ export interface IModerationTimelineStep {
   active: boolean;
 }
 
-const TIMELINE_BLUEPRINT: readonly Omit<
-  IModerationTimelineStep,
-  'completed' | 'active'
->[] = [
+type StepBlueprint = Omit<IModerationTimelineStep, 'completed' | 'active'> & {
+  activeAt: readonly ModerationStatus[];
+};
+
+const AFTER_DEAN: readonly ModerationStatus[] = [
+  ModerationStatus.PENDING_RETURN_HOME_HOD,
+  ModerationStatus.PENDING_HOME_HOD_POST_DEAN,
+  ModerationStatus.PENDING_RETURN_CA,
+  ModerationStatus.APPROVED_READY_TO_PUBLISH,
+  ModerationStatus.PUBLISHED,
+];
+
+const INTERNAL_TIMELINE: readonly StepBlueprint[] = [
   {
-    label: 'Submitted',
+    label: 'Letter submitted',
     role: 'Course Advisor',
+    activeAt: [ModerationStatus.DRAFT],
     reachedAtAny: [
       ModerationStatus.PENDING_HOME_HOD,
       ModerationStatus.REJECTED_HOME_HOD,
-      ModerationStatus.PENDING_OFFERING_HOD,
-      ModerationStatus.REJECTED_OFFERING_HOD,
-      ModerationStatus.PENDING_MODERATION,
-      ModerationStatus.PENDING_OFFERING_HOD_REVIEW,
       ModerationStatus.PENDING_DEAN,
       ModerationStatus.REJECTED_DEAN,
-      ModerationStatus.PENDING_RETURN_HOME_HOD,
-      ModerationStatus.PENDING_HOME_HOD_POST_DEAN,
-      ModerationStatus.PENDING_RETURN_CA,
-      ModerationStatus.APPROVED_READY_TO_PUBLISH,
-      ModerationStatus.PUBLISHED,
+      ...AFTER_DEAN,
     ],
   },
   {
-    label: 'Home HOD review',
-    role: 'Home Department',
-    reachedAtAny: [
-      ModerationStatus.PENDING_OFFERING_HOD,
-      ModerationStatus.PENDING_MODERATION,
-      ModerationStatus.PENDING_OFFERING_HOD_REVIEW,
-      ModerationStatus.PENDING_DEAN,
-      ModerationStatus.REJECTED_DEAN,
-      ModerationStatus.PENDING_RETURN_HOME_HOD,
-      ModerationStatus.PENDING_HOME_HOD_POST_DEAN,
-      ModerationStatus.PENDING_RETURN_CA,
-      ModerationStatus.APPROVED_READY_TO_PUBLISH,
-      ModerationStatus.PUBLISHED,
+    label: 'HOD reviews & moderates score',
+    role: 'Home Department HOD',
+    activeAt: [
+      ModerationStatus.PENDING_HOME_HOD,
+      ModerationStatus.REJECTED_HOME_HOD,
     ],
-  },
-  {
-    label: 'Offering HOD assigns moderator',
-    role: 'Course-owning Department',
-    reachedAtAny: [
-      ModerationStatus.PENDING_MODERATION,
-      ModerationStatus.PENDING_OFFERING_HOD_REVIEW,
-      ModerationStatus.PENDING_DEAN,
-      ModerationStatus.REJECTED_DEAN,
-      ModerationStatus.PENDING_RETURN_HOME_HOD,
-      ModerationStatus.PENDING_HOME_HOD_POST_DEAN,
-      ModerationStatus.PENDING_RETURN_CA,
-      ModerationStatus.APPROVED_READY_TO_PUBLISH,
-      ModerationStatus.PUBLISHED,
-    ],
-  },
-  {
-    label: 'Lecturer moderation',
-    role: 'Assigned Moderator',
-    reachedAtAny: [
-      ModerationStatus.PENDING_OFFERING_HOD_REVIEW,
-      ModerationStatus.PENDING_DEAN,
-      ModerationStatus.REJECTED_DEAN,
-      ModerationStatus.PENDING_RETURN_HOME_HOD,
-      ModerationStatus.PENDING_HOME_HOD_POST_DEAN,
-      ModerationStatus.PENDING_RETURN_CA,
-      ModerationStatus.APPROVED_READY_TO_PUBLISH,
-      ModerationStatus.PUBLISHED,
-    ],
-  },
-  {
-    label: 'HOD review',
-    role: 'Reviewing HOD',
     reachedAtAny: [
       ModerationStatus.PENDING_DEAN,
       ModerationStatus.REJECTED_DEAN,
-      ModerationStatus.PENDING_RETURN_HOME_HOD,
-      ModerationStatus.PENDING_HOME_HOD_POST_DEAN,
-      ModerationStatus.PENDING_RETURN_CA,
-      ModerationStatus.APPROVED_READY_TO_PUBLISH,
-      ModerationStatus.PUBLISHED,
+      ...AFTER_DEAN,
     ],
   },
   {
     label: 'Dean approval',
     role: 'Faculty Dean',
-    reachedAtAny: [
-      ModerationStatus.PENDING_RETURN_HOME_HOD,
-      ModerationStatus.PENDING_HOME_HOD_POST_DEAN,
-      ModerationStatus.PENDING_RETURN_CA,
-      ModerationStatus.APPROVED_READY_TO_PUBLISH,
-      ModerationStatus.PUBLISHED,
-    ],
+    activeAt: [ModerationStatus.PENDING_DEAN, ModerationStatus.REJECTED_DEAN],
+    reachedAtAny: AFTER_DEAN,
   },
   {
-    label: 'Return to home HOD',
-    role: 'Home Department',
+    label: 'HOD forwards to Course Advisor',
+    role: 'Home Department HOD',
+    activeAt: [ModerationStatus.PENDING_HOME_HOD_POST_DEAN],
     reachedAtAny: [
-      ModerationStatus.PENDING_RETURN_CA,
       ModerationStatus.APPROVED_READY_TO_PUBLISH,
       ModerationStatus.PUBLISHED,
     ],
@@ -509,75 +467,97 @@ const TIMELINE_BLUEPRINT: readonly Omit<
   {
     label: 'Course Advisor publishes',
     role: 'Course Advisor',
+    activeAt: [ModerationStatus.APPROVED_READY_TO_PUBLISH],
     reachedAtAny: [ModerationStatus.PUBLISHED],
   },
 ];
 
-/**
- * Build a flow timeline with completion + active flags. Cross-department-only
- * steps (offering-HOD assignment, return-to-home-HOD) are filtered out for
- * INTERNAL scope so the UI only shows the path the result actually takes.
- */
+const CROSS_TIMELINE: readonly StepBlueprint[] = [
+  {
+    label: 'Letter submitted',
+    role: 'Course Advisor',
+    activeAt: [ModerationStatus.DRAFT],
+    reachedAtAny: [
+      ModerationStatus.PENDING_HOME_HOD,
+      ModerationStatus.REJECTED_HOME_HOD,
+      ModerationStatus.PENDING_OFFERING_HOD,
+      ModerationStatus.REJECTED_OFFERING_HOD,
+      ModerationStatus.PENDING_DEAN,
+      ModerationStatus.REJECTED_DEAN,
+      ...AFTER_DEAN,
+    ],
+  },
+  {
+    label: 'Home HOD eligibility review',
+    role: 'Home Department HOD',
+    activeAt: [
+      ModerationStatus.PENDING_HOME_HOD,
+      ModerationStatus.REJECTED_HOME_HOD,
+    ],
+    reachedAtAny: [
+      ModerationStatus.PENDING_OFFERING_HOD,
+      ModerationStatus.REJECTED_OFFERING_HOD,
+      ModerationStatus.PENDING_DEAN,
+      ModerationStatus.REJECTED_DEAN,
+      ...AFTER_DEAN,
+    ],
+  },
+  {
+    label: 'Offering HOD moderates score',
+    role: 'Course-owning Department HOD',
+    activeAt: [
+      ModerationStatus.PENDING_OFFERING_HOD,
+      ModerationStatus.REJECTED_OFFERING_HOD,
+    ],
+    reachedAtAny: [
+      ModerationStatus.PENDING_DEAN,
+      ModerationStatus.REJECTED_DEAN,
+      ...AFTER_DEAN,
+    ],
+  },
+  {
+    label: 'Dean approval',
+    role: 'Faculty Dean',
+    activeAt: [ModerationStatus.PENDING_DEAN, ModerationStatus.REJECTED_DEAN],
+    reachedAtAny: AFTER_DEAN,
+  },
+  {
+    label: 'Offering HOD returns result',
+    role: 'Course-owning Department HOD',
+    activeAt: [ModerationStatus.PENDING_RETURN_HOME_HOD],
+    reachedAtAny: [
+      ModerationStatus.PENDING_RETURN_CA,
+      ModerationStatus.APPROVED_READY_TO_PUBLISH,
+      ModerationStatus.PUBLISHED,
+    ],
+  },
+  {
+    label: 'Home HOD forwards to Course Advisor',
+    role: 'Home Department HOD',
+    activeAt: [ModerationStatus.PENDING_RETURN_CA],
+    reachedAtAny: [
+      ModerationStatus.APPROVED_READY_TO_PUBLISH,
+      ModerationStatus.PUBLISHED,
+    ],
+  },
+  {
+    label: 'Course Advisor publishes',
+    role: 'Course Advisor',
+    activeAt: [ModerationStatus.APPROVED_READY_TO_PUBLISH],
+    reachedAtAny: [ModerationStatus.PUBLISHED],
+  },
+];
+
+/** Build the scope-appropriate flow timeline with completion + active flags. */
 export function buildModerationTimeline(
   mod: IResultModeration
 ): IModerationTimelineStep[] {
-  const internal = !isCross(mod);
-
-  return TIMELINE_BLUEPRINT.filter((step, index) => {
-    if (!internal) return true;
-
-    // Step 2 = "Offering HOD assigns moderator" — internal-only flow uses the
-    // home HOD for that step; we collapse it into "Home HOD review".
-    // Step 6 = "Return to home HOD" — only happens cross-dept after the dean.
-    return index !== 2 && index !== 6;
-  }).map((step) => ({
+  const blueprint = isCross(mod) ? CROSS_TIMELINE : INTERNAL_TIMELINE;
+  return blueprint.map(({ activeAt, ...step }) => ({
     ...step,
     completed: step.reachedAtAny.includes(mod.status),
-    active: isStepActive(step.label, mod.status, internal),
+    active: activeAt.includes(mod.status),
   }));
-}
-
-function isStepActive(
-  label: string,
-  status: ModerationStatus,
-  internal: boolean
-): boolean {
-  switch (label) {
-    case 'Submitted':
-      return status === ModerationStatus.DRAFT;
-    case 'Home HOD review':
-      return (
-        status === ModerationStatus.PENDING_HOME_HOD ||
-        status === ModerationStatus.REJECTED_HOME_HOD ||
-        status === ModerationStatus.PENDING_HOME_HOD_POST_DEAN ||
-        (internal && status === ModerationStatus.PENDING_OFFERING_HOD_REVIEW)
-      );
-    case 'Offering HOD assigns moderator':
-      return (
-        status === ModerationStatus.PENDING_OFFERING_HOD ||
-        status === ModerationStatus.REJECTED_OFFERING_HOD
-      );
-    case 'Lecturer moderation':
-      return status === ModerationStatus.PENDING_MODERATION;
-    case 'HOD review':
-      return (
-        !internal && status === ModerationStatus.PENDING_OFFERING_HOD_REVIEW
-      );
-    case 'Dean approval':
-      return (
-        status === ModerationStatus.PENDING_DEAN ||
-        status === ModerationStatus.REJECTED_DEAN
-      );
-    case 'Return to home HOD':
-      return status === ModerationStatus.PENDING_RETURN_HOME_HOD;
-    case 'Course Advisor publishes':
-      return (
-        status === ModerationStatus.PENDING_RETURN_CA ||
-        status === ModerationStatus.APPROVED_READY_TO_PUBLISH
-      );
-    default:
-      return false;
-  }
 }
 
 // ─── Status filter helpers (used by the list page) ──────────────────────────

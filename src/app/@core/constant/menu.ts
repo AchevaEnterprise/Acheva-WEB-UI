@@ -73,6 +73,14 @@ export const MENU: IMenu[] = [
     ],
   },
   {
+    label: 'Registration',
+    active_icon: 'icons/menu/courses-active.svg',
+    inactive_icon: 'icons/menu/courses-inactive.svg',
+    route: 'registration',
+    isActive: true,
+    accessRole: [RoleEnum.COURSE_ADVISOR],
+  },
+  {
     label: 'Moderation',
     active_icon: 'icons/menu/result-chart-active.svg',
     inactive_icon: 'icons/menu/result-chart-inactive.svg',

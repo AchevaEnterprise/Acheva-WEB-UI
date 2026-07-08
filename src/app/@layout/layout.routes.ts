@@ -99,6 +99,16 @@ export const routes: Routes = [
           import('../@features/students/students.routes').then((m) => m.routes),
       },
       {
+        path: 'registration',
+        data: {
+          title: 'Course Registration',
+        },
+        loadChildren: () =>
+          import('../@features/registration/registration.routes').then(
+            (m) => m.routes
+          ),
+      },
+      {
         path: 'moderation',
         data: {
           title: 'Moderation',

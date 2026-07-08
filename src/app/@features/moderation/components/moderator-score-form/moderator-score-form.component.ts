@@ -8,12 +8,22 @@ import {
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
-import { ISubmitOutcomePayload } from '../../models/moderation.model';
+import {
+  IModerationOutcome,
+  ISubmitOutcomePayload,
+} from '../../models/moderation.model';
+import {
+  MODERATED_TOTAL_MAX,
+  MODERATED_TOTAL_MIN,
+  generateModeratedScores,
+} from '../../utils/moderation-workflow';
 
 /**
- * Moderator score entry form. Calculates the live total/grade so the lecturer
- * sees the outcome before submitting. Pages own the network call — this
- * component is purely presentational + a single submit event.
+ * HOD moderation panel: shows the student's ORIGINAL failing score, lets the
+ * HOD auto-generate (or hand-adjust) replacement scores, and enforces the
+ * moderation policy — the new total must be a grade E (40–44) — before the
+ * submit button ever enables. Pages own the network call; this component is
+ * presentational + a single submit event.
  */
 @Component({
   selector: 'app-moderator-score-form',
@@ -30,14 +40,14 @@ import { ISubmitOutcomePayload } from '../../models/moderation.model';
 export class ModeratorScoreFormComponent {
   /** Bound to the parent's saving signal so the button shows a spinner. */
   saving = input<boolean>(false);
-  /** Pre-fill values when re-opening or for "edit" cases (currently unused). */
-  initial = input<Partial<ISubmitOutcomePayload>>({});
+  /** The failing scores being replaced — displayed above the inputs. */
+  originalScores = input<IModerationOutcome | null>(null);
 
   submitEvent = output<ISubmitOutcomePayload>();
 
-  // FormGroup with bounded numeric inputs. Values can never go negative or
-  // above their conventional caps — backend will revalidate but UI catches
-  // the obvious mistakes immediately.
+  readonly bandMin = MODERATED_TOTAL_MIN;
+  readonly bandMax = MODERATED_TOTAL_MAX;
+
   form = new FormGroup({
     test: new FormControl<number | null>(null, {
       validators: [Validators.required, Validators.min(0), Validators.max(30)],
@@ -60,8 +70,6 @@ export class ModeratorScoreFormComponent {
     this.form.valueChanges.subscribe(() =>
       this.raw.set(this.form.getRawValue())
     );
-    const init = this.initial();
-    if (Object.keys(init).length) this.form.patchValue(init);
   }
 
   total = computed(() => {
@@ -70,22 +78,42 @@ export class ModeratorScoreFormComponent {
   });
 
   grade = computed(() => gradeFor(this.total()));
-  passed = computed(() => this.total() >= 40);
+
+  /** The single rule of moderation: total must land in the E band. */
+  withinBand = computed(
+    () => this.total() >= this.bandMin && this.total() <= this.bandMax
+  );
+
+  hasValues = computed(() => {
+    const v = this.raw();
+    return v.test != null || v.exam != null || v.lab != null;
+  });
+
+  /**
+   * Fill the inputs with random scores summing to a grade E. Whether a lab
+   * component is generated follows the original failing entry's shape.
+   */
+  generate(): void {
+    const hadLab = (this.originalScores()?.lab ?? 0) > 0;
+    const scores = generateModeratedScores(hadLab);
+    this.form.patchValue({
+      test: scores.test,
+      lab: scores.lab ?? null,
+      exam: scores.exam,
+    });
+    this.form.markAsDirty();
+  }
 
   submit(): void {
-    if (this.form.invalid) {
+    if (this.form.invalid || !this.withinBand()) {
       this.form.markAllAsTouched();
       return;
     }
     const v = this.form.getRawValue();
-    const test = Number(v.test);
-    const exam = Number(v.exam);
-    const lab = v.lab == null ? undefined : Number(v.lab);
-
     this.submitEvent.emit({
-      test,
-      lab,
-      exam,
+      test: Number(v.test),
+      lab: v.lab == null ? undefined : Number(v.lab),
+      exam: Number(v.exam),
       comment: v.comment.trim() || undefined,
     });
   }

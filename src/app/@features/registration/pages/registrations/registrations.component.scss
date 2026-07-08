@@ -1,0 +1,195 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.reg-template-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-size: 0.875rem;
+  color: #2793ff;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+// ── Run controls ─────────────────────────────────────────────────────────────
+
+.reg-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 8%);
+  padding: 16px 24px;
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    input {
+      width: 140px;
+      padding: 8px 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 4px;
+      font: inherit;
+      font-size: 0.875rem;
+
+      &:focus {
+        outline: none;
+        border-color: #2793ff;
+      }
+    }
+  }
+
+  &__segments {
+    display: inline-flex;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  &__segment {
+    background: #fff;
+    border: none;
+    padding: 8px 16px;
+    font: inherit;
+    font-size: 0.8125rem;
+    color: #6b7280;
+    cursor: pointer;
+
+    & + & {
+      border-left: 1px solid #e5e7eb;
+    }
+
+    &--active {
+      background: #e8f3ff;
+      color: #134980;
+      font-weight: 600;
+    }
+  }
+}
+
+// ── Summary chips ────────────────────────────────────────────────────────────
+
+.reg-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.reg-chip {
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+
+  &--active {
+    background: #e8f3ff;
+    color: #134980;
+  }
+
+  &--pending {
+    background: #fef3c7;
+    color: #92400e;
+  }
+
+  &--attention {
+    background: #fee2e2;
+    color: #b91c1c;
+  }
+}
+
+// ── Status pill ──────────────────────────────────────────────────────────────
+
+.reg-status {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+
+  &[data-status='ACTIVE'] {
+    background: #e8f3ff;
+    color: #134980;
+  }
+
+  &[data-status='PENDING_CA_APPROVAL'] {
+    background: #fef3c7;
+    color: #92400e;
+  }
+
+  &[data-status='NEEDS_ATTENTION'] {
+    background: #fee2e2;
+    color: #b91c1c;
+  }
+}
+
+// ── CA elective-review queue (Slice 4) ───────────────────────────────────────
+
+.reg-reviews {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-left: 3px solid #f59e0b;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 8%);
+  padding: 16px 24px;
+
+  &__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  &__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid #f3f4f6;
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  &__grade {
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    background: #fef3c7;
+    color: #92400e;
+
+    &--fail {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+  }
+}
+
+.reg-reviews__cgpa {
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: #e8f3ff;
+  color: #134980;
+  white-space: nowrap;
+}

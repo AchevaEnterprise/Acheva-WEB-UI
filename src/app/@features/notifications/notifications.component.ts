@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatDialogRef } from '@angular/material/dialog';
+import { Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { of } from 'rxjs';
 import { catchError, finalize } from 'rxjs/operators';
@@ -18,6 +19,7 @@ import { notificationSelector } from '../../@core/store/notification/notificatio
 import { EmptyStateComponent } from '../../@shared/components/empty-state/empty-state.component';
 import { INotification } from './models/notification.model';
 import { NotificationService } from './service/notification.service';
+import { notificationRoute } from './utils/notification-route';
 
 @Component({
   selector: 'app-notifications',
@@ -32,6 +34,7 @@ export class NotificationsComponent implements OnInit {
   private readonly notificationService = inject(NotificationService);
   private readonly dialogRef = inject(MatDialogRef<NotificationsComponent>);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly router = inject(Router);
 
   notifications = signal<INotification[]>([]);
   marking = signal<boolean>(false);
@@ -51,6 +54,24 @@ export class NotificationsComponent implements OnInit {
 
   close(): void {
     this.dialogRef.close();
+  }
+
+  /** Whether this notification/activity deep-links somewhere when clicked. */
+  isNavigable(notification: INotification): boolean {
+    return notificationRoute(notification) !== null;
+  }
+
+  /** Mark read; if the notification points somewhere, open that page. */
+  openNotification(notification: INotification): void {
+    this.markAsRead(notification);
+
+    const route = notificationRoute(notification);
+    if (!route) return;
+
+    this.dialogRef.close();
+    void this.router.navigate(route.commands, {
+      queryParams: route.queryParams,
+    });
   }
 
   markAsRead(notification: INotification): void {

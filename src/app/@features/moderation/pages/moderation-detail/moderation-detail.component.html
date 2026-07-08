@@ -15,19 +15,17 @@
         />
       </div>
 
+      <!-- ── Header ─────────────────────────────────────────────────────── -->
       <header class="moderation-detail__header">
-        <div class="moderation-detail__header-left">
-          <div class="moderation-detail__heading">
-            <h2 class="acva-heading-5 fw-600 m-0">{{ courseSummary(mod) }}</h2>
-            <p class="moderation-detail__sub acva-para-1 text-neutral-500 m-0">
-              {{ studentSummary(mod) | titlecase }}
-              @if (studentRegNo(mod)) {
-                <span class="moderation-detail__regno"
-                  >· {{ studentRegNo(mod) }}</span
-                >
-              }
-            </p>
-          </div>
+        <div class="moderation-detail__heading">
+          <h2 class="acva-heading-5 fw-600 m-0">{{ courseSummary(mod) }}</h2>
+          <p class="moderation-detail__sub acva-para-1 text-neutral-500 m-0">
+            {{ studentSummary(mod) | titlecase }}
+            @if (studentRegNo(mod)) {
+              <span>· {{ studentRegNo(mod) }}</span>
+            }
+            <span>· {{ mod.session }} · {{ mod.level }}LVL</span>
+          </p>
         </div>
         <div class="moderation-detail__header-right">
           <span
@@ -42,6 +40,7 @@
         </div>
       </header>
 
+      <!-- ── Actions ────────────────────────────────────────────────────── -->
       @if (actions().length > 0) {
         <section class="moderation-detail__actions">
           <p class="moderation-detail__actions-hint">
@@ -50,179 +49,242 @@
                 It's your turn.
               </span>
             }
-            Choose an action to move this request forward.
           </p>
-          <div class="moderation-detail__action-buttons">
+          <div class="moderation-detail__actions-buttons">
             @for (action of actions(); track trackAction($index, action)) {
               <app-button
                 [label]="action.label"
-                class="btn-md"
                 [type]="action.tone === 'destructive' ? 'outline' : 'fill'"
-                [loading]="acting()"
+                class="btn-md"
                 [disabled]="acting()"
                 (clickEvent)="runAction(action)"
               />
             }
           </div>
         </section>
-      } @else if (isMyTurn()) {
-        <section class="moderation-detail__actions">
-          <p class="moderation-detail__actions-hint">
-            This request is assigned to you, but no actions are available in its
-            current state. Please refresh the page in a moment.
-          </p>
-        </section>
       }
 
-      <div class="moderation-detail__body">
+      <div class="moderation-detail__grid">
+        <!-- ── Main column ─────────────────────────────────────────────── -->
         <div class="moderation-detail__main">
-          <section class="moderation-detail__card">
-            <header class="moderation-detail__card-header">
-              <h3 class="moderation-detail__card-title">Request summary</h3>
-            </header>
-            <dl class="moderation-detail__meta">
-              <div class="moderation-detail__meta-item">
-                <dt>Session</dt>
-                <dd>{{ mod.session }}</dd>
+          <!-- Score story: old failing score → moderated score -->
+          @if (mod.originalScores || mod.moderationOutcome) {
+            <section class="md-card">
+              <div class="md-card__title-row">
+                <h4 class="md-card__title">Result under moderation</h4>
+                @if (mod.moderationOutcome) {
+                  <span class="md-moderated-tag">MODERATED</span>
+                }
               </div>
-              <div class="moderation-detail__meta-item">
-                <dt>Level</dt>
-                <dd>{{ mod.level }}LVL</dd>
-              </div>
-              <div class="moderation-detail__meta-item">
-                <dt>Semester</dt>
-                <dd>{{ mod.semester }}</dd>
-              </div>
-              <div class="moderation-detail__meta-item">
-                <dt>Home department</dt>
-                <dd>{{ homeDeptName(mod) }}</dd>
-              </div>
-              <div class="moderation-detail__meta-item">
-                <dt>Offering department</dt>
-                <dd>{{ offeringDeptName(mod) }}</dd>
-              </div>
-              <div class="moderation-detail__meta-item">
-                <dt>Current handler</dt>
-                <dd>{{ currentHandlerName(mod) }}</dd>
-              </div>
-              <div class="moderation-detail__meta-item">
-                <dt>Assigned moderator</dt>
-                <dd>{{ assignedModeratorName(mod) }}</dd>
-              </div>
-              <div class="moderation-detail__meta-item">
-                <dt>Created</dt>
-                <dd>{{ mod.createdAt | date: 'MMM d, y · h:mm a' }}</dd>
-              </div>
-            </dl>
-          </section>
-
-          <section class="moderation-detail__card">
-            <header class="moderation-detail__card-header">
-              <h3 class="moderation-detail__card-title">
-                Letter / justification
-              </h3>
-            </header>
-            @if (mod.letterBody.trim()) {
-              <p class="moderation-detail__letter">{{ mod.letterBody }}</p>
-            } @else {
-              <p class="moderation-detail__muted">No letter provided.</p>
-            }
-          </section>
-
-          @if (mod.rejectionReason) {
-            <section
-              class="moderation-detail__card moderation-detail__card--alert"
-            >
-              <header class="moderation-detail__card-header">
-                <h3 class="moderation-detail__card-title">Rejection reason</h3>
-              </header>
-              <p class="moderation-detail__letter">{{ mod.rejectionReason }}</p>
-            </section>
-          }
-
-          @if (mod.moderationOutcome; as outcome) {
-            <section class="moderation-detail__card">
-              <header class="moderation-detail__card-header">
-                <h3 class="moderation-detail__card-title">Moderated outcome</h3>
-              </header>
-              <div
-                class="moderation-detail__outcome"
-                [class.moderation-detail__outcome--fail]="
-                  outcome.status === 'FAIL'
-                "
-              >
-                <div class="moderation-detail__outcome-block">
-                  <span>Test</span>
-                  <strong>{{ outcome.test }}</strong>
-                </div>
-                <div class="moderation-detail__outcome-block">
-                  <span>Lab</span>
-                  <strong>{{ outcome.lab }}</strong>
-                </div>
-                <div class="moderation-detail__outcome-block">
-                  <span>Exam</span>
-                  <strong>{{ outcome.exam }}</strong>
-                </div>
-                <div class="moderation-detail__outcome-block">
-                  <span>Total</span>
-                  <strong>{{ outcome.total }}</strong>
-                </div>
-                <div class="moderation-detail__outcome-block">
-                  <span>Grade</span>
-                  <strong>{{ outcome.grade }}</strong>
-                </div>
-                <div class="moderation-detail__outcome-block">
-                  <span>Status</span>
-                  <strong>{{ outcome.status | titlecase }}</strong>
-                </div>
-              </div>
-              <p
-                class="moderation-detail__muted moderation-detail__outcome-foot"
-              >
-                Submitted {{ outcome.submittedAt | date: 'MMM d, y · h:mm a' }}
+              <p class="acva-caption text-neutral-500 mb-3">
+                {{ courseSummary(mod) }} — originally published in
+                {{ mod.session }} ({{ mod.semester | titlecase }})
               </p>
+
+              <div class="md-compare">
+                @if (mod.originalScores; as old) {
+                  <div class="md-compare__col md-compare__col--old">
+                    <span class="md-compare__label">Original (failed)</span>
+                    <div class="md-compare__scores">
+                      <span
+                        >Test <strong>{{ old.test }}</strong></span
+                      >
+                      <span
+                        >Lab <strong>{{ old.lab }}</strong></span
+                      >
+                      <span
+                        >Exam <strong>{{ old.exam }}</strong></span
+                      >
+                    </div>
+                    <div class="md-compare__total">
+                      {{ old.total }}
+                      <span class="md-compare__grade">{{ old.grade }}</span>
+                    </div>
+                  </div>
+                }
+                @if (mod.moderationOutcome; as out) {
+                  <div class="md-compare__arrow" aria-hidden="true">→</div>
+                  <div class="md-compare__col md-compare__col--new">
+                    <span class="md-compare__label">Moderated score</span>
+                    <div class="md-compare__scores">
+                      <span
+                        >Test <strong>{{ out.test }}</strong></span
+                      >
+                      <span
+                        >Lab <strong>{{ out.lab }}</strong></span
+                      >
+                      <span
+                        >Exam <strong>{{ out.exam }}</strong></span
+                      >
+                    </div>
+                    <div class="md-compare__total">
+                      {{ out.total }}
+                      <span class="md-compare__grade">{{ out.grade }}</span>
+                    </div>
+                  </div>
+                } @else {
+                  <div class="md-compare__arrow" aria-hidden="true">→</div>
+                  <div class="md-compare__col md-compare__col--empty">
+                    <span class="md-compare__label">Moderated score</span>
+                    <p class="acva-caption text-neutral-400 m-0">
+                      Awaiting the reviewing HOD
+                    </p>
+                  </div>
+                }
+              </div>
             </section>
           }
 
+          <!-- HOD moderation panel -->
           @if (showScoreForm()) {
-            <section class="moderation-detail__card" id="moderation-score-form">
-              <header class="moderation-detail__card-header">
-                <h3 class="moderation-detail__card-title">
-                  Submit moderated scores
-                </h3>
-                <p class="moderation-detail__muted">
-                  Enter your scores below — the totals and grade are calculated
-                  automatically.
-                </p>
-              </header>
+            <section class="md-card" id="moderation-score-form">
+              <h4 class="md-card__title mb-3">Moderate this result</h4>
               <app-moderator-score-form
                 [saving]="acting()"
+                [originalScores]="mod.originalScores ?? null"
                 (submitEvent)="submitScore($event)"
               />
             </section>
           }
 
-          <section class="moderation-detail__card">
-            <header class="moderation-detail__card-header">
-              <h3 class="moderation-detail__card-title">Workflow history</h3>
-            </header>
-            @if (mod.workflowHistory.length === 0) {
-              <p class="moderation-detail__muted">No history yet.</p>
+          <!-- The CA's letter -->
+          <section class="md-card">
+            <h4 class="md-card__title mb-3">Justification letter</h4>
+            @if (mod.letterBody) {
+              <div class="md-letter" [innerHTML]="mod.letterBody"></div>
             } @else {
-              <ul class="moderation-detail__history">
+              <p class="acva-para-1 text-neutral-400">No letter provided.</p>
+            }
+          </section>
+
+          <!-- Rejection reason -->
+          @if (mod.rejectionReason) {
+            <section class="md-card md-card--rejected">
+              <h4 class="md-card__title mb-2">Rejection reason</h4>
+              <p class="acva-para-1 m-0">{{ mod.rejectionReason }}</p>
+            </section>
+          }
+
+          <!-- Student's published history (eligibility evidence) -->
+          <section class="md-card">
+            <div class="md-card__title-row">
+              <h4 class="md-card__title">Student's published results</h4>
+              <span class="acva-caption text-neutral-500">
+                First year till date
+              </span>
+            </div>
+
+            @if (historyLoading()) {
+              <p class="acva-caption text-neutral-400 mt-3">Loading history…</p>
+            } @else if (historySessions().length === 0) {
+              <p class="acva-caption text-neutral-400 mt-3">
+                No published results found for this student.
+              </p>
+            } @else {
+              <div class="md-history mt-3">
+                @for (
+                  group of historySessions();
+                  track trackSession($index, group)
+                ) {
+                  <div class="md-history__session">
+                    <button
+                      type="button"
+                      class="md-history__toggle"
+                      (click)="toggleSession(group.session)"
+                    >
+                      <span class="fw-600">{{ group.session }}</span>
+                      <span class="acva-caption text-neutral-500">
+                        {{ group.entries.length }} course(s)
+                        <span class="md-history__chevron">
+                          {{ isSessionOpen(group.session) ? '▾' : '▸' }}
+                        </span>
+                      </span>
+                    </button>
+
+                    @if (isSessionOpen(group.session)) {
+                      <div class="md-history__table-wrap">
+                        <table class="md-history__table">
+                          <thead>
+                            <tr>
+                              <th>Course</th>
+                              <th>Level</th>
+                              <th>Test</th>
+                              <th>Lab</th>
+                              <th>Exam</th>
+                              <th>Total</th>
+                              <th>Grade</th>
+                              <th>Status</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            @for (
+                              entry of group.entries;
+                              track trackHistory($index)
+                            ) {
+                              <tr
+                                [class.md-history__row--target]="entry.isTarget"
+                              >
+                                <td>
+                                  <span class="fw-600">{{
+                                    entry.courseCode
+                                  }}</span>
+                                  @if (entry.isTarget && !entry.moderated) {
+                                    <span class="md-history__target-chip">
+                                      under moderation
+                                    </span>
+                                  }
+                                  @if (entry.moderated) {
+                                    <span
+                                      class="md-moderated-tag md-moderated-tag--small"
+                                    >
+                                      MODERATED
+                                    </span>
+                                  }
+                                </td>
+                                <td>{{ entry.level }}</td>
+                                <td>{{ entry.test }}</td>
+                                <td>{{ entry.lab }}</td>
+                                <td>{{ entry.exam }}</td>
+                                <td class="fw-600">{{ entry.total }}</td>
+                                <td class="fw-600">{{ entry.grade }}</td>
+                                <td>
+                                  <span
+                                    class="md-history__status"
+                                    [attr.data-status]="
+                                      entry.status.toLowerCase()
+                                    "
+                                  >
+                                    {{ entry.status | titlecase }}
+                                  </span>
+                                </td>
+                              </tr>
+                            }
+                          </tbody>
+                        </table>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </section>
+
+          <!-- Workflow history -->
+          <section class="md-card">
+            <h4 class="md-card__title mb-3">Activity</h4>
+            @if (mod.workflowHistory.length === 0) {
+              <p class="acva-caption text-neutral-400">No activity yet.</p>
+            } @else {
+              <ul class="md-activity">
                 @for (
                   entry of mod.workflowHistory;
                   track trackHistory($index)
                 ) {
-                  <li class="moderation-detail__history-item">
-                    <span class="moderation-detail__history-action">
-                      {{ entry.action | titlecase }}
-                    </span>
-                    <span class="moderation-detail__history-role">
-                      by {{ entry.lecturerRole }}
-                    </span>
-                    <span class="moderation-detail__history-time">
-                      {{ entry.timestamp | date: 'MMM d, y · h:mm a' }}
+                  <li>
+                    <span class="fw-600">{{ entry.action | titlecase }}</span>
+                    by {{ entry.lecturerRole | titlecase }}
+                    <span class="text-neutral-400">
+                      · {{ entry.timestamp | date: 'MMM d, y · h:mm a' }}
                     </span>
                   </li>
                 }
@@ -231,15 +293,45 @@
           </section>
         </div>
 
+        <!-- ── Right rail ──────────────────────────────────────────────── -->
         <aside class="moderation-detail__rail">
-          <section class="moderation-detail__card">
-            <header class="moderation-detail__card-header">
-              <h3 class="moderation-detail__card-title">Workflow</h3>
-              <p class="moderation-detail__muted">
-                Where this request is in the approval chain.
-              </p>
-            </header>
+          <section class="md-card">
+            <h4 class="md-card__title mb-3">Workflow</h4>
             <app-moderation-timeline [moderation]="mod" />
+          </section>
+
+          <section class="md-card">
+            <h4 class="md-card__title mb-3">Request summary</h4>
+            <dl class="md-summary">
+              <div>
+                <dt>Session</dt>
+                <dd>{{ mod.session }}</dd>
+              </div>
+              <div>
+                <dt>Level</dt>
+                <dd>{{ mod.level }}LVL</dd>
+              </div>
+              <div>
+                <dt>Semester</dt>
+                <dd>{{ mod.semester | titlecase }}</dd>
+              </div>
+              <div>
+                <dt>Student dept</dt>
+                <dd>{{ homeDeptName(mod) }}</dd>
+              </div>
+              <div>
+                <dt>Course dept</dt>
+                <dd>{{ offeringDeptName(mod) }}</dd>
+              </div>
+              <div>
+                <dt>Awaiting</dt>
+                <dd>{{ currentHandlerName(mod) | titlecase }}</dd>
+              </div>
+              <div>
+                <dt>Created</dt>
+                <dd>{{ mod.createdAt | date: 'MMM d, y' }}</dd>
+              </div>
+            </dl>
           </section>
 
           <app-moderation-comments
@@ -252,7 +344,7 @@
   } @else {
     <div class="moderation-detail moderation-detail--centered">
       <p class="acva-para-1 text-neutral-500">
-        We couldn't load this moderation. It may have been removed.
+        This moderation could not be loaded.
       </p>
     </div>
   }

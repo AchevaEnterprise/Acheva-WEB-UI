@@ -34,6 +34,7 @@ import {
 import { RoleEnum } from '../auth/model/auth.model';
 import { AuthenticationService } from '../auth/service/auth.service';
 import { INotification } from '../notifications/models/notification.model';
+import { notificationRoute } from '../notifications/utils/notification-route';
 import { ResultManagementFileTableComponent } from '../result-management/components/result-management-file-table/result-management-file-table.component';
 import { ResultManagementFolderTableComponent } from '../result-management/components/result-management-folder-table/result-management-folder-table.component';
 import {
@@ -558,6 +559,20 @@ export class DashboardComponent implements OnInit {
       next: (notifications) => {
         this.activities.set(notifications);
       },
+    });
+  }
+
+  /** Whether a recent-activity item deep-links somewhere when clicked. */
+  isActivityNavigable(activity: INotification): boolean {
+    return notificationRoute(activity) !== null;
+  }
+
+  /** Open the page a recent-activity item points at (same targets as notifications). */
+  openActivity(activity: INotification): void {
+    const route = notificationRoute(activity);
+    if (!route) return;
+    void this.router.navigate(route.commands, {
+      queryParams: route.queryParams,
     });
   }
 }

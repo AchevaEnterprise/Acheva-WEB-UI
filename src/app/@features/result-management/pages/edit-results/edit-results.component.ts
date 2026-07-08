@@ -1,4 +1,11 @@
-import { Component, HostListener, inject, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  HostListener,
+  inject,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatMenuModule } from '@angular/material/menu';
@@ -138,6 +145,12 @@ export class EditResultsComponent implements OnInit, CanComponentDeactivate {
   activeSegment = signal<ISegmentSwitcher>(this.segments()[0]);
 
   result = signal<IResult | null>(null);
+
+  /** True when the viewer is a secondary CA (reference/unregistered) with a restricted scope. */
+  isRestrictedViewer = computed(
+    () => this.result()?.viewerScope?.access === 'RESTRICTED'
+  );
+
   students = signal<Record<SegmentValue, Partial<IStudentGrade>[]>>({
     REGULAR: [],
     REFERENCE: [],
@@ -147,7 +160,64 @@ export class EditResultsComponent implements OnInit, CanComponentDeactivate {
   RoleEnum = RoleEnum;
 
   ngOnInit(): void {
-    this.getResultAndEntries();
+    // The result must load FIRST: its `viewerScope` decides which category
+    // tabs this user may see (a secondary CA — reference/unregistered — is
+    // not allowed to fetch REGULAR entries at all). Only then fetch entries
+    // for a permitted tab.
+    this.loadingResult.set(true);
+    this.resultsService.getResult(this.resultId).subscribe({
+      next: (result) => {
+        if (result.status) {
+          this.applyResult(result.data);
+          this.fetchEntries();
+        } else {
+          this.loadingResult.set(false);
+        }
+      },
+      error: () => this.loadingResult.set(false),
+    });
+  }
+
+  /** Store the result and apply the viewer's scope (tabs + read-only). */
+  private applyResult(result: IResult): void {
+    this.result.set(result);
+
+    const scope = result.viewerScope;
+    if (scope?.access === 'RESTRICTED') {
+      // Secondary CA (reference-student cohort CA / unregistered-level CA):
+      // show only their permitted tabs, everything read-only.
+      this.segments.update((segments) =>
+        segments.filter((s) =>
+          scope.categories.includes(s.value as SegmentValue)
+        )
+      );
+      if (
+        !scope.categories.includes(this.activeSegment().value as SegmentValue)
+      ) {
+        this.activeSegment.set(this.segments()[0]);
+      }
+      this.readOnly.set(true);
+      return;
+    }
+
+    this.readOnly.set(
+      this.userRole === RoleEnum.LECTURER && isResultReadonlyForLecturer(result)
+    );
+  }
+
+  private fetchEntries(): void {
+    this.loadingResult.set(true);
+    this.resultsService
+      .getResultEntries(this.resultId, {
+        category: this.activeSegment().value,
+      })
+      .pipe(finalize(() => this.loadingResult.set(false)))
+      .subscribe({
+        next: (resultEntries) => {
+          if (resultEntries.status)
+            this.setResultEntriesDetails(resultEntries.data);
+        },
+      });
   }
 
   getResultAndEntries() {
@@ -162,13 +232,7 @@ export class EditResultsComponent implements OnInit, CanComponentDeactivate {
       .pipe(finalize(() => this.loadingResult.set(false)))
       .subscribe({
         next: ([result, resultEntries]) => {
-          if (result.status) {
-            this.result.set(result.data);
-            this.readOnly.set(
-              this.userRole === RoleEnum.LECTURER &&
-                isResultReadonlyForLecturer(result.data)
-            );
-          }
+          if (result.status) this.applyResult(result.data);
           if (resultEntries.status)
             this.setResultEntriesDetails(resultEntries.data);
         },

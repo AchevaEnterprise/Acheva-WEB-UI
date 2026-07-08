@@ -54,7 +54,7 @@
         <button
           class="notif-panel__item"
           [class.notif-panel__item--unread]="notification.status === 'UNREAD'"
-          (click)="markAsRead(notification)"
+          (click)="openNotification(notification)"
           [attr.aria-label]="'Notification: ' + notification.title"
         >
           <div class="notif-panel__item-accent"></div>
@@ -68,6 +68,9 @@
               }}</span>
             </div>
             <p class="notif-panel__item-message">{{ notification.message }}</p>
+            @if (isNavigable(notification)) {
+              <span class="text-[#2793FF] acva-caption fw-500"> Open → </span>
+            }
           </div>
           @if (notification.status === 'UNREAD') {
             <span class="notif-panel__item-dot" aria-hidden="true"></span>

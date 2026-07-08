@@ -61,8 +61,24 @@ export class RegularTableResultUploadComponent {
   /** When true the grade inputs render as read-only text (no editing). */
   readonly = input<boolean>(false);
 
+  /**
+   * Registration gating (Slice 4): when non-null, rows whose student is NOT
+   * in this list are disabled and sorted to the bottom until the lecturer
+   * explicitly enables them. `null` = no registration data → no gating.
+   */
+  registeredRegNos = input<string[] | null>(null);
+
   /** Kept for back-compat with the parent's "unsaved changes" guard. */
   hasChangesEvent = output<boolean>();
+
+  /** Lecturer enabled an unregistered student's row — parent audits + notifies CA. */
+  overrideEvent = output<{ registrationNumber: string; fullName: string }>();
+
+  /** Rows the lecturer has explicitly enabled despite being unregistered. */
+  private readonly overridden = signal<ReadonlySet<string>>(new Set());
+
+  /** Bumped when hydration rewrites row values so the display recomputes. */
+  private readonly displayRefresh = signal(0);
 
   allRows = signal<FormGroup[]>([]);
   dataSource = signal<FormGroup[]>([]);
@@ -108,23 +124,69 @@ export class RegularTableResultUploadComponent {
       }
     });
 
-    // Search filter.
+    // Registration gating: flag + disable unregistered rows. Touches form
+    // controls only (never signals) so it cannot loop; readonly/non-DRAFT
+    // tables keep their existing behaviour untouched.
     effect(() => {
+      const regNos = this.registeredRegNos();
+      const overridden = this.overridden();
+      const rows = this.allRows();
+      if (rows.length === 0 || !regNos) return;
+
+      const baseEditable =
+        !this.readonly() && (!this.status || this.status === 'DRAFT');
+
+      const registered = new Set(regNos);
+      for (const row of rows) {
+        const regNo = String(row.getRawValue().registrationNumber ?? '');
+        const gated = !registered.has(regNo) && !overridden.has(regNo);
+        row.patchValue({ unregistered: gated }, { emitEvent: false });
+        if (!baseEditable) continue;
+        for (const column of this.GRADE_COLUMNS) {
+          const ctrl = row.get(column);
+          if (!ctrl) continue;
+          if (gated && ctrl.enabled) ctrl.disable({ emitEvent: false });
+          if (!gated && ctrl.disabled) ctrl.enable({ emitEvent: false });
+        }
+      }
+    });
+
+    // Display: search filter + registered-first ordering (gated rows sink to
+    // the bottom when registration data exists).
+    effect(() => {
+      this.displayRefresh(); // re-run after hydration rewrites
       const term = (this.searchValue() ?? '').trim().toLowerCase();
+      const regNos = this.registeredRegNos();
+      const overridden = this.overridden();
       const rows = this.allRows();
 
-      if (!term) {
-        this.dataSource.set(rows);
+      const filtered = !term
+        ? rows
+        : rows.filter((row) => {
+            const { registrationNumber, fullName } =
+              row.getRawValue() as Partial<IStudentGrade>;
+            return (
+              registrationNumber?.toLowerCase().includes(term) ||
+              fullName?.toLowerCase().includes(term)
+            );
+          });
+
+      if (!regNos) {
+        this.dataSource.set(filtered);
         return;
       }
 
+      const registered = new Set(regNos);
+      const gatedRank = (row: FormGroup): number => {
+        const regNo = String(row.getRawValue().registrationNumber ?? '');
+        return registered.has(regNo) || overridden.has(regNo) ? 0 : 1;
+      };
       this.dataSource.set(
-        rows.filter((row) => {
-          const { registrationNumber, fullName } =
-            row.getRawValue() as Partial<IStudentGrade>;
-          return (
-            registrationNumber?.toLowerCase().includes(term) ||
-            fullName?.toLowerCase().includes(term)
+        [...filtered].sort((a, b) => {
+          const rankDiff = gatedRank(a) - gatedRank(b);
+          if (rankDiff !== 0) return rankDiff;
+          return String(a.getRawValue().fullName ?? '').localeCompare(
+            String(b.getRawValue().fullName ?? '')
           );
         })
       );
@@ -163,10 +225,13 @@ export class RegularTableResultUploadComponent {
     const isDisabled =
       this.readonly() || (!!this.status && this.status !== 'DRAFT');
 
-    const createNumberControl = (value: number | null | undefined) =>
+    const createNumberControl = (
+      value: number | null | undefined,
+      required = true
+    ) =>
       new FormControl(
         { value: value ?? null, disabled: isDisabled },
-        numberValidator
+        required ? numberValidator : [Validators.min(0), Validators.max(100)]
       );
 
     return this.fb.group({
@@ -177,13 +242,39 @@ export class RegularTableResultUploadComponent {
       ],
 
       test: createNumberControl(student.test),
-      lab: createNumberControl(student.lab),
+      // LAB is optional — most courses have no lab component (FUTO 2026-07).
+      lab: createNumberControl(student.lab, false),
       exam: createNumberControl(student.exam),
 
       total: [student.total, numberValidator],
       grade: [student.grade],
       status: [student.status],
       isEdited: [student.isEdited || false],
+      moderated: [student.moderated || false],
+      unregistered: [false],
+    });
+  }
+
+  /**
+   * Lecturer override: the student wrote the exam without being registered —
+   * enable their row for score entry. Audited upstream (CA notified).
+   */
+  enableUnregisteredRow(index: number): void {
+    const row = this.dataSource()[index];
+    if (!row) return;
+    const { registrationNumber, fullName } = row.getRawValue() as {
+      registrationNumber?: string;
+      fullName?: string;
+    };
+    if (!registrationNumber) return;
+    this.overridden.update((current) => {
+      const next = new Set(current);
+      next.add(String(registrationNumber));
+      return next;
+    });
+    this.overrideEvent.emit({
+      registrationNumber: String(registrationNumber),
+      fullName: String(fullName ?? ''),
     });
   }
 
@@ -357,7 +448,9 @@ export class RegularTableResultUploadComponent {
     }
 
     if (toSeed.length) await this.store.bulkPut(toSeed);
-    this.dataSource.set([...this.rows.controls]);
+    // Recompute the displayed rows through the display effect so search and
+    // registration ordering are preserved (never overwrite dataSource raw).
+    this.displayRefresh.update((v) => v + 1);
     this.sync.setActiveResult(rid);
   }
 

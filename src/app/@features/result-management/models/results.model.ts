@@ -53,6 +53,18 @@ export interface IResultRoles {
   COURSE_ADVISOR: string | null;
 }
 
+/**
+ * What the requesting user may see of a result's entries (computed by the
+ * backend per request). RESTRICTED = the viewer's only link to the result is
+ * being a secondary Course Advisor attached at publish time (reference-student
+ * cohort CA and/or the UNREGISTERED-level CA) — they see only the listed
+ * category tabs, read-only, with REFERENCE filtered to their own students.
+ */
+export interface IResultViewerScope {
+  access: 'FULL' | 'RESTRICTED';
+  categories: SegmentValue[];
+}
+
 export interface IResult {
   _id: string;
   course: ICourse;
@@ -89,6 +101,7 @@ export interface IResult {
   students?: number;
   progress?: number;
   updatedAt?: Date;
+  viewerScope?: IResultViewerScope;
 }
 
 export interface IGroupedResult {

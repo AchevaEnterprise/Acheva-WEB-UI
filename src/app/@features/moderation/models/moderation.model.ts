@@ -16,9 +16,13 @@ export enum ModerationScope {
 
 export enum ModerationStatus {
   DRAFT = 'DRAFT',
+  /** Internal: home HOD reviews AND moderates here. Cross: eligibility review. */
   PENDING_HOME_HOD = 'PENDING_HOME_HOD',
+  /** Cross only: the offering (course-owning) HOD reviews AND moderates here. */
   PENDING_OFFERING_HOD = 'PENDING_OFFERING_HOD',
+  /** @deprecated legacy assign-a-moderator flow — old documents only. */
   PENDING_MODERATION = 'PENDING_MODERATION',
+  /** @deprecated legacy flow — old documents only. */
   PENDING_OFFERING_HOD_REVIEW = 'PENDING_OFFERING_HOD_REVIEW',
   PENDING_DEAN = 'PENDING_DEAN',
   PENDING_RETURN_HOME_HOD = 'PENDING_RETURN_HOME_HOD',
@@ -151,8 +155,23 @@ export interface IResultModeration {
   linkedResult?: string | null;
   rejectionReason?: string | null;
 
+  /** The published Result containing the failing entry (snapshot at creation). */
+  originalResult?: string | { _id: string; session?: string } | null;
+  /** The exact failing ResultEntry that publish will patch. */
+  originalEntry?: string | { _id: string } | null;
+  /** Immutable copy of the failing scores when moderation began. */
+  originalScores?: IModerationOutcome | null;
+
   createdAt: string | Date;
   updatedAt: string | Date;
+}
+
+// ─── Eligibility (duplicate-initiation guard) ────────────────────────────────
+
+export interface IModerationEligibility {
+  canInitiate: boolean;
+  reason?: string;
+  existing: { id: string; status: ModerationStatus } | null;
 }
 
 // ─── Paginated list ──────────────────────────────────────────────────────────
@@ -169,9 +188,7 @@ export interface IModerationListPage {
 export interface ICreateModerationPayload {
   student: string;
   course: string;
-  session: string;
-  level: string;
-  semester: string;
+  /** Rich-text HTML from the letter editor. */
   letterBody: string;
   /** When true the API skips `DRAFT` and submits to the home HOD immediately. */
   submitImmediately?: boolean;
@@ -187,25 +204,23 @@ export interface IListModerationsQuery {
   limit?: number;
 }
 
-/** Body of `PATCH /moderations/:id/home-hod/approve-internal` and `/offering-hod/approve`. */
-export interface IAssignModeratorPayload {
-  assignedLecturerId: string;
-  preferredModeratorNote?: string;
-  comment?: string;
-}
-
 /** Body of any rejection endpoint. */
 export interface IRejectPayload {
   reason: string;
   comment?: string;
 }
 
-/** Body of `PATCH /moderations/:id/moderator/submit`. */
+/** Body of `PATCH /moderations/:id/hod/moderate` — must total an E (40–44). */
 export interface ISubmitOutcomePayload {
   test: number;
   lab?: number;
   exam: number;
   comment?: string;
+}
+
+/** Body of `PATCH /moderations/:id/draft`. */
+export interface IUpdateDraftPayload {
+  letterBody: string;
 }
 
 /** Body of approval / forward endpoints that only accept an optional comment. */
