@@ -84,17 +84,23 @@
               </td>
             </ng-container>
 
-            <!-- <ng-container matColumnDef="actions">
-              <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>STATUS</th>
               <td mat-cell *matCellDef="let student">
-                <app-button
-                  label="Deactivate"
-                  class="btn-sm"
-                  type="outline"
-                  (clickEvent)="toggleActivateDeactivate(student)"
-                />
+                <button
+                  type="button"
+                  class="student-status-btn"
+                  [class.student-status-btn--inactive]="
+                    student.isActive === false
+                  "
+                  (click)="
+                    $event.stopPropagation(); toggleActivateDeactivate(student)
+                  "
+                >
+                  {{ student.isActive === false ? 'Deactivated' : 'Active' }}
+                </button>
               </td>
-            </ng-container> -->
+            </ng-container>
 
             <tr
               mat-header-row

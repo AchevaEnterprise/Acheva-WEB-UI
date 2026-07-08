@@ -17,6 +17,9 @@ export interface IStudent {
   level: string;
   accountType: 'STUDENT';
   emailVerified: boolean;
+  /** false = withdrawn/suspended (read-only, skipped by registration). */
+  isActive?: boolean;
+  deactivatedAt?: string | null;
 }
 
 export interface ICreateStudent {

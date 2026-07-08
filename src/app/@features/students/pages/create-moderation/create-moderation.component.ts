@@ -82,7 +82,9 @@ export class CreateModerationComponent implements OnInit {
   private readonly router = inject(Router);
 
   loading = signal(true);
-  saving = signal(false);
+  /** Which action is in flight — so only the clicked button shows a spinner. */
+  busyAction = signal<'draft' | 'submit' | null>(null);
+  readonly saving = computed(() => this.busyAction() !== null);
   student = signal<IStudent | null>(null);
   failingEntry = signal<IFailingEntryContext | null>(null);
   eligibility = signal<IModerationEligibility | null>(null);
@@ -249,7 +251,7 @@ export class CreateModerationComponent implements OnInit {
     }
 
     const letter = this.letterBody.value;
-    this.saving.set(true);
+    this.busyAction.set(submitImmediately ? 'submit' : 'draft');
 
     const existingDraft = this.draft();
     if (existingDraft) {
@@ -259,20 +261,20 @@ export class CreateModerationComponent implements OnInit {
         .subscribe({
           next: () => {
             if (!submitImmediately) {
-              this.saving.set(false);
+              this.busyAction.set(null);
               this.afterPersist(false, existingDraft._id);
               return;
             }
             this.moderationService
               .submit(existingDraft._id)
-              .pipe(finalize(() => this.saving.set(false)))
+              .pipe(finalize(() => this.busyAction.set(null)))
               .subscribe({
                 next: () => this.afterPersist(true, existingDraft._id),
                 error: (err) => this.persistError(err),
               });
           },
           error: (err) => {
-            this.saving.set(false);
+            this.busyAction.set(null);
             this.persistError(err);
           },
         });
@@ -286,7 +288,7 @@ export class CreateModerationComponent implements OnInit {
         letterBody: letter,
         submitImmediately,
       })
-      .pipe(finalize(() => this.saving.set(false)))
+      .pipe(finalize(() => this.busyAction.set(null)))
       .subscribe({
         next: (resp) => {
           if (resp.status) this.afterPersist(submitImmediately, resp.data._id);

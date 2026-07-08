@@ -111,6 +111,16 @@
             >
               {{ review.grade }} · {{ review.total }}
             </span>
+            @if (review.currentCgpa != null) {
+              <span
+                class="reg-reviews__cgpa"
+                title="Current CGPA vs. projected CGPA if this course is unregistered"
+              >
+                CGPA {{ review.currentCgpa }}
+                <span aria-hidden="true">→</span>
+                {{ review.projectedCgpa ?? '—' }}
+              </span>
+            }
             <app-button
               type="outline"
               label="Keep"

@@ -11,6 +11,7 @@ import { EmptyStateComponent } from '../../../../@shared/components/empty-state/
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
 import { SearchInputComponent } from '../../../../@shared/components/forms/search-input/search-input.component';
 import { LoaderComponent } from '../../../../@shared/components/loader/loader.component';
+import { ConfirmationComponent } from '../../../../@shared/components/confirmation/confirmation.component';
 import { UploadDialogComponent } from '../../../../@shared/components/upload-dialog/upload-dialog.component';
 import { AuthenticationService } from '../../../auth/service/auth.service';
 import { LecturersService } from '../../../user-settings/service/lecturer.service';
@@ -46,7 +47,7 @@ export class StudentsComponent implements OnInit {
     'issues',
     'registrationNumber',
     'fullName',
-    // 'actions',
+    'actions',
   ];
   /** Table rows — the current view (filtered when a search term is active). */
   dataSource = signal<IStudent[]>([]);
@@ -192,5 +193,40 @@ export class StudentsComponent implements OnInit {
     this.router.navigate([regNo], { relativeTo: this.route });
   }
 
-  toggleActivateDeactivate(student: IStudent) {}
+  /** Deactivate/reactivate a student (withdrawn/suspended) — never deletes. */
+  toggleActivateDeactivate(student: IStudent) {
+    const deactivating = (student as { isActive?: boolean }).isActive !== false;
+    const ref = this.dialog.open(ConfirmationComponent, {
+      data: {
+        message: deactivating
+          ? `Deactivate ${student.fullName}?`
+          : `Reactivate ${student.fullName}?`,
+        subTitle: deactivating
+          ? 'They keep read access to results published before today, are ' +
+            'skipped by auto-registration, and receive nothing published afterwards.'
+          : 'They resume as a normal active student.',
+      },
+    });
+    ref.afterClosed().subscribe((confirmed: boolean) => {
+      if (!confirmed) return;
+      this.studentService
+        .setStudentStatus(student._id, !deactivating)
+        .subscribe({
+          next: () => {
+            this.toastService.showNotification(
+              'success',
+              deactivating ? 'Student deactivated' : 'Student reactivated',
+              student.fullName ?? ''
+            );
+            this.getStudents();
+          },
+          error: (err: { error?: { message?: string } }) =>
+            this.toastService.showNotification(
+              'error',
+              'Update failed',
+              err?.error?.message ?? 'Could not update the student.'
+            ),
+        });
+    });
+  }
 }

@@ -222,14 +222,14 @@
   color: #b91c1c;
   cursor: pointer;
 
-  &:hover:not(:disabled) {
-    background: #fee2e2;
-    border-color: #fecaca;
-  }
-
   &:disabled {
     opacity: 0.5;
     cursor: default;
+  }
+
+  &:hover:not(:disabled) {
+    background: #fee2e2;
+    border-color: #fecaca;
   }
 }
 

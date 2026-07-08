@@ -136,4 +136,7 @@ export interface IElectiveReview {
   readonly total: number;
   readonly status: 'PENDING' | 'KEPT' | 'UNREGISTERED';
   readonly createdAt?: string;
+  /** CGPA with the grade counted vs. projected if unregistered. */
+  readonly currentCgpa?: number | null;
+  readonly projectedCgpa?: number | null;
 }

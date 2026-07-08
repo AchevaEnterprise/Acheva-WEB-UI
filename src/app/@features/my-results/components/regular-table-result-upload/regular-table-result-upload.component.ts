@@ -225,10 +225,13 @@ export class RegularTableResultUploadComponent {
     const isDisabled =
       this.readonly() || (!!this.status && this.status !== 'DRAFT');
 
-    const createNumberControl = (value: number | null | undefined) =>
+    const createNumberControl = (
+      value: number | null | undefined,
+      required = true
+    ) =>
       new FormControl(
         { value: value ?? null, disabled: isDisabled },
-        numberValidator
+        required ? numberValidator : [Validators.min(0), Validators.max(100)]
       );
 
     return this.fb.group({
@@ -239,7 +242,8 @@ export class RegularTableResultUploadComponent {
       ],
 
       test: createNumberControl(student.test),
-      lab: createNumberControl(student.lab),
+      // LAB is optional — most courses have no lab component (FUTO 2026-07).
+      lab: createNumberControl(student.lab, false),
       exam: createNumberControl(student.exam),
 
       total: [student.total, numberValidator],

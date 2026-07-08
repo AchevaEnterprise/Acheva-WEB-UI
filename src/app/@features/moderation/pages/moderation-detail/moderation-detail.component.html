@@ -228,7 +228,7 @@
                                   <span class="fw-600">{{
                                     entry.courseCode
                                   }}</span>
-                                  @if (entry.isTarget) {
+                                  @if (entry.isTarget && !entry.moderated) {
                                     <span class="md-history__target-chip">
                                       under moderation
                                     </span>

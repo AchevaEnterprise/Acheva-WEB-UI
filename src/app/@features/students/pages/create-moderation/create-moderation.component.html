@@ -76,13 +76,15 @@
                 type="outline"
                 label="Save as draft"
                 class="btn-md"
-                [loading]="saving()"
+                [loading]="busyAction() === 'draft'"
+                [disabled]="saving()"
                 (clickEvent)="saveDraft()"
               />
               <app-button
                 label="Submit to HOD"
                 class="btn-md"
-                [loading]="saving()"
+                [loading]="busyAction() === 'submit'"
+                [disabled]="saving()"
                 (clickEvent)="submitRequest()"
               />
             </div>

@@ -98,4 +98,12 @@ export class StudentService {
       `${this.studentUrl}/analytics`
     );
   }
+
+  /** CA deactivate/reactivate — deactivated students become read-only. */
+  setStudentStatus(id: string, isActive: boolean) {
+    return this.http.patch<IAPIResponse<IStudent>>(
+      `${environment.BASE_URL}/students/${id}/status`,
+      { isActive }
+    );
+  }
 }
