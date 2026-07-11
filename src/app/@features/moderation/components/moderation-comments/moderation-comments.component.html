@@ -8,7 +8,15 @@
 
   <div class="moderation-comments__thread" #thread>
     @if (comments.isLoading()) {
-      <app-loader />
+      @for (row of [1, 2, 3]; track row) {
+        <div class="flex gap-3 mb-4">
+          <app-skeleton width="2.25rem" height="2.25rem" [circle]="true" />
+          <div class="flex-1">
+            <app-skeleton width="35%" height="0.85rem" />
+            <app-skeleton width="85%" height="1rem" class="mt-2" />
+          </div>
+        </div>
+      }
     } @else if (comments.error()) {
       <app-empty-state
         description="Could not load comments. Please refresh and try again."

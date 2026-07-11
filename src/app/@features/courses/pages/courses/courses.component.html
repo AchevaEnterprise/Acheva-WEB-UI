@@ -40,7 +40,7 @@
     >
       <div content class="p-4">
         @if (isloadingRecentCourses()) {
-          <app-loader />
+          <app-skeleton-table [cols]="4" [rows]="5" />
         }
 
         <ng-container *ngIf="recentCourses$ | async as recentCourses">
@@ -87,7 +87,7 @@
 
       <div class="min-h-24 mt-4">
         @if (isSearching()) {
-          <app-loader />
+          <app-skeleton-table [cols]="4" [rows]="5" />
         } @else {
           @if (searchResults().length > 0) {
             <div
@@ -134,7 +134,7 @@
     <div class="min-h-24">
       @if (showAllCourses()) {
         @if (isLoadingAllCourses()) {
-          <app-loader />
+          <app-skeleton-table [cols]="4" [rows]="5" />
         } @else {
           @if (allCourses().length > 0) {
             <div class="grid lg:grid-cols-3 sm:grid-cols-2 gap-4 mt-4">
@@ -154,7 +154,7 @@
         }
       } @else {
         @if (isloadingCourses()) {
-          <app-loader />
+          <app-skeleton-table [cols]="4" [rows]="5" />
         }
 
         <ng-container *ngIf="courses$ | async as courses">

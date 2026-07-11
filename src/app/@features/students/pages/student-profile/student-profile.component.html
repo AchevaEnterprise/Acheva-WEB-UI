@@ -1,6 +1,14 @@
 @if (loadingStudent()) {
-  <div class="min-h-[40vh] grid place-content-center">
-    <app-loader />
+  <div class="min-h-[40vh]">
+    <div class="flex items-center gap-4">
+      <app-skeleton width="4rem" height="4rem" [circle]="true" />
+      <div class="flex-1">
+        <app-skeleton width="30%" height="1.25rem" />
+        <app-skeleton width="20%" height="0.9rem" class="mt-2" />
+      </div>
+    </div>
+    <app-skeleton height="8rem" class="mt-6" />
+    <app-skeleton height="16rem" class="mt-4" />
   </div>
 } @else {
   @if (student(); as s) {
@@ -142,7 +150,7 @@
 
           @if (loadingResults()) {
             <div class="results-card__loader">
-              <app-loader />
+              <app-skeleton-table [cols]="6" [rows]="6" />
             </div>
           } @else {
             <div class="results-table-wrapper">

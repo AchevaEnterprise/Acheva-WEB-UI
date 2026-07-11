@@ -6,7 +6,7 @@
 
   <div class="mt-8 overflow-y-auto h-[calc(100vh_-_40vh)]">
     @if (loading()) {
-      <app-loader />
+      <app-skeleton-table [cols]="2" [rows]="6" />
     } @else {
       <ul>
         @for (session of sessionsList(); track session) {

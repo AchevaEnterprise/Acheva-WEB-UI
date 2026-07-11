@@ -6,7 +6,7 @@ import {
   SemesterEnum,
 } from '../../../../@core/models/school.model';
 import { BackButtonComponent } from '../../../../@shared/components/back-button/back-button.component';
-import { LoaderComponent } from '../../../../@shared/components/loader/loader.component';
+import { SkeletonTableComponent } from '../../../../@shared/components/skeleton/skeleton-table.component';
 import { AuthenticationService } from '../../../auth/service/auth.service';
 import { ResultsService } from '../../../result-management/services/results.service';
 import {
@@ -34,7 +34,7 @@ export interface IStudentResultSemesterRecords {
     ResultViewComponent,
     ResultPreviewComponent,
     BackButtonComponent,
-    LoaderComponent,
+    SkeletonTableComponent,
   ],
   templateUrl: './student-result.component.html',
   styleUrl: './student-result.component.scss',

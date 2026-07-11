@@ -3,7 +3,7 @@
     type="button"
     mat-flat-button
     [disabled]="disabled() || loading()"
-    [class]="`${class()} btn-gradient`"
+    [class]="`${class()} btn-solid`"
     [style.cursor]="disabled() || loading() ? 'not-allowed' : 'pointer'"
     (click)="onBtnclick()"
   >

@@ -26,7 +26,7 @@ import { ToastService } from '../../@core/utility/toast.service';
 import { CardComponent } from '../../@shared/components/card/card.component';
 import { ConfirmationComponent } from '../../@shared/components/confirmation/confirmation.component';
 import { EmptyStateComponent } from '../../@shared/components/empty-state/empty-state.component';
-import { LoaderComponent } from '../../@shared/components/loader/loader.component';
+import { SkeletonComponent } from '../../@shared/components/skeleton/skeleton.component';
 import {
   ISegmentSwitcher,
   SegmentSwitcherComponent,
@@ -57,7 +57,7 @@ import { ChartComponent } from './components/chart/chart.component';
     MatSelectModule,
     SegmentSwitcherComponent,
     EmptyStateComponent,
-    LoaderComponent,
+    SkeletonComponent,
     MatDatepickerModule,
     MatTableModule,
     MatMenuModule,

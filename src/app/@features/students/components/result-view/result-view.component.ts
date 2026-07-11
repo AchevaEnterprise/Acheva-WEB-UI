@@ -7,7 +7,7 @@ import {
   SemesterEnum,
 } from '../../../../@core/models/school.model';
 import { EmptyStateComponent } from '../../../../@shared/components/empty-state/empty-state.component';
-import { LoaderComponent } from '../../../../@shared/components/loader/loader.component';
+import { SkeletonTableComponent } from '../../../../@shared/components/skeleton/skeleton-table.component';
 import { StatusBadgeComponent } from '../../../../@shared/components/status-badge/status-badge.component';
 import { IStudent, StudentResultType } from '../../models/student.model';
 
@@ -26,7 +26,7 @@ interface ResultViewData {
     EmptyStateComponent,
     UpperCasePipe,
     CommonModule,
-    LoaderComponent,
+    SkeletonTableComponent,
   ],
   templateUrl: './result-view.component.html',
   styleUrl: './result-view.component.scss',

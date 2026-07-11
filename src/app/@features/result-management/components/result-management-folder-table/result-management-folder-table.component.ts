@@ -29,7 +29,7 @@ import {
   facultiesSelector,
 } from '../../../../@core/store/school/school.selector';
 import { EmptyStateComponent } from '../../../../@shared/components/empty-state/empty-state.component';
-import { LoaderComponent } from '../../../../@shared/components/loader/loader.component';
+import { SkeletonTableComponent } from '../../../../@shared/components/skeleton/skeleton-table.component';
 import { PaginatorComponent } from '../../../../@shared/components/paginator/paginator.component';
 import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
 import { AuthenticationService } from '../../../auth/service/auth.service';
@@ -50,7 +50,7 @@ import { HasRejectedPipe } from '../../../../@core/pipes/has-rejected.pipe';
     MatDividerModule,
     MatIconModule,
     EmptyStateComponent,
-    LoaderComponent,
+    SkeletonTableComponent,
     HasRejectedPipe,
   ],
   templateUrl: './result-management-folder-table.component.html',

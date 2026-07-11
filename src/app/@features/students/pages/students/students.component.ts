@@ -10,7 +10,7 @@ import { ToastService } from '../../../../@core/utility/toast.service';
 import { EmptyStateComponent } from '../../../../@shared/components/empty-state/empty-state.component';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
 import { SearchInputComponent } from '../../../../@shared/components/forms/search-input/search-input.component';
-import { LoaderComponent } from '../../../../@shared/components/loader/loader.component';
+import { SkeletonTableComponent } from '../../../../@shared/components/skeleton/skeleton-table.component';
 import { ConfirmationComponent } from '../../../../@shared/components/confirmation/confirmation.component';
 import { UploadDialogComponent } from '../../../../@shared/components/upload-dialog/upload-dialog.component';
 import { AuthenticationService } from '../../../auth/service/auth.service';
@@ -26,7 +26,7 @@ import { StudentService } from '../../services/student.service';
     ButtonComponent,
     MatTableModule,
     MatTooltipModule,
-    LoaderComponent,
+    SkeletonTableComponent,
     EmptyStateComponent,
     TitleCasePipe,
   ],

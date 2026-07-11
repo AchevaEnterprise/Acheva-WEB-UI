@@ -49,10 +49,14 @@
   @apply flex gap-2 items-center;
 }
 
-.mat-mdc-unelevated-button.btn-gradient {
-  background: linear-gradient(180deg, #2793ff, #7bf) !important;
+.mat-mdc-unelevated-button.btn-solid {
+  background: #2793ff !important;
 
   @apply px-4;
+
+  &:hover:not(:disabled) {
+    background: #1d7fe0 !important;
+  }
 }
 
 .mat-mdc-button-disabled {

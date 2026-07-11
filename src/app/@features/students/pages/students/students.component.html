@@ -36,7 +36,7 @@
     </p>
 
     @if (loading()) {
-      <app-loader />
+      <app-skeleton-table [cols]="4" [rows]="8" />
     } @else {
       @if (dataSource().length > 0) {
         <div class="w-full overflow-auto max-h-[100vh]">

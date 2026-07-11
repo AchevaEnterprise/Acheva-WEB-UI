@@ -8,7 +8,7 @@ import { IDepartment } from '../../../../@core/models/school.model';
 import { ToastService } from '../../../../@core/utility/toast.service';
 import { ConfirmationComponent } from '../../../../@shared/components/confirmation/confirmation.component';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
-import { LoaderComponent } from '../../../../@shared/components/loader/loader.component';
+import { SkeletonComponent } from '../../../../@shared/components/skeleton/skeleton.component';
 import { RoleEnum } from '../../../auth/model/auth.model';
 import { AuthenticationService } from '../../../auth/service/auth.service';
 import { ICourse } from '../../../courses/models/course.model';
@@ -72,7 +72,7 @@ interface IHistorySession {
     DatePipe,
     TitleCasePipe,
     ButtonComponent,
-    LoaderComponent,
+    SkeletonComponent,
     ModerationCommentsComponent,
     ModerationTimelineComponent,
     ModeratorScoreFormComponent,

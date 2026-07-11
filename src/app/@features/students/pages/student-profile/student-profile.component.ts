@@ -10,7 +10,8 @@ import {
   SemesterEnum,
 } from '../../../../@core/models/school.model';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
-import { LoaderComponent } from '../../../../@shared/components/loader/loader.component';
+import { SkeletonComponent } from '../../../../@shared/components/skeleton/skeleton.component';
+import { SkeletonTableComponent } from '../../../../@shared/components/skeleton/skeleton-table.component';
 import { StatusBadgeComponent } from '../../../../@shared/components/status-badge/status-badge.component';
 import { ToastService } from '../../../../@core/utility/toast.service';
 import { AuthenticationService } from '../../../auth/service/auth.service';
@@ -38,7 +39,8 @@ interface LevelTab {
     MatIconModule,
     MatSelectModule,
     ButtonComponent,
-    LoaderComponent,
+    SkeletonComponent,
+    SkeletonTableComponent,
     StatusBadgeComponent,
     StudentStatCardComponent,
     AiInsightCardComponent,

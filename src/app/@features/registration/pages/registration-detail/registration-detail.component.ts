@@ -15,7 +15,7 @@ import { ToastService } from '../../../../@core/utility/toast.service';
 import { AuthenticationService } from '../../../auth/service/auth.service';
 import { ConfirmationComponent } from '../../../../@shared/components/confirmation/confirmation.component';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
-import { LoaderComponent } from '../../../../@shared/components/loader/loader.component';
+import { SkeletonComponent } from '../../../../@shared/components/skeleton/skeleton.component';
 import {
   ICourseRegistration,
   ICurriculumEntry,
@@ -49,7 +49,7 @@ interface IAddCandidate {
     TitleCasePipe,
     ReactiveFormsModule,
     ButtonComponent,
-    LoaderComponent,
+    SkeletonComponent,
   ],
   templateUrl: './registration-detail.component.html',
   styleUrl: './registration-detail.component.scss',

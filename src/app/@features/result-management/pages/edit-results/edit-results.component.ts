@@ -20,6 +20,8 @@ import { ConfirmationComponent } from '../../../../@shared/components/confirmati
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
 import { SearchInputComponent } from '../../../../@shared/components/forms/search-input/search-input.component';
 import { LoaderComponent } from '../../../../@shared/components/loader/loader.component';
+import { SkeletonComponent } from '../../../../@shared/components/skeleton/skeleton.component';
+import { SkeletonTableComponent } from '../../../../@shared/components/skeleton/skeleton-table.component';
 import { RejectReasonComponent } from '../../../../@shared/components/reject-reason/reject-reason.component';
 import {
   ISegmentSwitcher,
@@ -58,6 +60,8 @@ import {
     CardComponent,
     ButtonComponent,
     LoaderComponent,
+    SkeletonComponent,
+    SkeletonTableComponent,
     BackButtonComponent,
     MatMenuModule,
   ],

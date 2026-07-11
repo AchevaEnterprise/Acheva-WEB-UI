@@ -16,7 +16,7 @@ import { AssignCourseCoordinatorComponent } from '../../../../../@shared/compone
 import { BackButtonComponent } from '../../../../../@shared/components/back-button/back-button.component';
 import { EmptyStateComponent } from '../../../../../@shared/components/empty-state/empty-state.component';
 import { ButtonComponent } from '../../../../../@shared/components/forms/button/button.component';
-import { LoaderComponent } from '../../../../../@shared/components/loader/loader.component';
+import { SkeletonTableComponent } from '../../../../../@shared/components/skeleton/skeleton-table.component';
 import {
   ISegmentSwitcher,
   SegmentSwitcherComponent,
@@ -39,7 +39,7 @@ import { CoursesService } from '../../../../courses/services/courses.service';
     MatInputModule,
     MatSelectModule,
     EmptyStateComponent,
-    LoaderComponent,
+    SkeletonTableComponent,
     BackButtonComponent,
   ],
   templateUrl: './course-management.component.html',

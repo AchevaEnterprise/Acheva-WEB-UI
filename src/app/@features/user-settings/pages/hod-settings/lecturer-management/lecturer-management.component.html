@@ -28,7 +28,7 @@
   </div>
 
   @if (loading()) {
-    <app-loader />
+    <app-skeleton-table [cols]="4" [rows]="6" />
   } @else {
     @if (lecturersData().length > 0) {
       <div class="w-full overflow-auto max-h-[50vh]">

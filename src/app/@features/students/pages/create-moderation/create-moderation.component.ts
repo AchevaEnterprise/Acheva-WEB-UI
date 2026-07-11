@@ -14,7 +14,7 @@ import { finalize } from 'rxjs';
 import { ToastService } from '../../../../@core/utility/toast.service';
 import { BackButtonComponent } from '../../../../@shared/components/back-button/back-button.component';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
-import { LoaderComponent } from '../../../../@shared/components/loader/loader.component';
+import { SkeletonComponent } from '../../../../@shared/components/skeleton/skeleton.component';
 import { AuthenticationService } from '../../../auth/service/auth.service';
 import {
   IModerationEligibility,
@@ -64,7 +64,7 @@ const letterBodyRequired: ValidatorFn = (
     TitleCasePipe,
     ReactiveFormsModule,
     ButtonComponent,
-    LoaderComponent,
+    SkeletonComponent,
     BackButtonComponent,
     QuillEditorComponent,
   ],

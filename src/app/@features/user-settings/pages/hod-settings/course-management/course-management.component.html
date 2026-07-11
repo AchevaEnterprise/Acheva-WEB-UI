@@ -53,7 +53,7 @@
 
   <div class="mt-3">
     @if (loading()) {
-      <app-loader />
+      <app-skeleton-table [cols]="5" [rows]="6" />
     } @else {
       @if (dataSource().length > 0) {
         <div class="w-full overflow-auto max-h-[50vh]">

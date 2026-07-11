@@ -16,7 +16,7 @@ import { ToastService } from '../../../../@core/utility/toast.service';
 import { ConfirmationComponent } from '../../../../@shared/components/confirmation/confirmation.component';
 import { EmptyStateComponent } from '../../../../@shared/components/empty-state/empty-state.component';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
-import { LoaderComponent } from '../../../../@shared/components/loader/loader.component';
+import { SkeletonTableComponent } from '../../../../@shared/components/skeleton/skeleton-table.component';
 import { UploadDialogComponent } from '../../../../@shared/components/upload-dialog/upload-dialog.component';
 import {
   ICourseRegistration,
@@ -41,7 +41,7 @@ const SEMESTERS = ['1ST SEMESTER', '2ND SEMESTER'] as const;
     TitleCasePipe,
     ReactiveFormsModule,
     ButtonComponent,
-    LoaderComponent,
+    SkeletonTableComponent,
     EmptyStateComponent,
     MatTableModule,
   ],

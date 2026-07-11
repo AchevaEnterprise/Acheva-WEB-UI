@@ -22,7 +22,7 @@ import { of } from 'rxjs';
 import { AuthenticationService } from '../../../../@features/auth/service/auth.service';
 import { ResultsService } from '../../../../@features/result-management/services/results.service';
 import { EmptyStateComponent } from '../../empty-state/empty-state.component';
-import { LoaderComponent } from '../../loader/loader.component';
+import { SkeletonComponent } from '../../skeleton/skeleton.component';
 import { ButtonComponent } from '../button/button.component';
 
 @Component({
@@ -32,7 +32,7 @@ import { ButtonComponent } from '../button/button.component';
     MatFormFieldModule,
     MatInputModule,
     ButtonComponent,
-    LoaderComponent,
+    SkeletonComponent,
     EmptyStateComponent,
     DatePipe,
   ],

@@ -9,7 +9,7 @@ import {
 } from '@angular/core';
 import { finalize } from 'rxjs';
 import { LevelsEnum } from '../../../../@core/models/school.model';
-import { LoaderComponent } from '../../../../@shared/components/loader/loader.component';
+import { SkeletonTableComponent } from '../../../../@shared/components/skeleton/skeleton-table.component';
 import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
 import { ResultsService } from '../../../result-management/services/results.service';
 import { IResultEntry } from '../../models/student.model';
@@ -24,7 +24,7 @@ export interface IResultSessions {
 
 @Component({
   selector: 'app-result-list',
-  imports: [SvgComponent, NgClass, LoaderComponent],
+  imports: [SvgComponent, NgClass, SkeletonTableComponent],
   templateUrl: './result-list.component.html',
   styleUrl: './result-list.component.scss',
 })

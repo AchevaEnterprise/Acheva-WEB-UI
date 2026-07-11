@@ -143,7 +143,7 @@
   <!-- ── Cohort table ─────────────────────────────────────────────────── -->
   <div class="mt-4">
     @if (loading()) {
-      <app-loader />
+      <app-skeleton-table [cols]="5" [rows]="6" />
     } @else if (registrations().length > 0) {
       <div class="w-full overflow-auto">
         <table mat-table [dataSource]="registrations()">
