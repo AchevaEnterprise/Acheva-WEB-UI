@@ -152,6 +152,58 @@
               />
             </div>
           </div>
+
+          <!-- Classification (curriculum type) -->
+          <div class="input-style-1 acheva-input w-full">
+            <p class="acva-para-2 fw-400 label-text">Classification</p>
+            <mat-form-field [style.width.%]="100" appearance="outline">
+              <mat-select
+                placeholder="Choose a classification"
+                formControlName="classification"
+              >
+                @for (option of classificationOptions(); track $index) {
+                  <mat-option [value]="option.value">
+                    {{ option.label }}
+                  </mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <!-- Elective group (only when the course is an elective) -->
+          @if (form.controls.classification.value === 'ELECTIVE') {
+            <div class="grid md:grid-cols-2 grid-cols-1 gap-4">
+              <div class="input-style-1 acheva-input w-full">
+                <p class="acva-para-2 fw-400 label-text">
+                  Elective Group (optional)
+                </p>
+                <mat-form-field [style.width.%]="100" appearance="outline">
+                  <input
+                    matInput
+                    type="text"
+                    formControlName="electiveGroup"
+                    placeholder="e.g 300-1-A (leave empty for a free elective)"
+                  />
+                </mat-form-field>
+              </div>
+
+              @if (form.controls.electiveGroup.value) {
+                <div class="input-style-1 acheva-input w-full">
+                  <p class="acva-para-2 fw-400 label-text">
+                    Minimum required from the group
+                  </p>
+                  <mat-form-field [style.width.%]="100" appearance="outline">
+                    <input
+                      matInput
+                      type="number"
+                      min="1"
+                      formControlName="groupMinRequired"
+                    />
+                  </mat-form-field>
+                </div>
+              }
+            </div>
+          }
         </div>
       </app-card>
 

@@ -113,6 +113,16 @@ export class CreateCourseComponent implements OnInit, OnDestroy {
     // { label: '3rd Semester', value: SemesterEnum.THIRD },
   ]);
 
+  /**
+   * Curriculum classification — mirrors the Admin app so a course created here
+   * also lands in the department's curriculum (COMPULSORY / ELECTIVE / SIWES).
+   */
+  classificationOptions = signal<{ label: string; value: string }[]>([
+    { label: 'Compulsory', value: 'COMPULSORY' },
+    { label: 'Elective', value: 'ELECTIVE' },
+    { label: 'SIWES (Industrial Training)', value: 'SIWES' },
+  ]);
+
   schoolsOptions = signal<ISchool[]>([]);
   facultiesOptions = signal<IFaculty[]>([]);
   departmentsOptions = signal<IDepartment[]>([]);
@@ -147,6 +157,9 @@ export class CreateCourseComponent implements OnInit, OnDestroy {
       Validators.required
     ),
     courseLoad: new FormControl<number>(1, Validators.required),
+    classification: new FormControl<string>('COMPULSORY', Validators.required),
+    electiveGroup: new FormControl<string>(''),
+    groupMinRequired: new FormControl<number>(1),
   });
 
   private readonly sub: Subscription = new Subscription();
@@ -430,8 +443,19 @@ export class CreateCourseComponent implements OnInit, OnDestroy {
     // Get course code from separate control
     const courseCode = this.courseCodeControl.value || '';
 
-    const { semester, courseTitle, courseLoad, faculty, department, level } =
-      this.form.getRawValue();
+    const {
+      semester,
+      courseTitle,
+      courseLoad,
+      faculty,
+      department,
+      level,
+      classification,
+      electiveGroup,
+      groupMinRequired,
+    } = this.form.getRawValue();
+
+    const departmentId = (department as IDepartment)._id || '';
 
     const payload: ICreateCourse = {
       semester: semester || '',
@@ -439,38 +463,82 @@ export class CreateCourseComponent implements OnInit, OnDestroy {
       courseCode: courseCode,
       courseLoad: courseLoad || 0,
       faculty: (faculty as IFaculty)._id || '',
-      department: (department as IDepartment)._id || '',
+      department: departmentId,
       level: level || '',
     };
 
     this.sub.add(
-      this.courseService
-        .createCourse(payload)
-        .pipe(finalize(() => this.isLoading.set(false)))
-        .subscribe({
-          next: (resp) => {
-            if (resp.status) {
-              this.toast.showNotification(
-                'success',
-                'Course Created',
-                'Your course has been created successfully'
-              );
-              this.router.navigate(['../course-management'], {
-                relativeTo: this.route,
-                queryParams: { level },
-              });
-            }
-          },
-          error: (error) => {
+      this.courseService.createCourse(payload).subscribe({
+        next: (resp) => {
+          const courseId = (resp.data as { _id?: string } | undefined)?._id;
+
+          if (!resp.status || !courseId) {
+            this.isLoading.set(false);
             this.toast.showNotification(
-              'error',
-              'Course Creation Failed',
-              error.error.message ||
-                'An error occurred while creating the course'
+              'success',
+              'Course Created',
+              'Your course has been created successfully'
             );
-          },
-        })
+            this.navigateBackAfterCreate(level || '');
+            return;
+          }
+
+          // Mirror the Admin flow: classify the new course in the
+          // department's curriculum (COMPULSORY / ELECTIVE / SIWES) so it is
+          // registration-ready, not just a catalogue entry.
+          const isElective = classification === 'ELECTIVE';
+          const hasGroup = isElective && !!electiveGroup?.trim();
+
+          this.courseService
+            .upsertCurriculumEntry({
+              departmentId,
+              courseId,
+              level: level || '',
+              semester: semester || '',
+              units: courseLoad || 0,
+              type: classification || 'COMPULSORY',
+              electiveGroup: hasGroup ? electiveGroup!.trim() : undefined,
+              groupMinRequired: hasGroup ? groupMinRequired || 1 : undefined,
+            })
+            .pipe(finalize(() => this.isLoading.set(false)))
+            .subscribe({
+              next: () => {
+                this.toast.showNotification(
+                  'success',
+                  'Course Created',
+                  `Course created and classified as ${classification}.`
+                );
+                this.navigateBackAfterCreate(level || '');
+              },
+              error: (err) => {
+                // The course exists; only the curriculum classification failed.
+                this.toast.showNotification(
+                  'warning',
+                  'Classified partially',
+                  err?.error?.message ??
+                    'Course created, but it could not be added to the curriculum. Add it via curriculum import.'
+                );
+                this.navigateBackAfterCreate(level || '');
+              },
+            });
+        },
+        error: (error) => {
+          this.isLoading.set(false);
+          this.toast.showNotification(
+            'error',
+            'Course Creation Failed',
+            error.error.message || 'An error occurred while creating the course'
+          );
+        },
+      })
     );
+  }
+
+  private navigateBackAfterCreate(level: string): void {
+    this.router.navigate(['../course-management'], {
+      relativeTo: this.route,
+      queryParams: { level },
+    });
   }
 
   cancel() {

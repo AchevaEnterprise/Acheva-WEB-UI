@@ -79,7 +79,10 @@ export class StudentProfileComponent implements OnInit {
   activeSemester = signal<SemesterEnum>(SemesterEnum.FIRST);
 
   semesterResults = signal<StudentResultType[]>([]);
+  /** GPA of the level/semester currently selected in the tabs. */
   gpa = signal<number>(0);
+  /** Cumulative GPA across the student's whole record. */
+  cgpa = signal<string | null>(null);
 
   // ── Derived view-model bits ────────────────────────────────────────────────
   departmentName = computed<string>(() => {
@@ -154,6 +157,7 @@ export class StudentProfileComponent implements OnInit {
           this.student.set(resp.data);
           this.activeLevel.set(this.resolveDefaultLevel(resp.data.level));
           this.fetchSessionsAndResults();
+          this.fetchCgpa();
         },
       });
   }
@@ -202,6 +206,15 @@ export class StudentProfileComponent implements OnInit {
           this.gpa.set(resp.data?.gpa ?? 0);
         },
       });
+  }
+
+  private fetchCgpa(): void {
+    const studentId = this.student()?._id;
+    if (!studentId) return;
+
+    this.studentService.getStudentCGPA(studentId).subscribe({
+      next: (resp) => this.cgpa.set(resp.data?.cgpa ?? null),
+    });
   }
 
   /** Falls back to 100 level if the student record has no level set. */

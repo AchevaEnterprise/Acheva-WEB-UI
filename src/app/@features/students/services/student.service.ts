@@ -63,6 +63,16 @@ export class StudentService {
     );
   }
 
+  /** Cumulative GPA across all of a student's entries (same figure the
+   *  student sees on their own dashboard). */
+  getStudentCGPA(
+    studentId: string
+  ): Observable<IAPIResponse<{ cgpa: string; coursesEnrolled: number }>> {
+    return this.http.get<IAPIResponse<{ cgpa: string; coursesEnrolled: number }>>(
+      `${this.studentUrl}/cgpa/${studentId}`
+    );
+  }
+
   getStudentByRegNo(
     regNo: string,
     schoolId: string

@@ -94,6 +94,8 @@ export class CourseManagementComponent implements OnInit {
     courseTitle: '',
     level: this.activeSegment().value as LevelsEnum,
     semester: '',
+    // No paginator on this page — fetch the whole level (backend caps at 100).
+    limit: 100,
   };
 
   constructor() {

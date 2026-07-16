@@ -78,9 +78,15 @@
       <section class="profile-stats">
         <app-student-stat-card
           label="CGPA"
-          [value]="(gpa() | number: '1.2-2') ?? '—'"
+          [value]="cgpa() ?? '—'"
           icon="emoji_events"
           accent="amber"
+        />
+        <app-student-stat-card
+          label="GPA (current view)"
+          [value]="(gpa() | number: '1.2-2') ?? '—'"
+          icon="insights"
+          accent="indigo"
         />
         <app-student-stat-card
           label="Courses enrolled"
