@@ -68,9 +68,9 @@ export class StudentService {
   getStudentCGPA(
     studentId: string
   ): Observable<IAPIResponse<{ cgpa: string; coursesEnrolled: number }>> {
-    return this.http.get<IAPIResponse<{ cgpa: string; coursesEnrolled: number }>>(
-      `${this.studentUrl}/cgpa/${studentId}`
-    );
+    return this.http.get<
+      IAPIResponse<{ cgpa: string; coursesEnrolled: number }>
+    >(`${this.studentUrl}/cgpa/${studentId}`);
   }
 
   getStudentByRegNo(
