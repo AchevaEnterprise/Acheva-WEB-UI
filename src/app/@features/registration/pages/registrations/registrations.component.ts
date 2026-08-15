@@ -1,4 +1,4 @@
-import { TitleCasePipe } from '@angular/common';
+import { DatePipe, TitleCasePipe } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -39,6 +39,7 @@ const SEMESTERS = ['1ST SEMESTER', '2ND SEMESTER'] as const;
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     TitleCasePipe,
+    DatePipe,
     ReactiveFormsModule,
     ButtonComponent,
     SkeletonTableComponent,
@@ -64,10 +65,11 @@ export class RegistrationsComponent implements OnInit {
   semester = signal<string>(SEMESTERS[0]);
 
   loading = signal(false);
-  running = signal(false);
   registrations = signal<ICourseRegistration[]>([]);
   /** Pending elective outcomes (fail / C-or-lower) awaiting the CA's call. */
   reviews = signal<IElectiveReview[]>([]);
+  /** Decisions already made — kept visible so a mis-click can be undone. */
+  recentDecisions = signal<IElectiveReview[]>([]);
   deciding = signal(false);
 
   readonly counts = computed(() => {
@@ -106,10 +108,165 @@ export class RegistrationsComponent implements OnInit {
         /* non-CA roles simply have no queue */
       },
     });
+    this.registrationService.recentlyDecidedReviews().subscribe({
+      next: (resp) => this.recentDecisions.set(resp.data ?? []),
+      error: () => {
+        /* non-CA roles simply have no queue */
+      },
+    });
   }
 
   reviewStudent(review: IElectiveReview): IRegistrationStudent | null {
     return typeof review.student === 'object' ? review.student : null;
+  }
+
+  /**
+   * A registration mismatch (the student sat something they were not
+   * registered for) is approved or rejected — never keep/unregister. Nothing
+   * is applied until the CA decides; the score is held out of GPA meanwhile.
+   */
+  isMismatch(review: IElectiveReview): boolean {
+    return (
+      review.kind === 'ELECTIVE_MISMATCH' ||
+      review.kind === 'UNREGISTERED_WRITE' ||
+      review.kind === 'DROPPED_WRITE'
+    );
+  }
+
+  /** What the CA is being asked to decide, in their own words. */
+  mismatchPrompt(review: IElectiveReview): string {
+    switch (review.kind) {
+      case 'ELECTIVE_MISMATCH':
+        return `Wrote ${review.courseCode}, registered for ${
+          review.relatedCourseCode ?? 'another course'
+        }`;
+      case 'UNREGISTERED_WRITE':
+        return `Wrote ${review.courseCode} without registering for it`;
+      case 'DROPPED_WRITE':
+        return `Wrote ${review.courseCode}, which was dropped from their registration`;
+      default:
+        return '';
+    }
+  }
+
+  mismatchApproveLabel(review: IElectiveReview): string {
+    switch (review.kind) {
+      case 'ELECTIVE_MISMATCH':
+        return 'Approve swap';
+      case 'DROPPED_WRITE':
+        return 'Reinstate';
+      default:
+        return 'Register';
+    }
+  }
+
+  decideMismatch(
+    review: IElectiveReview,
+    decision: 'APPROVE' | 'REJECT'
+  ): void {
+    const approving = decision === 'APPROVE';
+    const ref = this.dialog.open(ConfirmationComponent, {
+      data: {
+        message: approving
+          ? `${this.mismatchApproveLabel(review)} ${review.courseCode}?`
+          : `Reject ${review.courseCode}?`,
+        subTitle: approving
+          ? this.approveSubtitle(review)
+          : 'The course will not be added to their registration and the ' +
+            'published score will be voided — it counts for nothing. ' +
+            'Reversible from Recently decided. Fully audited.',
+      },
+    });
+    ref.afterClosed().subscribe((confirmed: boolean) => {
+      if (!confirmed) return;
+      this.deciding.set(true);
+      this.registrationService
+        .decideReview(review._id, decision)
+        .pipe(finalize(() => this.deciding.set(false)))
+        .subscribe({
+          next: () => {
+            this.toast.showNotification(
+              'success',
+              approving ? 'Registration updated' : 'Course rejected',
+              approving
+                ? `${review.courseCode} is registered and the score now counts.`
+                : `${review.courseCode} was rejected and its score voided.`
+            );
+            this.loadReviews();
+            this.load();
+          },
+          error: (err: { error?: { message?: string } }) =>
+            this.toast.showNotification(
+              'error',
+              'Decision failed',
+              err?.error?.message ?? 'Could not apply the decision.'
+            ),
+        });
+    });
+  }
+
+  private approveSubtitle(review: IElectiveReview): string {
+    const tail =
+      ' The held score will start counting toward their CGPA. Fully audited.';
+    if (review.kind === 'ELECTIVE_MISMATCH') {
+      return (
+        `${review.relatedCourseCode ?? 'The registered course'} will be ` +
+        `dropped and ${review.courseCode} registered in its place.${tail}`
+      );
+    }
+    if (review.kind === 'DROPPED_WRITE') {
+      return `${review.courseCode} will be put back on their registration.${tail}`;
+    }
+    return `${review.courseCode} will be added to their registration.${tail}`;
+  }
+
+  decidedByName(review: IElectiveReview): string {
+    const by = review.decidedBy;
+    return by && typeof by === 'object' ? `${by.firstname} ${by.lastname}` : '';
+  }
+
+  /**
+   * Undo a decision. An UNREGISTER reversal un-voids the published entry, so
+   * the grade starts counting toward CGPA again — spelled out in the dialog
+   * rather than left as a silent side effect.
+   */
+  undoDecision(review: IElectiveReview): void {
+    const wasUnregistered = review.status === 'UNREGISTERED';
+    const ref = this.dialog.open(ConfirmationComponent, {
+      data: {
+        message: `Undo the decision on ${review.courseCode}?`,
+        subTitle: wasUnregistered
+          ? 'The course is re-registered and the published score is un-voided ' +
+            '— it counts toward CGPA and carry-overs again. Returns to your ' +
+            'pending queue. Fully audited.'
+          : 'The review returns to your pending queue so you can decide again. ' +
+            'Fully audited.',
+      },
+    });
+    ref.afterClosed().subscribe((confirmed: boolean) => {
+      if (!confirmed) return;
+      this.deciding.set(true);
+      this.registrationService
+        .revertReview(review._id)
+        .pipe(finalize(() => this.deciding.set(false)))
+        .subscribe({
+          next: () => {
+            this.toast.showNotification(
+              'success',
+              'Decision undone',
+              `${review.courseCode} is back in your pending queue.`
+            );
+            this.loadReviews();
+            this.load();
+          },
+          error: (err: { error?: { message?: string } }) =>
+            this.toast.showNotification(
+              'error',
+              'Undo failed',
+              err?.error?.message ?? 'Could not undo the decision.'
+            ),
+        });
+    });
   }
 
   decide(review: IElectiveReview, decision: 'KEEP' | 'UNREGISTER'): void {
@@ -175,53 +332,6 @@ export class RegistrationsComponent implements OnInit {
             'Could not load registrations.'
           ),
       });
-  }
-
-  runRegistration(): void {
-    if (this.sessionCtrl.invalid) {
-      this.toast.showNotification(
-        'warning',
-        'Invalid session',
-        'Enter a session like 2026/2027.'
-      );
-      return;
-    }
-    const ref = this.dialog.open(ConfirmationComponent, {
-      data: {
-        message: 'Run auto-registration?',
-        subTitle:
-          `Every student in your cohort without a registration for ` +
-          `${this.sessionCtrl.value} · ${this.semester().toLowerCase()} will ` +
-          `be registered automatically. Existing registrations are untouched.`,
-      },
-    });
-    ref.afterClosed().subscribe((confirmed: boolean) => {
-      if (!confirmed) return;
-      this.running.set(true);
-      this.registrationService
-        .run(this.sessionCtrl.value, this.semester())
-        .pipe(finalize(() => this.running.set(false)))
-        .subscribe({
-          next: (resp) => {
-            const r = resp.data;
-            this.toast.showNotification(
-              'success',
-              'Auto-registration complete',
-              `${r.registered} registered · ${r.pendingApproval} awaiting ` +
-                `your approval · ${r.needsAttention} need attention · ` +
-                `${r.skippedExisting} already registered`
-            );
-            this.load();
-          },
-          error: (err: { error?: { message?: string } }) => {
-            this.toast.showNotification(
-              'error',
-              'Run failed',
-              err?.error?.message ?? 'Could not run auto-registration.'
-            );
-          },
-        });
-    });
   }
 
   importCurriculum(): void {

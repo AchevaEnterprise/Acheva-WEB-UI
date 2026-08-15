@@ -251,6 +251,8 @@ export class RegularTableResultUploadComponent {
       status: [student.status],
       isEdited: [student.isEdited || false],
       moderated: [student.moderated || false],
+      voided: [student.voided || false],
+      voidedReason: [student.voidedReason ?? null],
       unregistered: [false],
     });
   }

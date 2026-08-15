@@ -179,6 +179,20 @@
                         @if (entry.type !== 'SIWES') {
                           <button
                             type="button"
+                            class="rd-excuse"
+                            [disabled]="acting()"
+                            (click)="excuseEntry(entry)"
+                            [attr.aria-label]="
+                              'Excuse ' +
+                              entry.courseCode +
+                              ' from this semester'
+                            "
+                            title="School-approved absence — no grade, no CGPA impact, course stays outstanding"
+                          >
+                            Excuse
+                          </button>
+                          <button
+                            type="button"
                             class="rd-drop"
                             [disabled]="acting()"
                             (click)="dropEntry(entry)"
@@ -226,13 +240,68 @@
                   entry of droppedEntries();
                   track trackEntry($index, entry)
                 ) {
-                  <span class="rd-dropped__chip">
+                  <span
+                    class="rd-dropped__chip"
+                    [class.rd-dropped__chip--excused]="entry.excused"
+                    [attr.title]="entry.droppedReason"
+                  >
                     {{ entry.courseCode }} ({{ entry.units }}u)
+                    @if (entry.excused) {
+                      · excused
+                    }
                   </span>
                 }
               </div>
             }
           </section>
+
+          <!-- ── Outstanding excused courses ────────────────────────────── -->
+          @if (excusedCourses().length > 0) {
+            <section class="rd-card rd-outstanding">
+              <h3 class="acva-para-2 fw-600 m-0 mb-1">
+                Outstanding — excused, must still be taken ({{
+                  excusedCourses().length
+                }})
+              </h3>
+              <p class="acva-caption text-neutral-500 mb-3">
+                The student was excused from these exams, so no grade was
+                recorded and their CGPA is unaffected. Each one is re-registered
+                automatically in a later session as a
+                <strong>fresh registration — not a carry-over</strong>.
+              </p>
+              <table class="rd-table">
+                <thead>
+                  <tr>
+                    <th>Course</th>
+                    <th>Units</th>
+                    <th>Returns as</th>
+                    <th>Excused in</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (row of excusedCourses(); track row.courseId) {
+                    <tr>
+                      <td class="fw-600">
+                        {{ row.courseCode }}
+                        <span class="acva-caption text-neutral-500 block">
+                          {{ row.courseTitle }}
+                        </span>
+                      </td>
+                      <td>{{ row.units }}u</td>
+                      <td>
+                        <span class="rd-outstanding__type">
+                          {{ row.originalType }}
+                        </span>
+                      </td>
+                      <td>
+                        {{ row.excusedInSession }} · {{ row.excusedInLevel }}L
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </section>
+          }
 
           <!-- ── Decision trace ─────────────────────────────────────────── -->
           <section class="rd-card">

@@ -40,6 +40,14 @@ export interface IStudentGrade {
   isEdited?: boolean;
   /** Set when the score was replaced through the moderation workflow. */
   moderated?: boolean;
+  /**
+   * Set when a CA unregistered this elective during post-publish
+   * reconciliation. The entry is excluded from GPA, transcripts and the
+   * carry-over ledger but is never deleted — without a chip it looks like an
+   * ordinary score that silently stopped counting.
+   */
+  voided?: boolean;
+  voidedReason?: string | null;
 }
 
 export interface IStudentQuery {

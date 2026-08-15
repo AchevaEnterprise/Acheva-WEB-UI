@@ -9,6 +9,7 @@ import {
   ICurriculumEntry,
   ICurriculumImportReport,
   IOutstandingCarryOver,
+  IOutstandingExcusedCourse,
   IRunReport,
   IStudentCgpa,
 } from '../models/registration.model';
@@ -101,14 +102,54 @@ export class RegistrationService {
     );
   }
 
+  /** Decisions already made (last 14 days), newest first — the undo list. */
+  recentlyDecidedReviews(): Observable<IAPIResponse<IElectiveReview[]>> {
+    return this.http.get<IAPIResponse<IElectiveReview[]>>(
+      `${this.baseUrl}/reviews/recent`
+    );
+  }
+
   decideReview(
     id: string,
-    decision: 'KEEP' | 'UNREGISTER',
+    decision: 'KEEP' | 'UNREGISTER' | 'APPROVE' | 'REJECT',
     note?: string
   ): Observable<IAPIResponse<IElectiveReview>> {
     return this.http.patch<IAPIResponse<IElectiveReview>>(
       `${this.baseUrl}/reviews/${id}`,
       { decision, note }
+    );
+  }
+
+  /** Audited undo of a decided review — returns it to the pending queue. */
+  revertReview(id: string): Observable<IAPIResponse<IElectiveReview>> {
+    return this.http.post<IAPIResponse<IElectiveReview>>(
+      `${this.baseUrl}/reviews/${id}/revert`,
+      {}
+    );
+  }
+
+  /**
+   * CA excuses a student from sitting a course. Drops the line without a
+   * grade and leaves the course outstanding — it returns in a later session
+   * as a fresh registration, never a carry-over.
+   */
+  excuseCourse(
+    id: string,
+    courseId: string,
+    note?: string
+  ): Observable<IAPIResponse<ICourseRegistration>> {
+    return this.http.patch<IAPIResponse<ICourseRegistration>>(
+      `${this.baseUrl}/${id}/excuse`,
+      { courseId, note }
+    );
+  }
+
+  /** Courses the student was excused from and must still take. */
+  excusedCourses(
+    studentId: string
+  ): Observable<IAPIResponse<IOutstandingExcusedCourse[]>> {
+    return this.http.get<IAPIResponse<IOutstandingExcusedCourse[]>>(
+      `${this.baseUrl}/excused/${studentId}`
     );
   }
 

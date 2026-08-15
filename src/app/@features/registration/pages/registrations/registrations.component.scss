@@ -182,6 +182,36 @@
       color: #b91c1c;
     }
   }
+
+  // Already-decided panel: same shell, muted rail — it is a record, not a
+  // queue demanding action.
+
+  &--decided {
+    border-left-color: #cbd5e1;
+  }
+
+  // Explains what the student actually did, on mismatch rows only.
+
+  &__prompt {
+    color: #92400e;
+    margin-top: 2px;
+  }
+
+  &__decision {
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    background: #e8f3ff;
+    color: #134980;
+    white-space: nowrap;
+
+    &--unregistered {
+      background: #f1f5f9;
+      color: #475569;
+    }
+  }
 }
 
 .reg-reviews__cgpa {
@@ -192,4 +222,12 @@
   background: #e8f3ff;
   color: #134980;
   white-space: nowrap;
+}
+
+// Replaces the old "Run auto-registration" button: this page reports what
+// students did, it does not initiate registration.
+
+.reg-controls__note {
+  max-width: 22rem;
+  text-align: right;
 }
