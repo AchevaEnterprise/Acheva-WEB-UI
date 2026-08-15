@@ -32,6 +32,7 @@
 // Chip for entries a CA unregistered at reconciliation. Deliberately slate,
 // not the fail red — the score is excluded from every calculation, which is
 // not the same thing as a failure.
+
 .voided-chip {
   display: inline-block;
   margin-left: 0.25rem;
