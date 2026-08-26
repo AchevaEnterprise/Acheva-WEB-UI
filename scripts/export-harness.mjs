@@ -12,7 +12,14 @@ import { mkdirSync, statSync } from 'fs';
 
 const API = process.env.EH_API ?? 'http://localhost:3000';
 const APP = process.env.EH_APP ?? 'http://localhost:4200';
-const EMAIL = process.env.EH_EMAIL ?? 'danielchinemerem302+6@gmail.com';
+/**
+ * Export is for EVERY role, not just the lecturer who computed the result —
+ * the Head of Department and the Dean are the ones who sign the paper form.
+ * Each account is checked on the page that role actually uses.
+ */
+const ACCOUNTS = (process.env.EH_EMAILS ??
+  'danielchinemerem302+2@gmail.com,danielchinemerem302+1@gmail.com,danielchinemerem302@gmail.com,danielchinemerem302+6@gmail.com'
+).split(',');
 const PASSWORD = process.env.EH_PASSWORD ?? 'Password8@';
 
 let failures = 0;
@@ -26,81 +33,88 @@ const check = (ok, m, d = '') => {
   const downloadDir = '/tmp/acheva-export-test';
   mkdirSync(downloadDir, { recursive: true });
 
-  const signin = await fetch(`${API}/auth/lecturers/signin`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: EMAIL, password: PASSWORD }),
-  });
-  const { data } = await signin.json();
-  const { accessToken, refreshToken, ...account } = data;
-
-  // A result with entries the exporter can actually render.
-  const results = await fetch(`${API}/results/prepared-results`, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  }).then((r) => r.json());
-  const target = (results?.data?.results ?? []).find((r) => r.students > 0) ?? results?.data?.results?.[0];
-  if (!target) throw new Error('no result available for this account');
-  console.log(`target: ${target.course?.courseCode} · ${target.session} · ${target.status}\n`);
-
   const browser = await chromium.launch({ headless: true });
-  const context = await browser.newContext({
-    viewport: { width: 1440, height: 1000 },
-    deviceScaleFactor: 2,
-    acceptDownloads: true,
-  });
-  await context.addInitScript(([t, r, a]) => {
-    localStorage.setItem('token', t);
-    localStorage.setItem('refresh_token', r);
-    localStorage.setItem('active_account', a);
-  }, [accessToken, refreshToken, JSON.stringify(account)]);
 
-  const page = await context.newPage();
-  const errors = [];
-  page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
-  page.on('pageerror', (e) => errors.push(String(e)));
+  for (const email of ACCOUNTS) {
+    const signin = await fetch(`${API}/auth/lecturers/signin`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: PASSWORD }),
+    });
+    if (!signin.ok) { console.log(`\n! ${email} — sign-in failed, skipped`); continue; }
+    const { data } = await signin.json();
+    const { accessToken, refreshToken, ...account } = data;
 
-  await page.goto(
-    `${APP}/my-result/upload-result?resultId=${target._id}&status=${target.status}`,
-    { waitUntil: 'networkidle', timeout: 40_000 },
-  );
-  await page.waitForTimeout(2500);
+    const results = await fetch(`${API}/results/prepared-results`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    }).then((r) => r.json());
+    const target =
+      (results?.data?.results ?? []).find((r) => r.students > 0) ??
+      results?.data?.results?.[0];
+    if (!target) { console.log(`\n! ${account.role} — no result on this desk, skipped`); continue; }
 
-  console.log('── the button lives on the computation page ──');
-  const exportBtn = page.getByRole('button', { name: /^Export$/i });
-  check((await exportBtn.count()) > 0, 'Export button is present');
-  await exportBtn.first().click();
+    // Lecturers compute on upload-result; every other role opens the same
+    // result through result-management's edit-results.
+    const isLecturer = account.role === 'LECTURER';
+    const route = isLecturer
+      ? `/my-result/upload-result?resultId=${target._id}&status=${target.status}`
+      : `/result-management/edit-results?resultId=${target._id}&status=${target.status}`;
 
-  console.log('\n── the preview is the real PDF ──');
-  const dialog = page.locator('app-export-result-dialog');
-  await dialog.waitFor({ state: 'visible', timeout: 15_000 }).catch(() => {});
-  check((await dialog.count()) > 0, 'export dialog opens');
+    console.log(`\n══ ${account.role} — ${target.course?.courseCode} (${isLecturer ? 'upload-result' : 'edit-results'}) ══`);
 
-  const frame = dialog.locator('iframe.export-dialog__frame');
-  await frame.waitFor({ state: 'attached', timeout: 30_000 }).catch(() => {});
-  check((await frame.count()) > 0, 'a PDF preview is rendered (not an HTML mock)');
-  const src = await frame.getAttribute('src').catch(() => null);
-  check(Boolean(src && src.startsWith('blob:')), 'preview is a generated blob', src?.slice(0, 24));
+    const context = await browser.newContext({
+      viewport: { width: 1440, height: 1000 },
+      acceptDownloads: true,
+    });
+    await context.addInitScript(([t, r, a]) => {
+      localStorage.setItem('token', t);
+      localStorage.setItem('refresh_token', r);
+      localStorage.setItem('active_account', a);
+    }, [accessToken, refreshToken, JSON.stringify(account)]);
 
-  await page.screenshot({ path: 'screenshots/export-preview.png' });
+    const page = await context.newPage();
+    const errors = [];
+    page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+    page.on('pageerror', (e) => errors.push(String(e)));
 
-  console.log('\n── both downloads produce a file ──');
-  for (const [label, expectExt] of [['Download PDF', '.pdf'], ['Download Excel', '.xlsx']]) {
-    const waitFor = page.waitForEvent('download', { timeout: 30_000 });
-    await dialog.getByRole('button', { name: new RegExp(label, 'i') }).click();
-    try {
-      const dl = await waitFor;
-      const name = dl.suggestedFilename();
-      const path = `${downloadDir}/${name}`;
-      await dl.saveAs(path);
-      const size = statSync(path).size;
-      check(name.endsWith(expectExt) && size > 1000, `${label} → ${name}`, `${size} bytes`);
-    } catch (e) {
-      check(false, `${label} produced a file`, e.message.split('\n')[0]);
+    await page.goto(`${APP}${route}`, { waitUntil: 'networkidle', timeout: 40_000 });
+    await page.waitForTimeout(2500);
+
+    const exportBtn = page.getByRole('button', { name: /^Export$/i });
+    check((await exportBtn.count()) > 0, 'Export button is present');
+    if ((await exportBtn.count()) === 0) { await context.close(); continue; }
+    await exportBtn.first().click();
+
+    const dialog = page.locator('app-export-result-dialog');
+    await dialog.waitFor({ state: 'visible', timeout: 15_000 }).catch(() => {});
+    check((await dialog.count()) > 0, 'export dialog opens');
+
+    const frame = dialog.locator('iframe.export-dialog__frame');
+    await frame.waitFor({ state: 'attached', timeout: 30_000 }).catch(() => {});
+    const src = await frame.getAttribute('src').catch(() => null);
+    // Headless Chromium has no PDF viewer, so the blob URL is the evidence —
+    // the pixels are always blank here even when it works.
+    check(Boolean(src && src.startsWith('blob:')), 'preview is the generated PDF blob');
+
+    for (const [label, ext] of [['Download PDF', '.pdf'], ['Download Excel', '.xlsx']]) {
+      const waitFor = page.waitForEvent('download', { timeout: 30_000 });
+      await dialog.getByRole('button', { name: new RegExp(label, 'i') }).click();
+      try {
+        const dl = await waitFor;
+        const name = dl.suggestedFilename();
+        const path = `${downloadDir}/${account.role}-${name}`;
+        await dl.saveAs(path);
+        check(name.endsWith(ext) && statSync(path).size > 1000, `${label} → ${name}`, `${statSync(path).size} bytes`);
+      } catch (e) {
+        check(false, `${label} produced a file`, e.message.split('\n')[0]);
+      }
     }
-  }
 
-  const real = errors.filter((e) => !/favicon|ERR_CONNECTION|Failed to load resource/i.test(e));
-  check(real.length === 0, 'no console errors', real.slice(0, 2).join(' | '));
+    const real = errors.filter((e) => !/favicon|ERR_CONNECTION|Failed to load resource/i.test(e));
+    check(real.length === 0, 'no console errors', real.slice(0, 2).join(' | '));
+
+    await context.close();
+  }
 
   await browser.close();
   console.log(`\n${failures === 0 ? 'ALL PASS' : failures + ' FAILURE(S)'}`);

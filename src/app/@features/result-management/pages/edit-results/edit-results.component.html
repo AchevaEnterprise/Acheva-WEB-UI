@@ -1,12 +1,25 @@
-<header class="mb-4 flex gap-4 justify-between">
+<header class="mb-4 flex gap-4 justify-between items-center">
   <app-back-button />
 
-  <app-button
-    [label]="tableExpanded() ? 'Collapse Table' : 'Expand Table'"
-    class="btn-sm"
-    type="clear"
-    (clickEvent)="toggleTableView()"
-  />
+  <div class="flex items-center gap-3">
+    <!-- Every role that can open a result can take it away as the official
+         grade report — the HOD and Dean are the ones who sign it. -->
+    <app-button
+      label="Export"
+      type="outline"
+      icon="icons/general/download-icon.svg"
+      class="btn-sm"
+      [disabled]="!resultId"
+      (clickEvent)="exportResult()"
+    />
+
+    <app-button
+      [label]="tableExpanded() ? 'Collapse Table' : 'Expand Table'"
+      class="btn-sm"
+      type="clear"
+      (clickEvent)="toggleTableView()"
+    />
+  </div>
 </header>
 
 @if (!tableExpanded()) {

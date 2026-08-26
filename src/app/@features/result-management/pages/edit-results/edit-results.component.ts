@@ -7,6 +7,7 @@ import {
   signal,
 } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
+import { ExportResultDialogComponent } from '../../components/export-result-dialog/export-result-dialog.component';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -645,6 +646,25 @@ export class EditResultsComponent implements OnInit, CanComponentDeactivate {
           }
         },
       });
+  }
+
+  /**
+   * The official grade report for this result — preview, then PDF or Excel.
+   *
+   * Available to every role that can open the result, not just the lecturer
+   * who computed it: the Head of Department and the Dean are the people who
+   * sign the paper form.
+   */
+  exportResult(): void {
+    if (!this.resultId) return;
+
+    this.dialog.open(ExportResultDialogComponent, {
+      width: '900px',
+      maxWidth: '95vw',
+      height: '90vh',
+      data: { resultId: this.resultId },
+      panelClass: 'export-result-panel',
+    });
   }
 
   toggleTableView() {
