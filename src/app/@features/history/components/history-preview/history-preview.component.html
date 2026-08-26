@@ -1,72 +1,139 @@
-<section class="p-4 overflow-y-auto grid gap-4">
+<section class="history-preview p-4 grid gap-4 content-start">
   <div class="flex justify-between items-center">
-    <h2 class="font-medium text-[1.2rem]">History Preview</h2>
-    <button class="cursor-pointer" (click)="close()">
+    <h2 class="acva-heading-6 fw-500">History Preview</h2>
+    <button
+      type="button"
+      class="cursor-pointer"
+      aria-label="Close history preview"
+      (click)="close()"
+    >
       <app-svg src="icons/general/close-icon.svg"></app-svg>
     </button>
   </div>
 
-  <div class="grid grid-cols-2 gap-4">
-    <div>
-      <p class="text-sm text-gray-400">Received On</p>
-      <p class="acva-para-2">May 2nd, 2025, 8:09AM</p>
+  @if (loading()) {
+    <div class="grid gap-4">
+      <app-skeleton width="100%" height="3rem" />
+      <app-skeleton width="100%" height="9rem" />
+      <app-skeleton width="100%" height="7rem" />
+    </div>
+  }
+
+  @if (detail(); as record) {
+    <!-- DATES -->
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <p class="acva-caption text-gray-400 uppercase">Received on</p>
+        <p class="acva-para-2">
+          {{
+            record.receivedOn
+              ? (record.receivedOn | date: 'MMMM d, y. h:mma')
+              : '—'
+          }}
+        </p>
+      </div>
+
+      <div>
+        <p class="acva-caption text-gray-400 uppercase">{{ actionLabel }}</p>
+        <p class="acva-para-2">
+          {{ actionDate ? (actionDate | date: 'MMMM d, y. h:mma') : '—' }}
+        </p>
+      </div>
+    </div>
+
+    <!-- SUMMARY -->
+    <h4 class="section-heading acva-para-2">
+      {{ isModeration ? 'Moderation Summary' : 'Course Summary' }}
+    </h4>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <p class="acva-caption text-gray-400 uppercase">Course code</p>
+        <p class="acva-para-2">{{ record.courseCode }}</p>
+      </div>
+
+      <div>
+        <p class="acva-caption text-gray-400 uppercase">Session</p>
+        <p class="acva-para-2">{{ record.session || '—' }}</p>
+      </div>
+
+      <div>
+        <p class="acva-caption text-gray-400 uppercase">Department</p>
+        <p class="acva-para-2">{{ record.department || '—' }}</p>
+      </div>
+
+      <div>
+        <p class="acva-caption text-gray-400 uppercase">Course title</p>
+        <p class="acva-para-2">{{ record.courseTitle }}</p>
+      </div>
+
+      <div>
+        <p class="acva-caption text-gray-400 uppercase">Semester</p>
+        <p class="acva-para-2">{{ record.semester || '—' }}</p>
+      </div>
+
+      <div>
+        <p class="acva-caption text-gray-400 uppercase">Level</p>
+        <p class="acva-para-2">{{ record.level || '—' }}</p>
+      </div>
     </div>
 
     <div>
-      <p class="text-sm text-gray-400">Published On</p>
-      <p>May 2nd, 2025, 8:09AM</p>
-    </div>
-  </div>
-
-  <h4 class="bg-gray-200 px-2 rounded-sm">Course Summary</h4>
-  <div class="grid grid-cols-2 gap-4">
-    <div>
-      <p class="text-sm text-gray-400">Course Code</p>
-      <p>May 2nd, 2025, 8:09AM</p>
-    </div>
-
-    <div>
-      <p class="text-sm text-gray-400">Session</p>
-      <p>May 2nd, 2025, 8:09AM</p>
-    </div>
-  </div>
-
-  <div class="grid grid-cols-2 gap-4">
-    <div>
-      <p class="text-sm text-gray-400">Department</p>
-      <p>May 2nd, 2025, 8:09AM</p>
+      <p class="acva-para-1 text-gray-500 mb-2">Course Coordinator</p>
+      @if (record.courseCoordinator) {
+        <p class="flex gap-3 items-center acva-para-2">
+          <img
+            src=""
+            alt=""
+            width="24"
+            height="24"
+            class="w-6 h-6 aspect-square rounded-full object-cover"
+            [appImageFallback]="'icons/general/profile-pic-placeholder.svg'"
+          />
+          {{ record.courseCoordinator.name }}
+        </p>
+      } @else {
+        <p class="acva-para-2 text-gray-400">Not assigned</p>
+      }
     </div>
 
-    <div>
-      <p class="text-sm text-gray-400">Course Title</p>
-      <p>May 2nd, 2025, 8:09AM</p>
-    </div>
+    <!-- COMMENTS -->
+    <h4 class="section-heading acva-para-2">Comments</h4>
 
-    <div>
-      <p class="text-sm text-gray-400">Course Coordinator</p>
-      <p>May 2nd, 2025, 8:09AM</p>
-    </div>
-  </div>
-
-  <h4 class="bg-gray-200 px-2 rounded-sm">Comments</h4>
-  <div class="mb-4">
-    <p class="flex gap-3 items-center">
-      <img
-        src=""
-        alt="Avatar"
-        width="50"
-        height="50"
-        class="w-6 h-6 aspect-square rounded-full object-cover"
-        [appImageFallback]="'icons/general/profile-pic-placeholder.svg'"
-      />
-      Engr. Daniel Chika
-      <span>HOD</span>
-    </p>
-    <p class="acva-para-1 text-gray-400 mt-2">
-      Please review the results of the reference students, especially that of
-      Nwaka Mathew, some of his scores don’t tally with the amount of work he
-      put into this semester.The number of students do not tally with the number
-      of results as well, look into that.
-    </p>
-  </div>
+    @if (record.comments.length === 0) {
+      <p class="acva-para-1 text-gray-400">
+        No comments were left on this
+        {{ isModeration ? 'moderation' : 'result' }}.
+      </p>
+    } @else {
+      @for (comment of record.comments; track comment.id) {
+        <div class="comment">
+          <p class="flex gap-3 items-center flex-wrap">
+            <img
+              src=""
+              alt=""
+              width="24"
+              height="24"
+              class="w-6 h-6 aspect-square rounded-full object-cover"
+              [appImageFallback]="'icons/general/profile-pic-placeholder.svg'"
+            />
+            <span class="acva-para-2">{{
+              comment.author?.name ?? 'Unknown'
+            }}</span>
+            @if (comment.author?.role) {
+              <span class="role-chip acva-caption">{{
+                roleLabel(comment.author?.role)
+              }}</span>
+            }
+            <span class="acva-caption text-gray-400">
+              {{ comment.createdAt | date: 'MMM d, y' }}
+            </span>
+          </p>
+          <p class="acva-para-1 text-gray-400 mt-2 whitespace-pre-line">
+            {{ comment.comment }}
+          </p>
+        </div>
+      }
+    }
+  }
 </section>

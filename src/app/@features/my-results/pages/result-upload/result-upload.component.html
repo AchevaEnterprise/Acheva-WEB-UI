@@ -252,6 +252,7 @@
           #regularTableResultUploadRef
           [refreshTable]="isUploaded()"
           [readonly]="readOnly()"
+          [assessmentShape]="assessmentShape()"
           [resultId]="resultId || ''"
           [searchValue]="searchStudentValue()"
           [students]="students()['REGULAR']"
@@ -265,6 +266,7 @@
           #referenceTableResultUploadRef
           [refreshTable]="isUploaded()"
           [readonly]="readOnly()"
+          [assessmentShape]="assessmentShape()"
           [resultId]="resultId || ''"
           [searchValue]="searchStudentValue()"
           [students]="students()['REFERENCE']"
@@ -276,6 +278,7 @@
           #unregisteredTableResultUploadRef
           [refreshTable]="isUploaded()"
           [readonly]="readOnly()"
+          [assessmentShape]="assessmentShape()"
           [resultId]="resultId || ''"
           [searchValue]="searchStudentValue()"
           [students]="students()['UNREGISTERED']"

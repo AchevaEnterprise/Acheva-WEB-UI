@@ -18,6 +18,7 @@ import {
   IResetPassword,
   ISignUp,
   RoleEnum,
+  IOccupiedLeadershipRoles,
 } from '../model/auth.model';
 
 @Injectable({
@@ -218,5 +219,19 @@ export class AuthenticationService {
 
     localStorage.clear();
     this.router.navigate(['auth']);
+  }
+
+  /**
+   * Departments that already have a Head and faculties that already have a
+   * Dean, for one school. Used to disable — not hide — those options during
+   * sign-up.
+   */
+  getOccupiedLeadershipRoles(
+    school: string
+  ): Observable<IAPIResponse<IOccupiedLeadershipRoles>> {
+    return this.http.get<IAPIResponse<IOccupiedLeadershipRoles>>(
+      `${this.authUrl}/lecturers/leadership-roles`,
+      { params: { school } }
+    );
   }
 }

@@ -162,9 +162,17 @@
                   (selectionChange)="getDepartments($event)"
                 >
                   @for (faculty of facultiesOptions(); track $index) {
-                    <mat-option [value]="faculty._id">{{
-                      faculty.name
-                    }}</mat-option>
+                    <mat-option
+                      [value]="faculty._id"
+                      [disabled]="isFacultyTaken(faculty._id)"
+                    >
+                      {{ faculty.name }}
+                      @if (isFacultyTaken(faculty._id)) {
+                        <span class="acva-caption text-neutral-500">
+                          — already has a Dean
+                        </span>
+                      }
+                    </mat-option>
                   }
                 </mat-select>
               </mat-form-field>
@@ -192,9 +200,17 @@
                   formControlName="department"
                 >
                   @for (department of departmentsOptions(); track $index) {
-                    <mat-option [value]="department._id">{{
-                      department.name
-                    }}</mat-option>
+                    <mat-option
+                      [value]="department._id"
+                      [disabled]="isDepartmentTaken(department._id)"
+                    >
+                      {{ department.name }}
+                      @if (isDepartmentTaken(department._id)) {
+                        <span class="acva-caption text-neutral-500">
+                          — already has an HOD
+                        </span>
+                      }
+                    </mat-option>
                   }
                 </mat-select>
               </mat-form-field>

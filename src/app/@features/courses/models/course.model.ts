@@ -18,6 +18,11 @@ export interface ICourse {
   level: string;
   courseCordinator?: string;
   courseLoad: number;
+  /**
+   * How the course is assessed. Absent on courses created before the field
+   * existed, which the backend treats as THEORY.
+   */
+  assessmentShape?: 'THEORY' | 'PRACTICAL_ONLY';
   lecturer: string;
   assignedTo?: {
     _id: string;
@@ -39,6 +44,7 @@ export interface ICreateCourse {
   faculty: string;
   department: string;
   level: string;
+  assessmentShape?: 'THEORY' | 'PRACTICAL_ONLY';
 }
 
 export interface ICourseQuery {

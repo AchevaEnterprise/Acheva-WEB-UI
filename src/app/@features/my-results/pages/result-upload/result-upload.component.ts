@@ -156,6 +156,9 @@ export class ResultUploadComponent implements OnInit, CanComponentDeactivate {
     UNREGISTERED: [],
   });
 
+  /** Drives which score columns the grade tables allow. */
+  assessmentShape = signal<'THEORY' | 'PRACTICAL_ONLY'>('THEORY');
+
   courseForm = new FormGroup({
     course: new FormControl({ value: '', disabled: true }),
     session: new FormControl({ value: '', disabled: true }),
@@ -210,6 +213,10 @@ export class ResultUploadComponent implements OnInit, CanComponentDeactivate {
 
   setResultDetails(result: IResult) {
     const { course, session, level, analytics } = result;
+    this.assessmentShape.set(
+      (course as { assessmentShape?: 'THEORY' | 'PRACTICAL_ONLY' })
+        ?.assessmentShape ?? 'THEORY'
+    );
 
     this.courseForm.patchValue({
       course: `${course?.courseCode} - ${course?.courseTitle}`,

@@ -124,50 +124,51 @@
             </div>
           </div>
 
-          <!-- Course Load with +/- stepper -->
-          <div>
-            <p class="acva-para-2 fw-400 label-text">Course Load</p>
-            <div class="flex items-center gap-2">
-              <div class="input-style-1 acheva-input max-w-[160px]">
-                <mat-form-field [style.width.%]="100" appearance="outline">
-                  <input
-                    matInput
-                    type="text"
-                    formControlName="courseLoad"
-                    readonly
-                  />
-                </mat-form-field>
-              </div>
-
-              <app-button
-                type="outline"
-                label="-"
-                class="btn-sm"
-                (clickEvent)="decreaseCourseUnit()"
-              />
-              <app-button
-                label="+"
-                class="btn-sm"
-                (clickEvent)="increaseCourseUnit()"
-              />
-            </div>
+          <!-- Course type — decides which score columns the result carries.
+               Radios, not a select: a dropdown hides that a choice exists, so
+               a lecturer who does not know to look never changes it. -->
+          <div class="w-full">
+            <p class="acva-para-2 fw-400 label-text">Course Type</p>
+            <mat-radio-group
+              formControlName="assessmentShape"
+              aria-label="Course type"
+              class="grid gap-2 md:grid-cols-2 grid-cols-1"
+            >
+              @for (option of assessmentOptions(); track $index) {
+                <label
+                  class="flex items-center border-[1px] border-neutral-300 p-3 rounded-[8px] cursor-pointer m-0"
+                >
+                  <mat-radio-button [value]="option.value"></mat-radio-button>
+                  <span class="min-w-0">
+                    <span class="fw-400 acva-para-1 block">{{
+                      option.label
+                    }}</span>
+                    <span class="acva-caption text-neutral-500 block">
+                      {{ option.hint }}
+                    </span>
+                  </span>
+                </label>
+              }
+            </mat-radio-group>
           </div>
 
           <!-- Classification (curriculum type) -->
-          <div class="input-style-1 acheva-input w-full">
+          <div class="w-full">
             <p class="acva-para-2 fw-400 label-text">Classification</p>
-            <mat-form-field [style.width.%]="100" appearance="outline">
-              <mat-select
-                placeholder="Choose a classification"
-                formControlName="classification"
-              >
-                @for (option of classificationOptions(); track $index) {
-                  <mat-option [value]="option.value">
-                    {{ option.label }}
-                  </mat-option>
-                }
-              </mat-select>
-            </mat-form-field>
+            <mat-radio-group
+              formControlName="classification"
+              aria-label="Classification"
+              class="grid gap-2 md:grid-cols-3 grid-cols-1"
+            >
+              @for (option of classificationOptions(); track $index) {
+                <label
+                  class="flex items-center border-[1px] border-neutral-300 p-3 rounded-[8px] cursor-pointer m-0"
+                >
+                  <mat-radio-button [value]="option.value"></mat-radio-button>
+                  <span class="acva-para-1 fw-400">{{ option.label }}</span>
+                </label>
+              }
+            </mat-radio-group>
           </div>
 
           <!-- Elective group (only when the course is an elective) -->
@@ -204,6 +205,37 @@
               }
             </div>
           }
+
+          <!-- Course Load, kept last: it is the one field a lecturer always
+               fills, so it should not sit between the two choices they might
+               otherwise skip past. -->
+          <div>
+            <p class="acva-para-2 fw-400 label-text">Course Load</p>
+            <div class="flex items-center gap-2">
+              <div class="input-style-1 acheva-input max-w-[160px]">
+                <mat-form-field [style.width.%]="100" appearance="outline">
+                  <input
+                    matInput
+                    type="text"
+                    formControlName="courseLoad"
+                    readonly
+                  />
+                </mat-form-field>
+              </div>
+
+              <app-button
+                type="outline"
+                label="-"
+                class="btn-sm"
+                (clickEvent)="decreaseCourseUnit()"
+              />
+              <app-button
+                label="+"
+                class="btn-sm"
+                (clickEvent)="increaseCourseUnit()"
+              />
+            </div>
+          </div>
         </div>
       </app-card>
 

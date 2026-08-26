@@ -12,7 +12,8 @@
     "screenshot": "node scripts/screenshot.mjs",
     "pw:install": "npx playwright install chromium --with-deps",
     "verify:responsive": "node scripts/verify-responsive.mjs",
-    "test:localfirst": "node scripts/localfirst-harness.mjs"
+    "test:localfirst": "node scripts/localfirst-harness.mjs",
+    "test:history": "node scripts/history-harness.mjs"
   },
   "private": true,
   "dependencies": {

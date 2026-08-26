@@ -122,6 +122,7 @@
           <app-regular-table-result-upload
             #regularTableResultUploadRef
             [readonly]="readOnly()"
+            [assessmentShape]="assessmentShape()"
             [resultId]="resultId"
             [students]="students()['REGULAR']"
             (hasChangesEvent)="updateChanges($event)"
@@ -131,6 +132,7 @@
           <app-regular-table-result-upload
             #regularTableResultUploadRef
             [readonly]="readOnly()"
+            [assessmentShape]="assessmentShape()"
             [resultId]="resultId"
             [students]="students()['REFERENCE']"
             (hasChangesEvent)="updateChanges($event)"
@@ -140,6 +142,7 @@
           <app-regular-table-result-upload
             #regularTableResultUploadRef
             [readonly]="readOnly()"
+            [assessmentShape]="assessmentShape()"
             [resultId]="resultId"
             [students]="students()['UNREGISTERED']"
             (hasChangesEvent)="updateChanges($event)"

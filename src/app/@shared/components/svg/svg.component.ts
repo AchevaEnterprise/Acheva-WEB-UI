@@ -76,10 +76,18 @@ export class SvgComponent implements OnChanges, OnDestroy {
     ) {
       this.subscription.add(
         this.http.get(this.src, { responseType: 'text' }).subscribe((svg) => {
+          // Write the raw markup, NOT a SafeHtml. `setProperty` assigns
+          // `el.innerHTML = value` without unwrapping, so a SafeValue lands as
+          // its `toString()` — the literal "SafeValue must use
+          // [property]=binding: …" text. The @HostBinding below normally
+          // overwrites it on the next change-detection pass, but under an
+          // OnPush parent whose view is already clean that pass never comes and
+          // the warning text stays on screen. `setProperty` does not sanitize
+          // either way, so the bypass call bought nothing.
           this.renderer.setProperty(
             this.elementRef.nativeElement,
             'innerHTML',
-            this.sanitizer.bypassSecurityTrustHtml(svg)
+            svg
           );
 
           const svgElement = (this.elementRef.nativeElement as HTMLElement)

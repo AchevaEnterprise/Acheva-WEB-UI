@@ -81,6 +81,9 @@ export class EditResultsComponent implements OnInit, CanComponentDeactivate {
   readonly status: string = this.route.snapshot.queryParamMap.get('status')!;
 
   results = signal<IResult[]>([]);
+
+  /** Drives which score columns the grade tables allow. */
+  assessmentShape = signal<'THEORY' | 'PRACTICAL_ONLY'>('THEORY');
   analyticsChartData = signal<number[]>([0, 0, 0, 0, 0, 0]);
   totalStudent = signal<number>(0);
   totalStudentPass = signal<number>(0);
@@ -185,6 +188,10 @@ export class EditResultsComponent implements OnInit, CanComponentDeactivate {
   /** Store the result and apply the viewer's scope (tabs + read-only). */
   private applyResult(result: IResult): void {
     this.result.set(result);
+    this.assessmentShape.set(
+      (result.course as { assessmentShape?: 'THEORY' | 'PRACTICAL_ONLY' })
+        ?.assessmentShape ?? 'THEORY'
+    );
 
     const scope = result.viewerScope;
     if (scope?.access === 'RESTRICTED') {

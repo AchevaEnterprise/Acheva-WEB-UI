@@ -1,0 +1,30 @@
+:host {
+  display: block;
+}
+
+// Material sizes date fields to ~250px intrinsically, which pushes the filter
+// bar onto a second line at 1440. Constraining them keeps the whole bar on one
+// row from 1280 up; below that it still wraps, which is the wanted behaviour
+// down to the 1000px floor.
+
+.date-filter {
+  .input-style-1 {
+    width: 180px;
+  }
+}
+
+// Rows open the preview drawer, so they must read and behave as controls.
+
+.history-row {
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+
+  &:hover {
+    background-color: #f7fafd;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #2793ff;
+    outline-offset: -2px;
+  }
+}

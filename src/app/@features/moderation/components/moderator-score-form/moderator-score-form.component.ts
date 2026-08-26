@@ -48,15 +48,19 @@ export class ModeratorScoreFormComponent {
   readonly bandMin = MODERATED_TOTAL_MIN;
   readonly bandMax = MODERATED_TOTAL_MAX;
 
+  // No per-component ceiling — schools weight test, practical and exam
+  // differently, so 30/30/70 is one school's split rather than a rule. Each
+  // component is a score in 0-100; the constraint that matters is the total,
+  // which moderation already holds to the E band below.
   form = new FormGroup({
     test: new FormControl<number | null>(null, {
-      validators: [Validators.required, Validators.min(0), Validators.max(30)],
+      validators: [Validators.required, Validators.min(0), Validators.max(100)],
     }),
     lab: new FormControl<number | null>(null, {
-      validators: [Validators.min(0), Validators.max(30)],
+      validators: [Validators.min(0), Validators.max(100)],
     }),
     exam: new FormControl<number | null>(null, {
-      validators: [Validators.required, Validators.min(0), Validators.max(70)],
+      validators: [Validators.required, Validators.min(0), Validators.max(100)],
     }),
     comment: new FormControl<string>('', {
       nonNullable: true,

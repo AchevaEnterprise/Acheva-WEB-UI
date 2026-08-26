@@ -66,7 +66,9 @@ const VIEWPORTS = [
     // ── Inject auth token so protected routes render correctly ─────────────────
     if (AUTH_TOKEN) {
       await page.addInitScript((token) => {
-        localStorage.setItem('access_token', token);
+        // Must match STORAGE_KEYS.TOKEN in @core/models/storage.model.ts —
+        // any other key silently lands the shot on the login page.
+        localStorage.setItem('token', token);
       }, AUTH_TOKEN);
     }
 

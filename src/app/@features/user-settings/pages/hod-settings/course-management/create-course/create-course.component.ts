@@ -8,6 +8,7 @@ import {
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectChange, MatSelectModule } from '@angular/material/select';
+import { MatRadioModule } from '@angular/material/radio';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import {
@@ -56,6 +57,7 @@ import { CoursesService } from '../../../../../courses/services/courses.service'
     ReactiveFormsModule,
     AutocompleteInputComponent,
     MatSelectModule,
+    MatRadioModule,
     MatFormFieldModule,
     MatInputModule,
     ButtonComponent,
@@ -131,6 +133,23 @@ export class CreateCourseComponent implements OnInit, OnDestroy {
   // ========================================
   // SEPARATE COURSE CODE CONTROL
   // ========================================
+  /**
+   * How the course is assessed. THEORY is the ordinary shape and stays the
+   * default, so nothing changes for a HOD who ignores this field.
+   */
+  assessmentOptions = signal<{ label: string; value: string; hint: string }[]>([
+    {
+      label: 'Test and exam',
+      value: 'THEORY',
+      hint: 'The usual shape — with an optional practical score.',
+    },
+    {
+      label: 'Practical only',
+      value: 'PRACTICAL_ONLY',
+      hint: 'Records a practical score alone — no test or exam column.',
+    },
+  ]);
+
   // courseCodeControl = new FormControl<string>('', Validators.required);
 
   // ========================================
@@ -157,6 +176,7 @@ export class CreateCourseComponent implements OnInit, OnDestroy {
       Validators.required
     ),
     courseLoad: new FormControl<number>(1, Validators.required),
+    assessmentShape: new FormControl<string>('THEORY', Validators.required),
     classification: new FormControl<string>('COMPULSORY', Validators.required),
     electiveGroup: new FormControl<string>(''),
     groupMinRequired: new FormControl<number>(1),
@@ -450,6 +470,7 @@ export class CreateCourseComponent implements OnInit, OnDestroy {
       faculty,
       department,
       level,
+      assessmentShape,
       classification,
       electiveGroup,
       groupMinRequired,
@@ -465,6 +486,10 @@ export class CreateCourseComponent implements OnInit, OnDestroy {
       faculty: (faculty as IFaculty)._id || '',
       department: departmentId,
       level: level || '',
+      // Sent explicitly: this payload is built field by field, so a control
+      // left out here is silently dropped however well the form renders.
+      assessmentShape:
+        (assessmentShape as 'THEORY' | 'PRACTICAL_ONLY') ?? 'THEORY',
     };
 
     this.sub.add(

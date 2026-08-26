@@ -69,6 +69,13 @@ export class ReferenceTableResultUploadComponent {
   /** When true the grade inputs render as read-only text (no editing). */
   readonly = input<boolean>(false);
 
+  /**
+   * How the course is assessed. On a PRACTICAL_ONLY course the test and exam
+   * columns stay visible but are disabled — the template already renders a
+   * disabled control as plain text — and the practical carries the whole mark.
+   */
+  assessmentShape = input<'THEORY' | 'PRACTICAL_ONLY'>('THEORY');
+
   /** Kept for back-compat with the parent's "unsaved changes" guard. */
   hasChangesEvent = output<boolean>();
 
@@ -205,11 +212,12 @@ export class ReferenceTableResultUploadComponent {
     const isDisabled =
       this.readonly() || (!!this.status && this.status !== 'DRAFT');
 
-    const createNumberControl = (value: number | null | undefined) =>
-      new FormControl(
-        { value: value ?? null, disabled: isDisabled },
-        numberValidator
-      );
+    const practicalOnly = this.assessmentShape() === 'PRACTICAL_ONLY';
+
+    const createNumberControl = (
+      value: number | null | undefined,
+      disabled = isDisabled
+    ) => new FormControl({ value: value ?? null, disabled }, numberValidator);
 
     return this.fb.group({
       registrationNumber: [student?.registrationNumber, Validators.required],
@@ -218,9 +226,11 @@ export class ReferenceTableResultUploadComponent {
         Validators.required,
       ],
 
-      test: createNumberControl(student?.test),
+      // Disabled, not removed, on a practical-only course: the lecturer keeps
+      // the familiar layout and can see the course simply has no test or exam.
+      test: createNumberControl(student?.test, isDisabled || practicalOnly),
       lab: createNumberControl(student?.lab),
-      exam: createNumberControl(student?.exam),
+      exam: createNumberControl(student?.exam, isDisabled || practicalOnly),
 
       total: [student?.total, numberValidator],
       grade: [student?.grade],
@@ -277,9 +287,17 @@ export class ReferenceTableResultUploadComponent {
 
     const isEmpty = (value: number | null | undefined): boolean =>
       value === null || value === undefined;
-    const allEmpty = isEmpty(test) && isEmpty(lab) && isEmpty(exam);
+    const allEmpty =
+      this.assessmentShape() === 'PRACTICAL_ONLY'
+        ? isEmpty(lab)
+        : isEmpty(test) && isEmpty(lab) && isEmpty(exam);
 
-    const total = (test ?? 0) + (lab ?? 0) + (exam ?? 0);
+    // A practical-only course's total IS its practical score — never a sum
+    // that quietly folds in a disabled test or exam.
+    const total =
+      this.assessmentShape() === 'PRACTICAL_ONLY'
+        ? (lab ?? 0)
+        : (test ?? 0) + (lab ?? 0) + (exam ?? 0);
 
     // onControlInput already prevents committing a >100 sum, so just bail
     // defensively — never wipe the row's other scores.
