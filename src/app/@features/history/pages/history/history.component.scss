@@ -1,5 +1,52 @@
+// The layout shell gives the routed content a definite height
+// (`h-[calc(100vh-5rem)]`), so the page can claim all of it and let the table
+// take whatever the header and filters leave behind.
+
 :host {
   display: block;
+  height: 100%;
+}
+
+.history-page {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.history-body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+
+  // Without this a flex item refuses to shrink below its content, so the table
+  // would push the paginator off-screen instead of scrolling inside itself.
+  min-height: 0;
+}
+
+.table-region {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+// The rows scroll; the paginator below stays put at the bottom of the page.
+
+.table-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  overflow: auto;
+}
+
+// Centre the illustration in the space the table would have filled, rather
+// than leaving it stranded under the filters.
+
+.empty-region {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  place-content: center;
 }
 
 // Material sizes date fields to ~250px intrinsically, which pushes the filter
