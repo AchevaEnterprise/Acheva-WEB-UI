@@ -8,6 +8,7 @@ import {
 } from '../../../@core/models/api-response.model';
 import { SemesterEnum } from '../../../@core/models/school.model';
 import { RoleEnum } from '../../auth/model/auth.model';
+import { IResultSheet } from '../models/result-sheet.model';
 import {
   IStudentResult,
   IStudentSessionsResult,
@@ -114,6 +115,16 @@ export class ResultsService {
     return this.http.get<IAPIResponse<IReferenceCandidate>>(
       `${this.resultsUrl}/${resultId}/reference-candidate`,
       { params }
+    );
+  }
+
+  /**
+   * `GET /results/:id/sheet` — the printable/exportable payload. One object,
+   * rendered by both the PDF and the spreadsheet.
+   */
+  getResultSheet(resultId: string): Observable<IAPIResponse<IResultSheet>> {
+    return this.http.get<IAPIResponse<IResultSheet>>(
+      `${this.resultsUrl}/${resultId}/sheet`
     );
   }
 

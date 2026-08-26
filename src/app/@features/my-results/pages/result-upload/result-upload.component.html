@@ -215,6 +215,17 @@
         (clickEvent)="confirmPublish()"
       />
 
+      <!-- Acheva cannot talk to a printer, so "print" is a download: the
+           sheet is rendered as the official grade report and handed over. -->
+      <app-button
+        label="Export"
+        type="outline"
+        icon="icons/general/download-icon.svg"
+        class="btn-md"
+        [disabled]="!resultId"
+        (clickEvent)="exportResult()"
+      />
+
       @if (!isUploaded() && !readOnly()) {
         <app-button
           [label]="

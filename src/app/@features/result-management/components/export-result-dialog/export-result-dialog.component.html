@@ -1,0 +1,77 @@
+<section class="export-dialog">
+  <header class="export-dialog__head">
+    <div>
+      <h2 class="acva-heading-6 fw-500">Export Result</h2>
+      @if (sheet(); as record) {
+        <p class="acva-para-1 text-neutral-500">
+          {{ record.course.code }} — {{ record.course.title }} ·
+          {{ record.session }} · {{ record.semesterLabel }}
+        </p>
+      }
+    </div>
+    <button
+      type="button"
+      class="cursor-pointer"
+      aria-label="Close export preview"
+      (click)="close()"
+    >
+      <app-svg src="icons/general/close-icon.svg"></app-svg>
+    </button>
+  </header>
+
+  @if (sheet()?.partial) {
+    <p class="export-dialog__partial acva-para-1" role="alert">
+      This copy shows only the students in your care, not the whole class. The
+      exported file says so on its face.
+    </p>
+  }
+
+  <div class="export-dialog__preview">
+    @if (loading()) {
+      <div class="grid gap-3 p-4">
+        <app-skeleton width="100%" height="2rem" />
+        <app-skeleton width="100%" height="18rem" />
+      </div>
+    } @else {
+      <!-- `as` is only allowed on the primary @if, so this nests rather than
+           chaining onto an @else if. -->
+      @if (previewUrl(); as url) {
+        <!-- The preview IS the file that downloads, not an HTML lookalike, so
+             the two can never drift apart. -->
+        <iframe
+          [src]="url"
+          title="Result sheet preview"
+          class="export-dialog__frame"
+        ></iframe>
+      } @else {
+        <p class="acva-para-1 text-neutral-500 p-6 text-center">
+          The preview could not be rendered, but the file can still be
+          downloaded.
+        </p>
+      }
+    }
+  </div>
+
+  <footer class="export-dialog__actions">
+    <p class="acva-caption text-neutral-500">
+      Download it to print — Acheva cannot send to a printer directly.
+    </p>
+    <div class="flex gap-3">
+      <app-button
+        label="Download Excel"
+        type="outline"
+        class="btn-md"
+        [disabled]="!sheet()"
+        [loading]="downloading() === 'EXCEL'"
+        (clickEvent)="download('EXCEL')"
+      />
+      <app-button
+        label="Download PDF"
+        class="btn-md"
+        [disabled]="!sheet()"
+        [loading]="downloading() === 'PDF'"
+        (clickEvent)="download('PDF')"
+      />
+    </div>
+  </footer>
+</section>
