@@ -32,11 +32,19 @@
 
 // The rows scroll; the paginator below stays put at the bottom of the page.
 
+// The panel is what stops a short page from looking broken. Rows are
+// transparent, so without a surface behind them the last row's border stops in
+// mid-air and the table appears to dangle with a void beneath it. A card makes
+// the leftover space read as the rest of the table rather than as a gap.
+
 .table-scroll {
   flex: 1 1 auto;
   min-height: 0;
   width: 100%;
   overflow: auto;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
 }
 
 // Centre the illustration in the space the table would have filled, rather
