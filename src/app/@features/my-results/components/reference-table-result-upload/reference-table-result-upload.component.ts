@@ -1,6 +1,7 @@
 import { TitleCasePipe } from '@angular/common';
 import {
   Component,
+  DestroyRef,
   effect,
   ElementRef,
   inject,
@@ -8,6 +9,7 @@ import {
   output,
   signal,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   AbstractControl,
   FormArray,
@@ -19,20 +21,20 @@ import {
 } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
 import { ActivatedRoute } from '@angular/router';
-import { finalize } from 'rxjs';
+import { catchError, EMPTY, finalize } from 'rxjs';
 
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
 import { SearchSelectComponent } from '../../../../@shared/components/forms/search-select/search-select.component';
 import { StatusBadgeComponent } from '../../../../@shared/components/status-badge/status-badge.component';
-import { AuthenticationService } from '../../../auth/service/auth.service';
 import { IStudentGrade } from '../../../students/models/student.model';
-import { StudentService } from '../../../students/services/student.service';
 import {
   ILocalResultEntry,
   SyncStatus,
 } from '../../sync/models/local-entry.model';
 import { ResultEntryStore } from '../../sync/result-entry-store.service';
 import { ResultSyncService } from '../../sync/result-sync.service';
+import { ResultsService } from '../../../result-management/services/results.service';
+import { ToastService } from '../../../../@core/utility/toast.service';
 
 type GradeColumn = 'test' | 'lab' | 'exam';
 
@@ -52,14 +54,15 @@ type GradeColumn = 'test' | 'lab' | 'exam';
   providers: [TitleCasePipe],
 })
 export class ReferenceTableResultUploadComponent {
-  private readonly authService = inject(AuthenticationService);
-  private readonly studentService = inject(StudentService);
   private readonly titlecasePipe = inject(TitleCasePipe);
   private readonly fb = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
   private readonly host = inject(ElementRef);
   private readonly store = inject(ResultEntryStore);
   private readonly sync = inject(ResultSyncService);
+  private readonly resultsService = inject(ResultsService);
+  private readonly toast = inject(ToastService);
+  private readonly destroyRef = inject(DestroyRef);
 
   students = input<Partial<IStudentGrade>[]>([]);
   searchValue = input<string | null>(null);
@@ -86,6 +89,8 @@ export class ReferenceTableResultUploadComponent {
     { label: string; value: { registrationNumber: string; fullName: string } }[]
   >([]);
   searchingStudent = signal<boolean>(false);
+  /** Why the last typed number was refused — shown under the table. */
+  referenceNotice = signal<string | null>(null);
 
   readonly status: string = this.route.snapshot.queryParamMap.get('status')!;
   readonly displayedColumns = [
@@ -486,25 +491,61 @@ export class ReferenceTableResultUploadComponent {
     input.select();
   }
 
+  /**
+   * Reference rows are the ONLY place a lecturer types a registration number —
+   * regular rows are prefilled from the department roster. So this asks the
+   * result-scoped endpoint, not the school-wide student lookup: a reference
+   * student must come from the same department as the cohort.
+   *
+   * A number that belongs to someone else is not silently dropped from the
+   * suggestions. It is explained, naming the student and their real
+   * department, because "no match" on a number the lecturer can see on a paper
+   * script in front of them just sends them hunting for a typo that is not
+   * there.
+   */
   searchStudentsByRegNo(regNo: string): void {
-    this.searchingStudent.set(true);
-    const schoolId = this.authService.activeAccount()!.school?._id;
+    const resultId = this.resultId();
+    if (!resultId) return;
 
-    this.studentService
-      .getStudentByRegNo(regNo, schoolId!)
-      .pipe(finalize(() => this.searchingStudent.set(false)))
-      .subscribe({
-        next: (resp) => {
-          if (resp.status && resp.data) {
-            const { registrationNumber, fullName } = resp.data;
-            this.filterdStudentRegNumber.set([
-              {
-                label: registrationNumber,
-                value: { registrationNumber, fullName },
+    this.searchingStudent.set(true);
+    this.referenceNotice.set(null);
+
+    this.resultsService
+      .checkReferenceCandidate(resultId, regNo)
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => this.searchingStudent.set(false)),
+        catchError(() => {
+          this.filterdStudentRegNumber.set([]);
+          return EMPTY;
+        })
+      )
+      .subscribe((resp) => {
+        const candidate = resp.data;
+
+        if (candidate.eligible && candidate.student) {
+          this.referenceNotice.set(null);
+          this.filterdStudentRegNumber.set([
+            {
+              label: candidate.student.registrationNumber,
+              value: {
+                registrationNumber: candidate.student.registrationNumber,
+                fullName: candidate.student.fullName,
               },
-            ]);
-          }
-        },
+            },
+          ]);
+          return;
+        }
+
+        this.filterdStudentRegNumber.set([]);
+        this.referenceNotice.set(candidate.message);
+        this.toast.showNotification(
+          'warning',
+          candidate.reason === 'DIFFERENT_DEPARTMENT'
+            ? 'Different department'
+            : 'Cannot add as reference',
+          candidate.message
+        );
       });
   }
 

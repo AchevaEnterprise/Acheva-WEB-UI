@@ -16,6 +16,7 @@ import {
   ICreateResult,
   ICreateResultEntry,
   IGroupedResult,
+  IReferenceCandidate,
   IPreparedResultQuery,
   IResult,
   IResultComment,
@@ -91,6 +92,28 @@ export class ResultsService {
   ): Observable<IAPIResponse<unknown>> {
     return this.http.get<IAPIResponse<unknown>>(
       `${this.resultsUrl}/prepared-results`
+    );
+  }
+
+  /**
+   * `GET /results/:id/reference-candidate` — may this typed registration
+   * number join the result as a REFERENCE row?
+   *
+   * Result-scoped, unlike the school-wide student lookup: a reference student
+   * must come from the SAME department as the cohort, and this says who a
+   * foreign number actually belongs to so the lecturer can see what happened.
+   */
+  checkReferenceCandidate(
+    resultId: string,
+    registrationNumber: string
+  ): Observable<IAPIResponse<IReferenceCandidate>> {
+    const params = new HttpParams().append(
+      'registrationNumber',
+      registrationNumber
+    );
+    return this.http.get<IAPIResponse<IReferenceCandidate>>(
+      `${this.resultsUrl}/${resultId}/reference-candidate`,
+      { params }
     );
   }
 
