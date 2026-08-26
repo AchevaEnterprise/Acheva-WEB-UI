@@ -36,7 +36,7 @@ import {
 import { HistoryService } from '../../services/history.service';
 import { historyBadge } from '../../utils/history-status';
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 15;
 
 @Component({
   selector: 'app-history',
