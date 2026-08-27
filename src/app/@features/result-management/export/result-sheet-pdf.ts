@@ -268,8 +268,12 @@ function approvalStamps(sheet: IResultSheet): Record<string, unknown> {
       // The last HOD approval on an external cohort is the offering
       // department's Head, which is the department this sheet is for.
       stamp(`HOD ${unit(sheet.department)}`, latest('HOD')),
-      // Acheva records the Dean of the cohort's faculty — the student's school.
-      stamp(`Dean of ${unit(sheet.studentSchool)}`, latest('DEAN')),
+      // The Dean of the faculty that OWNS THE COURSE, not the student's
+      // faculty. The Head of the course's department submits to their own
+      // Dean: a Maths student sitting ENG 101 has it signed by the Dean of
+      // Engineering. On an internal cohort the two are the same faculty, which
+      // is why the distinction only shows on a cross-school sheet.
+      stamp(`Dean of ${unit(sheet.offeringSchool)}`, latest('DEAN')),
       // The Examiner position is held by the Course Coordinator.
       stamp('Examiner(s)', latest('COURSE_COORDINATOR')),
     ],

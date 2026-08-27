@@ -123,7 +123,8 @@ export function buildResultSheetRows(sheet: IResultSheet): unknown[][] {
     org.code || org.name || '—';
   const office = (role: string) => {
     if (role === 'HOD') return `HOD ${unit(sheet.department)}`;
-    if (role === 'DEAN') return `Dean of ${unit(sheet.studentSchool)}`;
+    // The course's faculty, not the student's — see the PDF's stamps.
+    if (role === 'DEAN') return `Dean of ${unit(sheet.offeringSchool)}`;
     if (role === 'COURSE_COORDINATOR') return 'Examiner(s)';
     return role;
   };

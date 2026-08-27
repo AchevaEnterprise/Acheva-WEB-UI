@@ -123,19 +123,33 @@ describe('result sheet PDF — FUTO Official Grade Report', () => {
   it('names each office to its own unit, never generically', () => {
     const text = textOf(buildResultSheetPdf(sheet()).content).join(' | ');
     expect(text).toContain('HOD MTH');
-    expect(text).toContain('Dean of SOPS');
+    expect(text).toContain('Dean of SEET');
     expect(text).not.toContain('Head of Department');
     expect(text).not.toContain('Dean of School');
+  });
+
+  it('signs with the Dean of the faculty that OWNS the course', () => {
+    // A Maths student sitting ENG 101: the Engineering HOD submits it, so the
+    // Engineering Dean signs — not the Dean of the student's own school.
+    const crossSchool = sheet({
+      department: { name: 'Mathematics', code: 'MTH' },
+      studentSchool: { name: 'School of Physical Sciences', code: 'SOPS' },
+      offeringSchool: { name: 'School of Engineering', code: 'SEET' },
+    });
+    const text = textOf(buildResultSheetPdf(crossSchool).content).join(' | ');
+    expect(text).toContain('Dean of SEET');
+    expect(text).not.toContain('Dean of SOPS');
   });
 
   it('falls back to the unit name when a code is missing', () => {
     const noCodes = sheet({
       department: { name: 'Mathematics', code: '' },
       studentSchool: { name: 'School of Physical Sciences', code: '' },
+      offeringSchool: { name: 'School of Engineering', code: '' },
     });
     const text = textOf(buildResultSheetPdf(noCodes).content).join(' | ');
     expect(text).toContain('HOD Mathematics');
-    expect(text).toContain('Dean of School of Physical Sciences');
+    expect(text).toContain('Dean of School of Engineering');
   });
 
   it('prints the pass and fail rates under the tally, not just the grades', () => {
@@ -154,7 +168,7 @@ describe('result sheet PDF — FUTO Official Grade Report', () => {
     const text = textOf(buildResultSheetPdf(sheet()).content).join(' | ');
     expect(text).toContain('APPROVED');
     expect(text).toContain('HOD MTH');
-    expect(text).toContain('Dean of SOPS');
+    expect(text).toContain('Dean of SEET');
     expect(text).toContain('Examiner(s)');
   });
 
