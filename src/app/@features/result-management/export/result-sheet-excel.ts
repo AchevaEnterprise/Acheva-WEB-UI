@@ -102,7 +102,7 @@ export function buildResultSheetRows(sheet: IResultSheet): unknown[][] {
   rows.push(['Total', sheet.summary.total]);
   rows.push(['Passed', sheet.summary.totalPass]);
   rows.push(['Failed', sheet.summary.totalFail]);
-  rows.push(['Average', sheet.summary.averageTotal]);
+  rows.push(['Average (%)', sheet.summary.averageTotal]);
   rows.push(['Pass rate (%)', sheet.summary.percentagePass]);
   rows.push(['Fail rate (%)', sheet.summary.percentageFail]);
 
@@ -117,14 +117,24 @@ export function buildResultSheetRows(sheet: IResultSheet): unknown[][] {
     ]);
   }
 
+  // Offices, not people: Heads and Deans change often and a name printed here
+  // would be stale the moment the post turns over. Matches the PDF's stamps.
+  const unit = (org: { name: string; code: string }) =>
+    org.code || org.name || '—';
+  const office = (role: string) => {
+    if (role === 'HOD') return `HOD ${unit(sheet.department)}`;
+    if (role === 'DEAN') return `Dean of ${unit(sheet.studentSchool)}`;
+    if (role === 'COURSE_COORDINATOR') return 'Examiner(s)';
+    return role;
+  };
+
   rows.push(blank, ['Approvals']);
   if (sheet.approvals.length === 0) {
     rows.push(['None recorded']);
   }
   for (const approval of sheet.approvals) {
     rows.push([
-      approval.role,
-      approval.name,
+      office(approval.role),
       approval.action,
       formatSheetDate(approval.date),
       approval.comment ?? '',

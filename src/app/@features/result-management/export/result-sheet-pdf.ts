@@ -170,26 +170,17 @@ export function buildResultSheetPdf(sheet: IResultSheet): ResultSheetDocument {
       stampHeading: {
         fontSize: 9,
         bold: true,
-        color: '#2793FF',
-        alignment: 'center',
+        color: '#000000',
       },
       stampHeadingPending: {
-        fontSize: 9,
+        fontSize: 8,
         bold: true,
-        color: '#999999',
-        alignment: 'center',
+        color: '#888888',
       },
-      stampRole: {
-        fontSize: 6.5,
-        bold: true,
-        alignment: 'center',
-        margin: [0, 1, 0, 2],
-      },
-      stampName: { fontSize: 7.5, alignment: 'center' },
+      stampRole: { fontSize: 7.5, bold: true },
       stampDate: {
         fontSize: 6.5,
         color: '#555555',
-        alignment: 'center',
         margin: [0, 1, 0, 0],
       },
       sectionLabel: { fontSize: 8, bold: true },
@@ -203,13 +194,6 @@ export function buildResultSheetPdf(sheet: IResultSheet): ResultSheetDocument {
   };
 }
 
-/** A printable person name, or a dash. Never an email address. */
-function displayName(name: string | undefined): string {
-  const trimmed = name?.trim();
-  if (!trimmed || trimmed.includes('@')) return '—';
-  return trimmed.toUpperCase();
-}
-
 function metaLine(label: string, value: string): Record<string, unknown> {
   return {
     text: [
@@ -221,76 +205,75 @@ function metaLine(label: string, value: string): Record<string, unknown> {
 }
 
 /**
- * The form's three sign-off positions, as approval stamps.
+ * The form's three sign-off positions, as approval marks over a signature rule.
  *
  * Acheva cannot reproduce a handwritten signature and should not pretend to.
- * A stamp is the honest equivalent and the one FUTO staff already read as
- * authority on paper — and unlike the scrawls on the original form, it says
- * plainly WHO approved, in WHAT role, and WHEN.
+ * "APPROVED" sits where the scrawl would go, above the same ruled line the
+ * paper form uses, with the office and the date beneath it.
  *
- * A position nobody has approved yet prints an empty outline rather than being
- * hidden, so an incomplete sheet is obviously incomplete.
+ * NO NAMES. Heads and Deans change often, and a name printed here would be
+ * stale the moment the post turns over — the office is what holds the
+ * authority, not the person occupying it this year.
+ *
+ * The office is named to its unit ("HOD MTH", "Dean of SOPS") rather than left
+ * generic, so a sheet that crosses departments says exactly whose approval it
+ * carries.
+ *
+ * A position nobody has approved yet still prints its rule, so an incomplete
+ * sheet is visibly incomplete rather than quietly missing a mark.
  */
 function approvalStamps(sheet: IResultSheet): Record<string, unknown> {
   const latest = (role: string) =>
     [...sheet.approvals].reverse().find((a) => a.role === role) ?? null;
 
-  const stamp = (title: string, who: { name: string; date: string } | null) => {
+  const unit = (org: { name: string; code: string }) =>
+    org.code || org.name || '—';
+
+  const stamp = (title: string, who: { date: string } | null) => {
     const approved = Boolean(who?.date);
 
     return {
       width: '33%',
-      margin: [0, 0, 8, 0],
-      table: {
-        widths: ['*'],
-        body: [
-          [
+      margin: [0, 0, 10, 0],
+      stack: [
+        {
+          text: approved ? 'APPROVED' : 'AWAITING APPROVAL',
+          style: approved ? 'stampHeading' : 'stampHeadingPending',
+        },
+        {
+          canvas: [
             {
-              border: [true, true, true, true],
-              margin: [6, 5, 6, 5],
-              stack: [
-                {
-                  text: approved ? 'APPROVED' : 'AWAITING APPROVAL',
-                  style: approved ? 'stampHeading' : 'stampHeadingPending',
-                },
-                { text: title.toUpperCase(), style: 'stampRole' },
-                {
-                  // The office and the date are the substance; the name is the
-                  // courtesy. An unnamed approver prints a dash — never a
-                  // contact address, which belongs nowhere near a signature on
-                  // an academic record. The API no longer sends one; this is
-                  // the guarantee at the point of printing.
-                  text: displayName(who?.name),
-                  style: 'stampName',
-                },
-                {
-                  text: approved
-                    ? formatSheetDate(who!.date)
-                    : 'Not yet approved',
-                  style: 'stampDate',
-                },
-              ],
+              type: 'line',
+              x1: 0,
+              y1: 0,
+              x2: 150,
+              y2: 0,
+              lineWidth: 0.7,
+              lineColor: '#000000',
             },
           ],
-        ],
-      },
-      layout: {
-        hLineWidth: () => 1,
-        vLineWidth: () => 1,
-        hLineColor: () => (approved ? '#2793FF' : '#BBBBBB'),
-        vLineColor: () => (approved ? '#2793FF' : '#BBBBBB'),
-      },
+          margin: [0, 2, 0, 3],
+        },
+        { text: title, style: 'stampRole' },
+        {
+          text: approved ? formatSheetDate(who!.date) : 'Not yet approved',
+          style: 'stampDate',
+        },
+      ],
     };
   };
 
   return {
     columns: [
-      stamp('Head of Department', latest('HOD')),
-      stamp('Dean of School', latest('DEAN')),
+      // The last HOD approval on an external cohort is the offering
+      // department's Head, which is the department this sheet is for.
+      stamp(`HOD ${unit(sheet.department)}`, latest('HOD')),
+      // Acheva records the Dean of the cohort's faculty — the student's school.
+      stamp(`Dean of ${unit(sheet.studentSchool)}`, latest('DEAN')),
       // The Examiner position is held by the Course Coordinator.
       stamp('Examiner(s)', latest('COURSE_COORDINATOR')),
     ],
-    margin: [0, 18, 0, 0],
+    margin: [0, 20, 0, 0],
   };
 }
 
@@ -334,7 +317,7 @@ function gradeTally(sheet: IResultSheet): Record<string, unknown> {
       stat('Total', String(summary.total)),
       stat('Passed', String(summary.totalPass)),
       stat('Failed', String(summary.totalFail)),
-      stat('Average', `${summary.averageTotal}`),
+      stat('Average', `${summary.averageTotal}%`),
       stat('Pass rate', `${summary.percentagePass}%`, true),
       stat('Fail rate', `${summary.percentageFail}%`, true),
     ],

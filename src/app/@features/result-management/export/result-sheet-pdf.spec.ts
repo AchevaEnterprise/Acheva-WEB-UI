@@ -111,11 +111,31 @@ describe('result sheet PDF — FUTO Official Grade Report', () => {
     expect(rows[2][5].text).toBe('');
   });
 
-  it('names each approver and when they signed, since it cannot draw a signature', () => {
+  it('prints no personal names — offices change hands, the office does not', () => {
     const text = textOf(buildResultSheetPdf(sheet()).content).join(' | ');
-    expect(text).toContain('PROF H O D');
-    expect(text).toContain('PROF D EAN');
+    expect(text).not.toContain('PROF H O D');
+    expect(text).not.toContain('PROF D EAN');
+    expect(text).not.toContain('Dr Nnamdi Araka');
+    // The date of approval is still there — that is the part that matters.
     expect(text).toContain(formatSheetDate('2025-12-12T09:00:00.000Z'));
+  });
+
+  it('names each office to its own unit, never generically', () => {
+    const text = textOf(buildResultSheetPdf(sheet()).content).join(' | ');
+    expect(text).toContain('HOD MTH');
+    expect(text).toContain('Dean of SOPS');
+    expect(text).not.toContain('Head of Department');
+    expect(text).not.toContain('Dean of School');
+  });
+
+  it('falls back to the unit name when a code is missing', () => {
+    const noCodes = sheet({
+      department: { name: 'Mathematics', code: '' },
+      studentSchool: { name: 'School of Physical Sciences', code: '' },
+    });
+    const text = textOf(buildResultSheetPdf(noCodes).content).join(' | ');
+    expect(text).toContain('HOD Mathematics');
+    expect(text).toContain('Dean of School of Physical Sciences');
   });
 
   it('prints the pass and fail rates under the tally, not just the grades', () => {
@@ -126,15 +146,16 @@ describe('result sheet PDF — FUTO Official Grade Report', () => {
     expect(text).toContain('50%');
     expect(text).toContain('Fail rate');
     expect(text).toContain('Average');
-    expect(text).toContain('44.5');
+    // A mark out of 100 is a percentage; print it as one.
+    expect(text).toContain('44.5%');
   });
 
-  it('stamps each approval instead of faking a signature', () => {
+  it('marks each approval instead of faking a signature', () => {
     const text = textOf(buildResultSheetPdf(sheet()).content).join(' | ');
     expect(text).toContain('APPROVED');
-    expect(text).toContain('HEAD OF DEPARTMENT');
-    expect(text).toContain('DEAN OF SCHOOL');
-    expect(text).toContain('EXAMINER(S)');
+    expect(text).toContain('HOD MTH');
+    expect(text).toContain('Dean of SOPS');
+    expect(text).toContain('Examiner(s)');
   });
 
   it('marks an unapproved position rather than hiding it', () => {
@@ -146,14 +167,14 @@ describe('result sheet PDF — FUTO Official Grade Report', () => {
     expect(text).toContain('Not yet approved');
   });
 
-  it('never prints an email address in place of a missing name', () => {
+  it('never prints an email address anywhere on the sheet', () => {
     const nameless = sheet({
       approvals: sheet().approvals.map((a) => ({
         ...a,
         name: 'someone@example.com',
       })),
+      courseCoordinator: { name: 'someone@example.com', role: 'COURSE_COORDINATOR' },
     });
-    // The service falls back to the email; the sheet must not print it.
     const text = textOf(buildResultSheetPdf(nameless).content).join(' | ');
     expect(text).not.toContain('@');
   });
