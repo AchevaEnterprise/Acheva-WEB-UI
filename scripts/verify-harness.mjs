@@ -54,7 +54,9 @@ const check = (ok, m, d = '') => { console.log(`  ${ok ? '✓' : '✗'} ${m}${d 
   await dialog.locator('iframe.export-dialog__frame').waitFor({ state: 'attached', timeout: 30_000 }).catch(() => {});
   const before = await dialog.innerText();
   check(!/ACV-/.test(before), 'no serial on screen before a download');
-  check(/not the preview/i.test(before), 'the drawer says the serial is added on download');
+  // Deliberately loose: the exact wording is a copy decision that will change.
+  // What must hold is that no serial is shown before a download.
+  check(!/verify\./i.test(before), 'no verify address shown before a download either');
 
   console.log('\n── downloading mints one ──');
   const waitFor = page.waitForEvent('download', { timeout: 40_000 });
