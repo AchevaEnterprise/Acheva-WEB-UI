@@ -87,3 +87,18 @@ export interface IResultSheetApproval {
 }
 
 export type ExportFormat = 'PDF' | 'EXCEL';
+
+/**
+ * The serial minted when a document is actually taken away, and the address
+ * printed under its QR code. Only a downloaded document gets one — previewing
+ * mints nothing, so every serial in existence belongs to a copy someone holds.
+ */
+export interface IIssuedDocument {
+  readonly serial: string;
+  readonly kind: string;
+  readonly issuedAt: string;
+  readonly verifyUrl: string;
+  readonly contentHash: string;
+  /** The sheet the serial vouches for, as the server recorded it. */
+  readonly sheet: IResultSheet;
+}

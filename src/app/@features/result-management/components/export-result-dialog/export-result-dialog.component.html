@@ -53,9 +53,18 @@
   </div>
 
   <footer class="export-dialog__actions">
-    <p class="acva-caption text-neutral-500">
-      Download it to print — Acheva cannot send to a printer directly.
-    </p>
+    @if (issued(); as document) {
+      <p class="export-dialog__issued acva-caption" role="status">
+        Serial <strong>{{ document.serial }}</strong> — printed on the copy you
+        just downloaded, with a QR code beside it. Anyone can check it at
+        {{ document.verifyUrl }}
+      </p>
+    } @else {
+      <p class="acva-caption text-neutral-500">
+        Download it to print — Acheva cannot send to a printer directly. The
+        serial and QR code are added to the downloaded copy, not the preview.
+      </p>
+    }
     <div class="flex gap-3">
       <app-button
         label="Download Excel"

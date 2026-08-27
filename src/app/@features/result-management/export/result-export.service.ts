@@ -1,9 +1,9 @@
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { IResultSheet } from '../models/result-sheet.model';
+import { IIssuedDocument, IResultSheet } from '../models/result-sheet.model';
 import { ResultsService } from '../services/results.service';
 import { IAPIResponse } from '../../../@core/models/api-response.model';
-import { buildResultSheetPdf } from './result-sheet-pdf';
+import { buildResultSheetPdf, SheetProvenance } from './result-sheet-pdf';
 import {
   applySheetColumnWidths,
   buildResultSheetRows,
@@ -30,14 +30,28 @@ export class ResultExportService {
   }
 
   /**
+   * Mint the serial for a copy about to be taken away.
+   *
+   * Only downloads call this. Previewing mints nothing, so every serial that
+   * exists belongs to a document someone actually holds — which is what makes
+   * "this serial was issued" mean anything.
+   */
+  issue(resultId: string): Observable<IAPIResponse<IIssuedDocument>> {
+    return this.resultsService.issueResultSheet(resultId);
+  }
+
+  /**
    * A blob URL of the PDF, for the preview iframe.
    *
    * The preview renders the very file the download produces — not an HTML
    * lookalike. A separate preview layout would be a second definition of the
    * document, free to drift from the one that actually gets printed.
    */
-  async previewUrl(sheet: IResultSheet): Promise<string> {
-    const pdf = await this.createPdf(sheet);
+  async previewUrl(
+    sheet: IResultSheet,
+    provenance?: SheetProvenance
+  ): Promise<string> {
+    const pdf = await this.createPdf(sheet, provenance);
     // pdfmake 0.3 returns a Promise from getBlob; 0.2 took a callback. The
     // callback form fails silently here — the download still worked, so only
     // the preview was blank.
@@ -45,17 +59,39 @@ export class ResultExportService {
     return URL.createObjectURL(blob);
   }
 
-  async downloadPdf(sheet: IResultSheet): Promise<void> {
-    const pdf = await this.createPdf(sheet);
+  /**
+   * The QR as a PNG data URI, sized and error-corrected for a printed page.
+   *
+   * `M` correction survives the speckle a photocopier adds; the serial is
+   * printed beside it in text anyway, for when a scan fails entirely.
+   */
+  async qrDataUrl(verifyUrl: string): Promise<string> {
+    const QRCode = await import('qrcode');
+    return QRCode.toDataURL(verifyUrl, {
+      errorCorrectionLevel: 'M',
+      margin: 1,
+      width: 240,
+      color: { dark: '#000000', light: '#FFFFFF' },
+    });
+  }
+
+  async downloadPdf(
+    sheet: IResultSheet,
+    provenance?: SheetProvenance
+  ): Promise<void> {
+    const pdf = await this.createPdf(sheet, provenance);
     pdf.download(`${sheetFileName(sheet)}.pdf`);
   }
 
-  async downloadExcel(sheet: IResultSheet): Promise<void> {
+  async downloadExcel(
+    sheet: IResultSheet,
+    provenance?: SheetProvenance
+  ): Promise<void> {
     const XLSX = await import('xlsx');
     const { saveAs } = await import('file-saver');
 
     const worksheet = XLSX.utils.aoa_to_sheet(
-      buildResultSheetRows(sheet) as unknown[][]
+      buildResultSheetRows(sheet, provenance) as unknown[][]
     );
     applySheetColumnWidths(worksheet);
 
@@ -74,9 +110,12 @@ export class ResultExportService {
     );
   }
 
-  private async createPdf(sheet: IResultSheet): Promise<PdfDocument> {
+  private async createPdf(
+    sheet: IResultSheet,
+    provenance?: SheetProvenance
+  ): Promise<PdfDocument> {
     const pdfMake = await this.loadPdfMake();
-    return pdfMake.createPdf(buildResultSheetPdf(sheet));
+    return pdfMake.createPdf(buildResultSheetPdf(sheet, provenance));
   }
 
   private loadPdfMake(): Promise<PdfMakeStatic> {

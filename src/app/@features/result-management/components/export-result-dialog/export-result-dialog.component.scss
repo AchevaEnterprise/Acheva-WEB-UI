@@ -63,3 +63,15 @@
     align-items: stretch;
   }
 }
+
+/* Shown once a copy has actually been taken away. Brand blue rather than a
+   success green — the point is "here is your serial", not "well done". */
+
+.export-dialog__issued {
+  color: #1268bf;
+  background-color: #2793ff14;
+  border: 1px solid #2793ff33;
+  border-radius: 8px;
+  padding: 8px 12px;
+  max-width: 460px;
+}

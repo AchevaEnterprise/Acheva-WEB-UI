@@ -8,7 +8,7 @@ import {
 } from '../../../@core/models/api-response.model';
 import { SemesterEnum } from '../../../@core/models/school.model';
 import { RoleEnum } from '../../auth/model/auth.model';
-import { IResultSheet } from '../models/result-sheet.model';
+import { IIssuedDocument, IResultSheet } from '../models/result-sheet.model';
 import {
   IStudentResult,
   IStudentSessionsResult,
@@ -125,6 +125,22 @@ export class ResultsService {
   getResultSheet(resultId: string): Observable<IAPIResponse<IResultSheet>> {
     return this.http.get<IAPIResponse<IResultSheet>>(
       `${this.resultsUrl}/${resultId}/sheet`
+    );
+  }
+
+  /**
+   * `POST /results/:id/sheet/issue` — mint a serial for a sheet about to be
+   * downloaded, and get back the exact snapshot it vouches for.
+   *
+   * Only called on download, never on preview: a serial should exist for every
+   * copy in the world and no others.
+   */
+  issueResultSheet(
+    resultId: string
+  ): Observable<IAPIResponse<IIssuedDocument>> {
+    return this.http.post<IAPIResponse<IIssuedDocument>>(
+      `${this.resultsUrl}/${resultId}/sheet/issue`,
+      {}
     );
   }
 

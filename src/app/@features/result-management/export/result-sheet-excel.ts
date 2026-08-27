@@ -15,7 +15,10 @@ import {
  * two. Column headers come from `SHEET_COLUMNS`, so neither export can gain a
  * column the other lacks.
  */
-export function buildResultSheetRows(sheet: IResultSheet): unknown[][] {
+export function buildResultSheetRows(
+  sheet: IResultSheet,
+  provenance?: { serial: string; verifyUrl: string }
+): unknown[][] {
   const blank: unknown[] = [];
 
   const rows: unknown[][] = [
@@ -142,8 +145,17 @@ export function buildResultSheetRows(sheet: IResultSheet): unknown[][] {
     ]);
   }
 
+  if (provenance) {
+    rows.push(blank, ['Verify this document']);
+    rows.push(['Serial', provenance.serial]);
+    rows.push(['Verify at', provenance.verifyUrl]);
+    rows.push([
+      'Check that what the page shows matches this sheet — an altered copy will not match.',
+    ]);
+  }
+
   rows.push(blank, [
-    `Generated from Acheva on ${formatSheetDate(sheet.generatedAt)}. ` +
+    `Issued from Acheva on ${formatSheetDate(sheet.generatedAt)}. ` +
       `Approvals shown above are recorded electronically.`,
   ]);
 
