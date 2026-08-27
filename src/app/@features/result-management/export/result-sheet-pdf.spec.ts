@@ -111,18 +111,51 @@ describe('result sheet PDF — FUTO Official Grade Report', () => {
     expect(rows[2][5].text).toBe('');
   });
 
-  it('carries the three signature lines the form has', () => {
-    const text = textOf(buildResultSheetPdf(sheet()).content).join(' | ');
-    expect(text).toContain('Head of Department');
-    expect(text).toContain('Dean of School');
-    expect(text).toContain('Examiner(s)');
-  });
-
   it('names each approver and when they signed, since it cannot draw a signature', () => {
     const text = textOf(buildResultSheetPdf(sheet()).content).join(' | ');
     expect(text).toContain('PROF H O D');
     expect(text).toContain('PROF D EAN');
-    expect(text).toContain(`Approved ${formatSheetDate('2025-12-12T09:00:00.000Z')}`);
+    expect(text).toContain(formatSheetDate('2025-12-12T09:00:00.000Z'));
+  });
+
+  it('prints the pass and fail rates under the tally, not just the grades', () => {
+    // The paper form stops at the tally, leaving the reader to work the pass
+    // rate out by hand from forty names.
+    const text = textOf(buildResultSheetPdf(sheet()).content).join(' | ');
+    expect(text).toContain('Pass rate');
+    expect(text).toContain('50%');
+    expect(text).toContain('Fail rate');
+    expect(text).toContain('Average');
+    expect(text).toContain('44.5');
+  });
+
+  it('stamps each approval instead of faking a signature', () => {
+    const text = textOf(buildResultSheetPdf(sheet()).content).join(' | ');
+    expect(text).toContain('APPROVED');
+    expect(text).toContain('HEAD OF DEPARTMENT');
+    expect(text).toContain('DEAN OF SCHOOL');
+    expect(text).toContain('EXAMINER(S)');
+  });
+
+  it('marks an unapproved position rather than hiding it', () => {
+    const noDean = sheet({
+      approvals: sheet().approvals.filter((a) => a.role !== 'DEAN'),
+    });
+    const text = textOf(buildResultSheetPdf(noDean).content).join(' | ');
+    expect(text).toContain('AWAITING APPROVAL');
+    expect(text).toContain('Not yet approved');
+  });
+
+  it('never prints an email address in place of a missing name', () => {
+    const nameless = sheet({
+      approvals: sheet().approvals.map((a) => ({
+        ...a,
+        name: 'someone@example.com',
+      })),
+    });
+    // The service falls back to the email; the sheet must not print it.
+    const text = textOf(buildResultSheetPdf(nameless).content).join(' | ');
+    expect(text).not.toContain('@');
   });
 
   it('prints the grade tally and the grading legend', () => {

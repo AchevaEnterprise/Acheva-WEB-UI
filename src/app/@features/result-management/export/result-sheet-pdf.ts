@@ -131,7 +131,7 @@ export function buildResultSheetPdf(sheet: IResultSheet): ResultSheetDocument {
       {
         unbreakable: true,
         stack: [
-          signatureBlock(sheet),
+          approvalStamps(sheet),
           {
             columns: [
               { width: '40%', stack: [gradeTally(sheet)] },
@@ -167,8 +167,31 @@ export function buildResultSheetPdf(sheet: IResultSheet): ResultSheetDocument {
         color: '#8a5b00',
         margin: [0, 0, 0, 6],
       },
-      signatureName: { fontSize: 7.5, bold: true },
-      signatureMeta: { fontSize: 6.5, color: '#555555' },
+      stampHeading: {
+        fontSize: 9,
+        bold: true,
+        color: '#2793FF',
+        alignment: 'center',
+      },
+      stampHeadingPending: {
+        fontSize: 9,
+        bold: true,
+        color: '#999999',
+        alignment: 'center',
+      },
+      stampRole: {
+        fontSize: 6.5,
+        bold: true,
+        alignment: 'center',
+        margin: [0, 1, 0, 2],
+      },
+      stampName: { fontSize: 7.5, alignment: 'center' },
+      stampDate: {
+        fontSize: 6.5,
+        color: '#555555',
+        alignment: 'center',
+        margin: [0, 1, 0, 0],
+      },
       sectionLabel: { fontSize: 8, bold: true },
       provenance: {
         fontSize: 6.5,
@@ -178,6 +201,13 @@ export function buildResultSheetPdf(sheet: IResultSheet): ResultSheetDocument {
       },
     },
   };
+}
+
+/** A printable person name, or a dash. Never an email address. */
+function displayName(name: string | undefined): string {
+  const trimmed = name?.trim();
+  if (!trimmed || trimmed.includes('@')) return '—';
+  return trimmed.toUpperCase();
 }
 
 function metaLine(label: string, value: string): Record<string, unknown> {
@@ -191,61 +221,123 @@ function metaLine(label: string, value: string): Record<string, unknown> {
 }
 
 /**
- * The form's three signature lines. Acheva cannot reproduce a handwritten
- * signature, so each line carries the approver's name and the date they signed
- * — which is more than the paper form proves, since the signatures on it are
- * unreadable.
+ * The form's three sign-off positions, as approval stamps.
+ *
+ * Acheva cannot reproduce a handwritten signature and should not pretend to.
+ * A stamp is the honest equivalent and the one FUTO staff already read as
+ * authority on paper — and unlike the scrawls on the original form, it says
+ * plainly WHO approved, in WHAT role, and WHEN.
+ *
+ * A position nobody has approved yet prints an empty outline rather than being
+ * hidden, so an incomplete sheet is obviously incomplete.
  */
-function signatureBlock(sheet: IResultSheet): Record<string, unknown> {
+function approvalStamps(sheet: IResultSheet): Record<string, unknown> {
   const latest = (role: string) =>
     [...sheet.approvals].reverse().find((a) => a.role === role) ?? null;
 
-  const hod = latest('HOD');
-  const dean = latest('DEAN');
-  const examiner =
-    latest('COURSE_COORDINATOR') ??
-    (sheet.courseCoordinator
-      ? { name: sheet.courseCoordinator.name, date: '', action: '' }
-      : null);
+  const stamp = (title: string, who: { name: string; date: string } | null) => {
+    const approved = Boolean(who?.date);
 
-  const line = (title: string, who: { name: string; date: string } | null) => ({
-    width: '33%',
-    stack: [
-      { text: who?.name?.toUpperCase() ?? '', style: 'signatureName' },
-      {
-        canvas: [
-          { type: 'line', x1: 0, y1: 0, x2: 150, y2: 0, lineWidth: 0.5 },
+    return {
+      width: '33%',
+      margin: [0, 0, 8, 0],
+      table: {
+        widths: ['*'],
+        body: [
+          [
+            {
+              border: [true, true, true, true],
+              margin: [6, 5, 6, 5],
+              stack: [
+                {
+                  text: approved ? 'APPROVED' : 'AWAITING APPROVAL',
+                  style: approved ? 'stampHeading' : 'stampHeadingPending',
+                },
+                { text: title.toUpperCase(), style: 'stampRole' },
+                {
+                  // The office and the date are the substance; the name is the
+                  // courtesy. An unnamed approver prints a dash — never a
+                  // contact address, which belongs nowhere near a signature on
+                  // an academic record. The API no longer sends one; this is
+                  // the guarantee at the point of printing.
+                  text: displayName(who?.name),
+                  style: 'stampName',
+                },
+                {
+                  text: approved
+                    ? formatSheetDate(who!.date)
+                    : 'Not yet approved',
+                  style: 'stampDate',
+                },
+              ],
+            },
+          ],
         ],
-        margin: [0, 2, 0, 2],
       },
-      { text: title, fontSize: 7.5 },
-      {
-        text: who?.date
-          ? `Approved ${formatSheetDate(who.date)}`
-          : 'Not yet approved',
-        style: 'signatureMeta',
+      layout: {
+        hLineWidth: () => 1,
+        vLineWidth: () => 1,
+        hLineColor: () => (approved ? '#2793FF' : '#BBBBBB'),
+        vLineColor: () => (approved ? '#2793FF' : '#BBBBBB'),
       },
-    ],
-  });
+    };
+  };
 
   return {
     columns: [
-      line('Head of Department', hod),
-      line('Dean of School', dean),
-      line('Examiner(s)', examiner),
+      stamp('Head of Department', latest('HOD')),
+      stamp('Dean of School', latest('DEAN')),
+      // The Examiner position is held by the Course Coordinator.
+      stamp('Examiner(s)', latest('COURSE_COORDINATOR')),
     ],
-    margin: [0, 22, 0, 0],
+    margin: [0, 18, 0, 0],
   };
 }
 
-/** The A = 0, B = 2 … tally printed at the foot of the form. */
+/**
+ * The A = 0, B = 2 … tally the form prints, followed by the same analysis the
+ * app shows on screen. The paper form stops at the tally, which leaves whoever
+ * reads it to work out the pass rate by hand from a list of forty names.
+ */
 function gradeTally(sheet: IResultSheet): Record<string, unknown> {
+  const { summary } = sheet;
+
+  const stat = (label: string, value: string, emphasis = false) => ({
+    columns: [
+      { text: label, fontSize: 8, width: 62 },
+      { text: value, fontSize: 8, bold: emphasis },
+    ],
+    margin: [0, 0.5],
+  });
+
   return {
-    stack: Object.entries(sheet.summary.distribution).map(([grade, count]) => ({
-      text: `${grade} = ${count}`,
-      fontSize: 8,
-      margin: [0, 0.5],
-    })),
+    stack: [
+      ...Object.entries(summary.distribution).map(([grade, count]) => ({
+        text: `${grade} = ${count}`,
+        fontSize: 8,
+        margin: [0, 0.5],
+      })),
+      {
+        canvas: [
+          {
+            type: 'line',
+            x1: 0,
+            y1: 0,
+            x2: 120,
+            y2: 0,
+            lineWidth: 0.5,
+            lineColor: '#999999',
+          },
+        ],
+        margin: [0, 5, 0, 4],
+      },
+      stat('Total', String(summary.total)),
+      stat('Passed', String(summary.totalPass)),
+      stat('Failed', String(summary.totalFail)),
+      stat('Average', `${summary.averageTotal}`),
+      stat('Pass rate', `${summary.percentagePass}%`, true),
+      stat('Fail rate', `${summary.percentageFail}%`, true),
+    ],
   };
 }
 

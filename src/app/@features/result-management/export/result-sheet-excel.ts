@@ -96,6 +96,16 @@ export function buildResultSheetRows(sheet: IResultSheet): unknown[][] {
     rows.push([`${grade} = ${count}`]);
   }
 
+  // The same analysis the PDF prints under the tally, and the same the app
+  // shows on screen. Numbers stay numeric so the sheet can be charted.
+  rows.push(blank, ['Analysis']);
+  rows.push(['Total', sheet.summary.total]);
+  rows.push(['Passed', sheet.summary.totalPass]);
+  rows.push(['Failed', sheet.summary.totalFail]);
+  rows.push(['Average', sheet.summary.averageTotal]);
+  rows.push(['Pass rate (%)', sheet.summary.percentagePass]);
+  rows.push(['Fail rate (%)', sheet.summary.percentageFail]);
+
   rows.push(blank, ['Grading System:']);
   for (const band of sheet.gradingScale) {
     rows.push([
