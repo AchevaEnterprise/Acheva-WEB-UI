@@ -115,12 +115,23 @@
           <header class="results-card__header">
             <h3 class="acva-heading-6 fw-600 m-0">All Results</h3>
 
-            <app-button
-              label="Print"
-              type="outline"
-              class="btn-sm"
-              (clickEvent)="printResults()"
-            />
+            <div class="results-card__actions">
+              <app-button
+                label="Print"
+                type="outline"
+                class="btn-sm"
+                (clickEvent)="printResults()"
+              />
+
+              <app-button
+                label="Academic record"
+                type="outline"
+                class="btn-sm"
+                [loading]="downloadingTranscript()"
+                [disabled]="downloadingTranscript()"
+                (clickEvent)="downloadTranscript()"
+              />
+            </div>
           </header>
 
           <div class="results-card__filters">
