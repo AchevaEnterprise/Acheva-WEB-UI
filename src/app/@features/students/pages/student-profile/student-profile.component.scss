@@ -180,6 +180,7 @@ $text-muted: rgb(107 114 128);
 
   // Print and Academic record sit together; they wrap rather than squeeze the
   // heading on the narrow end of the responsive range.
+
   &__actions {
     display: flex;
     flex-wrap: wrap;
