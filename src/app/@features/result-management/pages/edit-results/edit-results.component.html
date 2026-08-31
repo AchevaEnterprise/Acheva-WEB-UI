@@ -1,4 +1,4 @@
-<header class="mb-4 flex gap-4 justify-between">
+<header class="mb-4 flex gap-4 justify-between items-center">
   <app-back-button />
 
   <app-button
@@ -12,12 +12,15 @@
 @if (!tableExpanded()) {
   @if (loadingResult()) {
     <div
-      class="rounded-[8px] border border-neutral-300 bg-white p-6 flex flex-col items-center justify-center min-h-[14rem]"
+      class="rounded-[8px] border border-neutral-300 bg-white p-6 flex flex-col gap-3 min-h-[14rem]"
     >
-      <app-loader />
-      <p class="acva-para-1 text-neutral-500 mt-4 text-center">
-        Loading result summary…
-      </p>
+      <app-skeleton width="40%" height="1.25rem" />
+      <app-skeleton width="70%" height="0.9rem" />
+      <div class="grid grid-cols-3 gap-3 mt-2">
+        <app-skeleton height="3.5rem" />
+        <app-skeleton height="3.5rem" />
+        <app-skeleton height="3.5rem" />
+      </div>
     </div>
   } @else {
     <app-card
@@ -93,29 +96,36 @@
   </div>
 
   @if (loadingResult()) {
-    <div
-      class="mt-4 rounded-[8px] border border-neutral-200 bg-white p-6 flex flex-col items-center"
-    >
-      <app-loader />
-      <p class="acva-para-1 text-neutral-500 mt-4 text-center">
-        Loading student grades…
-      </p>
+    <div class="mt-4 rounded-[8px] border border-neutral-200 bg-white p-6">
+      <app-skeleton-table [cols]="6" [rows]="6" />
     </div>
   } @else {
-    <div class="flex flex-wrap items-center justify-between">
+    <div class="flex flex-wrap items-center justify-between gap-3">
       <app-segment-switcher
         [activeSegment]="activeSegment()"
         [segments]="segments()"
         (switchEvent)="switchSegment($event)"
       />
 
-      @if (uploadingResult()) {
-        <p
-          class="flex gap-2 items text-blue-600 px-3 py-1 text-sm bg-blue-100 rounded-[50px]"
-        >
-          <app-loader /> Saving result...
-        </p>
-      }
+      <div class="flex items-center gap-4">
+        @if (uploadingResult()) {
+          <p
+            class="flex gap-2 items text-blue-600 px-3 py-1 text-sm bg-blue-100 rounded-[50px]"
+          >
+            <app-loader /> Saving result...
+          </p>
+        }
+
+        <!-- Every role that can open a result can take it away as the official
+             grade report — the HOD and Dean are the ones who sign it. -->
+        <app-button
+          label="Export"
+          icon="icons/general/download-icon.svg"
+          class="btn-md"
+          [disabled]="!resultId"
+          (clickEvent)="exportResult()"
+        />
+      </div>
     </div>
 
     <div class="mt-4">
@@ -124,6 +134,7 @@
           <app-regular-table-result-upload
             #regularTableResultUploadRef
             [readonly]="readOnly()"
+            [assessmentShape]="assessmentShape()"
             [resultId]="resultId"
             [students]="students()['REGULAR']"
             (hasChangesEvent)="updateChanges($event)"
@@ -133,6 +144,7 @@
           <app-regular-table-result-upload
             #regularTableResultUploadRef
             [readonly]="readOnly()"
+            [assessmentShape]="assessmentShape()"
             [resultId]="resultId"
             [students]="students()['REFERENCE']"
             (hasChangesEvent)="updateChanges($event)"
@@ -142,6 +154,7 @@
           <app-regular-table-result-upload
             #regularTableResultUploadRef
             [readonly]="readOnly()"
+            [assessmentShape]="assessmentShape()"
             [resultId]="resultId"
             [students]="students()['UNREGISTERED']"
             (hasChangesEvent)="updateChanges($event)"

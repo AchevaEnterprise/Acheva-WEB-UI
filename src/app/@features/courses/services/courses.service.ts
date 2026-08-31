@@ -14,6 +14,28 @@ import { ICourse, ICourseQuery, ICreateCourse } from '../models/course.model';
 export class CoursesService {
   private readonly http = inject(HttpClient);
   private readonly coursesUrl = `${environment.BASE_URL}/courses`;
+  private readonly curriculumUrl = `${environment.BASE_URL}/curriculum`;
+
+  /**
+   * Classify one course in a department's curriculum (COMPULSORY / ELECTIVE /
+   * SIWES + optional group). Same endpoint the Admin app uses, so a course
+   * created in the staff portal lands in the curriculum too. The staff token
+   * carries the school, so no `?schoolId=` is needed.
+   */
+  upsertCurriculumEntry(body: {
+    departmentId: string;
+    courseId: string;
+    level: string;
+    semester: string;
+    units?: number;
+    type: string;
+    electiveGroup?: string;
+    groupMinRequired?: number;
+  }): Observable<IAPIResponse<{ saved: boolean; blockIssues: unknown[] }>> {
+    return this.http.post<
+      IAPIResponse<{ saved: boolean; blockIssues: unknown[] }>
+    >(`${this.curriculumUrl}/entry`, body);
+  }
 
   getCourses(
     query?: Partial<ICourseQuery>

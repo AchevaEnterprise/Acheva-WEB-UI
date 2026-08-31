@@ -31,6 +31,27 @@ export interface IRegistrationEntry {
   readonly carriedFromSession: string | null;
   readonly note: string | null;
   readonly droppedReason: string | null;
+  /**
+   * Dropped because the school excused the student from the exam. No grade,
+   * no CGPA impact — but the course stays outstanding and comes back as a
+   * fresh registration, never a carry-over.
+   */
+  readonly excused?: boolean;
+  readonly excusedAt?: string | null;
+}
+
+/** A course the student was excused from and must still take. */
+export interface IOutstandingExcusedCourse {
+  readonly courseId: string;
+  readonly courseCode: string;
+  readonly courseTitle: string;
+  readonly units: number;
+  readonly courseSemester: string;
+  /** The type it will return as — never CARRYOVER. */
+  readonly originalType: RegistrationEntryType;
+  readonly excusedInSession: string;
+  readonly excusedInLevel: string;
+  readonly excusedAt: string | null;
 }
 
 export interface IUnplacedCarryOver {
@@ -131,12 +152,34 @@ export interface IElectiveReview {
   readonly units: number;
   readonly session: string;
   readonly level: string;
-  readonly kind: 'FAILED' | 'LOW_GRADE';
+  /**
+   * Outcome kinds (FAILED / LOW_GRADE) are decided KEEP vs UNREGISTER.
+   * Mismatch kinds — the student sat something they were not registered for
+   * — are decided APPROVE vs REJECT, and are never applied automatically.
+   */
+  readonly kind:
+    | 'FAILED'
+    | 'LOW_GRADE'
+    | 'ELECTIVE_MISMATCH'
+    | 'UNREGISTERED_WRITE'
+    | 'DROPPED_WRITE';
+  /** ELECTIVE_MISMATCH — the registered course the student did not write. */
+  readonly relatedCourseCode?: string | null;
+  readonly electiveGroup?: string | null;
   readonly grade: string;
   readonly total: number;
-  readonly status: 'PENDING' | 'KEPT' | 'UNREGISTERED';
+  readonly status:
+    | 'PENDING'
+    | 'KEPT'
+    | 'UNREGISTERED'
+    | 'APPROVED'
+    | 'REJECTED';
   readonly createdAt?: string;
   /** CGPA with the grade counted vs. projected if unregistered. */
   readonly currentCgpa?: number | null;
   readonly projectedCgpa?: number | null;
+  /** Populated on the recently-decided list only — drives the undo panel. */
+  readonly decidedAt?: string | null;
+  readonly decidedBy?: { firstname: string; lastname: string } | string | null;
+  readonly note?: string | null;
 }

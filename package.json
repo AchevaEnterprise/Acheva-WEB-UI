@@ -12,7 +12,10 @@
     "screenshot": "node scripts/screenshot.mjs",
     "pw:install": "npx playwright install chromium --with-deps",
     "verify:responsive": "node scripts/verify-responsive.mjs",
-    "test:localfirst": "node scripts/localfirst-harness.mjs"
+    "test:localfirst": "node scripts/localfirst-harness.mjs",
+    "test:history": "node scripts/history-harness.mjs",
+    "test:export": "node scripts/export-harness.mjs",
+    "test:verify": "node scripts/verify-harness.mjs"
   },
   "private": true,
   "dependencies": {
@@ -33,6 +36,8 @@
     "@ngrx/store": "^19.2.1",
     "@ngrx/store-devtools": "^19.2.1",
     "@tailwindcss/postcss": "^4.1.10",
+    "@types/pdfmake": "^0.3.3",
+    "@types/qrcode": "^1.5.6",
     "date-fns": "^4.1.0",
     "eslint-plugin-unused-imports": "^4.1.4",
     "file-saver": "^2.0.5",
@@ -41,7 +46,9 @@
     "idb": "^8.0.3",
     "ngx-mat-select-search": "^8.0.2",
     "ngx-quill": "^27.1.2",
+    "pdfmake": "^0.3.11",
     "postcss": "^8.5.6",
+    "qrcode": "^1.5.4",
     "quill": "^2.0.3",
     "rxjs": "~7.8.0",
     "tailwindcss": "^4.1.10",

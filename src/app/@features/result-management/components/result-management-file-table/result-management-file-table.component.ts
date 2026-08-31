@@ -42,7 +42,7 @@ import {
 } from '../../../../@core/store/school/school.selector';
 import { EmptyStateComponent } from '../../../../@shared/components/empty-state/empty-state.component';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
-import { LoaderComponent } from '../../../../@shared/components/loader/loader.component';
+import { SkeletonTableComponent } from '../../../../@shared/components/skeleton/skeleton-table.component';
 import { PaginatorComponent } from '../../../../@shared/components/paginator/paginator.component';
 import { RoleEnum } from '../../../auth/model/auth.model';
 import { AuthenticationService } from '../../../auth/service/auth.service';
@@ -65,7 +65,7 @@ export interface FileTableFilter {
     MatFormFieldModule,
     MatMenuModule,
     EmptyStateComponent,
-    LoaderComponent,
+    SkeletonTableComponent,
     ButtonComponent,
     ReactiveFormsModule,
     ResultApprovedForMePipe,

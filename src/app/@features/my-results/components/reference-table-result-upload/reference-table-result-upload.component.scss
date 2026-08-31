@@ -23,3 +23,15 @@
     background: #cde6f86e;
   }
 }
+
+/* A refused registration number, explained in place. Amber rather than red:
+   the lecturer has not broken anything, they have typed a number that belongs
+   to someone else. */
+
+.reference-notice {
+  background-color: #fff8e6;
+  border: 1px solid #f5d78e;
+  border-radius: 8px;
+  padding: 12px 16px;
+  color: #7a5b00;
+}

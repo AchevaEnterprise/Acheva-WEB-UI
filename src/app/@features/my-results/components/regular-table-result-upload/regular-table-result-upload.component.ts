@@ -62,6 +62,13 @@ export class RegularTableResultUploadComponent {
   readonly = input<boolean>(false);
 
   /**
+   * How the course is assessed. On a PRACTICAL_ONLY course the test and exam
+   * columns stay visible but are disabled — the template already renders a
+   * disabled control as plain text — and the practical carries the whole mark.
+   */
+  assessmentShape = input<'THEORY' | 'PRACTICAL_ONLY'>('THEORY');
+
+  /**
    * Registration gating (Slice 4): when non-null, rows whose student is NOT
    * in this list are disabled and sorted to the bottom until the lecturer
    * explicitly enables them. `null` = no registration data → no gating.
@@ -225,12 +232,15 @@ export class RegularTableResultUploadComponent {
     const isDisabled =
       this.readonly() || (!!this.status && this.status !== 'DRAFT');
 
+    const practicalOnly = this.assessmentShape() === 'PRACTICAL_ONLY';
+
     const createNumberControl = (
       value: number | null | undefined,
-      required = true
+      required = true,
+      disabled = isDisabled
     ) =>
       new FormControl(
-        { value: value ?? null, disabled: isDisabled },
+        { value: value ?? null, disabled },
         required ? numberValidator : [Validators.min(0), Validators.max(100)]
       );
 
@@ -241,16 +251,31 @@ export class RegularTableResultUploadComponent {
         Validators.required,
       ],
 
-      test: createNumberControl(student.test),
-      // LAB is optional — most courses have no lab component (FUTO 2026-07).
-      lab: createNumberControl(student.lab, false),
-      exam: createNumberControl(student.exam),
+      // On a practical-only course these two are disabled rather than removed:
+      // the lecturer still sees the columns, so the layout is familiar and it
+      // is obvious the course simply has no test or exam — where a vanished
+      // column just looks like a bug.
+      test: createNumberControl(
+        student.test,
+        !practicalOnly,
+        isDisabled || practicalOnly
+      ),
+      // Optional on a theory course — most have no lab. On a practical-only
+      // course it is the whole assessment, so it becomes required.
+      lab: createNumberControl(student.lab, practicalOnly),
+      exam: createNumberControl(
+        student.exam,
+        !practicalOnly,
+        isDisabled || practicalOnly
+      ),
 
       total: [student.total, numberValidator],
       grade: [student.grade],
       status: [student.status],
       isEdited: [student.isEdited || false],
       moderated: [student.moderated || false],
+      voided: [student.voided || false],
+      voidedReason: [student.voidedReason ?? null],
       unregistered: [false],
     });
   }
@@ -331,9 +356,17 @@ export class RegularTableResultUploadComponent {
 
     const isEmpty = (value: number | null | undefined): boolean =>
       value === null || value === undefined;
-    const allEmpty = isEmpty(test) && isEmpty(lab) && isEmpty(exam);
+    const allEmpty =
+      this.assessmentShape() === 'PRACTICAL_ONLY'
+        ? isEmpty(lab)
+        : isEmpty(test) && isEmpty(lab) && isEmpty(exam);
 
-    const total = (test ?? 0) + (lab ?? 0) + (exam ?? 0);
+    // A practical-only course's total IS its practical score — never a sum
+    // that quietly folds in a disabled test or exam.
+    const total =
+      this.assessmentShape() === 'PRACTICAL_ONLY'
+        ? (lab ?? 0)
+        : (test ?? 0) + (lab ?? 0) + (exam ?? 0);
 
     // onControlInput already prevents committing a >100 sum, so just bail
     // defensively — never wipe the row's other scores.

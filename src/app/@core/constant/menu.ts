@@ -93,20 +93,21 @@ export const MENU: IMenu[] = [
       RoleEnum.LECTURER,
     ],
   },
-  // {
-  //   label: 'History',
-  //   active_icon: 'icons/menu/history-active.svg',
-  //   inactive_icon: 'icons/menu/history-inactive.svg',
-  //   route: 'history',
-  //   isActive: true,
-  //   accessRole: [
-  //     RoleEnum.DEAN,
-  //     RoleEnum.HOD,
-  //     RoleEnum.COURSE_ADVISOR,
-  //     // RoleEnum.COURSE_COORDINATOR,
-  //     // RoleEnum.LECTURER,
-  //   ],
-  // },
+  {
+    label: 'History',
+    active_icon: 'icons/menu/history-active.svg',
+    inactive_icon: 'icons/menu/history-inactive.svg',
+    route: 'history',
+    isActive: true,
+    // Every workflow role keeps a desk trail, so History is open to all five.
+    accessRole: [
+      RoleEnum.DEAN,
+      RoleEnum.HOD,
+      RoleEnum.COURSE_ADVISOR,
+      RoleEnum.COURSE_COORDINATOR,
+      RoleEnum.LECTURER,
+    ],
+  },
   // {
   //   label: 'Dues Management',
   //   active_icon: 'icons/menu/dues-management-active.svg',

@@ -70,3 +70,9 @@ export interface IAccessRefreshToken {
   accessToken: string;
   refreshToken: string;
 }
+
+/** Ids only — enough to disable an option, not to name who holds the post. */
+export interface IOccupiedLeadershipRoles {
+  readonly departmentsWithHod: string[];
+  readonly facultiesWithDean: string[];
+}

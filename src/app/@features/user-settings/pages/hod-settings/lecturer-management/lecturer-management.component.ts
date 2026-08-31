@@ -18,7 +18,7 @@ import { BackButtonComponent } from '../../../../../@shared/components/back-butt
 import { EmptyStateComponent } from '../../../../../@shared/components/empty-state/empty-state.component';
 import { ButtonComponent } from '../../../../../@shared/components/forms/button/button.component';
 import { SearchInputComponent } from '../../../../../@shared/components/forms/search-input/search-input.component';
-import { LoaderComponent } from '../../../../../@shared/components/loader/loader.component';
+import { SkeletonTableComponent } from '../../../../../@shared/components/skeleton/skeleton-table.component';
 import { PaginatorComponent } from '../../../../../@shared/components/paginator/paginator.component';
 import { StatusBadgeComponent } from '../../../../../@shared/components/status-badge/status-badge.component';
 import { SvgComponent } from '../../../../../@shared/components/svg/svg.component';
@@ -44,7 +44,7 @@ import { LecturersService } from '../../../service/lecturer.service';
     PaginatorComponent,
     SearchInputComponent,
     SvgComponent,
-    LoaderComponent,
+    SkeletonTableComponent,
     EmptyStateComponent,
     BackButtonComponent,
     FormsModule,

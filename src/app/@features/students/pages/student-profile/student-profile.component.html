@@ -1,6 +1,14 @@
 @if (loadingStudent()) {
-  <div class="min-h-[40vh] grid place-content-center">
-    <app-loader />
+  <div class="min-h-[40vh]">
+    <div class="flex items-center gap-4">
+      <app-skeleton width="4rem" height="4rem" [circle]="true" />
+      <div class="flex-1">
+        <app-skeleton width="30%" height="1.25rem" />
+        <app-skeleton width="20%" height="0.9rem" class="mt-2" />
+      </div>
+    </div>
+    <app-skeleton height="8rem" class="mt-6" />
+    <app-skeleton height="16rem" class="mt-4" />
   </div>
 } @else {
   @if (student(); as s) {
@@ -70,9 +78,15 @@
       <section class="profile-stats">
         <app-student-stat-card
           label="CGPA"
-          [value]="(gpa() | number: '1.2-2') ?? '—'"
+          [value]="cgpa() ?? '—'"
           icon="emoji_events"
           accent="amber"
+        />
+        <app-student-stat-card
+          label="GPA (current view)"
+          [value]="(gpa() | number: '1.2-2') ?? '—'"
+          icon="insights"
+          accent="indigo"
         />
         <app-student-stat-card
           label="Courses enrolled"
@@ -101,12 +115,23 @@
           <header class="results-card__header">
             <h3 class="acva-heading-6 fw-600 m-0">All Results</h3>
 
-            <app-button
-              label="Print"
-              type="outline"
-              class="btn-sm"
-              (clickEvent)="printResults()"
-            />
+            <div class="results-card__actions">
+              <app-button
+                label="Print"
+                type="outline"
+                class="btn-sm"
+                (clickEvent)="printResults()"
+              />
+
+              <app-button
+                label="Academic record"
+                type="outline"
+                class="btn-sm"
+                [loading]="downloadingTranscript()"
+                [disabled]="downloadingTranscript()"
+                (clickEvent)="downloadTranscript()"
+              />
+            </div>
           </header>
 
           <div class="results-card__filters">
@@ -142,7 +167,7 @@
 
           @if (loadingResults()) {
             <div class="results-card__loader">
-              <app-loader />
+              <app-skeleton-table [cols]="6" [rows]="6" />
             </div>
           } @else {
             <div class="results-table-wrapper">

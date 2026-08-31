@@ -138,6 +138,17 @@
                 MODERATED
               </span>
             }
+            @if (row.value.voided) {
+              <span
+                class="voided-chip"
+                [title]="
+                  row.value.voidedReason ||
+                  'Unregistered by the Course Advisor — excluded from GPA, transcripts and carry-overs'
+                "
+              >
+                VOIDED
+              </span>
+            }
           </div>
         </td>
       </ng-container>

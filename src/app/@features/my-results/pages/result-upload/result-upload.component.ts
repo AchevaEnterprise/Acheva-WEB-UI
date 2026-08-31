@@ -41,6 +41,7 @@ import {
 } from '../../../result-management/models/results.model';
 import { RegistrationService } from '../../../registration/services/registration.service';
 import { ResultsService } from '../../../result-management/services/results.service';
+import { ExportResultDialogComponent } from '../../../result-management/components/export-result-dialog/export-result-dialog.component';
 import { isResultReadonlyForLecturer } from '../../../result-management/utils/workflow';
 import { IStudentGrade } from '../../../students/models/student.model';
 import { ResultSyncService } from '../../sync/result-sync.service';
@@ -156,6 +157,9 @@ export class ResultUploadComponent implements OnInit, CanComponentDeactivate {
     UNREGISTERED: [],
   });
 
+  /** Drives which score columns the grade tables allow. */
+  assessmentShape = signal<'THEORY' | 'PRACTICAL_ONLY'>('THEORY');
+
   courseForm = new FormGroup({
     course: new FormControl({ value: '', disabled: true }),
     session: new FormControl({ value: '', disabled: true }),
@@ -210,6 +214,10 @@ export class ResultUploadComponent implements OnInit, CanComponentDeactivate {
 
   setResultDetails(result: IResult) {
     const { course, session, level, analytics } = result;
+    this.assessmentShape.set(
+      (course as { assessmentShape?: 'THEORY' | 'PRACTICAL_ONLY' })
+        ?.assessmentShape ?? 'THEORY'
+    );
 
     this.courseForm.patchValue({
       course: `${course?.courseCode} - ${course?.courseTitle}`,
@@ -360,6 +368,26 @@ export class ResultUploadComponent implements OnInit, CanComponentDeactivate {
 
         this.getResultAndEntries();
       },
+    });
+  }
+
+  /**
+   * Opens the official grade report for this result: a preview of the exact
+   * file, with PDF and Excel downloads beneath it.
+   *
+   * Acheva cannot drive a printer, so printing means downloading — the sheet
+   * is rendered to match FUTO's Official Grade Report so what comes out of the
+   * printer is the form the department already knows.
+   */
+  exportResult(): void {
+    if (!this.resultId) return;
+
+    this.dialog.open(ExportResultDialogComponent, {
+      width: '900px',
+      maxWidth: '95vw',
+      height: '90vh',
+      data: { resultId: this.resultId },
+      panelClass: 'export-result-panel',
     });
   }
 

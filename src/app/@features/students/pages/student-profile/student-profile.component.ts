@@ -3,14 +3,15 @@ import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute, Router } from '@angular/router';
-import { finalize } from 'rxjs';
+import { finalize, firstValueFrom } from 'rxjs';
 import {
   IDepartment,
   LevelsEnum,
   SemesterEnum,
 } from '../../../../@core/models/school.model';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
-import { LoaderComponent } from '../../../../@shared/components/loader/loader.component';
+import { SkeletonComponent } from '../../../../@shared/components/skeleton/skeleton.component';
+import { SkeletonTableComponent } from '../../../../@shared/components/skeleton/skeleton-table.component';
 import { StatusBadgeComponent } from '../../../../@shared/components/status-badge/status-badge.component';
 import { ToastService } from '../../../../@core/utility/toast.service';
 import { AuthenticationService } from '../../../auth/service/auth.service';
@@ -24,6 +25,7 @@ import {
   StudentResultType,
 } from '../../models/student.model';
 import { StudentService } from '../../services/student.service';
+import { TranscriptExportService } from '../../../transcript/export/transcript-export.service';
 
 interface LevelTab {
   value: LevelsEnum;
@@ -38,7 +40,8 @@ interface LevelTab {
     MatIconModule,
     MatSelectModule,
     ButtonComponent,
-    LoaderComponent,
+    SkeletonComponent,
+    SkeletonTableComponent,
     StatusBadgeComponent,
     StudentStatCardComponent,
     AiInsightCardComponent,
@@ -51,6 +54,7 @@ export class StudentProfileComponent implements OnInit {
   private readonly studentService = inject(StudentService);
   private readonly resultsService = inject(ResultsService);
   private readonly toastService = inject(ToastService);
+  private readonly transcriptService = inject(TranscriptExportService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
@@ -68,6 +72,7 @@ export class StudentProfileComponent implements OnInit {
   // ── State ──────────────────────────────────────────────────────────────────
   loadingStudent = signal(true);
   loadingResults = signal(false);
+  downloadingTranscript = signal(false);
 
   student = signal<IStudent | null>(null);
   /** Per-level → session map populated by `getStudentResultsBySessions`. */
@@ -77,7 +82,10 @@ export class StudentProfileComponent implements OnInit {
   activeSemester = signal<SemesterEnum>(SemesterEnum.FIRST);
 
   semesterResults = signal<StudentResultType[]>([]);
+  /** GPA of the level/semester currently selected in the tabs. */
   gpa = signal<number>(0);
+  /** Cumulative GPA across the student's whole record. */
+  cgpa = signal<string | null>(null);
 
   // ── Derived view-model bits ────────────────────────────────────────────────
   departmentName = computed<string>(() => {
@@ -152,6 +160,7 @@ export class StudentProfileComponent implements OnInit {
           this.student.set(resp.data);
           this.activeLevel.set(this.resolveDefaultLevel(resp.data.level));
           this.fetchSessionsAndResults();
+          this.fetchCgpa();
         },
       });
   }
@@ -202,6 +211,15 @@ export class StudentProfileComponent implements OnInit {
       });
   }
 
+  private fetchCgpa(): void {
+    const studentId = this.student()?._id;
+    if (!studentId) return;
+
+    this.studentService.getStudentCGPA(studentId).subscribe({
+      next: (resp) => this.cgpa.set(resp.data?.cgpa ?? null),
+    });
+  }
+
   /** Falls back to 100 level if the student record has no level set. */
   private resolveDefaultLevel(level: string | undefined): LevelsEnum {
     const match = this.levelTabs.find((t) => t.value === level);
@@ -246,6 +264,64 @@ export class StudentProfileComponent implements OnInit {
 
   printResults(): void {
     window.print();
+  }
+
+  /**
+   * The student's whole published record as one PDF, carrying a serial and QR
+   * that resolve to the public verifier.
+   *
+   * Issue and download are one action: the serial is minted for a copy that is
+   * about to exist, and the response carries the exact snapshot it vouches
+   * for — so the file written here is the file the verifier will show. A
+   * preview would mint nothing, which is why nothing previews.
+   */
+  async downloadTranscript(): Promise<void> {
+    const studentId = this.student()?._id;
+    if (!studentId || this.downloadingTranscript()) return;
+
+    this.downloadingTranscript.set(true);
+
+    try {
+      const response = await firstValueFrom(
+        this.transcriptService.issue(studentId)
+      );
+      const issued = response.data;
+
+      if (issued.transcript.sessions.length === 0) {
+        this.toastService.showNotification(
+          'warning',
+          'Nothing to print yet',
+          'This student has no published results, so there is no academic ' +
+            'record to issue.'
+        );
+        return;
+      }
+
+      const qrDataUrl = await this.transcriptService.qrDataUrl(
+        issued.verifyUrl
+      );
+
+      await this.transcriptService.downloadPdf(issued.transcript, {
+        serial: issued.serial,
+        verifyUrl: issued.verifyUrl,
+        qrDataUrl,
+      });
+
+      this.toastService.showNotification(
+        'success',
+        'Academic record issued',
+        `Serial ${issued.serial}. Whoever receives it can check it at ` +
+          'verify.acheva.app.'
+      );
+    } catch {
+      this.toastService.showNotification(
+        'error',
+        'Could not issue the record',
+        'Something went wrong building the document. Please try again.'
+      );
+    } finally {
+      this.downloadingTranscript.set(false);
+    }
   }
 
   viewRegisteredCourses(): void {

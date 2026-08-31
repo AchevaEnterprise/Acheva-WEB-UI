@@ -1,6 +1,9 @@
 @if (loading()) {
-  <div class="moderation-detail moderation-detail--centered">
-    <app-loader />
+  <div class="moderation-detail">
+    <app-skeleton width="28%" height="1.5rem" />
+    <app-skeleton width="45%" height="1rem" class="mt-3" />
+    <app-skeleton height="5rem" class="mt-6" />
+    <app-skeleton height="16rem" class="mt-4" />
   </div>
 } @else {
   @if (moderation(); as mod) {

@@ -230,19 +230,31 @@
     </div>
   </div>
 
-  <div class="flex flex-wrap items-center justify-between mt-4">
+  <div class="flex flex-wrap items-center justify-between gap-3 mt-4">
     <app-segment-switcher
       [activeSegment]="activeSegment()"
       [segments]="segments()"
       (switchEvent)="switchSegment($event)"
     />
 
-    <a
-      href="template/results-template.xlsx"
-      class="underline text-blue-500"
-      download="Result Template"
-      >Download Result Template</a
-    >
+    <div class="flex items-center gap-4">
+      <a
+        href="template/results-template.xlsx"
+        class="underline text-blue-500"
+        download="Result Template"
+        >Download Result Template</a
+      >
+
+      <!-- Acheva cannot talk to a printer, so "print" is a download: the sheet
+           is rendered as the official grade report and handed over. -->
+      <app-button
+        label="Export"
+        icon="icons/general/download-icon.svg"
+        class="btn-md"
+        [disabled]="!resultId"
+        (clickEvent)="exportResult()"
+      />
+    </div>
   </div>
 
   <div class="mt-4">
@@ -252,6 +264,7 @@
           #regularTableResultUploadRef
           [refreshTable]="isUploaded()"
           [readonly]="readOnly()"
+          [assessmentShape]="assessmentShape()"
           [resultId]="resultId || ''"
           [searchValue]="searchStudentValue()"
           [students]="students()['REGULAR']"
@@ -265,6 +278,7 @@
           #referenceTableResultUploadRef
           [refreshTable]="isUploaded()"
           [readonly]="readOnly()"
+          [assessmentShape]="assessmentShape()"
           [resultId]="resultId || ''"
           [searchValue]="searchStudentValue()"
           [students]="students()['REFERENCE']"
@@ -276,6 +290,7 @@
           #unregisteredTableResultUploadRef
           [refreshTable]="isUploaded()"
           [readonly]="readOnly()"
+          [assessmentShape]="assessmentShape()"
           [resultId]="resultId || ''"
           [searchValue]="searchStudentValue()"
           [students]="students()['UNREGISTERED']"

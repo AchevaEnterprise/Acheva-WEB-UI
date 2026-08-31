@@ -8,7 +8,7 @@ import { ToastService } from '../../../../@core/utility/toast.service';
 import { EmptyStateComponent } from '../../../../@shared/components/empty-state/empty-state.component';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
 import { SearchInputComponent } from '../../../../@shared/components/forms/search-input/search-input.component';
-import { LoaderComponent } from '../../../../@shared/components/loader/loader.component';
+import { SkeletonTableComponent } from '../../../../@shared/components/skeleton/skeleton-table.component';
 import {
   ISegmentSwitcher,
   SegmentSwitcherComponent,
@@ -32,7 +32,7 @@ import { MyResultListCardComponent } from '../../components/my-result-list-card/
     MatSelectModule,
     MyResultGridCardComponent,
     MyResultListCardComponent,
-    LoaderComponent,
+    SkeletonTableComponent,
     EmptyStateComponent,
     RouterLink,
     SegmentSwitcherComponent,

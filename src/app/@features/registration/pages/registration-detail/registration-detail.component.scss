@@ -212,6 +212,30 @@
   }
 }
 
+// School-approved absence. Amber, not the destructive red of Drop — nothing
+// is lost here, the course simply moves to the outstanding list.
+
+.rd-excuse {
+  background: none;
+  border: 1px solid #fed7aa;
+  border-radius: 4px;
+  padding: 4px 12px;
+  margin-right: 8px;
+  font: inherit;
+  font-size: 0.75rem;
+  color: #9a3412;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  &:hover:not(:disabled) {
+    background: #fff7ed;
+  }
+}
+
 .rd-drop {
   background: none;
   border: 1px solid #e5e7eb;
@@ -307,6 +331,15 @@
     color: #6b7280;
     font-size: 0.6875rem;
     text-decoration: line-through;
+
+    // An excused course is not struck through: it is still owed.
+
+    &--excused {
+      background: #fff7ed;
+      color: #9a3412;
+      border: 1px solid #fed7aa;
+      text-decoration: none;
+    }
   }
 }
 
@@ -369,4 +402,23 @@
 .rd-ledger li > div {
   display: flex;
   flex-direction: column;
+}
+
+// Excused courses the student still owes. Deliberately amber rather than the
+// carry-over red: there was no failure here, and the CGPA was never touched.
+
+.rd-outstanding {
+  border-left: 3px solid #f59e0b;
+
+  &__type {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: #fff7ed;
+    color: #9a3412;
+    border: 1px solid #fed7aa;
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
 }

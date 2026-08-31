@@ -1,6 +1,6 @@
 @if (loading()) {
   <div class="carryovers-shell carryovers-shell--centered">
-    <app-loader />
+    <app-skeleton-table [cols]="5" [rows]="5" />
   </div>
 } @else {
   @if (student(); as s) {

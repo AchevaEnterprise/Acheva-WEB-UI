@@ -43,7 +43,7 @@
         matInput
         type="number"
         min="0"
-        max="30"
+        max="100"
         formControlName="test"
         required
       />
@@ -54,7 +54,7 @@
 
     <mat-form-field appearance="outline" class="score-form__field">
       <mat-label>Lab (optional, out of 30)</mat-label>
-      <input matInput type="number" min="0" max="30" formControlName="lab" />
+      <input matInput type="number" min="0" max="100" formControlName="lab" />
       @if (form.controls.lab.touched && form.controls.lab.invalid) {
         <mat-error>Enter a value between 0 and 30.</mat-error>
       }
@@ -66,7 +66,7 @@
         matInput
         type="number"
         min="0"
-        max="70"
+        max="100"
         formControlName="exam"
         required
       />

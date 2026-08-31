@@ -36,7 +36,7 @@
     <div class="moderations-card__body">
       @if (loading()) {
         <div class="moderations-empty">
-          <app-loader />
+          <app-skeleton-table [cols]="5" [rows]="6" />
         </div>
       } @else if (rows().length === 0) {
         <div class="moderations-empty moderations-empty--dashed">

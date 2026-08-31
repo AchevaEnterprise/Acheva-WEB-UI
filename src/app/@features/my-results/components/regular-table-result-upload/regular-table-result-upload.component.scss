@@ -29,6 +29,25 @@
   white-space: nowrap;
 }
 
+// Chip for entries a CA unregistered at reconciliation. Deliberately slate,
+// not the fail red — the score is excluded from every calculation, which is
+// not the same thing as a failure.
+
+.voided-chip {
+  display: inline-block;
+  margin-left: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.5625rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  white-space: nowrap;
+  cursor: help;
+}
+
 // Registration gating (Slice 4)
 
 .unregistered-chip {

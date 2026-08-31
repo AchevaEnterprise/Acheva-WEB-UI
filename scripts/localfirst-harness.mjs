@@ -29,7 +29,7 @@ let failures = 0;
 const pass = (m) => console.log('  ✅', m);
 const fail = (m) => {
   failures++;
-  console.log('  ❌', m);
+  
 };
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 

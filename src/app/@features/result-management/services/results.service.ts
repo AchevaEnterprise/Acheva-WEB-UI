@@ -8,6 +8,7 @@ import {
 } from '../../../@core/models/api-response.model';
 import { SemesterEnum } from '../../../@core/models/school.model';
 import { RoleEnum } from '../../auth/model/auth.model';
+import { IIssuedDocument, IResultSheet } from '../models/result-sheet.model';
 import {
   IStudentResult,
   IStudentSessionsResult,
@@ -16,6 +17,7 @@ import {
   ICreateResult,
   ICreateResultEntry,
   IGroupedResult,
+  IReferenceCandidate,
   IPreparedResultQuery,
   IResult,
   IResultComment,
@@ -91,6 +93,54 @@ export class ResultsService {
   ): Observable<IAPIResponse<unknown>> {
     return this.http.get<IAPIResponse<unknown>>(
       `${this.resultsUrl}/prepared-results`
+    );
+  }
+
+  /**
+   * `GET /results/:id/reference-candidate` — may this typed registration
+   * number join the result as a REFERENCE row?
+   *
+   * Result-scoped, unlike the school-wide student lookup: a reference student
+   * must come from the SAME department as the cohort, and this says who a
+   * foreign number actually belongs to so the lecturer can see what happened.
+   */
+  checkReferenceCandidate(
+    resultId: string,
+    registrationNumber: string
+  ): Observable<IAPIResponse<IReferenceCandidate>> {
+    const params = new HttpParams().append(
+      'registrationNumber',
+      registrationNumber
+    );
+    return this.http.get<IAPIResponse<IReferenceCandidate>>(
+      `${this.resultsUrl}/${resultId}/reference-candidate`,
+      { params }
+    );
+  }
+
+  /**
+   * `GET /results/:id/sheet` — the printable/exportable payload. One object,
+   * rendered by both the PDF and the spreadsheet.
+   */
+  getResultSheet(resultId: string): Observable<IAPIResponse<IResultSheet>> {
+    return this.http.get<IAPIResponse<IResultSheet>>(
+      `${this.resultsUrl}/${resultId}/sheet`
+    );
+  }
+
+  /**
+   * `POST /results/:id/sheet/issue` — mint a serial for a sheet about to be
+   * downloaded, and get back the exact snapshot it vouches for.
+   *
+   * Only called on download, never on preview: a serial should exist for every
+   * copy in the world and no others.
+   */
+  issueResultSheet(
+    resultId: string
+  ): Observable<IAPIResponse<IIssuedDocument>> {
+    return this.http.post<IAPIResponse<IIssuedDocument>>(
+      `${this.resultsUrl}/${resultId}/sheet/issue`,
+      {}
     );
   }
 

@@ -7,6 +7,7 @@ import {
   signal,
 } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
+import { ExportResultDialogComponent } from '../../components/export-result-dialog/export-result-dialog.component';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -20,6 +21,8 @@ import { ConfirmationComponent } from '../../../../@shared/components/confirmati
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
 import { SearchInputComponent } from '../../../../@shared/components/forms/search-input/search-input.component';
 import { LoaderComponent } from '../../../../@shared/components/loader/loader.component';
+import { SkeletonComponent } from '../../../../@shared/components/skeleton/skeleton.component';
+import { SkeletonTableComponent } from '../../../../@shared/components/skeleton/skeleton-table.component';
 import { RejectReasonComponent } from '../../../../@shared/components/reject-reason/reject-reason.component';
 import {
   ISegmentSwitcher,
@@ -58,6 +61,8 @@ import {
     CardComponent,
     ButtonComponent,
     LoaderComponent,
+    SkeletonComponent,
+    SkeletonTableComponent,
     BackButtonComponent,
     MatMenuModule,
   ],
@@ -77,6 +82,9 @@ export class EditResultsComponent implements OnInit, CanComponentDeactivate {
   readonly status: string = this.route.snapshot.queryParamMap.get('status')!;
 
   results = signal<IResult[]>([]);
+
+  /** Drives which score columns the grade tables allow. */
+  assessmentShape = signal<'THEORY' | 'PRACTICAL_ONLY'>('THEORY');
   analyticsChartData = signal<number[]>([0, 0, 0, 0, 0, 0]);
   totalStudent = signal<number>(0);
   totalStudentPass = signal<number>(0);
@@ -181,6 +189,10 @@ export class EditResultsComponent implements OnInit, CanComponentDeactivate {
   /** Store the result and apply the viewer's scope (tabs + read-only). */
   private applyResult(result: IResult): void {
     this.result.set(result);
+    this.assessmentShape.set(
+      (result.course as { assessmentShape?: 'THEORY' | 'PRACTICAL_ONLY' })
+        ?.assessmentShape ?? 'THEORY'
+    );
 
     const scope = result.viewerScope;
     if (scope?.access === 'RESTRICTED') {
@@ -634,6 +646,25 @@ export class EditResultsComponent implements OnInit, CanComponentDeactivate {
           }
         },
       });
+  }
+
+  /**
+   * The official grade report for this result — preview, then PDF or Excel.
+   *
+   * Available to every role that can open the result, not just the lecturer
+   * who computed it: the Head of Department and the Dean are the people who
+   * sign the paper form.
+   */
+  exportResult(): void {
+    if (!this.resultId) return;
+
+    this.dialog.open(ExportResultDialogComponent, {
+      width: '900px',
+      maxWidth: '95vw',
+      height: '90vh',
+      data: { resultId: this.resultId },
+      panelClass: 'export-result-panel',
+    });
   }
 
   toggleTableView() {

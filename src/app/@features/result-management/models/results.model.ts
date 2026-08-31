@@ -218,3 +218,28 @@ export interface IResultStatusCount {
     sentByMe: number;
   };
 }
+
+/**
+ * Why a typed registration number cannot join a result as a REFERENCE row.
+ * Mirrors `ReferenceRejection` in the API.
+ */
+export type ReferenceRejection =
+  | 'DIFFERENT_DEPARTMENT'
+  | 'NOT_FOUND'
+  | 'SAME_COHORT';
+
+export interface IReferenceCandidate {
+  readonly eligible: boolean;
+  readonly registrationNumber: string;
+  readonly reason: ReferenceRejection | null;
+  /** Written for the lecturer — names the student and their real department. */
+  readonly message: string;
+  readonly student: {
+    readonly id: string;
+    readonly fullName: string;
+    readonly registrationNumber: string;
+    readonly department: string;
+    readonly level: string | null;
+    readonly admissionYear: string | null;
+  } | null;
+}

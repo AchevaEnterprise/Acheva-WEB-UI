@@ -21,7 +21,7 @@ import { of } from 'rxjs';
 import { AuthenticationService } from '../../../auth/service/auth.service';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
 import { EmptyStateComponent } from '../../../../@shared/components/empty-state/empty-state.component';
-import { LoaderComponent } from '../../../../@shared/components/loader/loader.component';
+import { SkeletonComponent } from '../../../../@shared/components/skeleton/skeleton.component';
 import { IModerationComment } from '../../models/moderation.model';
 import { ModerationService } from '../../services/moderation.service';
 
@@ -41,7 +41,7 @@ import { ModerationService } from '../../services/moderation.service';
     MatFormFieldModule,
     MatInputModule,
     ButtonComponent,
-    LoaderComponent,
+    SkeletonComponent,
     EmptyStateComponent,
     DatePipe,
   ],

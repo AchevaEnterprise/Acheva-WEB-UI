@@ -4,7 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { finalize } from 'rxjs';
 import { LevelsEnum } from '../../../../@core/models/school.model';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
-import { LoaderComponent } from '../../../../@shared/components/loader/loader.component';
+import { SkeletonTableComponent } from '../../../../@shared/components/skeleton/skeleton-table.component';
 import { StatusBadgeComponent } from '../../../../@shared/components/status-badge/status-badge.component';
 import { AuthenticationService } from '../../../auth/service/auth.service';
 import { ResultsService } from '../../../result-management/services/results.service';
@@ -32,7 +32,7 @@ export interface ICarryoverRow {
   imports: [
     TitleCasePipe,
     ButtonComponent,
-    LoaderComponent,
+    SkeletonTableComponent,
     StatusBadgeComponent,
   ],
   templateUrl: './student-carryovers.component.html',

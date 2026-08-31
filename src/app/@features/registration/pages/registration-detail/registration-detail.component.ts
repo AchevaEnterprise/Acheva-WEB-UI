@@ -15,11 +15,12 @@ import { ToastService } from '../../../../@core/utility/toast.service';
 import { AuthenticationService } from '../../../auth/service/auth.service';
 import { ConfirmationComponent } from '../../../../@shared/components/confirmation/confirmation.component';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
-import { LoaderComponent } from '../../../../@shared/components/loader/loader.component';
+import { SkeletonComponent } from '../../../../@shared/components/skeleton/skeleton.component';
 import {
   ICourseRegistration,
   ICurriculumEntry,
   IOutstandingCarryOver,
+  IOutstandingExcusedCourse,
   IRegistrationEntry,
   IRegistrationStudent,
   IStudentCgpa,
@@ -49,7 +50,7 @@ interface IAddCandidate {
     TitleCasePipe,
     ReactiveFormsModule,
     ButtonComponent,
-    LoaderComponent,
+    SkeletonComponent,
   ],
   templateUrl: './registration-detail.component.html',
   styleUrl: './registration-detail.component.scss',
@@ -70,6 +71,8 @@ export class RegistrationDetailComponent implements OnInit {
   registration = signal<ICourseRegistration | null>(null);
   cgpa = signal<IStudentCgpa | null>(null);
   ledger = signal<IOutstandingCarryOver[]>([]);
+  /** Excused courses still owed — outstanding, but never carry-overs. */
+  excusedCourses = signal<IOutstandingExcusedCourse[]>([]);
   curriculum = signal<ICurriculumEntry[]>([]);
   showTrace = signal(false);
 
@@ -165,6 +168,9 @@ export class RegistrationDetailComponent implements OnInit {
     this.registrationService.carryOvers(studentId).subscribe({
       next: (resp) => this.ledger.set(resp.data ?? []),
     });
+    this.registrationService.excusedCourses(studentId).subscribe({
+      next: (resp) => this.excusedCourses.set(resp.data ?? []),
+    });
     const departmentId = this.authService.activeAccount()?.department?._id;
     if (departmentId) {
       this.registrationService
@@ -252,6 +258,36 @@ export class RegistrationDetailComponent implements OnInit {
     });
   }
 
+  /**
+   * The student was excused from sitting this exam by the school.
+   *
+   * Distinct from a plain drop: no grade is recorded, the CGPA is untouched,
+   * and the course stays OUTSTANDING — re-registered in a later session as a
+   * fresh registration, never a carry-over. If the CA does not do this, the
+   * student must sit the exam and failing to do so is an ordinary F.
+   */
+  excuseEntry(entry: IRegistrationEntry): void {
+    const reg = this.registration();
+    if (!reg) return;
+    const ref = this.dialog.open(ConfirmationComponent, {
+      data: {
+        message: `Excuse ${entry.courseCode} from this semester?`,
+        subTitle:
+          'Use this only when the school approved the student missing the ' +
+          'exam. No grade is recorded and their CGPA is not affected, but ' +
+          `${entry.courseCode} stays outstanding and will be registered ` +
+          'again in a later session as a fresh registration — not a ' +
+          'carry-over. Fully audited.',
+      },
+    });
+    ref.afterClosed().subscribe((confirmed: boolean) => {
+      if (!confirmed) return;
+      this.mutate(
+        this.registrationService.excuseCourse(reg._id, String(entry.course))
+      );
+    });
+  }
+
   addSelected(): void {
     const reg = this.registration();
     const courseId = this.addCtrl.value;
@@ -271,6 +307,9 @@ export class RegistrationDetailComponent implements OnInit {
     call.pipe(finalize(() => this.acting.set(false))).subscribe({
       next: (resp) => {
         this.registration.set(resp.data);
+        // An excusal changes the outstanding list, so refresh it here rather
+        // than leaving the panel stale until the next page load.
+        this.loadContext(resp.data);
         this.toast.showNotification(
           'success',
           'Updated',

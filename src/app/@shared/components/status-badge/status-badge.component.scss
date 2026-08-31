@@ -6,13 +6,21 @@ p {
   width: fit-content;
   background-color: #dcdcdc33;
 
-  &.pass {
+  &.tone-positive {
     color: #06a561;
     background-color: #34c75933;
   }
 
-  &.fail {
+  &.tone-negative {
     color: #b4294c;
     background-color: #f7d6de;
+  }
+
+  // Brand blue stands in for "success" wherever the vocabulary is workflow
+  // actions rather than pass/fail — green is off-brand for Acheva.
+
+  &.tone-brand {
+    color: #1268bf;
+    background-color: #2793ff1f;
   }
 }

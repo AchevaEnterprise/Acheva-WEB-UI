@@ -140,6 +140,15 @@
     ></tr>
   </table>
 </div>
+<!-- Why the last typed registration number was refused. Kept on screen rather
+     than left to the toast alone: the lecturer is mid-entry with a paper
+     script in hand and needs to be able to re-read it. -->
+@if (referenceNotice(); as notice) {
+  <p class="reference-notice acva-para-1 mt-4" role="alert">
+    {{ notice }}
+  </p>
+}
+
 @if (!readonly()) {
   <div class="flex justify-end mt-4">
     <app-button label="Add row" (clickEvent)="addRow()" />

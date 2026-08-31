@@ -19,7 +19,7 @@ import { ToastService } from '../../../../@core/utility/toast.service';
 import { CardComponent } from '../../../../@shared/components/card/card.component';
 import { EmptyStateComponent } from '../../../../@shared/components/empty-state/empty-state.component';
 import { SearchInputComponent } from '../../../../@shared/components/forms/search-input/search-input.component';
-import { LoaderComponent } from '../../../../@shared/components/loader/loader.component';
+import { SkeletonTableComponent } from '../../../../@shared/components/skeleton/skeleton-table.component';
 import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
 import { RoleEnum } from '../../../auth/model/auth.model';
 import { AuthenticationService } from '../../../auth/service/auth.service';
@@ -39,7 +39,7 @@ const SUGGESTED_TEMPLATE_LIMIT = 6;
     EmptyStateComponent,
     MatDivider,
     CourseCardComponent,
-    LoaderComponent,
+    SkeletonTableComponent,
     AsyncPipe,
     NgIf,
   ],

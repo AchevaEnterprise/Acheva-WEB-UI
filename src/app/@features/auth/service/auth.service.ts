@@ -18,6 +18,7 @@ import {
   IResetPassword,
   ISignUp,
   RoleEnum,
+  IOccupiedLeadershipRoles,
 } from '../model/auth.model';
 
 @Injectable({
@@ -212,11 +213,53 @@ export class AuthenticationService {
     );
   }
 
+  /**
+   * Ends the session on the server as well as locally.
+   *
+   * Local state is cleared FIRST and unconditionally: a logout that waits on
+   * the network could be refused, and leaving someone signed in because a
+   * request failed is the worse outcome. The server call is best-effort —
+   * it revokes the refresh token so a captured one cannot outlive the session.
+   */
   logOut() {
     this.idle.stop();
     this.idle.clearInterrupts();
 
+    const refreshToken = this.getRefreshToken;
+    const token = this.getToken;
+
     localStorage.clear();
     this.router.navigate(['auth']);
+
+    if (!token) return;
+
+    this.http
+      .post(
+        `${this.authUrl}/logout`,
+        { refreshToken },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            // Nothing useful to say if this fails: the user is already signed
+            // out locally and on their way to the login page.
+            'X-Silent-Error': 'true',
+          },
+        }
+      )
+      .subscribe({ error: () => undefined });
+  }
+
+  /**
+   * Departments that already have a Head and faculties that already have a
+   * Dean, for one school. Used to disable — not hide — those options during
+   * sign-up.
+   */
+  getOccupiedLeadershipRoles(
+    school: string
+  ): Observable<IAPIResponse<IOccupiedLeadershipRoles>> {
+    return this.http.get<IAPIResponse<IOccupiedLeadershipRoles>>(
+      `${this.authUrl}/lecturers/leadership-roles`,
+      { params: { school } }
+    );
   }
 }

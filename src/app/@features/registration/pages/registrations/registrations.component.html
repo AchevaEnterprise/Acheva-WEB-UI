@@ -58,12 +58,15 @@
 
     <div class="flex-1"></div>
 
-    <app-button
-      label="Run auto-registration"
-      class="btn-md"
-      [loading]="running()"
-      (clickEvent)="runRegistration()"
-    />
+    <!--
+      No "Run auto-registration" button by design: students register their own
+      courses, and anyone who misses the school's deadline is registered
+      automatically by the hourly sweep. This page is where you SEE the result.
+    -->
+    <p class="acva-caption text-neutral-500 reg-controls__note">
+      Students register their own courses. Anyone who has not registered by the
+      school's deadline is registered automatically.
+    </p>
   </section>
 
   <!-- ── Summary chips ────────────────────────────────────────────────── -->
@@ -86,10 +89,11 @@
     <section class="reg-reviews mt-4">
       <div class="reg-reviews__head">
         <h4 class="acva-para-2 fw-600 m-0">
-          Elective outcomes needing your decision ({{ reviews().length }})
+          Decisions needed ({{ reviews().length }})
         </h4>
         <span class="acva-caption text-neutral-500">
-          Keep the grade, or unregister the course (voids the score — audited)
+          Registration changes are never automatic — nothing is applied until
+          you decide
         </span>
       </div>
       @for (review of reviews(); track review._id) {
@@ -103,36 +107,112 @@
               {{ review.courseCode }} ({{ review.units }}u) ·
               {{ review.session }}
             </span>
+            @if (isMismatch(review)) {
+              <span class="acva-caption reg-reviews__prompt block">
+                {{ mismatchPrompt(review) }} — score held, not counting toward
+                CGPA
+              </span>
+            }
           </div>
           <div class="reg-reviews__actions">
             <span
               class="reg-reviews__grade"
-              [class.reg-reviews__grade--fail]="review.kind === 'FAILED'"
+              [class.reg-reviews__grade--fail]="
+                review.kind === 'FAILED' || review.grade === 'F'
+              "
             >
               {{ review.grade }} · {{ review.total }}
             </span>
-            @if (review.currentCgpa != null) {
-              <span
-                class="reg-reviews__cgpa"
-                title="Current CGPA vs. projected CGPA if this course is unregistered"
-              >
-                CGPA {{ review.currentCgpa }}
-                <span aria-hidden="true">→</span>
-                {{ review.projectedCgpa ?? '—' }}
-              </span>
+
+            @if (isMismatch(review)) {
+              <app-button
+                type="outline"
+                label="Reject"
+                class="btn-sm"
+                [disabled]="deciding()"
+                (clickEvent)="decideMismatch(review, 'REJECT')"
+              />
+              <app-button
+                [label]="mismatchApproveLabel(review)"
+                class="btn-sm"
+                [disabled]="deciding()"
+                (clickEvent)="decideMismatch(review, 'APPROVE')"
+              />
+            } @else {
+              @if (review.currentCgpa != null) {
+                <span
+                  class="reg-reviews__cgpa"
+                  title="Current CGPA vs. projected CGPA if this course is unregistered"
+                >
+                  CGPA {{ review.currentCgpa }}
+                  <span aria-hidden="true">→</span>
+                  {{ review.projectedCgpa ?? '—' }}
+                </span>
+              }
+              <app-button
+                type="outline"
+                label="Keep"
+                class="btn-sm"
+                [disabled]="deciding()"
+                (clickEvent)="decide(review, 'KEEP')"
+              />
+              <app-button
+                label="Unregister"
+                class="btn-sm"
+                [disabled]="deciding()"
+                (clickEvent)="decide(review, 'UNREGISTER')"
+              />
             }
+          </div>
+        </div>
+      }
+    </section>
+  }
+
+  <!-- ── Recently decided — the undo affordance ────────────────────────── -->
+  @if (recentDecisions().length > 0) {
+    <section class="reg-reviews reg-reviews--decided mt-4">
+      <div class="reg-reviews__head">
+        <h4 class="acva-para-2 fw-600 m-0">
+          Recently decided ({{ recentDecisions().length }})
+        </h4>
+        <span class="acva-caption text-neutral-500">
+          Last 14 days — undo returns the review to your pending queue
+        </span>
+      </div>
+      @for (review of recentDecisions(); track review._id) {
+        <div class="reg-reviews__row">
+          <div>
+            <span class="fw-600">
+              {{ reviewStudent(review)?.fullName | titlecase }}
+            </span>
+            <span class="acva-caption text-neutral-500">
+              · {{ reviewStudent(review)?.registrationNumber }} ·
+              {{ review.courseCode }} ({{ review.units }}u) ·
+              {{ review.session }}
+              @if (review.decidedAt) {
+                · {{ review.decidedAt | date: 'MMM d, y' }}
+              }
+              @if (decidedByName(review)) {
+                · by {{ decidedByName(review) }}
+              }
+            </span>
+          </div>
+          <div class="reg-reviews__actions">
+            <span
+              class="reg-reviews__decision"
+              [class.reg-reviews__decision--unregistered]="
+                review.status === 'UNREGISTERED' || review.status === 'REJECTED'
+              "
+            >
+              {{ review.status }}
+            </span>
             <app-button
               type="outline"
-              label="Keep"
+              label="Undo"
               class="btn-sm"
               [disabled]="deciding()"
-              (clickEvent)="decide(review, 'KEEP')"
-            />
-            <app-button
-              label="Unregister"
-              class="btn-sm"
-              [disabled]="deciding()"
-              (clickEvent)="decide(review, 'UNREGISTER')"
+              (clickEvent)="undoDecision(review)"
             />
           </div>
         </div>
@@ -143,7 +223,7 @@
   <!-- ── Cohort table ─────────────────────────────────────────────────── -->
   <div class="mt-4">
     @if (loading()) {
-      <app-loader />
+      <app-skeleton-table [cols]="5" [rows]="6" />
     } @else if (registrations().length > 0) {
       <div class="w-full overflow-auto">
         <table mat-table [dataSource]="registrations()">

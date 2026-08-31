@@ -106,6 +106,15 @@ export class CreateAccountComponent implements OnInit, OnDestroy {
       value: 'Prof.',
     },
   ]);
+  /**
+   * Departments that already have a Head, faculties that already have a Dean.
+   * Those options stay visible but unselectable: a greyed-out row explains why
+   * you cannot pick it, whereas hiding it just looks like your department is
+   * missing from the list.
+   */
+  departmentsWithHod = signal<string[]>([]);
+  facultiesWithDean = signal<string[]>([]);
+
   schoolsOptions = signal<ISchool[]>([]);
   facultiesOptions = signal<IFaculty[]>([]);
   departmentsOptions = signal<IDepartment[]>([]);
@@ -206,6 +215,7 @@ export class CreateAccountComponent implements OnInit, OnDestroy {
   getFaculties(event: MatSelectChange) {
     const schoolId = event.value as string;
     this.store.dispatch(loadFaculties({ schoolId }));
+    this.loadOccupiedLeadershipRoles(schoolId);
 
     this.sub.add(
       this.store.select(facultiesSelector).subscribe({
@@ -226,6 +236,40 @@ export class CreateAccountComponent implements OnInit, OnDestroy {
           this.departmentsOptions.set(departments);
         },
       })
+    );
+  }
+
+  /** One call per school — the whole form's occupancy in a single request. */
+  private loadOccupiedLeadershipRoles(schoolId: string): void {
+    this.sub.add(
+      this.authService.getOccupiedLeadershipRoles(schoolId).subscribe({
+        next: (resp) => {
+          this.departmentsWithHod.set(resp.data?.departmentsWithHod ?? []);
+          this.facultiesWithDean.set(resp.data?.facultiesWithDean ?? []);
+        },
+        error: () => {
+          // Never block sign-up on this: the backend rejects a duplicate
+          // anyway, so the worst case is the old behaviour.
+          this.departmentsWithHod.set([]);
+          this.facultiesWithDean.set([]);
+        },
+      })
+    );
+  }
+
+  /** Only an incoming HOD is blocked by a department that already has one. */
+  isDepartmentTaken(departmentId: string): boolean {
+    return (
+      this.form.controls['role'].value === RoleEnum.HOD &&
+      this.departmentsWithHod().includes(departmentId)
+    );
+  }
+
+  /** Likewise, only an incoming Dean is blocked by a faculty that has one. */
+  isFacultyTaken(facultyId: string): boolean {
+    return (
+      this.form.controls['role'].value === RoleEnum.DEAN &&
+      this.facultiesWithDean().includes(facultyId)
     );
   }
 

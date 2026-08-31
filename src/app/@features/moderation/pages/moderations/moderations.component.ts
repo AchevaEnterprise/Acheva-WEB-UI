@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
 import { ToastService } from '../../../../@core/utility/toast.service';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
-import { LoaderComponent } from '../../../../@shared/components/loader/loader.component';
+import { SkeletonTableComponent } from '../../../../@shared/components/skeleton/skeleton-table.component';
 import { AuthenticationService } from '../../../auth/service/auth.service';
 import {
   IListModerationsQuery,
@@ -35,7 +35,7 @@ interface ITab {
     DatePipe,
     TitleCasePipe,
     ButtonComponent,
-    LoaderComponent,
+    SkeletonTableComponent,
     ModerationStatusPipe,
     ModerationStatusVariantPipe,
   ],

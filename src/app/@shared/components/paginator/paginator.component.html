@@ -1,9 +1,6 @@
 <div class="flex gap-4 mt-4 justify-between items-center">
   <p class="acva-caption text-neutral-500">
-    Showing 1 to
-    {{ paginator()?.pageSize || 1 }}
-    of
-    {{ paginator()?.total || 1 }}
+    Showing {{ range().from }} to {{ range().to }} of {{ range().total }}
   </p>
 
   <mat-paginator
