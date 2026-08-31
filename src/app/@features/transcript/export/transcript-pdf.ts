@@ -14,6 +14,7 @@
 import {
   ITranscript,
   ITranscriptCourse,
+  ITranscriptSemester,
   ITranscriptSession,
   ITranscriptStudent,
   ITranscriptTotals,
@@ -295,6 +296,12 @@ function courseTable(transcript: ITranscript): Record<string, unknown> {
       for (const course of semester.courses) {
         body.push(courseRow(course));
       }
+
+      // The semester's own GPA, plus the running CGPA in the Cum G.P.A.
+      // column. These are the only two figures this document is in a position
+      // to state — a degree classification is the Senate's determination at
+      // graduation, so the legend is printed and no class is asserted.
+      body.push(semesterGpaRow(semester));
     }
 
     // A per-session running total, so a multi-year record shows where the
@@ -305,7 +312,11 @@ function courseTable(transcript: ITranscript): Record<string, unknown> {
       );
     }
 
-    body.push(spacerRow());
+    // Between sessions only. A blank band before the grand total would be an
+    // empty row separating a total from the rows it totals.
+    if (session !== transcript.sessions[transcript.sessions.length - 1]) {
+      body.push(spacerRow());
+    }
   }
 
   // The figures the whole document exists to state.
@@ -377,6 +388,30 @@ function courseRow(course: ITranscriptCourse): unknown[] {
       alignment: 'center',
     },
     { text: '', style },
+  ];
+}
+
+/**
+ * The line that closes a semester: units and grade points earned in it, the
+ * GPA those give, and the cumulative standing at that point.
+ *
+ * The semester GPA is stated in words in the title column rather than placed
+ * in the last column, because that column is headed "Cum G.P.A." and means
+ * exactly that. Putting a single-semester figure under a cumulative heading
+ * would be the kind of small mislabelling that a reader has no way to catch.
+ */
+function semesterGpaRow(semester: ITranscriptSemester): unknown[] {
+  return [
+    { text: '', style: 'td' },
+    {
+      text: `SEMESTER GPA ${semester.totals.gpa.toFixed(2)}`,
+      style: 'sessionHeading',
+      alignment: 'right',
+    },
+    { text: String(semester.totals.units), style: 'totalsRow' },
+    { text: '', style: 'td' },
+    { text: String(semester.totals.gradePoints), style: 'totalsRow' },
+    { text: semester.cumulative.gpa.toFixed(2), style: 'totalsRow' },
   ];
 }
 
@@ -472,32 +507,29 @@ function gradingSystem(transcript: ITranscript): Record<string, unknown> {
  * No class is asserted for this student — see the note at the top of the file.
  */
 function classification(transcript: ITranscript): Record<string, unknown> {
+  // The eras sit SIDE BY SIDE rather than stacked as on the paper form. The
+  // form has a page per session and room to spare; this document carries a
+  // whole record, and stacking cost enough height to push the verification
+  // block onto a page of its own — which is a worse departure from the paper
+  // than two columns, since a reader would then be holding a second sheet
+  // whose only content is a QR code.
   return {
-    margin: [0, 7, 0, 0],
-    stack: transcript.classificationScales.map((scale) => {
-      const items = scale.bands.map(
-        (band) =>
-          `${band.label}: ${band.min.toFixed(2)} - ${band.max.toFixed(2)}`
-      );
-      const half = Math.ceil(items.length / 2);
-
-      return {
-        margin: [0, 0, 0, 4],
-        stack: [
-          {
-            text: `DEGREE CLASSIFICATION - (${scale.era})`,
-            style: 'sectionLabel',
-            margin: [0, 0, 0, 3],
-          },
-          {
-            columns: [
-              { stack: items.slice(0, half).map(legendLine) },
-              { stack: items.slice(half).map(legendLine) },
-            ],
-          },
-        ],
-      };
-    }),
+    margin: [0, 5, 0, 0],
+    columns: transcript.classificationScales.map((scale) => ({
+      width: '50%',
+      stack: [
+        {
+          text: `DEGREE CLASSIFICATION - (${scale.era})`,
+          style: 'sectionLabel',
+          margin: [0, 0, 0, 3],
+        },
+        ...scale.bands.map((band) =>
+          legendLine(
+            `${band.label}: ${band.min.toFixed(2)} - ${band.max.toFixed(2)}`
+          )
+        ),
+      ],
+    })),
   };
 }
 
