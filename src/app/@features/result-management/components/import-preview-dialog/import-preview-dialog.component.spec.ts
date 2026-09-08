@@ -1,4 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { signal } from '@angular/core';
+import { AuthenticationService } from '../../../auth/service/auth.service';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { provideHttpClient } from '@angular/common/http';
@@ -63,6 +65,25 @@ describe('ImportPreviewDialogComponent', () => {
     await TestBed.configureTestingModule({
       imports: [ImportPreviewDialogComponent, NoopAnimationsModule],
       providers: [
+        // Most components read the signed-in account during construction or
+        // ngOnInit and cannot survive it being null. The stub signs the test
+        // in as somebody rather than each component growing a null guard that
+        // only exists to satisfy a test.
+        {
+          provide: AuthenticationService,
+          useValue: {
+            activeAccount: signal({
+              id: 'user-1',
+              role: 'LECTURER',
+              school: { _id: 'school-1' },
+              faculty: { _id: 'faculty-1' },
+              department: { _id: 'dept-1' },
+            }),
+            accounts: signal([]),
+            getToken: 'test-token',
+          },
+        },
+
         // SvgComponent fetches its icon over HTTP.
         provideHttpClient(),
         provideHttpClientTesting(),

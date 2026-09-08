@@ -1,4 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
+import { importProvidersFrom } from '@angular/core';
+import { NgIdleModule } from '@ng-idle/core';
+import { provideStore } from '@ngrx/store';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialog } from '@angular/material/dialog';
@@ -94,6 +97,8 @@ describe('RegistrationDetailComponent — excusing a course', () => {
       providers: [
         // Root services in the component tree still reach for HttpClient even
         // though every call site here is mocked.
+        provideStore({}),
+        importProvidersFrom(NgIdleModule.forRoot()),
         provideHttpClient(),
         provideHttpClientTesting(),
         {

@@ -1,0 +1,78 @@
+<section class="composer">
+  <header class="composer__head">
+    <div>
+      <h2 class="acva-heading-6 fw-500">New announcement</h2>
+      <p class="acva-para-1 text-neutral-500">
+        One message, sent once. Recipients cannot reply to it.
+      </p>
+    </div>
+  </header>
+
+  <div class="composer__body">
+    <fieldset class="field">
+      <legend class="acva-para-2 fw-500">Who should receive this?</legend>
+      @for (option of options(); track option.value) {
+        <label
+          class="audience"
+          [class.audience--on]="recipientClass() === option.value"
+        >
+          <input
+            type="radio"
+            name="audience"
+            [checked]="recipientClass() === option.value"
+            (change)="recipientClass.set(option.value)"
+          />
+          <span>
+            <span class="acva-para-2 fw-500">{{ option.label }}</span>
+            <span class="acva-para-1 text-neutral-500">{{
+              option.detail
+            }}</span>
+          </span>
+        </label>
+      }
+    </fieldset>
+
+    <div class="field">
+      <label class="acva-para-2 fw-500" for="subject">Subject</label>
+      <input
+        id="subject"
+        class="input acva-para-2"
+        type="text"
+        maxlength="160"
+        placeholder="Examination timetable released"
+        [value]="subject()"
+        (input)="subject.set($any($event.target).value)"
+      />
+    </div>
+
+    <div class="field">
+      <label class="acva-para-2 fw-500" for="body">Message</label>
+      <textarea
+        id="body"
+        class="input acva-para-2"
+        rows="7"
+        maxlength="4000"
+        placeholder="Write the announcement…"
+        [value]="body()"
+        (input)="body.set($any($event.target).value)"
+      ></textarea>
+      <p class="acva-caption text-neutral-500">{{ body().length }} / 4000</p>
+    </div>
+  </div>
+
+  <footer class="composer__foot">
+    <app-button
+      label="Cancel"
+      type="outline"
+      class="btn-sm"
+      (clickEvent)="cancel()"
+    />
+    <app-button
+      label="Send announcement"
+      class="btn-sm"
+      [loading]="sending()"
+      [disabled]="!canSend()"
+      (clickEvent)="send()"
+    />
+  </footer>
+</section>

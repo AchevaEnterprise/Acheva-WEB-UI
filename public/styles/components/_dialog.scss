@@ -11,3 +11,20 @@
     overflow: hidden;
   }
 }
+
+/* The messaging people-picker.
+   Material 3 gives a dialog a 28px radius, which reads as a different
+   product's dialog next to the app's 12px cards. `!important` for the same
+   reason the panel above needs it: these are MDC's own surface styles, and
+   the alternative is a selector nobody can read. */
+.messaging-picker-panel {
+  .mat-mdc-dialog-container,
+  .mdc-dialog__surface {
+    border-radius: 12px !important;
+    overflow: hidden;
+  }
+
+  .mat-mdc-dialog-container {
+    padding: 0 !important;
+  }
+}

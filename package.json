@@ -15,7 +15,8 @@
     "test:localfirst": "node scripts/localfirst-harness.mjs",
     "test:history": "node scripts/history-harness.mjs",
     "test:export": "node scripts/export-harness.mjs",
-    "test:verify": "node scripts/verify-harness.mjs"
+    "test:verify": "node scripts/verify-harness.mjs",
+    "test:realtime": "node scripts/realtime-harness.mjs"
   },
   "private": true,
   "dependencies": {

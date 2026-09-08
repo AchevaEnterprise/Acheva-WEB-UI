@@ -1,0 +1,100 @@
+$border: #e5e7eb;
+$brand: #2793ff;
+
+:host {
+  display: block;
+}
+
+.composer {
+  display: flex;
+  flex-direction: column;
+  max-height: 82vh;
+}
+
+.composer__head {
+  padding: 16px 24px;
+  border-bottom: 1px solid $border;
+}
+
+.composer__head h2,
+.composer__head p {
+  margin: 0;
+}
+
+.composer__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.field legend {
+  padding: 0;
+  margin-bottom: 4px;
+}
+
+.audience {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid $border;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.audience:hover {
+  background: #f7f9fb;
+}
+
+/* The selected audience is emphasised, because sending to the wrong one is
+   the mistake this dialog exists to prevent. */
+.audience--on {
+  border-color: $brand;
+  background: #eaf4ff;
+}
+
+.audience input {
+  margin-top: 3px;
+  accent-color: $brand;
+}
+
+.audience span {
+  display: flex;
+  flex-direction: column;
+}
+
+.input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d8dee6;
+  border-radius: 6px;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.input:focus {
+  outline: 2px solid $brand;
+  outline-offset: 1px;
+  border-color: $brand;
+}
+
+.composer__foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 16px 24px;
+  border-top: 1px solid $border;
+}

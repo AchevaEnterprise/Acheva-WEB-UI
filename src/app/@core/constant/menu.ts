@@ -59,6 +59,22 @@ export const MENU: IMenu[] = [
     ],
   },
   {
+    label: 'Messages',
+    active_icon: 'icons/menu/messages-active.svg',
+    inactive_icon: 'icons/menu/messages-inactive.svg',
+    route: 'messages',
+    isActive: true,
+    // Everyone. Messaging is the one feature with no role boundary at the
+    // door — who you may write TO is decided server-side, per conversation.
+    accessRole: [
+      RoleEnum.DEAN,
+      RoleEnum.HOD,
+      RoleEnum.COURSE_ADVISOR,
+      RoleEnum.COURSE_COORDINATOR,
+      RoleEnum.LECTURER,
+    ],
+  },
+  {
     label: 'Students',
     active_icon: 'icons/menu/students-active.svg',
     inactive_icon: 'icons/menu/students-inactive.svg',

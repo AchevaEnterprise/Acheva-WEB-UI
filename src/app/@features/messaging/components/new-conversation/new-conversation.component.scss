@@ -1,0 +1,362 @@
+/* The "who are you writing to?" picker.
+   Typography is the `acva-` scale throughout — the sizes here were hardcoded
+   before, which is why the dialog read a size larger than the rest of the app. */
+
+$border: #e5e7eb;
+$brand: #2793ff;
+$ink: #10243a;
+$muted: #6b7c8d;
+$ground: #f7f9fb;
+
+:host {
+  display: block;
+}
+
+.picker {
+  display: flex;
+  flex-direction: column;
+  max-height: 78vh;
+  color: $ink;
+}
+
+/* ── Head ────────────────────────────────────────────────────────────────── */
+
+.picker__head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid $border;
+}
+
+.picker__heading {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* The step's purpose, one line, under its name — so the dialog explains itself
+   without a paragraph of instructions in the body. */
+.picker__lede {
+  color: $muted;
+}
+
+/* Both head buttons are the same control: a 32px square holding a 20px stroke
+   glyph. The `✕` and `←` characters they replace rendered in whatever the
+   system font offered, at a weight nothing else on the page used. */
+.icon-btn {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #4a6076;
+  cursor: pointer;
+  padding: 0;
+}
+
+.icon-btn svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.icon-btn:hover {
+  background: #eef2f6;
+  color: $ink;
+}
+
+.icon-btn:focus-visible {
+  outline: 2px solid $brand;
+  outline-offset: 1px;
+}
+
+/* ── Step one ────────────────────────────────────────────────────────────── */
+
+.choices {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 20px 20px;
+}
+
+.choice {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid $border;
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    border-color 0.12s ease,
+    background 0.12s ease;
+}
+
+.choice:hover {
+  border-color: #bcdcff;
+  background: #f5faff;
+}
+
+.choice:focus-visible {
+  outline: 2px solid $brand;
+  outline-offset: 1px;
+}
+
+/* A tinted tile, not a bare emoji. Emoji render differently on every platform
+   and carry a colour palette nothing else in the app uses. */
+.choice__icon {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: #e8f3ff;
+  color: #12508f;
+}
+
+.choice__icon svg {
+  width: 21px;
+  height: 21px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.choice__body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.choice__title {
+  color: $ink;
+}
+
+.choice__sub {
+  color: $muted;
+  line-height: 1.4;
+}
+
+.choice__chevron {
+  flex: 0 0 auto;
+  color: #b3c0cc;
+  display: grid;
+  place-items: center;
+}
+
+.choice__chevron svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.choice:hover .choice__chevron {
+  color: $brand;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .choice {
+    transition: none;
+  }
+}
+
+/* ── Step two ────────────────────────────────────────────────────────────── */
+
+.picker__search {
+  padding: 16px 20px 12px;
+}
+
+/* The magnifier sits inside the field rather than beside it, so an empty
+   search box still reads as a search box. */
+.search-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  border: 1px solid #d8dee6;
+  border-radius: 999px;
+  background: $ground;
+}
+
+.search-field:focus-within {
+  border-color: $brand;
+  box-shadow: 0 0 0 3px rgba(39, 147, 255, 0.15);
+}
+
+.search-field__icon {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  color: #9aa8b5;
+}
+
+.search-field__icon svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+
+.search-field__input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 10px 0;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  color: $ink;
+}
+
+.search-field__input:focus {
+  outline: none;
+}
+
+/* Safari draws its own clear button on `type="search"`; it lands on the wrong
+   ground colour inside a pill. */
+.search-field__input::-webkit-search-cancel-button {
+  appearance: none;
+}
+
+.picker__note {
+  margin: 10px 2px 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #f2f8ff;
+  color: #12508f;
+  line-height: 1.45;
+}
+
+.picker__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 4px 20px 20px;
+}
+
+/* A re-search keeps the current list on screen and dims it, rather than
+   blanking to skeletons on every keystroke. */
+.picker__body--busy {
+  opacity: 0.55;
+}
+
+.group + .group {
+  margin-top: 20px;
+}
+
+.group__label {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: $muted;
+}
+
+.group__hint {
+  margin: 2px 0 0;
+  color: #98a4b0;
+}
+
+.people {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+}
+
+.person {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 9px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.person:hover {
+  background: #f5faff;
+}
+
+.person:focus-visible {
+  outline: 2px solid $brand;
+  outline-offset: -2px;
+}
+
+.person__body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.person__name {
+  color: $ink;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* An office is identified by its email, which is long — it must ellipsize
+   rather than push the row wider. */
+.person__sub {
+  color: $muted;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.avatar {
+  flex: 0 0 auto;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #e8f3ff;
+  color: #12508f;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.notice {
+  margin: 0;
+  padding: 24px 4px;
+  color: $muted;
+}
+
+.person-skeleton {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 8px;
+}
+
+.person-skeleton__text {
+  flex: 1 1 auto;
+  display: grid;
+  gap: 6px;
+}
