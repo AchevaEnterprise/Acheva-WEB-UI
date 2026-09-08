@@ -110,12 +110,13 @@ $ink-soft: #6b7280;
 
 .row {
   display: grid;
+
   /* Two columns from 1000px up: the facts on the left, what to do on the
      right. Below that they stack, which the media query at the foot handles. */
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
   gap: 16px;
   padding: 12px 0;
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  border-top: 1px solid rgb(0 0 0 / 6%);
 }
 
 .row:first-of-type {
@@ -123,6 +124,7 @@ $ink-soft: #6b7280;
 }
 
 /* A decided row recedes, so what is left to do stays obvious. */
+
 .row--done {
   opacity: 0.55;
 }
@@ -218,7 +220,7 @@ $ink-soft: #6b7280;
    the footer stack rather than crushing; the dialog stays usable if someone
    drags the window narrower than the supported range. */
 
-@media (max-width: 999px) {
+@media (width <= 999px) {
   .row {
     grid-template-columns: minmax(0, 1fr);
     gap: 8px;
