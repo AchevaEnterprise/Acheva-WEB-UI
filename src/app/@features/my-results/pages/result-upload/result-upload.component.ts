@@ -1,4 +1,5 @@
 import {
+  DestroyRef,
   Component,
   HostListener,
   inject,
@@ -6,6 +7,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
@@ -28,7 +30,12 @@ import {
 
 import { RoleAccessDirective } from '../../../../@core/directives/role-access.directive';
 import { CanComponentDeactivate } from '../../../../@core/guards/pending-changes.guard';
-import { UtilityService } from '../../../../@core/utility/utility.service';
+import { IImportResolutions } from '../../../result-management/models/import-preview.model';
+import {
+  IImportPreviewDialogData,
+  IImportPreviewResult,
+  ImportPreviewDialogComponent,
+} from '../../../result-management/components/import-preview-dialog/import-preview-dialog.component';
 import { BackButtonComponent } from '../../../../@shared/components/back-button/back-button.component';
 import { ConfirmationComponent } from '../../../../@shared/components/confirmation/confirmation.component';
 import { UploadResultDialogComponent } from '../../../../@shared/components/upload-result-dialog/upload-result-dialog.component';
@@ -78,8 +85,8 @@ import { UnregisteredTableResultUploadComponent } from '../../components/unregis
 })
 export class ResultUploadComponent implements OnInit, CanComponentDeactivate {
   private readonly authService = inject(AuthenticationService);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly resultsService = inject(ResultsService);
-  private readonly utilsService = inject(UtilityService);
   private readonly toast = inject(ToastService);
   private readonly dialog = inject(MatDialog);
   private readonly route = inject(ActivatedRoute);
@@ -428,60 +435,113 @@ export class ResultUploadComponent implements OnInit, CanComponentDeactivate {
   }
 
   uploadResultDocument() {
-    this.dialog
-      .open(UploadResultDialogComponent, {
-        width: '600px',
-      })
-      .afterClosed()
-      .subscribe({
-        next: async (file: File) => {
-          const students = await this.utilsService.convertExcelToJson(file);
-          if (file) this.importResult(file, students.records);
-        },
-      });
+    this.pickFileThenCheck();
   }
 
   importResultDocument() {
+    this.pickFileThenCheck();
+  }
+
+  /**
+   * Pick a file, show the lecturer what it will do, then import.
+   *
+   * The check is a server dry-run, not a guess made here: the browser cannot
+   * see the class list or the student records, so only the backend can say
+   * whether a number belongs to this cohort, another year, or nobody.
+   *
+   * This replaces a second, client-side parse of the same file. Two parsers
+   * meant two readings of one spreadsheet, and the table could end up showing
+   * something the server had not recorded.
+   */
+  private pickFileThenCheck(): void {
     this.dialog
-      .open(UploadResultDialogComponent, {
-        width: '600px',
-      })
+      .open<UploadResultDialogComponent, unknown, File | undefined>(
+        UploadResultDialogComponent,
+        { width: '600px' }
+      )
       .afterClosed()
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: async (file: File) => {
-          const students = await this.utilsService.convertExcelToJson(file);
-          if (file) this.importResult(file, students.records);
+        next: (file) => {
+          if (file) this.checkThenImport(file);
         },
       });
   }
 
-  importResult(file: File, studentRecords: Record<string, unknown>[]) {
+  private checkThenImport(file: File): void {
     this.uploading.set(true);
 
     this.resultsService
-      .uploadResultFile(this.resultId!, file)
-      .pipe(finalize(() => this.uploading.set(false)))
+      .previewResultImport(this.resultId!, file)
+      .pipe(
+        finalize(() => this.uploading.set(false)),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe({
+        next: (resp) => {
+          const preview = resp.data;
+
+          // Nothing to look at — no clashes, no refusals, every name agreeing.
+          // Stopping to confirm an unremarkable file would just train the
+          // lecturer to dismiss the dialog without reading it.
+          const needsAnEye =
+            preview.needsConfirmation > 0 ||
+            preview.problems > 0 ||
+            preview.reference > 0 ||
+            preview.unregistered > 0;
+
+          if (!needsAnEye) {
+            this.importResult(file);
+            return;
+          }
+
+          this.dialog
+            .open<
+              ImportPreviewDialogComponent,
+              IImportPreviewDialogData,
+              IImportPreviewResult
+            >(ImportPreviewDialogComponent, {
+              width: 'min(960px, 92vw)',
+              maxHeight: '88vh',
+              autoFocus: false,
+              data: { preview, fileName: file.name },
+            })
+            .afterClosed()
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+              next: (outcome) => {
+                if (outcome?.proceed)
+                  this.importResult(file, outcome.resolutions);
+              },
+            });
+        },
+      });
+  }
+
+  /**
+   * Send the file and then re-read what the server actually recorded.
+   *
+   * It used to paint the table from a SECOND, client-side parse of the same
+   * spreadsheet. That could disagree with what the backend stored — the server
+   * recomputes every total and grade, resolves each name against the class
+   * list, and files rows as reference or unregistered — so the lecturer could
+   * be looking at numbers that were never saved. Re-fetching is one round trip
+   * and removes the whole class of disagreement.
+   */
+  importResult(file: File, resolutions?: IImportResolutions) {
+    this.uploading.set(true);
+
+    this.resultsService
+      .uploadResultFile(this.resultId!, file, resolutions)
+      .pipe(
+        finalize(() => this.uploading.set(false)),
+        takeUntilDestroyed(this.destroyRef)
+      )
       .subscribe({
         next: (resp) => {
           if (resp.status) {
             this.isUploaded.set(true);
-
-            const records = studentRecords.map((record) => ({
-              fullName: record['names'],
-              registrationNumber: record['regNo'],
-              test: record['test'] || 0,
-              lab: record['lab'] || 0,
-              exam: record['exam'] || 0,
-              total: record['total'],
-              grade: record['grade'],
-              status: record['rmk1'],
-            }));
-
-            const activeCategory = this.activeSegment().value as SegmentValue;
-            this.students.update((students) => {
-              students[activeCategory] = records as IStudentGrade[];
-              return students;
-            });
+            this.getResultAndEntries();
 
             this.toast.showNotification(
               'success',
@@ -493,56 +553,16 @@ export class ResultUploadComponent implements OnInit, CanComponentDeactivate {
       });
   }
 
+  /**
+   * Replacing an uploaded document goes through the same check.
+   *
+   * A replacement carries exactly the risks a first upload does — a mistyped
+   * number, a student of another department, one number twice — so exempting
+   * it would leave the hazard open on the path most likely to be taken in a
+   * hurry, after something was already found to be wrong.
+   */
   replaceResultDocument() {
-    this.dialog
-      .open(UploadResultDialogComponent, {
-        width: '600px',
-      })
-      .afterClosed()
-      .subscribe({
-        next: async (file: File) => {
-          const students = await this.utilsService.convertExcelToJson(file);
-          if (file) this.replaceUploadedResult(file, students.records);
-        },
-      });
-  }
-
-  replaceUploadedResult(file: File, studentRecords: Record<string, unknown>[]) {
-    this.uploading.set(true);
-
-    this.resultsService
-      .uploadResultFile(this.resultId!, file)
-      .pipe(finalize(() => this.uploading.set(false)))
-      .subscribe({
-        next: (resp) => {
-          if (resp.status) {
-            this.isUploaded.set(true);
-
-            const records = studentRecords.map((record) => ({
-              fullName: record['names'],
-              registrationNumber: record['regNo'],
-              test: record['test'] || 0,
-              lab: record['lab'] || 0,
-              exam: record['exam'] || 0,
-              total: record['total'],
-              grade: record['grade'],
-              status: record['rmk1'],
-            }));
-
-            const activeCategory = this.activeSegment().value as SegmentValue;
-            this.students.update((students) => {
-              students[activeCategory] = records as IStudentGrade[];
-              return students;
-            });
-
-            this.toast.showNotification(
-              'success',
-              'Upload Successful',
-              'Result document has been replaced successfully'
-            );
-          }
-        },
-      });
+    this.pickFileThenCheck();
   }
 
   toggleTableView() {

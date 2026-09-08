@@ -1,0 +1,303 @@
+<section class="import-preview">
+  <header class="import-preview__head">
+    <div>
+      <h2 class="acva-heading-6 fw-500">Check this upload</h2>
+      <p class="acva-para-1 text-neutral-500">
+        {{ fileName }} · {{ preview.totalRows }}
+        {{ preview.totalRows === 1 ? 'row' : 'rows' }} read
+      </p>
+    </div>
+    <button
+      type="button"
+      class="cursor-pointer"
+      aria-label="Close import check"
+      (click)="cancel()"
+    >
+      <app-svg src="icons/general/close-icon.svg"></app-svg>
+    </button>
+  </header>
+
+  <div class="import-preview__body">
+    <!-- The shape of the file, before any individual row. -->
+    <ul class="summary" aria-label="Summary of this upload">
+      <li class="summary__item summary__item--plain">
+        <span class="summary__count">{{ preview.regular }}</span>
+        <span class="acva-para-1">recorded normally</span>
+      </li>
+      @if (preview.reference > 0) {
+        <li class="summary__item summary__item--note">
+          <span class="summary__count">{{ preview.reference }}</span>
+          <span class="acva-para-1">reference</span>
+        </li>
+      }
+      @if (preview.unregistered > 0) {
+        <li class="summary__item summary__item--note">
+          <span class="summary__count">{{ preview.unregistered }}</span>
+          <span class="acva-para-1">not on record</span>
+        </li>
+      }
+      @if (refused().length > 0) {
+        <li class="summary__item summary__item--refused">
+          <span class="summary__count">{{ refused().length }}</span>
+          <span class="acva-para-1">cannot be recorded</span>
+        </li>
+      }
+    </ul>
+
+    <!-- ── Refused outright ───────────────────────────────────────────────── -->
+    @if (refused().length > 0) {
+      <section class="block block--refused" aria-labelledby="refused-heading">
+        <h3 id="refused-heading" class="acva-para-2 fw-600">
+          These cannot be recorded on this result
+        </h3>
+        @for (row of refused(); track row.rowNumber) {
+          <div class="row">
+            <div class="row__main">
+              <p class="acva-para-2 fw-500">
+                {{ row.nameOnRecord || row.nameInFile || 'No name given' }}
+              </p>
+              <p class="acva-para-1 text-neutral-500">
+                Row {{ row.rowNumber }} · {{ row.registrationNumber || '—' }}
+              </p>
+            </div>
+            <p class="row__why acva-para-1">
+              @if (row.problem === 'DIFFERENT_DEPARTMENT') {
+                Belongs to
+                <strong>{{
+                  row.belongsToDepartment || 'another department'
+                }}</strong
+                >. Their own Course Advisor will upload this result — it cannot
+                be recorded here.
+              } @else if (row.problem === 'NOT_YOUR_STUDENT') {
+                Not in this cohort. Their own Course Advisor uploads their
+                record — recording it here would create a second copy of the
+                same result.
+              } @else if (row.problem === 'NOT_ON_YOUR_LIST') {
+                No student has this registration number. If they are yours, add
+                them on the <strong>Students</strong> page first, then import
+                this file again. Otherwise this row is ignored.
+              } @else {
+                No registration number in this row, so there is no way to tell
+                whose score it is.
+              }
+            </p>
+          </div>
+        }
+      </section>
+    }
+
+    <!-- ── Needs a decision: name mismatch ────────────────────────────────── -->
+    @if (mismatches().length > 0) {
+      <section class="block block--decide" aria-labelledby="mismatch-heading">
+        <h3 id="mismatch-heading" class="acva-para-2 fw-600">
+          Check these registration numbers
+        </h3>
+        <p class="acva-para-1 text-neutral-500 block__lead">
+          The number is on your class list, but the name in your file belongs to
+          someone else. That usually means a digit was mistyped.
+        </p>
+
+        @for (row of mismatches(); track row.rowNumber) {
+          <div class="row" [class.row--done]="isResolved(row)">
+            <div class="row__main">
+              <p class="acva-para-1 text-neutral-500">
+                Row {{ row.rowNumber }} · {{ row.registrationNumber }}
+              </p>
+              <p class="acva-para-2">
+                Your file says <strong>{{ row.nameInFile }}</strong>
+              </p>
+              <p class="acva-para-2">
+                The class list says <strong>{{ row.nameOnRecord }}</strong>
+              </p>
+            </div>
+
+            <div class="row__actions">
+              <label class="tick acva-para-1">
+                <input
+                  type="checkbox"
+                  [checked]="isResolved(row) && !correctionFor(row)"
+                  (change)="confirm(row)"
+                />
+                The number is correct — record it as
+                {{ row.nameOnRecord }}
+              </label>
+
+              <div class="correct">
+                <label
+                  class="acva-para-1 text-neutral-500"
+                  [attr.for]="'fix-' + row.rowNumber"
+                >
+                  or type the right number
+                </label>
+                <input
+                  class="correct__input acva-para-2"
+                  [id]="'fix-' + row.rowNumber"
+                  type="text"
+                  inputmode="numeric"
+                  [value]="correctionFor(row)"
+                  (input)="correct(row, $any($event.target).value)"
+                />
+                @if (correctionFor(row)) {
+                  @if (matchForCorrection(row); as matched) {
+                    <p class="correct__match acva-para-1">
+                      That is <strong>{{ matched }}</strong>
+                    </p>
+                  } @else {
+                    <p class="correct__miss acva-para-1">
+                      Not on your class list — this will be recorded as a
+                      reference or unregistered entry.
+                    </p>
+                  }
+                }
+              </div>
+            </div>
+          </div>
+        }
+      </section>
+    }
+
+    <!-- ── Needs a decision: one number, two rows ─────────────────────────── -->
+    @if (duplicateGroups().length > 0) {
+      <section class="block block--decide" aria-labelledby="duplicate-heading">
+        <h3 id="duplicate-heading" class="acva-para-2 fw-600">
+          The same number appears more than once
+        </h3>
+        <p class="acva-para-1 text-neutral-500 block__lead">
+          Pick the score to keep. The others are not recorded.
+        </p>
+
+        @for (group of duplicateGroups(); track group.registrationNumber) {
+          <div
+            class="row"
+            [class.row--done]="pickedRow(group.registrationNumber) !== null"
+          >
+            <div class="row__main">
+              <p class="acva-para-2 fw-500">
+                {{ group.nameOnRecord || 'Unknown student' }}
+              </p>
+              <p class="acva-para-1 text-neutral-500">
+                {{ group.registrationNumber }}
+              </p>
+            </div>
+
+            <div class="row__actions">
+              @for (option of group.rows; track option.rowNumber) {
+                <label class="tick acva-para-1">
+                  <input
+                    type="radio"
+                    [name]="'dup-' + group.registrationNumber"
+                    [checked]="
+                      pickedRow(group.registrationNumber) === option.rowNumber
+                    "
+                    (change)="pick(group.registrationNumber, option.rowNumber)"
+                  />
+                  Row {{ option.rowNumber }} — {{ scoreLine(option) }}
+                </label>
+              }
+            </div>
+          </div>
+        }
+      </section>
+    }
+
+    <!-- ── Information only ───────────────────────────────────────────────── -->
+    @if (referenceRows().length > 0) {
+      <section class="block" aria-labelledby="reference-heading">
+        <h3 id="reference-heading" class="acva-para-2 fw-600">
+          Recorded as reference students
+        </h3>
+        <p class="acva-para-1 text-neutral-500 block__lead">
+          Students of this department who are not on this cohort's class list —
+          usually carrying the course from an earlier year.
+        </p>
+        <ul class="plain-list">
+          @for (row of referenceRows(); track row.rowNumber) {
+            <li class="acva-para-1">
+              {{ row.nameOnRecord || row.nameInFile }} ·
+              {{ row.registrationNumber }}
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
+    @if (unregisteredRows().length > 0) {
+      <section class="block" aria-labelledby="unregistered-heading">
+        <h3 id="unregistered-heading" class="acva-para-2 fw-600">
+          Not students of record
+        </h3>
+        <p class="acva-para-1 text-neutral-500 block__lead">
+          No student holds these numbers. They go to the department's
+          unregistered Course Advisor to rule on.
+        </p>
+        <ul class="plain-list">
+          @for (row of unregisteredRows(); track row.rowNumber) {
+            <li class="acva-para-1">
+              {{ row.nameInFile || 'No name' }} · {{ row.registrationNumber }}
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
+    <!-- ── Advisory: scores taken as given, so arithmetic cannot catch a slip -->
+    @if (flagged().length > 0) {
+      <section class="block block--decide" aria-labelledby="flagged-heading">
+        <h3 id="flagged-heading" class="acva-para-2 fw-600">
+          Worth checking before you record these
+        </h3>
+        <p class="acva-para-1 text-neutral-500 block__lead">
+          These scores are recorded exactly as your file states them — nothing
+          is recalculated. Nothing here stops the import.
+        </p>
+        @for (row of flagged(); track row.rowNumber) {
+          <div class="row">
+            <div class="row__main">
+              <p class="acva-para-2 fw-500">
+                {{ row.nameOnRecord || row.nameInFile }}
+              </p>
+              <p class="acva-para-1 text-neutral-500">
+                Row {{ row.rowNumber }} · {{ row.registrationNumber }} ·
+                {{ scoreLine(row) }}
+                @if (row.scores?.grade) {
+                  · Grade {{ row.scores?.grade }}
+                }
+              </p>
+            </div>
+            <ul class="plain-list">
+              @for (advisory of advisoriesFor(row); track advisory) {
+                <li class="acva-para-1">{{ advisoryText(advisory) }}</li>
+              }
+            </ul>
+          </div>
+        }
+      </section>
+    }
+  </div>
+
+  <footer class="import-preview__foot">
+    <p class="acva-para-1 text-neutral-500" aria-live="polite">
+      @if (outstanding() > 0) {
+        {{ outstanding() }}
+        {{ outstanding() === 1 ? 'row needs' : 'rows need' }} your decision
+      } @else {
+        {{ willImport() }} of {{ preview.totalRows }} rows will be recorded
+      }
+    </p>
+
+    <div class="import-preview__buttons">
+      <app-button
+        label="Cancel"
+        type="outline"
+        class="btn-sm"
+        (clickEvent)="cancel()"
+      />
+      <app-button
+        [label]="'Record ' + willImport() + ' rows'"
+        class="btn-sm"
+        [disabled]="!canImport()"
+        (clickEvent)="proceed()"
+      />
+    </div>
+  </footer>
+</section>
