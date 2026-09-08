@@ -103,6 +103,7 @@ $brand: #2793ff;
 /* Form labels name a field; they are not headings and do not need a heavier
    face to do it. Everything here was set at `fw-500` at body size, which made
    the whole dialog read as bold text with a few inputs between it. */
+
 .field__label {
   color: #6b7c8d;
   font-weight: 400;

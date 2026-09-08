@@ -28,6 +28,7 @@ $border: #e5e7eb;
 
 /* The desk gets a mark rather than initials — it is an office, not a person,
    and a "AS" monogram would suggest somebody named that. */
+
 .support__mark {
   flex: 0 0 auto;
   width: 40px;
@@ -43,7 +44,7 @@ $border: #e5e7eb;
   width: 22px;
   height: 22px;
   fill: none;
-  stroke: currentColor;
+  stroke: currentcolor;
   stroke-width: 1.5;
   stroke-linecap: round;
   stroke-linejoin: round;
