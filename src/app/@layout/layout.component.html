@@ -6,7 +6,11 @@
 >
   <app-tool-bar />
 
-  <div class="h-[calc(100vh_-_5rem)] overflow-y-auto p-[2rem]">
+  <!-- Most pages are documents: they sit on the page ground with a margin and
+       scroll as a whole. A few — the chat — are applications that own their
+       viewport and scroll internally, so the shell hands them every pixel it
+       has instead of framing them. Declared per route as `fullBleed`. -->
+  <div class="content" [class.content--full-bleed]="fullBleed()">
     <router-outlet></router-outlet>
   </div>
 </div>

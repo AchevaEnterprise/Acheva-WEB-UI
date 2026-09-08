@@ -26,6 +26,7 @@ import { UtilityService } from '../../@core/utility/utility.service';
 import { RoleEnum } from '../../@features/auth/model/auth.model';
 import { AuthenticationService } from '../../@features/auth/service/auth.service';
 import { ModerationInboxBadgeService } from '../../@features/moderation/services/moderation-inbox-badge.service';
+import { MessagingService } from '../../@features/messaging/services/messaging.service';
 import { SvgComponent } from '../../@shared/components/svg/svg.component';
 
 @Component({
@@ -49,6 +50,12 @@ export class SideBarComponent {
   private readonly utils = inject(UtilityService);
   private readonly toast = inject(ToastService);
   readonly moderationInbox = inject(ModerationInboxBadgeService);
+  /**
+   * The unread count comes straight from the messaging service, which owns the
+   * live stream for the whole session — so this badge moves the moment a
+   * message lands, wherever in the app you happen to be.
+   */
+  readonly messaging = inject(MessagingService);
 
   appMenu = signal<IMenu[]>(MENU);
   activeAccount = this.authService.activeAccount;

@@ -1,0 +1,175 @@
+<section class="picker">
+  <header class="picker__head">
+    @if (audience()) {
+      <button
+        type="button"
+        class="icon-btn"
+        aria-label="Back to message type"
+        (click)="back()"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M14.5 5.5 8 12l6.5 6.5" />
+        </svg>
+      </button>
+    }
+
+    <div class="picker__heading">
+      <h2 class="acva-para-3 fw-600 m-0">{{ title() }}</h2>
+      <p class="acva-caption m-0 picker__lede">
+        @if (audience() === 'STAFF') {
+          Search reaches every department and faculty in your school.
+        } @else if (audience() === 'STUDENTS') {
+          Only the cohort you advise can be messaged directly.
+        } @else {
+          Who are you writing to?
+        }
+      </p>
+    </div>
+
+    <button
+      type="button"
+      class="icon-btn"
+      aria-label="Close"
+      (click)="cancel()"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M6.5 6.5l11 11M17.5 6.5l-11 11" />
+      </svg>
+    </button>
+  </header>
+
+  @if (!audience()) {
+    <!-- Step one: who are you writing to? -->
+    <div class="choices">
+      <button type="button" class="choice" (click)="choose('STAFF')">
+        <span class="choice__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="M3.5 9.5 12 4.5l8.5 5" />
+            <path d="M5.5 9.5v9M9.5 9.5v9M14.5 9.5v9M18.5 9.5v9" />
+            <path d="M3 18.5h18" />
+          </svg>
+        </span>
+        <span class="choice__body">
+          <span class="acva-para-2 fw-500 choice__title">Staff</span>
+          <span class="acva-para-1 choice__sub">
+            Any colleague in your school — your department, or search across
+            every other department and faculty
+          </span>
+        </span>
+        <span class="choice__chevron" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M9.5 5.5 16 12l-6.5 6.5" /></svg>
+        </span>
+      </button>
+
+      <button type="button" class="choice" (click)="choose('STUDENTS')">
+        <span class="choice__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 4.5 22 9l-10 4.5L2 9l10-4.5Z" />
+            <path d="M6.5 11v5c0 1.4 2.5 2.8 5.5 2.8s5.5-1.4 5.5-2.8v-5" />
+          </svg>
+        </span>
+        <span class="choice__body">
+          <span class="acva-para-2 fw-500 choice__title">Student</span>
+          <span class="acva-para-1 choice__sub">
+            Students in the cohort you advise
+          </span>
+        </span>
+        <span class="choice__chevron" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M9.5 5.5 16 12l-6.5 6.5" /></svg>
+        </span>
+      </button>
+    </div>
+  } @else {
+    <div class="picker__search">
+      <span class="search-field">
+        <span class="search-field__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="6.25" />
+            <path d="m15.6 15.6 3.6 3.6" />
+          </svg>
+        </span>
+        <input
+          type="search"
+          class="search-field__input acva-para-1"
+          [placeholder]="
+            audience() === 'STAFF'
+              ? 'Search any colleague by name or email'
+              : 'Search by name or registration number'
+          "
+          [attr.aria-label]="
+            audience() === 'STAFF'
+              ? 'Search staff across the whole school'
+              : 'Search your students'
+          "
+          [value]="search()"
+          (input)="search.set($any($event.target).value)"
+        />
+      </span>
+
+      <!-- The one thing this picker cannot show on its own: that the short
+           default list is a shortcut, not a boundary. Rank and unit have never
+           gated a message here. It goes away once a search is running, where
+           the results say the same thing more convincingly. -->
+      @if (audience() === 'STAFF' && !search().trim()) {
+        <p class="picker__note acva-caption">
+          This is your own department. Search by name or email to reach anyone
+          in another department or faculty.
+        </p>
+      }
+    </div>
+
+    <div class="picker__body" [class.picker__body--busy]="refreshing()">
+      @if (loading()) {
+        @for (row of [1, 2, 3, 4, 5]; track row) {
+          <div class="person-skeleton">
+            <app-skeleton width="2.4rem" height="2.4rem" [circle]="true" />
+            <div class="person-skeleton__text">
+              <app-skeleton width="45%" height="0.85rem" />
+              <app-skeleton width="65%" height="0.75rem" />
+            </div>
+          </div>
+        }
+      } @else if (unavailable()) {
+        <p class="notice acva-para-1">{{ unavailable() }}</p>
+      } @else if (isEmpty()) {
+        <p class="notice acva-para-1">
+          @if (search()) {
+            Nobody in your school matches “{{ search() }}”.
+          } @else {
+            There is nobody here to message yet.
+          }
+        </p>
+      } @else {
+        @for (group of filtered(); track trackByLabel($index, group)) {
+          <div class="group">
+            <p class="group__label acva-caption fw-600">{{ group.label }}</p>
+            @if (group.hint) {
+              <p class="group__hint acva-caption">{{ group.hint }}</p>
+            }
+            <ul class="people">
+              @for (person of group.people; track trackById($index, person)) {
+                <li>
+                  <button type="button" class="person" (click)="pick(person)">
+                    <span class="avatar" aria-hidden="true">
+                      {{ initials(person) }}
+                    </span>
+                    <span class="person__body">
+                      <span class="person__name acva-para-1 fw-500">
+                        {{ person.name }}
+                      </span>
+                      @if (person.subtitle) {
+                        <span class="person__sub acva-caption">
+                          {{ person.subtitle }}
+                        </span>
+                      }
+                    </span>
+                  </button>
+                </li>
+              }
+            </ul>
+          </div>
+        }
+      }
+    </div>
+  }
+</section>

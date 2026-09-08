@@ -1,0 +1,145 @@
+<section class="chat">
+  <!-- ── Threads ──────────────────────────────────────────────────────────── -->
+  <aside class="chat__list">
+    <header class="list-head">
+      <div class="list-head__title">
+        <h1 class="acva-heading-6 fw-500 m-0">Messages</h1>
+        @if (totalUnread() > 0) {
+          <span class="pill">{{ totalUnread() }}</span>
+        }
+      </div>
+    </header>
+
+    <div class="list-search">
+      <input
+        type="search"
+        class="list-search__input acva-para-1"
+        placeholder="Search conversations"
+        aria-label="Search conversations"
+        [value]="search()"
+        (input)="search.set($any($event.target).value)"
+      />
+    </div>
+
+    @if (canAnnounce()) {
+      <div class="list-announce">
+        <app-button
+          label="New announcement"
+          type="outline"
+          class="btn-sm w-full"
+          (clickEvent)="compose()"
+        />
+      </div>
+    }
+
+    <div class="list-scroll">
+      @if (loadingInbox()) {
+        @for (row of [1, 2, 3, 4, 5]; track row) {
+          <div class="row-skeleton">
+            <app-skeleton width="2.75rem" height="2.75rem" [circle]="true" />
+            <div class="row-skeleton__text">
+              <app-skeleton width="45%" height="0.9rem" />
+              <app-skeleton width="75%" height="0.8rem" />
+            </div>
+          </div>
+        }
+      } @else if (filtered().length === 0) {
+        <p class="empty acva-para-1">
+          @if (search()) {
+            No conversation matches “{{ search() }}”.
+          } @else {
+            No messages yet. Conversations you start or receive appear here.
+          }
+        </p>
+      } @else {
+        <ul class="threads">
+          @for (item of filtered(); track trackById($index, item)) {
+            <li>
+              <button
+                type="button"
+                class="thread"
+                [class.thread--active]="active()?.id === item.id"
+                [class.thread--unread]="item.unread > 0"
+                (click)="open(item)"
+              >
+                <span
+                  class="avatar"
+                  [class.avatar--broadcast]="item.kind === 'ANNOUNCEMENT'"
+                  aria-hidden="true"
+                >
+                  {{ initialsFor(item) }}
+                </span>
+
+                <span class="thread__body">
+                  <span class="thread__top">
+                    <span class="thread__name acva-para-2">{{
+                      item.title
+                    }}</span>
+                    @if (item.lastMessage?.at) {
+                      <span class="thread__time acva-caption">
+                        {{ item.lastMessage?.at | date: 'shortTime' }}
+                      </span>
+                    }
+                  </span>
+
+                  <span class="thread__bottom">
+                    <span class="thread__preview acva-para-1">
+                      @if (item.kind === 'ANNOUNCEMENT') {
+                        <span class="thread__tag">{{
+                          item.audienceLabel
+                        }}</span>
+                      }
+                      @if (rowTickFor(item) !== 'none') {
+                        <app-message-ticks
+                          class="thread__ticks"
+                          [state]="rowTickFor(item)"
+                        />
+                      }
+                      {{ item.lastMessage?.preview || 'No messages yet' }}
+                    </span>
+                    @if (item.unread > 0) {
+                      <span class="pill pill--sm">{{ item.unread }}</span>
+                    }
+                  </span>
+                </span>
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+
+    <!-- The way every chat app starts a conversation: one button, bottom
+         right, always reachable regardless of how far the list is scrolled. -->
+    <button
+      type="button"
+      class="fab"
+      aria-label="Start a new conversation"
+      title="New message"
+      (click)="startConversation()"
+    >
+      +
+    </button>
+  </aside>
+
+  <!-- ── The open conversation ────────────────────────────────────────────── -->
+  <div class="chat__thread">
+    @if (!active()) {
+      <div class="placeholder">
+        <p class="acva-para-2 fw-500">Select a conversation</p>
+        <p class="acva-para-1 text-neutral-500">
+          Pick a thread on the left to read it, or start an announcement.
+        </p>
+      </div>
+    } @else {
+      <app-chat-thread
+        [conversation]="active()"
+        [messages]="messages()"
+        [loading]="loadingThread()"
+        (sendMessage)="sendDraft($event)"
+      >
+        <ng-container emptyState> No messages yet. Say hello. </ng-container>
+      </app-chat-thread>
+    }
+  </div>
+</section>

@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, effect } from '@angular/core';
 import * as Highcharts from 'highcharts';
 import { HighchartsChartComponent } from 'highcharts-angular';
 
@@ -18,9 +18,19 @@ export class ChartComponent {
 
   updateFlag = false;
 
+  constructor() {
+    // Telling Highcharts to redraw is a SIDE EFFECT, so it belongs in an
+    // effect rather than inside the computed that builds the options. Setting
+    // it from the computed made the value change during rendering, which is
+    // what Angular reports as NG0100.
+    effect(() => {
+      this.chart();
+      this.updateFlag = true;
+    });
+  }
+
   chartOptions = computed<Highcharts.Options>(() => {
     const data = this.chart();
-    this.updateFlag = true;
 
     return {
       chart: {

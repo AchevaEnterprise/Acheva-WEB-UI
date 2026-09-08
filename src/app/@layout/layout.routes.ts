@@ -64,6 +64,8 @@ export const routes: Routes = [
         path: 'support',
         data: {
           title: 'Support & Help',
+          // A chat that scrolls internally, like /messages.
+          fullBleed: true,
         },
         loadComponent: () =>
           import('../@features/support/support.component').then(
@@ -79,6 +81,19 @@ export const routes: Routes = [
           import('../@features/user-settings/user-settings.routes').then(
             (m) => m.routes
           ),
+      },
+      {
+        path: 'messages',
+        data: {
+          title: 'Messages',
+          // The chat owns its viewport: two panes that scroll internally, with
+          // no shell padding around them. See `LayoutComponent.fullBleed`.
+          fullBleed: true,
+        },
+        loadComponent: () =>
+          import(
+            '../@features/messaging/pages/messages/messages.component'
+          ).then((m) => m.MessagesComponent),
       },
       {
         path: 'history',

@@ -1,1 +1,43 @@
-<p>support works!</p>
+<section class="support">
+  <header class="support__head">
+    <span class="support__mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24">
+        <path d="M12 3.2a8.8 8.8 0 0 0-8.8 8.8v4.2" />
+        <path d="M20.8 16.2V12A8.8 8.8 0 0 0 12 3.2" />
+        <rect x="2.2" y="13.4" width="4" height="6" rx="2" />
+        <rect x="17.8" y="13.4" width="4" height="6" rx="2" />
+        <path d="M20.3 19.4a3 3 0 0 1-3 2.4H13" />
+      </svg>
+    </span>
+    <div class="support__title">
+      <h1 class="acva-para-3 fw-500 m-0">Acheva Support</h1>
+      <p class="acva-caption m-0 support__lede">
+        Ask us anything about your account, results or the approval chain. You
+        are writing to the Acheva team, not to your institution.
+      </p>
+    </div>
+  </header>
+
+  @if (failed()) {
+    <p class="support__error acva-para-1">
+      We could not open your support thread. Please refresh the page — if it
+      keeps happening, email
+      <a href="mailto:members@acheva.app">members&#64;acheva.app</a>.
+    </p>
+  } @else {
+    <app-chat-thread
+      class="support__thread"
+      [conversation]="conversation()"
+      [messages]="messages()"
+      [loading]="loading()"
+      [showHeader]="false"
+      placeholder="Describe what you need help with"
+      (sendMessage)="send($event)"
+    >
+      <ng-container emptyState>
+        No messages yet. Tell us what is going wrong and we will pick it up —
+        replies come back here.
+      </ng-container>
+    </app-chat-thread>
+  }
+</section>
