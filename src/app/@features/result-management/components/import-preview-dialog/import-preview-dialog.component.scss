@@ -1,0 +1,237 @@
+/* Follows `export-result-dialog`: fixed head and foot, the body takes what is
+   left. `min-height: 0` is what lets the body shrink and scroll instead of
+   pushing the actions off the bottom of the dialog. */
+
+:host {
+  display: block;
+  height: 100%;
+}
+
+$border: #e5e7eb;
+$ink-soft: #6b7280;
+
+.import-preview {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.import-preview__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 24px;
+  border-bottom: 1px solid $border;
+}
+
+.import-preview__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px 24px 24px;
+}
+
+/* ── Summary strip ───────────────────────────────────────────────────────── */
+
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+}
+
+.summary__item {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid $border;
+  border-radius: 8px;
+}
+
+.summary__count {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+/* Brand blue for the ordinary case rather than a success green — green is off
+   palette here, and "recorded normally" is not an achievement anyway. */
+
+.summary__item--plain {
+  border-color: #bfdcff;
+  background-color: #f2f8ff;
+  color: #12508f;
+}
+
+.summary__item--note {
+  border-color: #f5d78e;
+  background-color: #fff8e6;
+  color: #7a5b00;
+}
+
+.summary__item--refused {
+  border-color: #f3c2c2;
+  background-color: #fdf2f2;
+  color: #8a1f1f;
+}
+
+/* ── Blocks ──────────────────────────────────────────────────────────────── */
+
+.block {
+  margin-bottom: 16px;
+  padding: 16px;
+  border: 1px solid $border;
+  border-radius: 12px;
+}
+
+.block:last-child {
+  margin-bottom: 0;
+}
+
+.block__lead {
+  margin: 4px 0 12px;
+}
+
+.block--refused {
+  border-color: #f3c2c2;
+  background-color: #fdf2f2;
+}
+
+.block--decide {
+  border-color: #f5d78e;
+  background-color: #fffdf7;
+}
+
+/* ── Rows ────────────────────────────────────────────────────────────────── */
+
+.row {
+  display: grid;
+
+  /* Two columns from 1000px up: the facts on the left, what to do on the
+     right. Below that they stack, which the media query at the foot handles. */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: 16px;
+  padding: 12px 0;
+  border-top: 1px solid rgb(0 0 0 / 6%);
+}
+
+.row:first-of-type {
+  border-top: 0;
+}
+
+/* A decided row recedes, so what is left to do stays obvious. */
+
+.row--done {
+  opacity: 0.55;
+}
+
+.row__main p {
+  margin: 0 0 2px;
+}
+
+.row__why {
+  margin: 0;
+  align-self: center;
+}
+
+.row__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.tick {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.tick input {
+  margin-top: 3px;
+  accent-color: #2793ff;
+  flex: 0 0 auto;
+}
+
+.correct {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.correct__input {
+  width: 100%;
+  max-width: 260px;
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  font-family: inherit;
+}
+
+.correct__input:focus {
+  outline: 2px solid #2793ff;
+  outline-offset: 1px;
+  border-color: #2793ff;
+}
+
+.correct__match {
+  margin: 0;
+  color: #12508f;
+}
+
+.correct__miss {
+  margin: 0;
+  color: #7a5b00;
+}
+
+.plain-list {
+  margin: 0;
+  padding-left: 18px;
+  color: $ink-soft;
+}
+
+.plain-list li {
+  margin-bottom: 2px;
+}
+
+/* ── Foot ────────────────────────────────────────────────────────────────── */
+
+.import-preview__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 24px;
+  border-top: 1px solid $border;
+}
+
+.import-preview__buttons {
+  display: flex;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+/* The staff portal is supported to 1000px. Below it the two-column rows and
+   the footer stack rather than crushing; the dialog stays usable if someone
+   drags the window narrower than the supported range. */
+
+@media (width <= 999px) {
+  .row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .import-preview__foot {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .import-preview__buttons {
+    justify-content: flex-end;
+  }
+}

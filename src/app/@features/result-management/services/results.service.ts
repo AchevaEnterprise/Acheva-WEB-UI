@@ -10,6 +10,11 @@ import { SemesterEnum } from '../../../@core/models/school.model';
 import { RoleEnum } from '../../auth/model/auth.model';
 import { IIssuedDocument, IResultSheet } from '../models/result-sheet.model';
 import {
+  IImportOutcome,
+  IImportPreview,
+  IImportResolutions,
+} from '../models/import-preview.model';
+import {
   IStudentResult,
   IStudentSessionsResult,
 } from '../../students/models/student.model';
@@ -141,6 +146,24 @@ export class ResultsService {
     return this.http.post<IAPIResponse<IIssuedDocument>>(
       `${this.resultsUrl}/${resultId}/sheet/issue`,
       {}
+    );
+  }
+
+  /**
+   * `POST /results/entries/import/:id/preview` — what the file WOULD do.
+   *
+   * Writes nothing. A separate route rather than a flag on the import, so a
+   * preview can never be one mistyped parameter away from recording scores.
+   */
+  previewResultImport(
+    resultId: string,
+    file: File
+  ): Observable<IAPIResponse<IImportPreview>> {
+    const form = new FormData();
+    form.append('file', file);
+    return this.http.post<IAPIResponse<IImportPreview>>(
+      `${this.resultsUrl}/entries/import/${resultId}/preview`,
+      form
     );
   }
 
@@ -292,12 +315,19 @@ export class ResultsService {
 
   uploadResultFile(
     resultId: string,
-    file: File
-  ): Observable<IAPIResponse<unknown>> {
+    file: File,
+    resolutions?: IImportResolutions
+  ): Observable<IAPIResponse<IImportOutcome>> {
     const formData = new FormData();
     formData.append('file', file);
+    // The preview's decisions ride along as JSON, because the file itself has
+    // to be multipart. Without them the server records neither side of an
+    // unresolved clash rather than guessing.
+    if (resolutions) {
+      formData.append('resolutions', JSON.stringify(resolutions));
+    }
 
-    return this.http.post<IAPIResponse<unknown>>(
+    return this.http.post<IAPIResponse<IImportOutcome>>(
       `${this.resultsUrl}/entries/import/${resultId}`,
       formData
     );

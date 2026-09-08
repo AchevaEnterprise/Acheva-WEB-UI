@@ -315,6 +315,28 @@ describe('buildTranscriptPdf — the grades table', () => {
     expect(cellText(body.find((r) => cellText(r, 0) === 'GST101') as unknown[], 1)).toContain('‡');
   });
 
+  it('states the semester GPA and the running CGPA at each semester close', () => {
+    // These two figures are the only standing this document claims. The
+    // semester GPA is spelled out in the title column; the last column stays
+    // strictly cumulative, because that is what its heading says.
+    const body = courseTable(buildTranscriptPdf(transcript())).body;
+
+    const harmattan = body.find((row) =>
+      cellText(row, 1).startsWith('SEMESTER GPA')
+    ) as unknown[];
+    expect(cellText(harmattan, 1)).toBe('SEMESTER GPA 3.60');
+    expect(cellText(harmattan, 2)).toBe('5');
+    expect(cellText(harmattan, 4)).toBe('18');
+    expect(cellText(harmattan, 5)).toBe('3.60');
+
+    const rain = body.filter((row) =>
+      cellText(row, 1).startsWith('SEMESTER GPA')
+    )[1];
+    expect(cellText(rain, 1)).toBe('SEMESTER GPA 4.00');
+    // The semester earned 4.00, but the record stands at 3.80 overall.
+    expect(cellText(rain, 5)).toBe('3.80');
+  });
+
   it('closes with the cumulative figures the whole document exists to state', () => {
     const body = courseTable(buildTranscriptPdf(transcript())).body;
     const last = body[body.length - 1];
