@@ -39,6 +39,7 @@ $ground: #f7f9fb;
 
 /* The step's purpose, one line, under its name — so the dialog explains itself
    without a paragraph of instructions in the body. */
+
 .picker__lede {
   color: $muted;
 }
@@ -46,6 +47,7 @@ $ground: #f7f9fb;
 /* Both head buttons are the same control: a 32px square holding a 20px stroke
    glyph. The `✕` and `←` characters they replace rendered in whatever the
    system font offered, at a weight nothing else on the page used. */
+
 .icon-btn {
   flex: 0 0 auto;
   width: 32px;
@@ -64,7 +66,7 @@ $ground: #f7f9fb;
   width: 20px;
   height: 20px;
   fill: none;
-  stroke: currentColor;
+  stroke: currentcolor;
   stroke-width: 1.6;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -117,6 +119,7 @@ $ground: #f7f9fb;
 
 /* A tinted tile, not a bare emoji. Emoji render differently on every platform
    and carry a colour palette nothing else in the app uses. */
+
 .choice__icon {
   flex: 0 0 auto;
   width: 40px;
@@ -132,7 +135,7 @@ $ground: #f7f9fb;
   width: 21px;
   height: 21px;
   fill: none;
-  stroke: currentColor;
+  stroke: currentcolor;
   stroke-width: 1.5;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -166,7 +169,7 @@ $ground: #f7f9fb;
   width: 18px;
   height: 18px;
   fill: none;
-  stroke: currentColor;
+  stroke: currentcolor;
   stroke-width: 1.6;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -190,6 +193,7 @@ $ground: #f7f9fb;
 
 /* The magnifier sits inside the field rather than beside it, so an empty
    search box still reads as a search box. */
+
 .search-field {
   display: flex;
   align-items: center;
@@ -202,7 +206,7 @@ $ground: #f7f9fb;
 
 .search-field:focus-within {
   border-color: $brand;
-  box-shadow: 0 0 0 3px rgba(39, 147, 255, 0.15);
+  box-shadow: 0 0 0 3px rgb(39 147 255 / 15%);
 }
 
 .search-field__icon {
@@ -216,7 +220,7 @@ $ground: #f7f9fb;
   width: 17px;
   height: 17px;
   fill: none;
-  stroke: currentColor;
+  stroke: currentcolor;
   stroke-width: 1.6;
   stroke-linecap: round;
 }
@@ -237,6 +241,7 @@ $ground: #f7f9fb;
 
 /* Safari draws its own clear button on `type="search"`; it lands on the wrong
    ground colour inside a pill. */
+
 .search-field__input::-webkit-search-cancel-button {
   appearance: none;
 }
@@ -259,6 +264,7 @@ $ground: #f7f9fb;
 
 /* A re-search keeps the current list on screen and dims it, rather than
    blanking to skeletons on every keystroke. */
+
 .picker__body--busy {
   opacity: 0.55;
 }
@@ -322,6 +328,7 @@ $ground: #f7f9fb;
 
 /* An office is identified by its email, which is long — it must ellipsize
    rather than push the row wider. */
+
 .person__sub {
   color: $muted;
   white-space: nowrap;

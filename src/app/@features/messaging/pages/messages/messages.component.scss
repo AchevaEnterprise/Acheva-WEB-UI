@@ -8,6 +8,7 @@ $ground: #f7f9fb;
 
 /* The layout shell gives routed content a definite height, so the page claims
    all of it and lets the two panes divide it between them. */
+
 :host {
   display: block;
   height: 100%;
@@ -17,6 +18,7 @@ $ground: #f7f9fb;
 .chat {
   display: grid;
   grid-template-columns: 340px minmax(0, 1fr);
+
   /* Claim the whole routed area and never exceed it. `max-height` matters as
      much as `height`: the shell scrolls its content, so a panel even a pixel
      taller than the space produces a scrollbar around a chat that is already
@@ -25,6 +27,7 @@ $ground: #f7f9fb;
   max-height: 100%;
   width: 100%;
   background: #fff;
+
   /* Edge to edge. The route is declared `fullBleed`, so the shell hands this
      page every pixel below the toolbar — a card border and a radius here would
      draw a frame around something that has nothing beside it. */
@@ -41,6 +44,7 @@ $ground: #f7f9fb;
   min-height: 0;
   border-right: 1px solid $border;
   background: #fff;
+
   /* Anchors the floating action button to this pane rather than the page, so
      it sits over the thread list exactly as it does in a chat app. */
   position: relative;
@@ -59,7 +63,7 @@ $ground: #f7f9fb;
   font-size: 1.6rem;
   line-height: 1;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(39, 147, 255, 0.4);
+  box-shadow: 0 4px 14px rgb(39 147 255 / 40%);
   transition: transform 0.12s ease;
 }
 
@@ -114,6 +118,7 @@ $ground: #f7f9fb;
 }
 
 /* Brand blue for the connected state — a green dot would be off-palette. */
+
 .live--on {
   color: #12508f;
 }
@@ -206,6 +211,7 @@ $ground: #f7f9fb;
 
 /* An unread thread is distinguished by colour and its count pill, not by a
    heavier face — bolding the row made the list look noisy. */
+
 .thread--unread .thread__name {
   color: #0f2438;
 }
@@ -218,6 +224,7 @@ $ground: #f7f9fb;
 /* The tick sits inside the preview line, before the text, exactly where every
    chat app puts it — so a glance down the list says which of your messages
    have landed. */
+
 .thread__ticks {
   margin-right: 2px;
   color: #98a4b0;
@@ -225,6 +232,7 @@ $ground: #f7f9fb;
 
 /* The preview must ellipsize rather than wrap, or rows jump height as
    messages arrive. `min-width: 0` is what lets it shrink inside the flex row. */
+
 .thread__preview {
   color: #6b7c8d;
   white-space: nowrap;
@@ -329,6 +337,7 @@ $ground: #f7f9fb;
    every chat app does it — not stranded at the top of an empty rectangle.
    `margin-top: auto` on the first bubble rather than `justify-content:
    flex-end`, which clips the top of the list once it overflows. */
+
 .bubbles > :first-child {
   margin-top: auto;
 }
@@ -340,6 +349,7 @@ $ground: #f7f9fb;
   background: #fff;
   border: 1px solid $border;
   align-self: flex-start;
+
   /* A long unbroken string (a URL, a reg number) must wrap, not widen. */
   overflow-wrap: anywhere;
 }
@@ -349,6 +359,7 @@ $ground: #f7f9fb;
   background: $brand;
   border-color: $brand;
   color: #fff;
+
   /* A blue read-tick on a blue bubble would be the one state nobody can see. */
   --tick-read: #fff;
 }
@@ -378,7 +389,7 @@ $ground: #f7f9fb;
 }
 
 .bubble--mine .bubble__meta {
-  color: rgba(255, 255, 255, 0.82);
+  color: rgb(255 255 255 / 82%);
 }
 
 .bubble--failed .bubble__meta {
@@ -421,7 +432,7 @@ $ground: #f7f9fb;
 
 /* The staff UI is supported to 1000px. Below it the thread list would squeeze
    the conversation into an unusable column, so the panes stack instead. */
-@media (max-width: 1079px) {
+@media (width <= 1079px) {
   .chat {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: minmax(0, 2fr) minmax(0, 3fr);
