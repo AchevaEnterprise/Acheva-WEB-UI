@@ -44,14 +44,27 @@ export class MessagingService {
   private readonly events = new Subject<IStreamEvent>();
   readonly stream$ = this.events.asObservable();
 
-  /** Unread across every conversation. Drives the sidebar badge. */
+  /** Unread across every conversation except support. Sidebar: Messages. */
   readonly unreadTotal = signal(0);
 
-  readonly unreadLabel = computed(() => {
-    const n = this.unreadTotal();
-    if (n <= 0) return '';
-    return n > 99 ? '99+' : String(n);
-  });
+  /** Unread on the support thread. Sidebar: Support. */
+  readonly supportUnread = signal(0);
+
+  /** Which threads are support, so a live event can be counted to the right badge. */
+  private readonly supportConversationIds = signal<ReadonlySet<string>>(
+    new Set()
+  );
+
+  private static readonly badgeLabel = (n: number): string =>
+    n <= 0 ? '' : n > 99 ? '99+' : String(n);
+
+  readonly unreadLabel = computed(() =>
+    MessagingService.badgeLabel(this.unreadTotal())
+  );
+
+  readonly supportLabel = computed(() =>
+    MessagingService.badgeLabel(this.supportUnread())
+  );
 
   /**
    * The thread currently on screen, if any.
@@ -85,6 +98,8 @@ export class MessagingService {
     this.started = false;
     this.activeConversationId = null;
     this.unreadTotal.set(0);
+    this.supportUnread.set(0);
+    this.supportConversationIds.set(new Set());
     this.disconnect();
   }
 
@@ -95,10 +110,27 @@ export class MessagingService {
   /** Recount from the server. The inbox already carries each row's unread. */
   refreshUnread(): void {
     this.inbox().subscribe({
-      next: (resp) =>
+      next: (resp) => {
+        const rows = resp.data.conversations;
+        // Two badges, two counts: Messages counts people at your institution,
+        // Support counts the desk. A support reply lighting up the Messages
+        // badge would send you to a page the thread is not on.
         this.unreadTotal.set(
-          resp.data.conversations.reduce((sum, row) => sum + row.unread, 0)
-        ),
+          rows
+            .filter((row) => row.kind !== 'SUPPORT')
+            .reduce((sum, row) => sum + row.unread, 0)
+        );
+        this.supportUnread.set(
+          rows
+            .filter((row) => row.kind === 'SUPPORT')
+            .reduce((sum, row) => sum + row.unread, 0)
+        );
+        this.supportConversationIds.set(
+          new Set(
+            rows.filter((row) => row.kind === 'SUPPORT').map((row) => row.id)
+          )
+        );
+      },
       error: () => undefined,
     });
   }
@@ -131,6 +163,19 @@ export class MessagingService {
     const query = cursor ? `?cursor=${encodeURIComponent(cursor)}` : '';
     return this.http.get<IAPIResponse<IConversationPage>>(
       `${this.baseUrl}/conversations/${conversationId}/messages${query}`
+    );
+  }
+
+  /**
+   * My thread with the Acheva support desk, created on first contact.
+   *
+   * Takes no argument because there is nobody to choose: everyone has exactly
+   * one support thread, and the desk is the only counterpart.
+   */
+  openSupport(): Observable<IAPIResponse<{ _id: string }>> {
+    return this.http.post<IAPIResponse<{ _id: string }>>(
+      `${this.baseUrl}/support`,
+      {}
     );
   }
 
@@ -275,9 +320,18 @@ export class MessagingService {
     }
 
     if (event.type !== 'message:new') return;
-    if (event.payload.conversationId === this.activeConversationId) return;
 
-    this.unreadTotal.update((n) => n + 1);
+    const { conversationId } = event.payload;
+    if (conversationId === this.activeConversationId) return;
+
+    // A thread this session has never seen could be either kind, so the safe
+    // move is to recount rather than guess which badge it belongs to.
+    if (!this.supportConversationIds().has(conversationId)) {
+      this.unreadTotal.update((n) => n + 1);
+      return;
+    }
+
+    this.supportUnread.update((n) => n + 1);
   }
 
   /**

@@ -93,7 +93,9 @@ export class LayoutComponent implements OnInit {
   private routeWantsFullBleed(): boolean {
     let node: ActivatedRoute | null = this.route;
     while (node) {
-      if (node.snapshot.data?.['fullBleed'] === true) return true;
+      // `snapshot` is not populated on a child route until the navigation
+      // that activates it has finished, and this runs once before that.
+      if (node.snapshot?.data?.['fullBleed'] === true) return true;
       node = node.firstChild;
     }
     return false;

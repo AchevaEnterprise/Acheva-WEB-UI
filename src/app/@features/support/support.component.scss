@@ -1,0 +1,78 @@
+/* One thread, full height. No list beside it: everyone has exactly one support
+   conversation, so a picker would be a list of one. */
+
+$border: #e5e7eb;
+
+:host {
+  display: block;
+  height: 100%;
+  min-height: 0;
+}
+
+.support {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-height: 100%;
+  background: #fff;
+}
+
+.support__head {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 20px;
+  border-bottom: 1px solid $border;
+  background: #fff;
+}
+
+/* The desk gets a mark rather than initials — it is an office, not a person,
+   and a "AS" monogram would suggest somebody named that. */
+.support__mark {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: #e8f3ff;
+  color: #12508f;
+}
+
+.support__mark svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.support__title {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.support__lede {
+  color: #6b7c8d;
+  max-width: 68ch;
+  line-height: 1.45;
+}
+
+.support__thread {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.support__error {
+  margin: 0;
+  padding: 24px 20px;
+  color: #8a1f1f;
+}
+
+.support__error a {
+  color: #12508f;
+}

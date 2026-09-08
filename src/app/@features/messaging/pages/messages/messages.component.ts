@@ -2,12 +2,10 @@ import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
-  ElementRef,
   OnInit,
   computed,
   inject,
   signal,
-  viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
@@ -20,6 +18,7 @@ import { ToastService } from '../../../../@core/utility/toast.service';
 import { AuthenticationService } from '../../../auth/service/auth.service';
 import { RoleEnum } from '../../../auth/model/auth.model';
 import { AnnouncementComposerComponent } from '../../components/announcement-composer/announcement-composer.component';
+import { ChatThreadComponent } from '../../components/chat-thread/chat-thread.component';
 import { MessageTicksComponent } from '../../components/message-ticks/message-ticks.component';
 import { NewConversationComponent } from '../../components/new-conversation/new-conversation.component';
 import {
@@ -51,6 +50,7 @@ import { MessagingService } from '../../services/messaging.service';
     ButtonComponent,
     SkeletonComponent,
     MessageTicksComponent,
+    ChatThreadComponent,
   ],
   templateUrl: './messages.component.html',
   styleUrl: './messages.component.scss',
@@ -62,14 +62,11 @@ export class MessagesComponent implements OnInit {
   private readonly dialog = inject(MatDialog);
   private readonly destroyRef = inject(DestroyRef);
 
-  private readonly scroller = viewChild<ElementRef<HTMLElement>>('scroller');
-
   readonly conversations = signal<IConversationSummary[]>([]);
   readonly messages = signal<IMessage[]>([]);
   readonly active = signal<IConversationSummary | null>(null);
   readonly loadingInbox = signal(true);
   readonly loadingThread = signal(false);
-  readonly draft = signal('');
   readonly search = signal('');
 
   /** Only these offices can address a room. Mirrors the server's rule. */
@@ -82,16 +79,28 @@ export class MessagesComponent implements OnInit {
     );
   });
 
+  /**
+   * Support lives on its own page, not in this list.
+   *
+   * "Messages" means people at your institution — colleagues, your Course
+   * Advisor, notices from your Head. Acheva's support desk is a different
+   * relationship with a different address, and mixing a helpdesk ticket in
+   * among departmental threads makes both harder to find.
+   */
+  readonly visible = computed(() =>
+    this.conversations().filter((c) => c.kind !== 'SUPPORT')
+  );
+
   readonly filtered = computed(() => {
     const term = this.search().trim().toLowerCase();
-    if (!term) return this.conversations();
-    return this.conversations().filter((c) =>
+    if (!term) return this.visible();
+    return this.visible().filter((c) =>
       (c.title ?? '').toLowerCase().includes(term)
     );
   });
 
   readonly totalUnread = computed(() =>
-    this.conversations().reduce((sum, c) => sum + c.unread, 0)
+    this.visible().reduce((sum, c) => sum + c.unread, 0)
   );
 
   ngOnInit(): void {
@@ -140,7 +149,6 @@ export class MessagesComponent implements OnInit {
           // oldest at the top, as every chat does.
           this.messages.set([...resp.data.messages].reverse());
           this.loadingThread.set(false);
-          this.scrollToLatest();
         },
         error: () => this.loadingThread.set(false),
       });
@@ -168,8 +176,8 @@ export class MessagesComponent implements OnInit {
    * two seconds this is the whole difference between a chat that feels alive
    * and one that feels broken.
    */
-  sendDraft(): void {
-    const body = this.draft().trim();
+  sendDraft(text: string): void {
+    const body = text.trim();
     const conversation = this.active();
     if (!body || !conversation) return;
 
@@ -187,9 +195,6 @@ export class MessagesComponent implements OnInit {
         read: false,
       },
     ]);
-    this.draft.set('');
-    this.scrollToLatest();
-
     this.messaging
       .send(conversation.id, body)
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -266,7 +271,6 @@ export class MessagesComponent implements OnInit {
           createdAt: event.payload.createdAt ?? new Date().toISOString(),
         },
       ]);
-      this.scrollToLatest();
       this.clearUnread(conversationId);
       return;
     }
@@ -412,23 +416,6 @@ export class MessagesComponent implements OnInit {
           if (sent) this.loadInbox();
         },
       });
-  }
-
-  onDraftKey(event: KeyboardEvent): void {
-    // Enter sends, Shift+Enter breaks the line — the convention everyone
-    // already has in their fingers.
-    if (event.key === 'Enter' && !event.shiftKey) {
-      event.preventDefault();
-      this.sendDraft();
-    }
-  }
-
-  private scrollToLatest(): void {
-    // After the next paint, or the new bubble is not yet laid out.
-    requestAnimationFrame(() => {
-      const el = this.scroller()?.nativeElement;
-      if (el) el.scrollTop = el.scrollHeight;
-    });
   }
 
   initialsFor(conversation: IConversationSummary): string {

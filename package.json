@@ -16,7 +16,8 @@
     "test:history": "node scripts/history-harness.mjs",
     "test:export": "node scripts/export-harness.mjs",
     "test:verify": "node scripts/verify-harness.mjs",
-    "test:realtime": "node scripts/realtime-harness.mjs"
+    "test:realtime": "node scripts/realtime-harness.mjs",
+    "test:messaging-surfaces": "node scripts/messaging-surfaces-harness.mjs"
   },
   "private": true,
   "dependencies": {

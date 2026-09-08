@@ -4,7 +4,12 @@
  * package, the same way the result-sheet and transcript models are.
  */
 
-export type ConversationKind = 'DIRECT' | 'ADVISORY' | 'ANNOUNCEMENT';
+export type ConversationKind =
+  | 'DIRECT'
+  | 'ADVISORY'
+  | 'ANNOUNCEMENT'
+  /** You ↔ the Acheva support desk. Lives on `/support`, not in Messages. */
+  | 'SUPPORT';
 export type RecipientClass = 'STAFF' | 'STUDENTS' | 'EVERYONE';
 
 export interface ILastMessage {

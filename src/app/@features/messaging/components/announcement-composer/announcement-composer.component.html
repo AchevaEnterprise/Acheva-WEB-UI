@@ -1,7 +1,7 @@
 <section class="composer">
   <header class="composer__head">
     <div>
-      <h2 class="acva-heading-6 fw-500">New announcement</h2>
+      <h2 class="acva-para-3 fw-500 m-0">New announcement</h2>
       <p class="acva-para-1 text-neutral-500">
         One message, sent once. Recipients cannot reply to it.
       </p>
@@ -10,7 +10,7 @@
 
   <div class="composer__body">
     <fieldset class="field">
-      <legend class="acva-para-2 fw-500">Who should receive this?</legend>
+      <legend class="field__label acva-para-1">Who should receive this?</legend>
       @for (option of options(); track option.value) {
         <label
           class="audience"
@@ -23,7 +23,7 @@
             (change)="recipientClass.set(option.value)"
           />
           <span>
-            <span class="acva-para-2 fw-500">{{ option.label }}</span>
+            <span class="acva-para-2">{{ option.label }}</span>
             <span class="acva-para-1 text-neutral-500">{{
               option.detail
             }}</span>
@@ -33,7 +33,7 @@
     </fieldset>
 
     <div class="field">
-      <label class="acva-para-2 fw-500" for="subject">Subject</label>
+      <label class="field__label acva-para-1" for="subject">Subject</label>
       <input
         id="subject"
         class="input acva-para-2"
@@ -46,7 +46,7 @@
     </div>
 
     <div class="field">
-      <label class="acva-para-2 fw-500" for="body">Message</label>
+      <label class="field__label acva-para-1" for="body">Message</label>
       <textarea
         id="body"
         class="input acva-para-2"

@@ -64,6 +64,8 @@ export const routes: Routes = [
         path: 'support',
         data: {
           title: 'Support & Help',
+          // A chat that scrolls internally, like /messages.
+          fullBleed: true,
         },
         loadComponent: () =>
           import('../@features/support/support.component').then(
