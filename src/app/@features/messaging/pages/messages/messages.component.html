@@ -77,7 +77,7 @@
                     }}</span>
                     @if (item.lastMessage?.at) {
                       <span class="thread__time acva-caption">
-                        {{ item.lastMessage?.at | date: 'shortTime' }}
+                        {{ stampFor(item) }}
                       </span>
                     }
                   </span>
@@ -95,7 +95,7 @@
                           [state]="rowTickFor(item)"
                         />
                       }
-                      {{ item.lastMessage?.preview || 'No messages yet' }}
+                      {{ previewOf(item) }}
                     </span>
                     @if (item.unread > 0) {
                       <span class="pill pill--sm">{{ item.unread }}</span>
