@@ -28,6 +28,8 @@ import {
   IStreamEvent,
 } from '../../models/messaging.model';
 import { MessagingService } from '../../services/messaging.service';
+import { listTimestamp } from '../../utils/message-day';
+import { readablePreview } from '../../utils/readable-text';
 
 /**
  * Messages — the familiar two-pane chat layout: threads on the left, the open
@@ -426,6 +428,16 @@ export class MessagesComponent implements OnInit {
       .slice(0, 2)
       .map((part) => part[0]?.toUpperCase() ?? '')
       .join('');
+  }
+
+  /** A preview safe to print — never raw ciphertext. See `readable-text.ts`. */
+  previewOf(conversation: IConversationSummary): string {
+    return readablePreview(conversation.lastMessage?.preview);
+  }
+
+  /** Time for today's threads, a day for anything older. WhatsApp's rule. */
+  stampFor(conversation: IConversationSummary): string {
+    return listTimestamp(conversation.lastMessage?.at);
   }
 
   trackById = (_: number, item: { id: string }) => item.id;
