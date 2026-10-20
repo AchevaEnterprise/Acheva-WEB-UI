@@ -1,0 +1,115 @@
+<section class="payout">
+  <app-back-button />
+
+  <header class="payout__head">
+    <div>
+      <h1 class="acva-heading-5 fw-500 m-0">Payout account</h1>
+      <p class="acva-para-1 text-neutral-500 m-0">
+        Where your department’s share of every payment is settled. Students
+        cannot pay dues until this is set up.
+      </p>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <app-skeleton width="100%" height="14rem" />
+  } @else {
+    <!-- State first: a Head opening this page is asking one question —
+         "can my students pay yet?" -->
+    @if (isVerified()) {
+      <p class="status status--ready acva-para-1">
+        <span class="fw-500">Collection is live.</span>
+        Payments to your department settle to
+        {{ bankName() }} · {{ grouped(account()!.accountNumber) }} ·
+        {{ account()!.accountName }}.
+      </p>
+    } @else if (isUnverified()) {
+      <p class="status status--pending acva-para-1">
+        <span class="fw-500">Saved, but not yet confirmed.</span>
+        We hold these details, but our payment provider has not acknowledged
+        them — so <strong>students still cannot pay</strong>. Check the account
+        number and name match the bank’s records exactly, then save again.
+      </p>
+    } @else {
+      <p class="status status--empty acva-para-1">
+        <span class="fw-500">No payout account yet.</span>
+        Add your department’s bank account below. Until you do, dues you publish
+        cannot be collected.
+      </p>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="save()">
+      <app-card label="Bank account" [showDivider]="true">
+        <div content class="card-body">
+          <div class="input-style-1 acheva-input w-full">
+            <p class="acva-para-2 fw-400 label-text">Bank name</p>
+            <mat-form-field [style.width.%]="100" appearance="outline">
+              <mat-select
+                formControlName="bankCode"
+                placeholder="Choose a bank"
+              >
+                @for (bank of banks(); track trackByCode($index, bank)) {
+                  <mat-option [value]="bank.bankCode">
+                    {{ bank.bankName }}
+                  </mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <div class="input-style-1 acheva-input w-full">
+            <p class="acva-para-2 fw-400 label-text">Account number</p>
+            <mat-form-field [style.width.%]="100" appearance="outline">
+              <input
+                matInput
+                type="text"
+                inputmode="numeric"
+                [maxlength]="numberLength"
+                formControlName="accountNumber"
+                placeholder="10 digits"
+              />
+            </mat-form-field>
+            @if (
+              form.get('accountNumber')?.touched &&
+              form.get('accountNumber')?.invalid
+            ) {
+              <p class="field-error acva-caption">
+                A Nigerian account number is exactly
+                {{ numberLength }} digits.
+              </p>
+            }
+          </div>
+
+          <div class="input-style-1 acheva-input w-full">
+            <p class="acva-para-2 fw-400 label-text">Account name</p>
+            <mat-form-field [style.width.%]="100" appearance="outline">
+              <input
+                matInput
+                type="text"
+                formControlName="accountName"
+                placeholder="As it appears at the bank"
+              />
+            </mat-form-field>
+            <p class="acva-caption text-neutral-500 m-0">
+              It must match the bank’s records exactly, or the provider will
+              reject the account.
+            </p>
+          </div>
+        </div>
+      </app-card>
+
+      <footer class="payout__foot">
+        <app-button
+          [label]="account() ? 'Update account' : 'Add account'"
+          class="btn-sm"
+          [loading]="saving()"
+          [disabled]="form.invalid || saving()"
+          (clickEvent)="save()"
+        />
+        <span class="acva-caption text-neutral-500">
+          Only you, as Head of Department, can change this.
+        </span>
+      </footer>
+    </form>
+  }
+</section>

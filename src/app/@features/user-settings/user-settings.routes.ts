@@ -57,6 +57,26 @@ export const routes: Routes = [
           ).then((m) => m.CourseManagementComponent),
       },
       {
+        path: 'payout-account',
+        data: {
+          title: 'Payout Account',
+        },
+        loadComponent: () =>
+          import(
+            './pages/hod-settings/payout-account/payout-account.component'
+          ).then((m) => m.PayoutAccountComponent),
+      },
+      {
+        path: 'departmental-dues',
+        data: {
+          title: 'Departmental Dues',
+        },
+        loadComponent: () =>
+          import(
+            './pages/hod-settings/departmental-dues/departmental-dues.component'
+          ).then((m) => m.DepartmentalDuesComponent),
+      },
+      {
         path: 'create-course',
         data: {
           title: 'Course Management',
