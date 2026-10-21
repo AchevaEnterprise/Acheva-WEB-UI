@@ -44,8 +44,11 @@ Thumbs.db
 # Claude Code harness
 CLAUDE.md
 
-# Generated screenshots (Claude UI verification)
+# Generated screenshots and documents (Claude UI verification)
 screenshots/*.png
+# The payments harness saves the real receipt here so the PDF itself can be
+# rendered — headless Chromium screenshots an empty iframe.
+screenshots/*.pdf
 
 # Claude Code harness config
 .claude/
