@@ -89,13 +89,22 @@
                   (clickEvent)="confirmAssignAsCourseAdvisor(lecturer)"
                 />
               } @else {
-                <app-button
-                  label="Unassign"
-                  type="outline"
-                  class="btn-sm"
-                  [disabled]="!lecturer.isActive"
-                  (clickEvent)="confirmUnassignAsCourseAdvisor(lecturer)"
-                />
+                <span class="actions">
+                  <app-button
+                    label="Hand over"
+                    type="outline"
+                    class="btn-sm"
+                    [disabled]="!lecturer.isActive"
+                    (clickEvent)="confirmHandover(lecturer)"
+                  />
+                  <app-button
+                    label="Unassign"
+                    type="outline"
+                    class="btn-sm"
+                    [disabled]="!lecturer.isActive"
+                    (clickEvent)="confirmUnassignAsCourseAdvisor(lecturer)"
+                  />
+                </span>
               }
             </td>
           </ng-container>

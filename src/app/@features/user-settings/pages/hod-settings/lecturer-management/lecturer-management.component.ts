@@ -1,4 +1,12 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  DestroyRef,
+  inject,
+  OnInit,
+  signal,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -10,6 +18,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTableModule } from '@angular/material/table';
 import { finalize } from 'rxjs';
+import { HandoverCourseAdvisorComponent } from '../../../../../@shared/components/handover-course-advisor/handover-course-advisor.component';
 import { RoleEnum } from '../../../../auth/model/auth.model';
 
 import { TitleCasePipe } from '@angular/common';
@@ -59,6 +68,7 @@ export class LecturerManagementComponent implements OnInit {
   private readonly authService = inject(AuthenticationService);
   private readonly dialog = inject(MatDialog);
   private readonly toast = inject(ToastService);
+  private readonly destroyRef = inject(DestroyRef);
 
   userDepartmentId = this.authService.activeAccount()?.department!._id;
 
@@ -175,6 +185,38 @@ export class LecturerManagementComponent implements OnInit {
   onPage(event: { pageIndex: number; pageSize: number }): void {
     this.currentPage.set(event.pageIndex);
     this.pageSize.set(event.pageSize);
+  }
+
+  /**
+   * Hand this advisor's cohort to someone else.
+   *
+   * Distinct from Unassign, which leaves the cohort with NO advisor — the
+   * results waiting on that desk, the moderations due back and the
+   * students' threads all stay pointed at someone who no longer holds the
+   * post. A handover moves them.
+   */
+  confirmHandover(lecturer: ILecturer): void {
+    this.dialog
+      .open(HandoverCourseAdvisorComponent, {
+        width: '40%',
+        data: {
+          lecturer:
+            `${lecturer.firstname ?? ''} ${lecturer.lastname ?? ''}`.trim() ||
+            lecturer.email,
+          lecturerId: lecturer._id,
+          level: lecturer.assignedLevel,
+          departmentId: this.userDepartmentId,
+        },
+      })
+      .afterClosed()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (result) => {
+          // Both advisors' rows changed; refetch rather than patch two
+          // rows in place and risk the table disagreeing with the server.
+          if (result) this.getLecturers();
+        },
+      });
   }
 
   confirmAssignAsCourseAdvisor(lecturer: ILecturer): void {
