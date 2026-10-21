@@ -18,7 +18,8 @@
     "test:verify": "node scripts/verify-harness.mjs",
     "test:realtime": "node scripts/realtime-harness.mjs",
     "test:messaging-surfaces": "node scripts/messaging-surfaces-harness.mjs",
-    "test:payments": "node scripts/payments-harness.mjs"
+    "test:payments": "node scripts/payments-harness.mjs",
+    "test:dues-collections": "node scripts/dues-collections-harness.mjs"
   },
   "private": true,
   "dependencies": {

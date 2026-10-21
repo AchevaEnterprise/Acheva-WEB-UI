@@ -124,20 +124,17 @@ export const MENU: IMenu[] = [
       RoleEnum.LECTURER,
     ],
   },
-  // {
-  //   label: 'Dues Management',
-  //   active_icon: 'icons/menu/dues-management-active.svg',
-  //   inactive_icon: 'icons/menu/dues-management-inactive.svg',
-  //   route: 'dues-management',
-  //   isActive: true,
-  //   accessRole: [
-  //     // RoleEnum.DEAN,
-  //     RoleEnum.HOD,
-  //     // RoleEnum.COURSE_ADVISOR,
-  //     // RoleEnum.COURSE_COORDINATOR,
-  //     // RoleEnum.LECTURER,
-  //   ],
-  // },
+  {
+    label: 'Dues Management',
+    active_icon: 'icons/menu/dues-management-active.svg',
+    inactive_icon: 'icons/menu/dues-management-inactive.svg',
+    route: 'dues-management',
+    isActive: true,
+    // HOD only: it is their department's money, their roster and their
+    // decision who to chase. A Dean seeing it would be reading another
+    // office's collections.
+    accessRole: [RoleEnum.HOD],
+  },
   // {
   //   label: 'FAQ',
   //   active_icon: 'icons/menu/faq-inactive.svg',
