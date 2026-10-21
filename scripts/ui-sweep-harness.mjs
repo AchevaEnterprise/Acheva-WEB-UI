@@ -241,7 +241,22 @@ for (const route of app.routes) {
       await page.waitForTimeout(700);
       const opts = await page.locator('mat-option:visible').all();
       if (opts.length === 0) {
-        note(route, `mat-select#${i} opened with NO options`);
+        /**
+         * Empty is only a fault if the control does not say why.
+         *
+         * A dependent dropdown — Department under Faculty under School —
+         * is legitimately empty until its parent is chosen, and says so in
+         * its placeholder. Flagging those made the admin app carry a
+         * permanent finding for behaviour that is correct, which is how a
+         * real one gets lost.
+         */
+        const placeholder =
+          (await sel.getAttribute('placeholder')) ??
+          (await sel.getAttribute('aria-label')) ??
+          '';
+        if (!placeholder.trim()) {
+          note(route, `mat-select#${i} opened with NO options and no placeholder to explain why`);
+        }
         await page.keyboard.press('Escape');
         continue;
       }
