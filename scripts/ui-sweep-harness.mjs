@@ -152,7 +152,19 @@ page.on('pageerror', (e) => consoleErrors.push(`UNCAUGHT: ${String(e).slice(0, 1
 page.on('response', (r) => {
   const url = r.url();
   if (!url.startsWith(API)) return;
-  if (r.status() >= 400) badRequests.push(`${r.status()} ${r.request().method()} ${url.replace(API, '')}`);
+  if (r.status() < 400) return;
+
+  /**
+   * A call the app tagged `X-Silent-Error` is one whose failure the page
+   * has already decided to handle — the review queue a non-CA has no
+   * access to, for instance. Reporting those would mean every run of this
+   * harness carries the same two permanent findings, and two permanent
+   * findings are how a real one goes unnoticed.
+   */
+  const headers = r.request().headers();
+  if (headers['x-silent-error']) return;
+
+  badRequests.push(`${r.status()} ${r.request().method()} ${url.replace(API, '')}`);
 });
 page.on('request', (r) => {
   if (!r.url().startsWith(API)) return;
