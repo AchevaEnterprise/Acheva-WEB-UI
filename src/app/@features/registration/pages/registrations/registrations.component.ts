@@ -24,7 +24,10 @@ import {
   IRegistrationStudent,
   RegistrationStatus,
 } from '../../models/registration.model';
-import { RegistrationService } from '../../services/registration.service';
+import {
+  IExtraYearProposal,
+  RegistrationService,
+} from '../../services/registration.service';
 
 const SEMESTERS = ['1ST SEMESTER', '2ND SEMESTER'] as const;
 
@@ -99,6 +102,113 @@ export class RegistrationsComponent implements OnInit {
       error: () => this.load(),
     });
     this.loadReviews();
+    this.loadExtraYear();
+  }
+
+  /**
+   * Extra-year proposals, grouped back into the single year the student
+   * proposed.
+   *
+   * They arrive one per semester because a registration is keyed that way,
+   * but the student made ONE request and the advisor answers it once —
+   * two rows to approve separately would invite approving half a year, and
+   * the 15-unit minimum is met by neither half alone.
+   */
+  readonly extraYearProposals = signal<IExtraYearProposal[]>([]);
+  readonly decidingExtraYear = signal<string | null>(null);
+
+  readonly extraYears = computed(() => {
+    const byStudent = new Map<
+      string,
+      {
+        key: string;
+        anyId: string;
+        student: IExtraYearProposal['student'];
+        session: string;
+        semesters: {
+          semester: string;
+          units: number;
+          entries: IExtraYearProposal['entries'];
+        }[];
+        totalUnits: number;
+      }
+    >();
+
+    for (const row of this.extraYearProposals()) {
+      const key = `${row.student?._id}:${row.session}`;
+      const group = byStudent.get(key) ?? {
+        key,
+        anyId: row._id,
+        student: row.student,
+        session: row.session,
+        semesters: [],
+        totalUnits: 0,
+      };
+      group.semesters.push({
+        semester: row.semester,
+        units: row.nonSiwesUnits,
+        entries: row.entries ?? [],
+      });
+      group.totalUnits += row.nonSiwesUnits;
+      byStudent.set(key, group);
+    }
+
+    for (const group of byStudent.values()) {
+      group.semesters.sort((a, b) => a.semester.localeCompare(b.semester));
+    }
+    return [...byStudent.values()];
+  });
+
+  loadExtraYear(): void {
+    this.registrationService.pendingExtraYear().subscribe({
+      next: (resp) => this.extraYearProposals.set(resp.data ?? []),
+      error: () => {
+        /* non-CA roles simply have no queue */
+      },
+    });
+  }
+
+  decideExtraYear(
+    group: { anyId: string; student: { fullName: string } },
+    approve: boolean
+  ): void {
+    if (this.decidingExtraYear()) return;
+
+    // Returning one needs a reason the student can act on; approving does
+    // not, because nothing is being asked of them.
+    let reason: string | undefined;
+    if (!approve) {
+      const answer = window.prompt(
+        `Why are you returning ${group.student?.fullName}'s extra year? They will see this.`
+      );
+      if (answer === null) return;
+      reason = answer.trim() || undefined;
+    }
+
+    this.decidingExtraYear.set(group.anyId);
+    this.registrationService
+      .decideExtraYear(group.anyId, approve, reason)
+      .subscribe({
+        next: () => {
+          this.decidingExtraYear.set(null);
+          this.toast.showNotification(
+            'success',
+            approve ? 'Extra year approved' : 'Returned to the student',
+            approve
+              ? `${group.student?.fullName} is registered for both semesters.`
+              : `${group.student?.fullName} can revise and resubmit.`
+          );
+          this.loadExtraYear();
+        },
+        error: (err) => {
+          this.decidingExtraYear.set(null);
+          this.toast.showNotification(
+            'error',
+            'Could not record that decision',
+            err?.error?.message ?? 'Please try again.'
+          );
+        },
+      });
   }
 
   loadReviews(): void {

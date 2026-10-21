@@ -22,6 +22,28 @@ export interface IRegistrationsQuery {
   studentId?: string;
 }
 
+/** One semester of an extra-year proposal awaiting the advisor. */
+export interface IExtraYearProposal {
+  readonly _id: string;
+  readonly session: string;
+  readonly semester: string;
+  readonly nonSiwesUnits: number;
+  readonly status: string;
+  readonly student: {
+    _id: string;
+    fullName: string;
+    registrationNumber: string;
+  };
+  readonly entries: {
+    readonly courseCode: string;
+    readonly courseTitle: string;
+    readonly units: number;
+    /** CARRYOVER is a retake; ELECTIVE here means a borrowed course. */
+    readonly type: string;
+    readonly note?: string | null;
+  }[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class RegistrationService {
   private readonly http = inject(HttpClient);
@@ -92,6 +114,35 @@ export class RegistrationService {
     return this.http.post<IAPIResponse<{ notified: boolean }>>(
       `${this.baseUrl}/roster-override`,
       body
+    );
+  }
+
+  /**
+   * Extra-year proposals waiting on this advisor.
+   *
+   * One per semester, because a registration is keyed that way — the page
+   * groups them back into the single year the student proposed. Silent
+   * for the same reason the review calls are: a non-CA has no queue.
+   */
+  pendingExtraYear(): Observable<IAPIResponse<IExtraYearProposal[]>> {
+    return this.http.get<IAPIResponse<IExtraYearProposal[]>>(
+      `${this.baseUrl}/extra-year/pending`,
+      { headers: { 'X-Silent-Error': 'true' } }
+    );
+  }
+
+  /**
+   * Approve or return a proposal. Decides the whole YEAR — the server acts
+   * on every semester of it, so any one of its ids is enough.
+   */
+  decideExtraYear(
+    id: string,
+    approve: boolean,
+    reason?: string
+  ): Observable<IAPIResponse<unknown>> {
+    return this.http.patch<IAPIResponse<unknown>>(
+      `${this.baseUrl}/extra-year/${id}`,
+      { approve, reason }
     );
   }
 

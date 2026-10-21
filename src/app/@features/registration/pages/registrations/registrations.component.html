@@ -85,6 +85,83 @@
   }
 
   <!-- ── Elective outcomes needing a decision ─────────────────────────── -->
+  <!-- Extra-year proposals. Shown above the elective queue because a
+       student cannot register at all until one is decided. -->
+  @if (extraYears().length > 0) {
+    <section class="reg-reviews reg-xy mt-4">
+      <header>
+        <h4 class="acva-para-2 fw-500">
+          Extra year — awaiting your approval ({{ extraYears().length }})
+        </h4>
+      </header>
+
+      @for (group of extraYears(); track group.key) {
+        <article class="xy-card">
+          <div class="xy-card__head">
+            <div>
+              <p class="acva-para-1 fw-500 m-0">
+                <!-- Title-cased: names are stored as typed at enrolment, and a
+                     staff record reading "caleb smith" looks unfinished. -->
+                {{ group.student?.fullName | titlecase }}
+              </p>
+              <p class="acva-caption text-neutral-500 m-0">
+                {{ group.student?.registrationNumber }} · {{ group.session }} ·
+                {{ group.totalUnits }} units across the year
+              </p>
+            </div>
+
+            <div class="xy-card__actions">
+              <button
+                type="button"
+                class="xy-btn xy-btn--ghost"
+                [disabled]="decidingExtraYear() === group.anyId"
+                (click)="decideExtraYear(group, false)"
+              >
+                Return
+              </button>
+              <button
+                type="button"
+                class="xy-btn xy-btn--primary"
+                [disabled]="decidingExtraYear() === group.anyId"
+                (click)="decideExtraYear(group, true)"
+              >
+                {{
+                  decidingExtraYear() === group.anyId
+                    ? 'Saving…'
+                    : 'Approve the year'
+                }}
+              </button>
+            </div>
+          </div>
+
+          @for (sem of group.semesters; track sem.semester) {
+            <div class="xy-sem">
+              <p class="acva-caption text-neutral-500 m-0">
+                {{ sem.semester }} — {{ sem.units }} units
+              </p>
+              <ul>
+                @for (entry of sem.entries; track entry.courseCode) {
+                  <li>
+                    <span class="fw-500">{{ entry.courseCode }}</span>
+                    <span>{{ entry.courseTitle }}</span>
+                    <!-- Which half of the proposal this is: a retake they
+                         owe, or a course borrowed to make up the load. -->
+                    <span class="xy-tag">
+                      {{ entry.type === 'CARRYOVER' ? 'Retake' : 'Borrowed' }}
+                    </span>
+                    <span class="acva-caption text-neutral-500"
+                      >{{ entry.units }}u</span
+                    >
+                  </li>
+                }
+              </ul>
+            </div>
+          }
+        </article>
+      }
+    </section>
+  }
+
   @if (reviews().length > 0) {
     <section class="reg-reviews mt-4">
       <div class="reg-reviews__head">

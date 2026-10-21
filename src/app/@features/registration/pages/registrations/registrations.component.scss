@@ -231,3 +231,99 @@
   max-width: 22rem;
   text-align: right;
 }
+
+/* ── Extra-year proposals ─────────────────────────────────────────────────
+   Shown as ONE card per student-year, not one per semester: the student
+   made a single request and the advisor answers it once. */
+
+.xy-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  padding: 16px;
+  margin-top: 12px;
+}
+
+.xy-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.xy-card__actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.xy-sem {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #eef1f4;
+}
+
+.xy-sem ul {
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.xy-sem li {
+  display: grid;
+  grid-template-columns: 6rem 1fr 5.5rem 3rem;
+  gap: 12px;
+  align-items: baseline;
+  font-size: 0.875rem;
+  color: #10243a;
+}
+
+/* Brand blue for a retake, neutral for a borrowed course — green is
+   off-palette. */
+
+.xy-tag {
+  justify-self: start;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #eef4fb;
+  color: #12508f;
+  font-size: 0.6875rem;
+  font-weight: 500;
+}
+
+.xy-btn {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.8125rem;
+}
+
+.xy-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.xy-btn--primary {
+  background: #2793ff;
+  color: #fff;
+}
+
+.xy-btn--primary:hover:not(:disabled) {
+  background: #1a84ee;
+}
+
+.xy-btn--ghost {
+  border-color: #c7dcf5;
+  background: #fff;
+  color: #12508f;
+}
+
+.xy-btn--ghost:hover:not(:disabled) {
+  background: #f2f8ff;
+}
