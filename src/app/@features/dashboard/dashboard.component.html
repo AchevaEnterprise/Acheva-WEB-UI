@@ -126,15 +126,10 @@
     iconSrc="icons/general/calendar-icon.svg"
     [showDivider]="true"
   >
-    <div class="input-style-1 acheva-input" rightHeaderContent>
-      <mat-form-field [style.width.%]="100" appearance="outline">
-        <mat-select value="week">
-          <mat-option [value]="'week'">Week</mat-option>
-          <mat-option [value]="'month'">Month</mat-option>
-        </mat-select>
-      </mat-form-field>
-    </div>
-
+    <!-- The "Week / Month" dropdown that used to sit here was bound to
+         nothing and `mat-calendar` has no week view, so there was no setting
+         for it to change. Removed rather than wired: a control over a view
+         that does not exist cannot be made to work. -->
     <div content class="p-4">
       <mat-calendar [(selected)]="selectedCalendarDate"></mat-calendar>
     </div>
@@ -149,7 +144,11 @@
     >
       <div class="input-style-1 acheva-input" rightHeaderContent>
         <mat-form-field [style.width.%]="100" appearance="outline">
-          <mat-select value="newest">
+          <mat-select
+            [value]="activitySort()"
+            aria-label="Sort recent activity"
+            (selectionChange)="setActivitySort($event.value)"
+          >
             <mat-option [value]="'newest'">Newest</mat-option>
             <mat-option [value]="'oldest'">Oldest</mat-option>
           </mat-select>
@@ -157,8 +156,8 @@
       </div>
 
       <div content class="p-4 h-[35vh] overflow-y-auto">
-        @if (activities().length > 0) {
-          @for (activity of activities(); track $index) {
+        @if (sortedActivities().length > 0) {
+          @for (activity of sortedActivities(); track activity.id) {
             <button
               type="button"
               class="w-full text-left rounded-[8px] transition-colors"
@@ -185,20 +184,10 @@
       iconSrc="icons/general/recent-icon.svg"
       [showDivider]="true"
     >
-      <div class="input-style-1 acheva-input" rightHeaderContent>
-        <mat-form-field [style.width.%]="100" appearance="outline">
-          <mat-select value="today">
-            <mat-option [value]="'today'">Today</mat-option>
-            <mat-option [value]="'yesterday'">Yesterday</mat-option>
-            <mat-option [value]="'1week'">1 Week</mat-option>
-            <mat-option [value]="'2week'">2 Weeks</mat-option>
-            <mat-option [value]="'3week'">3 Weeks</mat-option>
-            <mat-option [value]="'monthly'">Last Month</mat-option>
-            <mat-option [value]="'session'">Session</mat-option>
-            <mat-option [value]="'custom'">Custom Date Rage</mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
+      <!-- An eight-option date-range filter used to sit here, bound to
+           nothing, over a card whose body is a fixed empty state. There is no
+           schedule feature for it to narrow. Removed rather than wired:
+           until schedules exist there is nothing to filter. -->
 
       <div content class="p-4 h-[35vh] overflow-y-auto">
         <app-empty-state

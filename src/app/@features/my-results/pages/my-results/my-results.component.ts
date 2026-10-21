@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
@@ -51,6 +51,51 @@ export class MyResultsComponent implements OnInit {
   isloadingResults = signal(false);
   results = signal<IResult[]>([]);
   searchTerm = signal<string>('');
+  semesterFilter = signal<string>('');
+
+  /**
+   * Search and semester, applied.
+   *
+   * `searchTerm` was set by `onSearch` and read by NOTHING — the box took
+   * text, the handler ran, and the list never moved. The semester dropdown
+   * beside it was bound to nothing at all and offered one option, "All
+   * Semester", so it could not narrow anything either.
+   */
+  readonly filteredResults = computed(() => {
+    const term = this.searchTerm().trim().toLowerCase();
+    const semester = this.semesterFilter();
+
+    return this.results().filter((result) => {
+      if (semester && result.semester !== semester) return false;
+      if (!term) return true;
+      const code = result.course?.courseCode?.toLowerCase() ?? '';
+      const title = result.course?.courseTitle?.toLowerCase() ?? '';
+      return (
+        code.includes(term) ||
+        title.includes(term) ||
+        (result.session ?? '').toLowerCase().includes(term)
+      );
+    });
+  });
+
+  /** Only the semesters actually present, so no option leads to an empty list. */
+  readonly semesterOptions = computed(() => {
+    const present = [
+      ...new Set(
+        this.results()
+          .map((r) => r.semester)
+          .filter(Boolean)
+      ),
+    ];
+    return [
+      { label: 'All semesters', value: '' },
+      ...present.map((s) => ({ label: s, value: s })),
+    ];
+  });
+
+  onSemesterFilter(value: string): void {
+    this.semesterFilter.set(value);
+  }
 
   view = signal<'list' | 'grid'>('list');
   viewLabel = signal<string>('Grid View');

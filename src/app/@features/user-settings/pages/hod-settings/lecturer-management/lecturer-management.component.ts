@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -10,6 +10,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTableModule } from '@angular/material/table';
 import { finalize } from 'rxjs';
+import { RoleEnum } from '../../../../auth/model/auth.model';
 
 import { TitleCasePipe } from '@angular/common';
 import { ToastService } from '../../../../../@core/utility/toast.service';
@@ -79,6 +80,50 @@ export class LecturerManagementComponent implements OnInit {
   searchQuery = signal<string>('');
   filterValue = signal<string>('');
 
+  pageSize = signal(10);
+
+  /**
+   * Filter by the OFFICE a lecturer holds, which is what a Head actually
+   * wants to narrow by. The dropdown previously offered a single option,
+   * "Science", which is not a property a lecturer has.
+   */
+  readonly roleOptions = [
+    { label: 'All roles', value: '' },
+    { label: 'Course Advisor', value: RoleEnum.COURSE_ADVISOR },
+    { label: 'Course Coordinator', value: RoleEnum.COURSE_COORDINATOR },
+    { label: 'Lecturer', value: RoleEnum.LECTURER },
+    { label: 'HOD', value: RoleEnum.HOD },
+  ];
+
+  /** Search over name and email, then narrow by role. */
+  readonly filteredLecturers = computed(() => {
+    const term = this.searchQuery().trim().toLowerCase();
+    const role = this.filterValue();
+
+    return this.lecturersData().filter((lecturer) => {
+      if (role && lecturer.role !== role) return false;
+      if (!term) return true;
+      const name =
+        `${lecturer.firstname ?? ''} ${lecturer.lastname ?? ''}`.toLowerCase();
+      return (
+        name.includes(term) ||
+        (lecturer.email ?? '').toLowerCase().includes(term)
+      );
+    });
+  });
+
+  /** The slice on screen. */
+  readonly pagedLecturers = computed(() => {
+    const start = this.currentPage() * this.pageSize();
+    return this.filteredLecturers().slice(start, start + this.pageSize());
+  });
+
+  readonly paginator = computed(() => ({
+    page: this.currentPage() + 1,
+    pageSize: this.pageSize(),
+    total: this.filteredLecturers().length,
+  }));
+
   // Available levels for assignment
   levelOptions = [
     { label: '100 Level', value: '100' },
@@ -105,15 +150,31 @@ export class LecturerManagementComponent implements OnInit {
       });
   }
 
-  // Search and filter
+  /**
+   * Search, filter and pagination — all three were written and NONE was
+   * connected.
+   *
+   * `onSearch` and `onFilter` existed but nothing called them: the search
+   * box carried no `(searchEvent)`, the dropdown no `(selectionChange)`, and
+   * `<app-paginator />` was rendered with no inputs and no output, so it
+   * could neither show a range nor turn a page. Three controls that looked
+   * like a working toolbar and did nothing at all.
+   *
+   * The whole department is fetched in one call, so all three run in memory.
+   */
   onSearch(query: string): void {
     this.searchQuery.set(query);
-    this.currentPage.set(0); // Reset to first page
+    this.currentPage.set(0); // a narrower list has fewer pages
   }
 
   onFilter(value: string): void {
     this.filterValue.set(value);
-    this.currentPage.set(0); // Reset to first page
+    this.currentPage.set(0);
+  }
+
+  onPage(event: { pageIndex: number; pageSize: number }): void {
+    this.currentPage.set(event.pageIndex);
+    this.pageSize.set(event.pageSize);
   }
 
   confirmAssignAsCourseAdvisor(lecturer: ILecturer): void {
