@@ -95,17 +95,29 @@ export class RegistrationService {
     );
   }
 
-  /** The CA's pending elective decisions (fail / low-grade outcomes). */
+  /**
+   * The CA's pending elective decisions (fail / low-grade outcomes).
+   *
+   * **Silent.** Both review calls are Course-Advisor-only and the page
+   * loads them for whoever opens it, swallowing the failure because a
+   * non-CA simply has no queue. The server answers 403, which the error
+   * interceptor turns into an "Access Denied" toast — so a HOD reaching
+   * this URL was shown two scary toasts for a failure the page had
+   * already decided to ignore. `X-Silent-Error` is exactly the header for
+   * that: a background call whose failure should be invisible.
+   */
   reviews(): Observable<IAPIResponse<IElectiveReview[]>> {
     return this.http.get<IAPIResponse<IElectiveReview[]>>(
-      `${this.baseUrl}/reviews`
+      `${this.baseUrl}/reviews`,
+      { headers: { 'X-Silent-Error': 'true' } }
     );
   }
 
   /** Decisions already made (last 14 days), newest first — the undo list. */
   recentlyDecidedReviews(): Observable<IAPIResponse<IElectiveReview[]>> {
     return this.http.get<IAPIResponse<IElectiveReview[]>>(
-      `${this.baseUrl}/reviews/recent`
+      `${this.baseUrl}/reviews/recent`,
+      { headers: { 'X-Silent-Error': 'true' } }
     );
   }
 
