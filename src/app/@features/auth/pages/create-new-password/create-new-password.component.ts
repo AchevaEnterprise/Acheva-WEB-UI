@@ -43,7 +43,11 @@ export class CreateNewPasswordComponent implements OnInit, OnDestroy {
   showConfirmPassword = signal<boolean>(false);
   passwordMatchError = signal<string>('');
 
-  accountId = signal(this.route.snapshot.queryParamMap.get('accountId'));
+  /**
+   * The opaque handle from `forgot-password`, not an account id — the
+   * server no longer tells anyone which account an address belongs to.
+   */
+  requestId = signal(this.route.snapshot.queryParamMap.get('requestId'));
 
   form: FormGroup = new FormGroup({
     token: new FormControl('', Validators.required),
@@ -100,7 +104,7 @@ export class CreateNewPasswordComponent implements OnInit, OnDestroy {
 
     this.sub.add(
       this.authService
-        .resetPassword(payload, this.accountId()!)
+        .resetPassword(payload, this.requestId()!)
         .pipe(finalize(() => this.isLoading.set(false)))
         .subscribe({
           next: (resp) => {
