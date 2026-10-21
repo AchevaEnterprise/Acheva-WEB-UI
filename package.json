@@ -19,7 +19,8 @@
     "test:realtime": "node scripts/realtime-harness.mjs",
     "test:messaging-surfaces": "node scripts/messaging-surfaces-harness.mjs",
     "test:payments": "node scripts/payments-harness.mjs",
-    "test:dues-collections": "node scripts/dues-collections-harness.mjs"
+    "test:dues-collections": "node scripts/dues-collections-harness.mjs",
+    "test:transcript-paywall": "node scripts/transcript-paywall-harness.mjs"
   },
   "private": true,
   "dependencies": {
