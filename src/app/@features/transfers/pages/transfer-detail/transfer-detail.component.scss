@@ -28,25 +28,26 @@
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   background: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 8%);
   padding: 24px;
 
   &--note {
-    border-color: rgba(39, 147, 255, 0.25);
-    background: rgba(39, 147, 255, 0.04);
+    border-color: rgb(39 147 255 / 25%);
+    background: rgb(39 147 255 / 4%);
   }
 }
 
 .td-returned {
   padding: 16px 24px;
-  border: 1px solid rgba(216, 49, 91, 0.3);
+  border: 1px solid rgb(216 49 91 / 30%);
   border-radius: 8px;
-  background: rgba(216, 49, 91, 0.05);
+  background: rgb(216 49 91 / 5%);
   color: #9b1b3b;
 }
 
 /* The advisor's own prose. Quill emits plain block elements, so the few that
    appear are given sane spacing rather than the browser's defaults. */
+
 .td-letter {
   font-size: 0.9375rem;
   line-height: 1.7;
@@ -69,6 +70,7 @@
 
 /* The column can be narrower than the table; the table scrolls inside it
    rather than widening the page and clipping the side column. */
+
 .td-scroll {
   width: 100%;
   overflow-x: auto;
