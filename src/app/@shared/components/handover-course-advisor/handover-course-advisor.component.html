@@ -1,0 +1,82 @@
+<div class="handover">
+  <h2 class="acva-heading-6 fw-600 m-0">Hand over this cohort</h2>
+  <p class="acva-para-1 text-neutral-500">
+    <strong>{{ data.lecturer }}</strong> currently advises level
+    <strong>{{ data.level }}</strong
+    >. Choose who takes it on.
+  </p>
+
+  <mat-form-field appearance="outline" class="w-full">
+    <mat-select
+      [formControl]="toCtrl"
+      placeholder="Choose the incoming advisor"
+      aria-label="Incoming course advisor"
+    >
+      @for (lecturer of candidates(); track lecturer._id) {
+        <mat-option [value]="lecturer._id">{{ nameOf(lecturer) }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  @if (!loadingCandidates() && candidates().length === 0) {
+    <!-- Nobody eligible: an advisor holds one cohort, so anyone already
+         advising a different level cannot take this one as well. -->
+    <p class="note note--warn acva-para-1">
+      Nobody in this department can take this cohort right now. An advisor holds
+      one level at a time, so unassign someone first.
+    </p>
+  }
+
+  @if (checking()) {
+    <p class="acva-para-1 text-neutral-500">Checking what would move…</p>
+  }
+
+  @if (preview(); as p) {
+    <div class="panel">
+      <p class="panel__head acva-caption">WHAT MOVES TO {{ p.to.name }}</p>
+
+      @if (nothingToMove()) {
+        <p class="acva-para-1 text-neutral-500 m-0">
+          Nothing is currently in flight — only the cohort itself changes hands.
+        </p>
+      } @else {
+        <ul>
+          <li>
+            <span class="count">{{ p.moved.resultsInFlight }}</span>
+            <span>result(s) waiting on their desk</span>
+          </li>
+          <li>
+            <span class="count">{{ p.moved.publishedResultLinks }}</span>
+            <span>published result(s) they can read for this cohort</span>
+          </li>
+          <li>
+            <span class="count">{{ p.moved.moderations }}</span>
+            <span>moderation(s) still in flight</span>
+          </li>
+          <li>
+            <span class="count">{{ p.moved.conversations }}</span>
+            <span>conversation(s) with students</span>
+          </li>
+        </ul>
+      }
+
+      <!-- Said plainly, because people reasonably assume a reassignment
+           rewrites everything and would be surprised later to find the
+           old name still on the record. -->
+      <p class="panel__foot acva-caption">
+        {{ p.from.name }} keeps credit for everything they already approved — a
+        handover moves the work that is still open, never the record of what was
+        decided.
+      </p>
+    </div>
+  }
+
+  <div class="actions">
+    <app-button label="Cancel" type="outline" (clickEvent)="cancel()" />
+    <app-button
+      [label]="handingOver() ? 'Handing over…' : 'Hand over'"
+      [disabled]="!canConfirm()"
+      (clickEvent)="confirm()"
+    />
+  </div>
+</div>

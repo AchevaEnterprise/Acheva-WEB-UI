@@ -1,4 +1,12 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  DestroyRef,
+  inject,
+  OnInit,
+  signal,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -10,6 +18,8 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTableModule } from '@angular/material/table';
 import { finalize } from 'rxjs';
+import { HandoverCourseAdvisorComponent } from '../../../../../@shared/components/handover-course-advisor/handover-course-advisor.component';
+import { RoleEnum } from '../../../../auth/model/auth.model';
 
 import { TitleCasePipe } from '@angular/common';
 import { ToastService } from '../../../../../@core/utility/toast.service';
@@ -58,6 +68,7 @@ export class LecturerManagementComponent implements OnInit {
   private readonly authService = inject(AuthenticationService);
   private readonly dialog = inject(MatDialog);
   private readonly toast = inject(ToastService);
+  private readonly destroyRef = inject(DestroyRef);
 
   userDepartmentId = this.authService.activeAccount()?.department!._id;
 
@@ -78,6 +89,50 @@ export class LecturerManagementComponent implements OnInit {
   loading = signal<boolean>(false);
   searchQuery = signal<string>('');
   filterValue = signal<string>('');
+
+  pageSize = signal(10);
+
+  /**
+   * Filter by the OFFICE a lecturer holds, which is what a Head actually
+   * wants to narrow by. The dropdown previously offered a single option,
+   * "Science", which is not a property a lecturer has.
+   */
+  readonly roleOptions = [
+    { label: 'All roles', value: '' },
+    { label: 'Course Advisor', value: RoleEnum.COURSE_ADVISOR },
+    { label: 'Course Coordinator', value: RoleEnum.COURSE_COORDINATOR },
+    { label: 'Lecturer', value: RoleEnum.LECTURER },
+    { label: 'HOD', value: RoleEnum.HOD },
+  ];
+
+  /** Search over name and email, then narrow by role. */
+  readonly filteredLecturers = computed(() => {
+    const term = this.searchQuery().trim().toLowerCase();
+    const role = this.filterValue();
+
+    return this.lecturersData().filter((lecturer) => {
+      if (role && lecturer.role !== role) return false;
+      if (!term) return true;
+      const name =
+        `${lecturer.firstname ?? ''} ${lecturer.lastname ?? ''}`.toLowerCase();
+      return (
+        name.includes(term) ||
+        (lecturer.email ?? '').toLowerCase().includes(term)
+      );
+    });
+  });
+
+  /** The slice on screen. */
+  readonly pagedLecturers = computed(() => {
+    const start = this.currentPage() * this.pageSize();
+    return this.filteredLecturers().slice(start, start + this.pageSize());
+  });
+
+  readonly paginator = computed(() => ({
+    page: this.currentPage() + 1,
+    pageSize: this.pageSize(),
+    total: this.filteredLecturers().length,
+  }));
 
   // Available levels for assignment
   levelOptions = [
@@ -105,15 +160,63 @@ export class LecturerManagementComponent implements OnInit {
       });
   }
 
-  // Search and filter
+  /**
+   * Search, filter and pagination — all three were written and NONE was
+   * connected.
+   *
+   * `onSearch` and `onFilter` existed but nothing called them: the search
+   * box carried no `(searchEvent)`, the dropdown no `(selectionChange)`, and
+   * `<app-paginator />` was rendered with no inputs and no output, so it
+   * could neither show a range nor turn a page. Three controls that looked
+   * like a working toolbar and did nothing at all.
+   *
+   * The whole department is fetched in one call, so all three run in memory.
+   */
   onSearch(query: string): void {
     this.searchQuery.set(query);
-    this.currentPage.set(0); // Reset to first page
+    this.currentPage.set(0); // a narrower list has fewer pages
   }
 
   onFilter(value: string): void {
     this.filterValue.set(value);
-    this.currentPage.set(0); // Reset to first page
+    this.currentPage.set(0);
+  }
+
+  onPage(event: { pageIndex: number; pageSize: number }): void {
+    this.currentPage.set(event.pageIndex);
+    this.pageSize.set(event.pageSize);
+  }
+
+  /**
+   * Hand this advisor's cohort to someone else.
+   *
+   * Distinct from Unassign, which leaves the cohort with NO advisor — the
+   * results waiting on that desk, the moderations due back and the
+   * students' threads all stay pointed at someone who no longer holds the
+   * post. A handover moves them.
+   */
+  confirmHandover(lecturer: ILecturer): void {
+    this.dialog
+      .open(HandoverCourseAdvisorComponent, {
+        width: '40%',
+        data: {
+          lecturer:
+            `${lecturer.firstname ?? ''} ${lecturer.lastname ?? ''}`.trim() ||
+            lecturer.email,
+          lecturerId: lecturer._id,
+          level: lecturer.assignedLevel,
+          departmentId: this.userDepartmentId,
+        },
+      })
+      .afterClosed()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (result) => {
+          // Both advisors' rows changed; refetch rather than patch two
+          // rows in place and risk the table disagreeing with the server.
+          if (result) this.getLecturers();
+        },
+      });
   }
 
   confirmAssignAsCourseAdvisor(lecturer: ILecturer): void {

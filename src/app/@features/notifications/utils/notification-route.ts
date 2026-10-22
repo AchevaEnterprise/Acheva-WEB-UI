@@ -38,6 +38,10 @@ export function notificationRoute(
       if (!meta.moderationId) return null;
       return { commands: ['/moderation', meta.moderationId] };
     }
+    case 'transfer': {
+      if (!meta.transferId) return null;
+      return { commands: ['/transfers', meta.transferId] };
+    }
     default:
       return null;
   }

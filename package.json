@@ -17,7 +17,12 @@
     "test:export": "node scripts/export-harness.mjs",
     "test:verify": "node scripts/verify-harness.mjs",
     "test:realtime": "node scripts/realtime-harness.mjs",
-    "test:messaging-surfaces": "node scripts/messaging-surfaces-harness.mjs"
+    "test:messaging-surfaces": "node scripts/messaging-surfaces-harness.mjs",
+    "test:payments": "node scripts/payments-harness.mjs",
+    "test:dues-collections": "node scripts/dues-collections-harness.mjs",
+    "test:transcript-paywall": "node scripts/transcript-paywall-harness.mjs",
+    "test:ui-sweep": "node scripts/ui-sweep-harness.mjs",
+    "test:transfers-ui": "node scripts/transfers-ui-harness.mjs"
   },
   "private": true,
   "dependencies": {

@@ -1,0 +1,85 @@
+/* Handing a cohort to another Course Advisor. Brand blue only. */
+
+$border: #e5e7eb;
+$brand: #2793ff;
+$ink: #10243a;
+
+/* Material's dialog surface carries no padding in this app, so the panel
+   has to supply its own or the heading sits flush against the edge. */
+
+:host {
+  display: block;
+  padding: 24px;
+}
+
+.handover {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: min(32rem, 80vw);
+  color: $ink;
+}
+
+.note {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 8px;
+  line-height: 1.5;
+}
+
+.note--warn {
+  background: #fff8e6;
+  border: 1px solid #f0d79a;
+  color: #7a5b00;
+}
+
+.panel {
+  border: 1px solid #bcdcff;
+  border-radius: 12px;
+  background: #f2f8ff;
+  padding: 16px;
+}
+
+.panel__head {
+  margin: 0 0 8px;
+  letter-spacing: 0.06em;
+  color: #12508f;
+}
+
+.panel ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.panel li {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 0.875rem;
+}
+
+.count {
+  min-width: 1.75rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: #12508f;
+}
+
+.panel__foot {
+  margin: 12px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid #bcdcff;
+  color: #4a5a6a;
+  line-height: 1.5;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 4px;
+}

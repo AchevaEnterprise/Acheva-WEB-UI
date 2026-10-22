@@ -1,55 +1,64 @@
-<!-- HOD SETTINGS VIEW -->
-<div class="grid place-items-center gap-4" *appRoleAccess="[RoleEnum.HOD]">
-  <div class="bg-gradient-to-b from-[#2793FF] to-[#77BBFF] h-6 w-full"></div>
-
-  <img
-    [appImageFallback]="'icons/general/profile-pic-placeholder.svg'"
-    src=""
-    alt=""
-    width="500"
-    height="500"
-    class="w-[10rem] h-[10rem] object-cover aspect-square rounded-full"
-  />
-  <p>{{ activeAccount()?.firstname }} {{ activeAccount()?.lastname }}</p>
-  <p>HOD</p>
-
-  <div class="bg-gray-200 p-4 w-full">
-    <div class="flex justify-center">
-      <app-search-input placeholder="Find Settings..." />
+<!-- HOD SETTINGS -->
+<section class="settings" *appRoleAccess="[RoleEnum.HOD]">
+  <!-- Identity, stated once and small. This is a directory of things to
+       administer, not a profile page. -->
+  <header class="settings__head">
+    <span class="settings__avatar" aria-hidden="true">{{ initials() }}</span>
+    <div class="settings__who">
+      <h1 class="acva-heading-5 fw-500 m-0">{{ heading() }}</h1>
+      <p class="acva-para-1 text-neutral-500 m-0">{{ subheading() }}</p>
     </div>
+  </header>
 
-    <div class="grid lg:grid-cols-2 md:grid-cols-2 sm:grid-cols-1 gap-4">
-      <div
-        class="flex gap-4 bg-white p-4 items-center h-[8rem] cursor-pointer"
-        routerLink="hod/lecturer-management"
-      >
-        <app-svg
-          svgWidth="2rem"
-          src="icons/general/lecturer-management-icon.svg"
-        ></app-svg>
-        <div>
-          <h4 class="acva-heading-6 fw-500">Lecturer Management</h4>
-          <p class="acva-para-1">
-            This allows you control over all the lecturers in your department
-          </p>
-        </div>
-      </div>
+  <div class="settings__bar">
+    <h2 class="acva-para-2 fw-500 m-0">Manage your department</h2>
 
-      <div
-        class="flex gap-4 bg-white p-4 items-center h-[8rem] cursor-pointer"
-        routerLink="hod/course-management"
-      >
-        <app-svg
-          svgWidth="2rem"
-          src="icons/general/course-management-icon.svg"
-        ></app-svg>
-        <div>
-          <h4 class="acva-heading-6 fw-500">Course Management</h4>
-          <p class="acva-para-1">
-            This allows you control over all courses in your department
-          </p>
-        </div>
-      </div>
-    </div>
+    <label class="settings__search">
+      <span class="settings__search-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="6.25" />
+          <path d="m15.6 15.6 3.6 3.6" />
+        </svg>
+      </span>
+      <input
+        type="search"
+        class="settings__search-input acva-para-1"
+        placeholder="Find a setting"
+        aria-label="Find a setting"
+        [value]="search()"
+        (input)="search.set($any($event.target).value)"
+      />
+    </label>
   </div>
-</div>
+
+  @if (filtered().length === 0) {
+    <p class="settings__empty acva-para-1">
+      Nothing here matches “{{ search() }}”.
+    </p>
+  } @else {
+    <ul class="tiles">
+      @for (tile of filtered(); track tile.route) {
+        <li>
+          <a class="tile" [routerLink]="tile.route">
+            <span class="tile__icon" aria-hidden="true">
+              <app-svg svgWidth="1.5rem" svgHeight="1.5rem" [src]="tile.icon" />
+            </span>
+
+            <span class="tile__body">
+              <span class="acva-para-2 fw-500 tile__title">{{
+                tile.label
+              }}</span>
+              <span class="acva-para-1 tile__desc">{{ tile.description }}</span>
+            </span>
+
+            <span class="tile__chevron" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M9.5 5.5 16 12l-6.5 6.5" />
+              </svg>
+            </span>
+          </a>
+        </li>
+      }
+    </ul>
+  }
+</section>

@@ -32,3 +32,11 @@
 .custom-toggle:not(.mat-checked) .toggle-text {
   display: none;
 }
+
+/* Two actions on an assigned advisor: hand the cohort on, or release it. */
+
+.actions {
+  display: inline-flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}

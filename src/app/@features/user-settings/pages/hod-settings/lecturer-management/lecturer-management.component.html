@@ -7,7 +7,10 @@
     <h3 class="acva-heading-5 fw-500">Lecturer Management</h3>
 
     <div class="flex flex-wrap gap-3">
-      <app-search-input placeholder="Search lecturer" />
+      <app-search-input
+        placeholder="Search lecturer"
+        (searchEvent)="onSearch($event)"
+      />
 
       <div class="input-style-1 acheva-input">
         <mat-form-field [style.width.%]="100" appearance="outline">
@@ -19,8 +22,15 @@
             ></app-svg>
           </span>
 
-          <mat-select placeholder="Filter">
-            <mat-option [value]="'Science'">Science</mat-option>
+          <mat-select
+            placeholder="Filter by role"
+            aria-label="Filter lecturers by role"
+            [value]="filterValue()"
+            (selectionChange)="onFilter($event.value)"
+          >
+            @for (option of roleOptions; track option.value) {
+              <mat-option [value]="option.value">{{ option.label }}</mat-option>
+            }
           </mat-select>
         </mat-form-field>
       </div>
@@ -32,7 +42,7 @@
   } @else {
     @if (lecturersData().length > 0) {
       <div class="w-full overflow-auto max-h-[50vh]">
-        <table mat-table [dataSource]="lecturersData()">
+        <table mat-table [dataSource]="pagedLecturers()">
           <ng-container matColumnDef="name">
             <th mat-header-cell *matHeaderCellDef>NAME</th>
             <td mat-cell *matCellDef="let lecturer">
@@ -79,13 +89,22 @@
                   (clickEvent)="confirmAssignAsCourseAdvisor(lecturer)"
                 />
               } @else {
-                <app-button
-                  label="Unassign"
-                  type="outline"
-                  class="btn-sm"
-                  [disabled]="!lecturer.isActive"
-                  (clickEvent)="confirmUnassignAsCourseAdvisor(lecturer)"
-                />
+                <span class="actions">
+                  <app-button
+                    label="Hand over"
+                    type="outline"
+                    class="btn-sm"
+                    [disabled]="!lecturer.isActive"
+                    (clickEvent)="confirmHandover(lecturer)"
+                  />
+                  <app-button
+                    label="Unassign"
+                    type="outline"
+                    class="btn-sm"
+                    [disabled]="!lecturer.isActive"
+                    (clickEvent)="confirmUnassignAsCourseAdvisor(lecturer)"
+                  />
+                </span>
               }
             </td>
           </ng-container>
@@ -116,7 +135,12 @@
           <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
         </table>
       </div>
-      <app-paginator />
+      @if (filteredLecturers().length === 0) {
+        <p class="acva-para-1 text-neutral-500 p-4 text-center">
+          No lecturer matches that search or filter.
+        </p>
+      }
+      <app-paginator [paginator]="paginator()" (pageEvent)="onPage($event)" />
     } @else {
       <app-empty-state
         iconSrc="images/general/empty-doc.svg"

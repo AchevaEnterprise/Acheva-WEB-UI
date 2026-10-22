@@ -194,13 +194,24 @@ export class AuthenticationService {
     );
   }
 
+  /**
+   * The `requestId` travels in the BODY, not the path.
+   *
+   * It used to be the account id in the URL, which `forgot-password` had to
+   * disclose in order to put it there — and an id in a path parameter ends
+   * up in browser history, referrer headers and access logs. The request id
+   * is opaque and single-use.
+   */
   resetPassword(
     payload: IResetPassword,
-    accountId: string
+    requestId: string
   ): Observable<IAPIResponse<any>> {
     return this.http.patch<IAPIResponse<any>>(
-      `${this.authUrl}/reset-password/${accountId}`,
-      payload
+      `${this.authUrl}/reset-password`,
+      {
+        ...payload,
+        requestId,
+      }
     );
   }
 

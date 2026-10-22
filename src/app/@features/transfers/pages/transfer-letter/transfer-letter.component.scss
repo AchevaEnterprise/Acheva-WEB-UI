@@ -1,0 +1,89 @@
+:host {
+  display: block;
+}
+
+.tl-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 8%);
+  padding: 24px;
+
+  &__header {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 16px;
+  }
+
+  &__footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid #f1f3f5;
+  }
+}
+
+.tl-side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.tl-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  & + & {
+    margin-top: 16px;
+  }
+}
+
+.tl-select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  background: #fff;
+  font-size: 0.875rem;
+  color: inherit;
+
+  &:focus-visible {
+    outline: none;
+    border-color: #2793ff;
+  }
+
+  &:disabled {
+    background: #f6f7f8;
+    color: #9aa0a6;
+  }
+}
+
+.tl-blocked {
+  padding: 8px 12px;
+  border-radius: 4px;
+  background: rgb(216 49 91 / 8%);
+  color: #d8315b;
+}
+
+.tl-note {
+  padding: 16px;
+  border: 1px solid rgb(39 147 255 / 25%);
+  border-radius: 8px;
+  background: rgb(39 147 255 / 5%);
+  color: #4b5563;
+}
+
+.tl-editor {
+  display: block;
+
+  ::ng-deep .ql-container {
+    min-height: 320px;
+    font-size: 0.9375rem;
+  }
+}

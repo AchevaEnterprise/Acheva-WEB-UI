@@ -1,0 +1,197 @@
+<div id="container">
+  <app-back-button />
+
+  <div class="mt-4">
+    <h3 class="acva-heading-5 fw-500">New transfer request</h3>
+    <p class="acva-para-1 text-neutral-500">
+      Write to the Head of the receiving department. Their approval moves the
+      student out of {{ myDepartmentName() | titlecase }}.
+    </p>
+  </div>
+
+  @if (loading()) {
+    <div class="mt-6 flex flex-col gap-3">
+      <app-skeleton height="120px" />
+      <app-skeleton height="320px" />
+    </div>
+  } @else {
+    <div
+      class="grid lg:grid-cols-[1fr_340px] grid-cols-1 gap-6 items-start mt-6"
+    >
+      <!-- ── The letter ───────────────────────────────────────────────────── -->
+      <section class="tl-card min-w-0">
+        <div class="tl-card__header">
+          <h4 class="acva-para-2 fw-600 m-0">Letter to the receiving Head</h4>
+          <p class="acva-caption text-neutral-500 m-0">
+            State the student's case. Their CGPA, courses and full academic
+            history are attached automatically — you do not need to retype them.
+          </p>
+        </div>
+
+        <quill-editor
+          class="tl-editor"
+          [formControl]="letterBody"
+          [modules]="editorModules"
+          placeholder="Dear HOD, I write to request the transfer of…"
+        ></quill-editor>
+
+        @if (letterBody.touched && letterBody.invalid) {
+          <p class="acva-caption text-[#D8315B] mt-2">
+            Write at least a sentence — the Head is being asked to accept a
+            person and has only this and the attached record to go on.
+          </p>
+        }
+
+        <div class="tl-card__footer">
+          <app-button
+            type="clear"
+            label="Cancel"
+            class="btn-md"
+            (clickEvent)="cancel()"
+          />
+          <div class="flex gap-3">
+            <app-button
+              type="outline"
+              label="Save draft"
+              class="btn-md"
+              [disabled]="saving() || !selectedStudent()"
+              (clickEvent)="saveDraft()"
+            />
+            <app-button
+              [label]="
+                busyAction() === 'submit' ? 'Sending…' : 'Send to the Head'
+              "
+              class="btn-md"
+              [disabled]="!canSend()"
+              (clickEvent)="send()"
+            />
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Who, and where to ────────────────────────────────────────────── -->
+      <aside class="tl-side min-w-0">
+        <section class="tl-card">
+          <div class="tl-card__header">
+            <h4 class="acva-para-2 fw-600 m-0">Student</h4>
+          </div>
+
+          <label class="tl-field">
+            <span class="acva-caption text-neutral-500">
+              Your cohort ({{ students().length }})
+            </span>
+            <select
+              class="tl-select"
+              [value]="selectedStudent()?._id ?? ''"
+              (change)="pickStudentById($any($event.target).value)"
+            >
+              <option value="">Select a student…</option>
+              @for (student of students(); track student._id) {
+                <option [value]="student._id">
+                  {{ student.fullName | titlecase }} —
+                  {{ student.registrationNumber }}
+                </option>
+              }
+            </select>
+          </label>
+
+          @if (checkingEligibility()) {
+            <p class="acva-caption text-neutral-500 mt-2">Checking…</p>
+          } @else if (eligibility() && !eligibility()!.eligible) {
+            <p class="tl-blocked acva-caption mt-2">
+              {{ eligibility()!.reason }}
+            </p>
+          } @else if (selectedStudent()) {
+            <p class="acva-caption text-neutral-500 mt-2">
+              Currently {{ eligibility()?.currentLevel }} level in
+              {{ myDepartmentName() | titlecase }}.
+            </p>
+          }
+        </section>
+
+        <section class="tl-card">
+          <div class="tl-card__header">
+            <h4 class="acva-para-2 fw-600 m-0">Transferring into</h4>
+            <p class="acva-caption text-neutral-500 m-0">
+              Faculty first, then the department within it.
+            </p>
+          </div>
+
+          <label class="tl-field">
+            <span class="acva-caption text-neutral-500">Faculty</span>
+            <select
+              class="tl-select"
+              [value]="facultyCtrl.value"
+              (change)="onFacultyChange($any($event.target).value)"
+            >
+              <option value="">Select a faculty…</option>
+              @for (faculty of faculties(); track faculty._id) {
+                <option [value]="faculty._id">{{ faculty.name }}</option>
+              }
+            </select>
+          </label>
+
+          <label class="tl-field">
+            <span class="acva-caption text-neutral-500">Department</span>
+            <select
+              class="tl-select"
+              [formControl]="departmentCtrl"
+              [disabled]="departments().length === 0"
+            >
+              <option value="">
+                {{
+                  loadingDepartments()
+                    ? 'Loading…'
+                    : departments().length === 0
+                      ? 'Pick a faculty first'
+                      : 'Select a department…'
+                }}
+              </option>
+              @for (department of departments(); track department._id) {
+                <option [value]="department._id">{{ department.name }}</option>
+              }
+            </select>
+          </label>
+
+          <div class="grid grid-cols-2 gap-3">
+            <label class="tl-field">
+              <span class="acva-caption text-neutral-500">Level</span>
+              <select class="tl-select" [formControl]="levelCtrl">
+                <option value="">Level…</option>
+                @for (level of levels; track level) {
+                  <option [value]="level">{{ level }}</option>
+                }
+              </select>
+            </label>
+
+            <label class="tl-field">
+              <span class="acva-caption text-neutral-500">Semester</span>
+              <select class="tl-select" [formControl]="semesterCtrl">
+                @for (semester of semesters; track semester) {
+                  <option [value]="semester">{{ semester }}</option>
+                }
+              </select>
+            </label>
+          </div>
+        </section>
+
+        <!--
+          Said plainly, because it is the thing most likely to surprise
+          somebody: the transfer does not tidy up the student's obligations,
+          and it cannot be undone.
+        -->
+        <section class="tl-note">
+          <p class="acva-caption m-0">
+            Courses the student still owes stay owed — under the curriculum of
+            the department that set them. They are listed for the receiving
+            advisor rather than remapped.
+          </p>
+          <p class="acva-caption m-0 mt-2">
+            A transfer cannot be reversed. Correcting one means raising a new
+            transfer in the other direction.
+          </p>
+        </section>
+      </aside>
+    </div>
+  }
+</div>

@@ -22,6 +22,28 @@ export interface IRegistrationsQuery {
   studentId?: string;
 }
 
+/** One semester of an extra-year proposal awaiting the advisor. */
+export interface IExtraYearProposal {
+  readonly _id: string;
+  readonly session: string;
+  readonly semester: string;
+  readonly nonSiwesUnits: number;
+  readonly status: string;
+  readonly student: {
+    _id: string;
+    fullName: string;
+    registrationNumber: string;
+  };
+  readonly entries: {
+    readonly courseCode: string;
+    readonly courseTitle: string;
+    readonly units: number;
+    /** CARRYOVER is a retake; ELECTIVE here means a borrowed course. */
+    readonly type: string;
+    readonly note?: string | null;
+  }[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class RegistrationService {
   private readonly http = inject(HttpClient);
@@ -95,17 +117,58 @@ export class RegistrationService {
     );
   }
 
-  /** The CA's pending elective decisions (fail / low-grade outcomes). */
+  /**
+   * Extra-year proposals waiting on this advisor.
+   *
+   * One per semester, because a registration is keyed that way — the page
+   * groups them back into the single year the student proposed. Silent
+   * for the same reason the review calls are: a non-CA has no queue.
+   */
+  pendingExtraYear(): Observable<IAPIResponse<IExtraYearProposal[]>> {
+    return this.http.get<IAPIResponse<IExtraYearProposal[]>>(
+      `${this.baseUrl}/extra-year/pending`,
+      { headers: { 'X-Silent-Error': 'true' } }
+    );
+  }
+
+  /**
+   * Approve or return a proposal. Decides the whole YEAR — the server acts
+   * on every semester of it, so any one of its ids is enough.
+   */
+  decideExtraYear(
+    id: string,
+    approve: boolean,
+    reason?: string
+  ): Observable<IAPIResponse<unknown>> {
+    return this.http.patch<IAPIResponse<unknown>>(
+      `${this.baseUrl}/extra-year/${id}`,
+      { approve, reason }
+    );
+  }
+
+  /**
+   * The CA's pending elective decisions (fail / low-grade outcomes).
+   *
+   * **Silent.** Both review calls are Course-Advisor-only and the page
+   * loads them for whoever opens it, swallowing the failure because a
+   * non-CA simply has no queue. The server answers 403, which the error
+   * interceptor turns into an "Access Denied" toast — so a HOD reaching
+   * this URL was shown two scary toasts for a failure the page had
+   * already decided to ignore. `X-Silent-Error` is exactly the header for
+   * that: a background call whose failure should be invisible.
+   */
   reviews(): Observable<IAPIResponse<IElectiveReview[]>> {
     return this.http.get<IAPIResponse<IElectiveReview[]>>(
-      `${this.baseUrl}/reviews`
+      `${this.baseUrl}/reviews`,
+      { headers: { 'X-Silent-Error': 'true' } }
     );
   }
 
   /** Decisions already made (last 14 days), newest first — the undo list. */
   recentlyDecidedReviews(): Observable<IAPIResponse<IElectiveReview[]>> {
     return this.http.get<IAPIResponse<IElectiveReview[]>>(
-      `${this.baseUrl}/reviews/recent`
+      `${this.baseUrl}/reviews/recent`,
+      { headers: { 'X-Silent-Error': 'true' } }
     );
   }
 

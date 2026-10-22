@@ -1,5 +1,6 @@
 import {
   Component,
+  computed,
   inject,
   model,
   OnInit,
@@ -279,6 +280,31 @@ export class DashboardComponent implements OnInit {
 
   selectedCalendarDate = model<number>(Date.now());
   activities = signal<INotification[]>([]);
+
+  /**
+   * Newest first by default.
+   *
+   * The dropdown beside "Recent Activity" offered these two options and was
+   * bound to nothing at all — it changed on screen and the list never moved,
+   * which is the most convincing kind of broken because nothing errors.
+   */
+  activitySort = signal<'newest' | 'oldest'>('newest');
+
+  readonly sortedActivities = computed(() => {
+    const rows = [...this.activities()];
+    const newest = this.activitySort() === 'newest';
+    // Copy before sorting: `sort` mutates, and the source array is the one
+    // the store holds.
+    return rows.sort((a, b) => {
+      const left = new Date(a.createdAt).getTime();
+      const right = new Date(b.createdAt).getTime();
+      return newest ? right - left : left - right;
+    });
+  });
+
+  setActivitySort(order: 'newest' | 'oldest'): void {
+    this.activitySort.set(order);
+  }
   activeAccount = this.authService.activeAccount;
 
   switchSegment(switchValue: ISegmentSwitcher['value']) {

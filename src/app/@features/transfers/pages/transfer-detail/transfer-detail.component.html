@@ -1,0 +1,272 @@
+<div id="container">
+  <app-back-button />
+
+  @if (loading()) {
+    <div class="mt-6 flex flex-col gap-3">
+      <app-skeleton height="96px" />
+      <app-skeleton height="280px" />
+    </div>
+  } @else {
+    <!--
+      Nested rather than `@else if (transfer(); as request)`: Angular's `as`
+      alias binds only on a PRIMARY `@if`, so on an `@else if` `request` is
+      simply undefined. Documented trap — see the staff CLAUDE.md.
+    -->
+    @if (transfer(); as request) {
+      <!-- ── Header ───────────────────────────────────────────────────────── -->
+      <header class="td-head mt-4">
+        <div>
+          <div class="flex flex-wrap items-center gap-3">
+            <h3 class="acva-heading-5 fw-500 m-0">
+              {{ request.snapshot.fullName | titlecase }}
+            </h3>
+            <app-status-badge
+              [status]="statusLabel(request.status)"
+              [tone]="statusTone(request.status)"
+            />
+          </div>
+          <p class="acva-para-1 text-neutral-500 m-0 mt-1">
+            {{ request.snapshot.registrationNumber }} ·
+            {{ departmentName(request.fromDepartment) }}
+            <span class="td-arrow" aria-hidden="true">→</span>
+            {{ departmentName(request.toDepartment) }} ·
+            {{ request.toLevel }} level, {{ request.toSemester | titlecase }}
+          </p>
+          <p class="acva-caption text-neutral-500 m-0 mt-1">
+            Raised by {{ nameOf(request.submittedBy) | titlecase }}
+            @if (request.createdAt) {
+              on {{ request.createdAt | date: 'MMM d, y' }}
+            }
+          </p>
+        </div>
+
+        <div class="td-head__actions">
+          @if (actions().canDecide) {
+            <app-button
+              type="outline"
+              label="Return to advisor"
+              class="btn-md"
+              [disabled]="busy()"
+              (clickEvent)="reject()"
+            />
+            <app-button
+              label="Approve the transfer"
+              class="btn-md"
+              [disabled]="busy()"
+              (clickEvent)="approve()"
+            />
+          }
+          @if (actions().canSubmit) {
+            <app-button
+              type="clear"
+              label="Withdraw"
+              class="btn-md"
+              [disabled]="busy()"
+              (clickEvent)="withdraw()"
+            />
+            <app-button
+              label="Send to the Head"
+              class="btn-md"
+              [disabled]="busy()"
+              (clickEvent)="submit()"
+            />
+          }
+        </div>
+      </header>
+
+      @if (request.rejectionReason && request.status === 'REJECTED') {
+        <section class="td-returned mt-4">
+          <p class="acva-para-1 fw-500 m-0">Returned by the receiving Head</p>
+          <p class="acva-para-1 m-0 mt-1">{{ request.rejectionReason }}</p>
+        </section>
+      }
+
+      <!--
+        `min-w-0` on BOTH tracks is load-bearing. A `1fr` track is
+        `minmax(auto, 1fr)`, so without it this column refuses to shrink
+        below the academic-record table and pushes the aside off the side of
+        the page. Documented in the staff CLAUDE.md; caught here by the
+        clipping check in scripts/transfers-ui-harness.mjs.
+      -->
+      <div
+        class="grid lg:grid-cols-[1fr_360px] grid-cols-1 gap-6 items-start mt-4"
+      >
+        <!-- ── The letter and the record it encloses ───────────────────────── -->
+        <div class="flex flex-col gap-4 min-w-0">
+          <section class="td-card">
+            <h4 class="acva-para-2 fw-600 m-0">Letter</h4>
+            <div class="td-letter mt-3" [innerHTML]="letterHtml()"></div>
+          </section>
+
+          <section class="td-card">
+            <div class="flex flex-wrap items-baseline justify-between gap-2">
+              <h4 class="acva-para-2 fw-600 m-0">Academic record</h4>
+              <span class="acva-caption text-neutral-500">
+                As it stood when the letter was written
+              </span>
+            </div>
+
+            @if (sessions().length === 0) {
+              <p class="acva-caption text-neutral-500 mt-3">
+                No published results on record yet.
+              </p>
+            } @else {
+              @for (block of sessions(); track block.session) {
+                <div class="td-session mt-3">
+                  <p class="acva-caption fw-600 text-neutral-500 m-0">
+                    {{ block.session }}
+                  </p>
+                  <div class="td-scroll">
+                    <table class="td-table">
+                      <thead>
+                        <tr>
+                          <th>COURSE</th>
+                          <th>UNITS</th>
+                          <th>TOTAL</th>
+                          <th>GRADE</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (row of block.rows; track row.courseCode) {
+                          <tr>
+                            <td>
+                              <span class="fw-500">{{ row.courseCode }}</span>
+                              <span class="acva-caption text-neutral-500 block">
+                                {{ row.courseTitle }}
+                              </span>
+                            </td>
+                            <td>{{ row.units }}</td>
+                            <td>{{ row.total }}</td>
+                            <td
+                              [class.td-grade--fail]="row.status === 'FAIL'"
+                              class="fw-600"
+                            >
+                              {{ row.grade }}
+                            </td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              }
+            }
+          </section>
+        </div>
+
+        <!-- ── Standing, obligations, trail ────────────────────────────────── -->
+        <aside class="flex flex-col gap-4 min-w-0">
+          <section class="td-card">
+            <h4 class="acva-para-2 fw-600 m-0">Standing</h4>
+            <dl class="td-stats mt-3">
+              <div>
+                <dt class="acva-caption text-neutral-500">CGPA</dt>
+                <dd class="acva-para-3 fw-600 m-0">
+                  {{ request.snapshot.cgpa }}
+                </dd>
+              </div>
+              <div>
+                <dt class="acva-caption text-neutral-500">Courses passed</dt>
+                <dd class="acva-para-3 fw-600 m-0">
+                  {{ request.snapshot.coursesPassed }}
+                </dd>
+              </div>
+              <div>
+                <dt class="acva-caption text-neutral-500">Units passed</dt>
+                <dd class="acva-para-3 fw-600 m-0">
+                  {{ request.snapshot.unitsPassed }}
+                </dd>
+              </div>
+            </dl>
+            <!--
+            The registrar's answer, stated where the decision is made: nothing
+            is recomputed against the receiving curriculum.
+          -->
+            <p class="acva-caption text-neutral-500 mt-3 m-0">
+              Carried over unchanged. A transfer never recomputes a student's
+              standing against the new department's curriculum.
+            </p>
+          </section>
+
+          @if (request.snapshot.carryOvers.length > 0) {
+            <section class="td-card">
+              <h4 class="acva-para-2 fw-600 m-0">
+                Outstanding courses ({{ request.snapshot.carryOvers.length }})
+              </h4>
+              <p class="acva-caption text-neutral-500 m-0 mt-1">
+                Still owed under the curriculum of the department that set them
+                — never remapped or waived by a transfer.
+              </p>
+              <ul class="td-list mt-3">
+                @for (
+                  row of request.snapshot.carryOvers;
+                  track row.courseCode
+                ) {
+                  <li>
+                    <span class="fw-500">{{ row.courseCode }}</span>
+                    <span class="acva-caption text-neutral-500">
+                      {{ row.units }}u · failed {{ row.failedInSession }} ({{
+                        row.failedInLevel
+                      }}
+                      level) · {{ row.attempts }} attempt(s)
+                    </span>
+                  </li>
+                }
+              </ul>
+            </section>
+          }
+
+          @if (request.unplaced.length > 0) {
+            <section class="td-card td-card--note">
+              <h4 class="acva-para-2 fw-600 m-0">For the receiving advisor</h4>
+              <p class="acva-caption text-neutral-500 m-0 mt-1">
+                Left exactly as it stands — these need a person, not a rule.
+              </p>
+              <ul class="td-list mt-3">
+                @for (row of request.unplaced; track row.label) {
+                  <li>
+                    <span class="fw-500">{{ row.label }}</span>
+                    <span class="acva-caption text-neutral-500">
+                      {{ row.detail }}
+                    </span>
+                  </li>
+                }
+              </ul>
+            </section>
+          }
+
+          <section class="td-card">
+            <h4 class="acva-para-2 fw-600 m-0">Trail</h4>
+            <ol class="td-trail mt-3">
+              @for (event of request.history; track $index) {
+                <li>
+                  <span class="acva-para-1 fw-500">
+                    {{ event.action | titlecase }}
+                  </span>
+                  <span class="acva-caption text-neutral-500 block">
+                    {{
+                      nameOf(event.lecturer) || event.lecturerRole | titlecase
+                    }}
+                    <!--
+                    Two pipes, not one format string. Every unquoted letter
+                    in a DatePipe pattern is a format specifier, so
+                    'MMM d, y · shortTime' renders as "109ortTi9e" — the
+                    letters of the word "shortTime" each getting substituted.
+                  -->
+                    · {{ event.timestamp | date: 'MMM d, y' }} ·
+                    {{ event.timestamp | date: 'shortTime' }}
+                  </span>
+                  @if (event.comment) {
+                    <span class="acva-caption block mt-1">{{
+                      event.comment
+                    }}</span>
+                  }
+                </li>
+              }
+            </ol>
+          </section>
+        </aside>
+      </div>
+    }
+  }
+</div>

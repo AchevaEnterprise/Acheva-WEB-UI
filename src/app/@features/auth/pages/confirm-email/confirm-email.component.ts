@@ -75,7 +75,11 @@ export class ConfirmEmailComponent implements OnDestroy {
     this.isLoading.set(true);
     this.sub.add(
       this.authService
-        .forgotPassword(this.email()!)
+        // `resendEmailVerification`, not `forgotPassword`. This button
+        // resends the SIGN-UP code; calling the reset endpoint sent the
+        // person a "reset your forgotten password" email instead, for an
+        // account they were in the middle of verifying.
+        .resendEmailVerification(this.email()!)
         .pipe(finalize(() => this.isLoading.set(false)))
         .subscribe({
           next: (res) => {

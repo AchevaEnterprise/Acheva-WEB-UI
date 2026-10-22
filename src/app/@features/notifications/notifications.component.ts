@@ -32,7 +32,21 @@ import { notificationRoute } from './utils/notification-route';
 export class NotificationsComponent implements OnInit {
   private readonly store = inject(Store<AppState>);
   private readonly notificationService = inject(NotificationService);
-  private readonly dialogRef = inject(MatDialogRef<NotificationsComponent>);
+  /**
+   * OPTIONAL — this component is opened two ways.
+   *
+   * The toolbar bell opens it as a dialog, and `layout.routes.ts` also
+   * registers it at `/notifications`. As a route there is no
+   * `MatDialogRef` to inject, so the required form threw
+   * `NullInjectorError: No provider for MatDialogRef!` and the page died
+   * before rendering anything. It is only reachable by typing the URL
+   * today, because the menu entry is commented out — but a registered
+   * route that crashes is a trap for the next person who uncomments it.
+   */
+  private readonly dialogRef =
+    inject<MatDialogRef<NotificationsComponent> | null>(MatDialogRef, {
+      optional: true,
+    });
   private readonly destroyRef = inject(DestroyRef);
   private readonly router = inject(Router);
 
@@ -52,8 +66,9 @@ export class NotificationsComponent implements OnInit {
     this.store.dispatch(loadNotification());
   }
 
+  /** No-op when rendered as a page: there is no dialog to dismiss. */
   close(): void {
-    this.dialogRef.close();
+    this.dialogRef?.close();
   }
 
   /** Whether this notification/activity deep-links somewhere when clicked. */
@@ -68,7 +83,7 @@ export class NotificationsComponent implements OnInit {
     const route = notificationRoute(notification);
     if (!route) return;
 
-    this.dialogRef.close();
+    this.dialogRef?.close();
     void this.router.navigate(route.commands, {
       queryParams: route.queryParams,
     });

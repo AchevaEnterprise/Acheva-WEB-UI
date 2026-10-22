@@ -1,0 +1,213 @@
+/* The Head's administration hub.
+   Rebuilt 2026-09-27 — see the component for what was wrong with the old one. */
+
+$border: #e5e7eb;
+$brand: #2793ff;
+$ink: #10243a;
+$muted: #6b7c8d;
+
+:host {
+  display: block;
+}
+
+.settings {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 980px;
+}
+
+/* ── Identity ────────────────────────────────────────────────────────────── */
+
+.settings__head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Initials, not a 160px placeholder photograph. Office accounts rarely have
+   one, and the old page gave most of the first screen to a grey silhouette. */
+
+.settings__avatar {
+  flex: 0 0 auto;
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #e8f3ff;
+  color: #12508f;
+  font-size: 1.125rem;
+  font-weight: 500;
+}
+
+.settings__who {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.settings__who h1 {
+  color: $ink;
+}
+
+/* ── Section bar ─────────────────────────────────────────────────────────── */
+
+.settings__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-bottom: 16px;
+  border-bottom: 1px solid $border;
+}
+
+.settings__search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: min(320px, 100%);
+  padding: 0 14px;
+  border: 1px solid #d8dee6;
+  border-radius: 999px;
+  background: #f7f9fb;
+}
+
+.settings__search:focus-within {
+  border-color: $brand;
+  box-shadow: 0 0 0 3px rgb(39 147 255 / 15%);
+}
+
+.settings__search-icon {
+  display: grid;
+  place-items: center;
+  color: #9aa8b5;
+}
+
+.settings__search-icon svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+
+.settings__search-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 9px 0;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  color: $ink;
+}
+
+.settings__search-input:focus {
+  outline: none;
+}
+
+/* Safari draws its own clear button, which lands wrong inside a pill. */
+
+.settings__search-input::-webkit-search-cancel-button {
+  appearance: none;
+}
+
+/* ── Tiles ───────────────────────────────────────────────────────────────── */
+
+.tiles {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+  gap: 16px;
+}
+
+.tile {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  height: 100%;
+  padding: 18px;
+  border: 1px solid $border;
+  border-radius: 12px;
+  background: #fff;
+  text-decoration: none;
+  transition:
+    border-color 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+.tile:hover {
+  border-color: #bcdcff;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 8%);
+}
+
+.tile:focus-visible {
+  outline: 2px solid $brand;
+  outline-offset: 2px;
+}
+
+.tile__icon {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: #f2f8ff;
+}
+
+.tile__body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tile__title {
+  color: $ink;
+}
+
+.tile__desc {
+  color: $muted;
+  line-height: 1.45;
+}
+
+.tile__chevron {
+  flex: 0 0 auto;
+  margin-top: 10px;
+  color: #b3c0cc;
+  display: grid;
+  place-items: center;
+}
+
+.tile__chevron svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.tile:hover .tile__chevron {
+  color: $brand;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tile {
+    transition: none;
+  }
+}
+
+.settings__empty {
+  margin: 0;
+  padding: 32px 4px;
+  color: $muted;
+}

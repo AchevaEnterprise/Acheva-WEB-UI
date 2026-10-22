@@ -1,0 +1,208 @@
+/* Dues collections — who has paid, who has not.
+   Brand blue is the only accent; green is off-palette. */
+
+$border: #e5e7eb;
+$brand: #2793ff;
+$ink: #10243a;
+
+:host {
+  display: block;
+}
+
+.collections__head h1 {
+  color: $ink;
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 32px 24px;
+  border: 1px solid $border;
+  border-radius: 12px;
+  background: #fff;
+  color: $ink;
+}
+
+/* ── Filters ─────────────────────────────────────────────────────────────── */
+
+.filters {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 32px;
+}
+
+.filters__right {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  padding: 8px 16px;
+  border: 1px solid $border;
+  border-radius: 999px;
+  background: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.875rem;
+  color: #6b7c8d;
+}
+
+.chip:hover {
+  border-color: #c7dcf5;
+}
+
+.chip:focus-visible {
+  outline: 2px solid $brand;
+  outline-offset: 1px;
+}
+
+.chip--on {
+  background: $brand;
+  border-color: $brand;
+  color: #fff;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.field__select,
+.field__input {
+  padding: 8px 12px;
+  border: 1px solid #d8dee6;
+  border-radius: 8px;
+  background: #fff;
+  font-family: inherit;
+  color: $ink;
+}
+
+.field__input {
+  min-width: 15rem;
+}
+
+.field__select:focus,
+.field__input:focus {
+  outline: 2px solid $brand;
+  outline-offset: 1px;
+}
+
+/* ── Table ───────────────────────────────────────────────────────────────── */
+
+.table-wrap {
+  width: 100%;
+  overflow: auto;
+  max-height: 55vh;
+  border: 1px solid $border;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.student {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 0;
+}
+
+/* Money right-aligned so the columns can be compared down the page rather
+   than read one row at a time. */
+
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.link {
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  color: $brand;
+  text-decoration: underline;
+}
+
+.link:focus-visible {
+  outline: 2px solid $brand;
+  outline-offset: 2px;
+}
+
+.no-rows {
+  padding: 32px 16px;
+  text-align: center;
+}
+
+/* ── Status ──────────────────────────────────────────────────────────────── */
+
+.pill {
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.pill--paid {
+  background: #e8f3ff;
+  color: #12508f;
+}
+
+.pill--partial {
+  background: #fff8e6;
+  color: #7a5b00;
+}
+
+.pill--none {
+  background: #f1f3f5;
+  color: #5b6472;
+}
+
+/* ── Payment breakdown ───────────────────────────────────────────────────── */
+
+.breakdown {
+  padding: 16px;
+  border-top: 1px solid $border;
+  background: #fbfdff;
+}
+
+.breakdown ul {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.breakdown li {
+  display: grid;
+  grid-template-columns: 8rem 14rem 1fr;
+  gap: 16px;
+  align-items: baseline;
+  color: $ink;
+  font-size: 0.875rem;
+}
+
+@media (width <= 1000px) {
+  .breakdown li {
+    grid-template-columns: 1fr;
+    gap: 2px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid $border;
+  }
+}

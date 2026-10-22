@@ -110,6 +110,17 @@ export const MENU: IMenu[] = [
     ],
   },
   {
+    label: 'Transfers',
+    active_icon: 'icons/menu/courses-active.svg',
+    inactive_icon: 'icons/menu/courses-inactive.svg',
+    route: 'transfers',
+    isActive: true,
+    // A Course Advisor raises one and a Head approves it. Deans see the menu
+    // entry because a Head's queue is a Dean's business too, and the page is
+    // read-only for anyone who is not party to a request.
+    accessRole: [RoleEnum.COURSE_ADVISOR, RoleEnum.HOD, RoleEnum.DEAN],
+  },
+  {
     label: 'History',
     active_icon: 'icons/menu/history-active.svg',
     inactive_icon: 'icons/menu/history-inactive.svg',
@@ -124,20 +135,17 @@ export const MENU: IMenu[] = [
       RoleEnum.LECTURER,
     ],
   },
-  // {
-  //   label: 'Dues Management',
-  //   active_icon: 'icons/menu/dues-management-active.svg',
-  //   inactive_icon: 'icons/menu/dues-management-inactive.svg',
-  //   route: 'dues-management',
-  //   isActive: true,
-  //   accessRole: [
-  //     // RoleEnum.DEAN,
-  //     RoleEnum.HOD,
-  //     // RoleEnum.COURSE_ADVISOR,
-  //     // RoleEnum.COURSE_COORDINATOR,
-  //     // RoleEnum.LECTURER,
-  //   ],
-  // },
+  {
+    label: 'Dues Management',
+    active_icon: 'icons/menu/dues-management-active.svg',
+    inactive_icon: 'icons/menu/dues-management-inactive.svg',
+    route: 'dues-management',
+    isActive: true,
+    // HOD only: it is their department's money, their roster and their
+    // decision who to chase. A Dean seeing it would be reading another
+    // office's collections.
+    accessRole: [RoleEnum.HOD],
+  },
   // {
   //   label: 'FAQ',
   //   active_icon: 'icons/menu/faq-inactive.svg',
