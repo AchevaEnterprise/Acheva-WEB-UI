@@ -21,6 +21,10 @@ import { resolve, dirname } from 'path';
 import { mkdirSync } from 'fs';
 import { fileURLToPath } from 'url';
 
+// NOTE: never `networkidle` here. The app shell opens the messaging SSE
+// stream for the whole session, so the network never falls quiet and every
+// navigation would time out. Wait for a selector instead.
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const BASE_URL   = process.env.APP_URL   ?? 'http://localhost:4200';
@@ -74,7 +78,7 @@ const VIEWPORTS = [
 
     try {
       await page.goto(`${BASE_URL}${route}`, {
-        waitUntil: 'networkidle',
+        waitUntil: 'domcontentloaded',
         timeout:   30_000,
       });
 

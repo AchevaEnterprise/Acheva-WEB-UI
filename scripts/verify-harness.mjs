@@ -8,6 +8,10 @@
 import { chromium } from '@playwright/test';
 import { mkdirSync, statSync } from 'fs';
 
+// NOTE: never `networkidle` here. The app shell opens the messaging SSE
+// stream for the whole session, so the network never falls quiet and every
+// navigation would time out. Wait for a selector instead.
+
 const API = process.env.VH_API ?? 'http://localhost:3000';
 const APP = process.env.VH_APP ?? 'http://localhost:4200';
 const EMAIL = process.env.VH_EMAIL ?? 'danielchinemerem302+1@gmail.com';
@@ -44,7 +48,7 @@ const check = (ok, m, d = '') => { console.log(`  ${ok ? '✓' : '✗'} ${m}${d 
   page.on('pageerror', (e) => errors.push(String(e)));
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
 
-  await page.goto(`${APP}/result-management/edit-results?resultId=${target._id}&status=${target.status}`, { waitUntil: 'networkidle', timeout: 40_000 });
+  await page.goto(`${APP}/result-management/edit-results?resultId=${target._id}&status=${target.status}`, { waitUntil: 'domcontentloaded', timeout: 40_000 });
   await page.waitForTimeout(2500);
 
   console.log('── the preview mints nothing ──');
@@ -70,7 +74,16 @@ const check = (ok, m, d = '') => { console.log(`  ${ok ? '✓' : '✗'} ${m}${d 
   const after = await dialog.innerText();
   const serial = (after.match(/ACV-[2-9A-HJ-NP-TV-Z]{4}-[2-9A-HJ-NP-TV-Z]{4}-[2-9A-HJ-NP-TV-Z]{4}/) ?? [])[0];
   check(Boolean(serial), 'the drawer now shows the serial', serial);
-  check(/verify\./.test(after), 'and where to check it');
+  /**
+   * A verification URL, whatever host this environment is pointed at.
+   *
+   * This asserted the literal string `verify.` — the production hostname.
+   * In development `VERIFY_PORTAL_URL` is `http://localhost:4500/`, so the
+   * dialog was showing exactly the right thing and the check failed anyway.
+   * A test that only passes in production tells you nothing anywhere else.
+   */
+  check(/https?:\/\/\S+/.test(after), 'and where to check it',
+    (after.match(/https?:\/\/\S+/) ?? [''])[0]);
 
   console.log('\n── anyone can check it, with no account ──');
   const pub = await fetch(`${API}/verify/${serial}`);       // NO Authorization header
