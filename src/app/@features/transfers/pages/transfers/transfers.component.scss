@@ -1,0 +1,85 @@
+:host {
+  display: block;
+}
+
+.tr-group {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+
+  &__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 16px 24px;
+    border-bottom: 1px solid #e5e7eb;
+    background: #fafbfc;
+  }
+}
+
+.tr-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 24px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+
+  & + & {
+    border-top: 1px solid #f1f3f5;
+  }
+
+  &:hover,
+  &:focus-visible {
+    background: #f6fafe;
+    outline: none;
+  }
+
+  /* Work owed reads differently from a record of work done. */
+  &--action {
+    border-left: 3px solid #2793ff;
+  }
+
+  &__who {
+    min-width: 0;
+  }
+
+  &__move {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  &__arrow {
+    color: #2793ff;
+    font-weight: 600;
+  }
+
+  &__end {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  &__open {
+    color: #2793ff;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+}
+
+/* The staff UI has to work down to 1000px; this grid is the first thing to
+   crowd, so the three columns stack before they overlap. */
+@media (max-width: 1100px) {
+  .tr-row {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 8px;
+  }
+}

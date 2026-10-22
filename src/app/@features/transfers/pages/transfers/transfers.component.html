@@ -1,0 +1,183 @@
+<div id="container">
+  <div class="flex flex-wrap items-start justify-between gap-4">
+    <div>
+      <h3 class="acva-heading-5 fw-500">Department Transfers</h3>
+      <p class="acva-para-1 text-neutral-500">
+        A student's Course Advisor writes to the Head of the receiving
+        department. On approval the student and their record move.
+      </p>
+    </div>
+    @if (canCompose()) {
+      <app-button
+        label="New transfer request"
+        class="btn-md"
+        (clickEvent)="compose()"
+      />
+    }
+  </div>
+
+  @if (loading()) {
+    <div class="mt-6">
+      <app-skeleton-table [cols]="5" [rows]="5" />
+    </div>
+  } @else if (transfers().length === 0) {
+    <div class="mt-6">
+      <app-empty-state
+        iconSrc="images/general/empty-doc.svg"
+        description="No transfer requests yet. A Course Advisor starts one by writing to the Head of the receiving department."
+      />
+    </div>
+  } @else {
+    <!-- ── Awaiting my decision — work owed, so it comes first ──────────── -->
+    @if (onMyDesk().length > 0) {
+      <section class="tr-group mt-6">
+        <header class="tr-group__head">
+          <h4 class="acva-para-2 fw-600 m-0">
+            Awaiting your approval ({{ onMyDesk().length }})
+          </h4>
+          <span class="acva-caption text-neutral-500">
+            Approving moves the student into your department immediately
+          </span>
+        </header>
+
+        @for (transfer of onMyDesk(); track transfer._id) {
+          <article
+            class="tr-row tr-row--action"
+            tabindex="0"
+            (click)="open(transfer)"
+            (keydown.enter)="open(transfer)"
+          >
+            <div class="tr-row__who">
+              <p class="acva-para-1 fw-500 m-0">
+                {{ studentName(transfer) | titlecase }}
+              </p>
+              <p class="acva-caption text-neutral-500 m-0">
+                {{ regNo(transfer) }} · CGPA {{ transfer.snapshot.cgpa }} ·
+                {{ transfer.snapshot.entries.length }} courses on record
+              </p>
+            </div>
+            <div class="tr-row__move">
+              <span class="acva-caption text-neutral-500">
+                {{ departmentName(transfer.fromDepartment) }}
+              </span>
+              <span class="tr-row__arrow" aria-hidden="true">→</span>
+              <span class="acva-caption fw-500">
+                {{ departmentName(transfer.toDepartment) }}
+              </span>
+              <span class="acva-caption text-neutral-500">
+                · {{ transfer.toLevel }} level
+              </span>
+            </div>
+            <div class="tr-row__end">
+              <app-status-badge
+                [status]="statusLabel(transfer.status)"
+                [tone]="statusTone(transfer.status)"
+              />
+              <span class="tr-row__open acva-caption">Review</span>
+            </div>
+          </article>
+        }
+      </section>
+    }
+
+    <!-- ── My drafts and anything returned to me ────────────────────────── -->
+    @if (myDrafts().length > 0) {
+      <section class="tr-group mt-4">
+        <header class="tr-group__head">
+          <h4 class="acva-para-2 fw-600 m-0">
+            Your drafts and returned letters ({{ myDrafts().length }})
+          </h4>
+          <span class="acva-caption text-neutral-500">
+            Nothing here has been seen by the receiving Head yet
+          </span>
+        </header>
+
+        @for (transfer of myDrafts(); track transfer._id) {
+          <article
+            class="tr-row"
+            tabindex="0"
+            (click)="open(transfer)"
+            (keydown.enter)="open(transfer)"
+          >
+            <div class="tr-row__who">
+              <p class="acva-para-1 fw-500 m-0">
+                {{ studentName(transfer) | titlecase }}
+              </p>
+              <p class="acva-caption text-neutral-500 m-0">
+                {{ regNo(transfer) }}
+                @if (transfer.rejectionReason) {
+                  · Returned: {{ transfer.rejectionReason }}
+                }
+              </p>
+            </div>
+            <div class="tr-row__move">
+              <span class="acva-caption text-neutral-500">
+                {{ departmentName(transfer.fromDepartment) }}
+              </span>
+              <span class="tr-row__arrow" aria-hidden="true">→</span>
+              <span class="acva-caption fw-500">
+                {{ departmentName(transfer.toDepartment) }}
+              </span>
+            </div>
+            <div class="tr-row__end">
+              <app-status-badge
+                [status]="statusLabel(transfer.status)"
+                [tone]="statusTone(transfer.status)"
+              />
+              <span class="tr-row__open acva-caption">Open</span>
+            </div>
+          </article>
+        }
+      </section>
+    }
+
+    <!-- ── Sent, approved, withdrawn ────────────────────────────────────── -->
+    @if (settled().length > 0) {
+      <section class="tr-group mt-4">
+        <header class="tr-group__head">
+          <h4 class="acva-para-2 fw-600 m-0">
+            All transfers ({{ settled().length }})
+          </h4>
+        </header>
+
+        @for (transfer of settled(); track transfer._id) {
+          <article
+            class="tr-row"
+            tabindex="0"
+            (click)="open(transfer)"
+            (keydown.enter)="open(transfer)"
+          >
+            <div class="tr-row__who">
+              <p class="acva-para-1 fw-500 m-0">
+                {{ studentName(transfer) | titlecase }}
+              </p>
+              <p class="acva-caption text-neutral-500 m-0">
+                {{ regNo(transfer) }} · raised by
+                {{ advisorName(transfer) | titlecase }}
+                @if (transfer.completedAt) {
+                  · {{ transfer.completedAt | date: 'MMM d, y' }}
+                }
+              </p>
+            </div>
+            <div class="tr-row__move">
+              <span class="acva-caption text-neutral-500">
+                {{ departmentName(transfer.fromDepartment) }}
+              </span>
+              <span class="tr-row__arrow" aria-hidden="true">→</span>
+              <span class="acva-caption fw-500">
+                {{ departmentName(transfer.toDepartment) }}
+              </span>
+            </div>
+            <div class="tr-row__end">
+              <app-status-badge
+                [status]="statusLabel(transfer.status)"
+                [tone]="statusTone(transfer.status)"
+              />
+              <span class="tr-row__open acva-caption">Open</span>
+            </div>
+          </article>
+        }
+      </section>
+    }
+  }
+</div>

@@ -134,6 +134,16 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'transfers',
+        data: {
+          title: 'Department Transfers',
+        },
+        loadChildren: () =>
+          import('../@features/transfers/transfers.routes').then(
+            (m) => m.routes
+          ),
+      },
+      {
         path: 'dues-management',
         data: {
           title: 'Dues Management',

@@ -1,0 +1,141 @@
+:host {
+  display: block;
+}
+
+.td-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+}
+
+.td-arrow {
+  color: #2793ff;
+  font-weight: 600;
+  margin: 0 4px;
+}
+
+.td-card {
+  /* A long course title or an email must wrap, not widen the card. */
+  overflow-wrap: anywhere;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 24px;
+
+  &--note {
+    border-color: rgba(39, 147, 255, 0.25);
+    background: rgba(39, 147, 255, 0.04);
+  }
+}
+
+.td-returned {
+  padding: 16px 24px;
+  border: 1px solid rgba(216, 49, 91, 0.3);
+  border-radius: 8px;
+  background: rgba(216, 49, 91, 0.05);
+  color: #9b1b3b;
+}
+
+/* The advisor's own prose. Quill emits plain block elements, so the few that
+   appear are given sane spacing rather than the browser's defaults. */
+.td-letter {
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  color: #374151;
+
+  ::ng-deep p {
+    margin: 0 0 12px;
+  }
+
+  ::ng-deep ol,
+  ::ng-deep ul {
+    margin: 0 0 12px;
+    padding-left: 24px;
+  }
+
+  ::ng-deep strong {
+    font-weight: 600;
+  }
+}
+
+/* The column can be narrower than the table; the table scrolls inside it
+   rather than widening the page and clipping the side column. */
+.td-scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.td-table {
+  width: 100%;
+  min-width: 420px;
+  border-collapse: collapse;
+  margin-top: 8px;
+
+  th {
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6b7280;
+    padding: 8px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  td {
+    font-size: 0.875rem;
+    padding: 8px;
+    border-bottom: 1px solid #f1f3f5;
+    vertical-align: top;
+  }
+}
+
+.td-grade--fail {
+  color: #d8315b;
+}
+
+.td-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0;
+
+  dt {
+    margin-bottom: 2px;
+  }
+}
+
+.td-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+}
+
+.td-trail {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.td-session + .td-session {
+  margin-top: 24px;
+}

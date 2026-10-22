@@ -110,6 +110,17 @@ export const MENU: IMenu[] = [
     ],
   },
   {
+    label: 'Transfers',
+    active_icon: 'icons/menu/courses-active.svg',
+    inactive_icon: 'icons/menu/courses-inactive.svg',
+    route: 'transfers',
+    isActive: true,
+    // A Course Advisor raises one and a Head approves it. Deans see the menu
+    // entry because a Head's queue is a Dean's business too, and the page is
+    // read-only for anyone who is not party to a request.
+    accessRole: [RoleEnum.COURSE_ADVISOR, RoleEnum.HOD, RoleEnum.DEAN],
+  },
+  {
     label: 'History',
     active_icon: 'icons/menu/history-active.svg',
     inactive_icon: 'icons/menu/history-inactive.svg',
