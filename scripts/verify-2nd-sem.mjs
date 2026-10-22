@@ -1,5 +1,9 @@
 import { chromium } from '@playwright/test';
 
+// NOTE: never `networkidle` here. The app shell opens the messaging SSE
+// stream for the whole session, so the network never falls quiet and every
+// navigation would time out. Wait for a selector instead.
+
 const BASE = 'http://localhost:4200';
 const EMAIL = 'danielchinemerem302+7@gmail.com';
 const PASSWORD = 'Password8@';
@@ -12,14 +16,14 @@ const page = await browser.newPage();
 page.on('console', (m) => { if (m.type() === 'error') log('  [console.error]', m.text().slice(0, 160)); });
 
 try {
-  await page.goto(`${BASE}/auth/login`, { waitUntil: 'networkidle' });
+  await page.goto(`${BASE}/auth/login`, { waitUntil: 'domcontentloaded' });
   await page.fill('input[type="email"], input[formcontrolname="email"]', EMAIL);
   await page.fill('input[type="password"], input[formcontrolname="password"]', PASSWORD);
   await page.click('button[type="submit"]');
   await page.waitForURL('**/dashboard**', { timeout: 20000 });
   log('✅ logged in');
 
-  await page.goto(`${BASE}/results`, { waitUntil: 'networkidle' });
+  await page.goto(`${BASE}/results`, { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(2500);
 
   // Confirm "2 Pages"

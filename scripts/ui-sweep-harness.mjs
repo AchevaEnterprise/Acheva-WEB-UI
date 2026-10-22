@@ -62,7 +62,7 @@ const APPS = {
     routes: [
       'dashboard', 'courses', 'my-result', 'result-management', 'notifications',
       'support', 'user-settings', 'messages', 'history', 'students',
-      'registration', 'moderation', 'dues-management',
+      'registration', 'moderation', 'dues-management', 'transfers',
     ],
     account: {
       id: '69e9f7ec1a16b46a857a847a',

@@ -141,8 +141,12 @@ try {
 
   studentId = await studentSelect.locator('option').nth(1).getAttribute('value');
   await studentSelect.selectOption(studentId);
-  await caPage.waitForTimeout(1200); // the eligibility round-trip
 
+  // Wait for the eligibility round-trip to RESOLVE — either verdict will do.
+  // A fixed sleep here made this check fail intermittently on a slower API
+  // while the rest of the run proved the data had in fact arrived.
+  const standing = caPage.getByText(/Currently .* level in|transfer request in progress|account is deactivated/i);
+  await standing.first().waitFor({ timeout: 30_000 }).catch(() => undefined);
   check('picking a student reports their current standing',
     (await caPage.getByText(/Currently .* level in/i).count()) > 0);
 
@@ -157,9 +161,15 @@ try {
     .first()
     .getAttribute('value');
   await facultySelect.selectOption(sops);
-  await caPage.waitForTimeout(1200);
 
   const deptSelect = selects.nth(2);
+  // Wait for the dependent fetch to populate it, rather than sleeping.
+  await caPage
+    .waitForFunction(
+      () => (document.querySelectorAll('select')[2]?.options.length ?? 0) > 1,
+      { timeout: 30_000 }
+    )
+    .catch(() => undefined);
   const deptNames = await deptSelect.locator('option').allInnerTexts();
   check('departments populate from the chosen faculty',
     deptNames.length > 1, deptNames.slice(1).join(', '));
@@ -204,6 +214,11 @@ try {
     `status=${raised?.status ?? 'none'}`);
 
   await open(caPage, `/transfers`, 'h3:has-text("Department Transfers")');
+  await caPage
+    .getByText('Awaiting approval')
+    .first()
+    .waitFor({ timeout: 30_000 })
+    .catch(() => undefined);
   const awaitingText = await caPage.getByText('Awaiting approval').count();
   check('the advisor sees it as awaiting approval, in words not enum tokens',
     awaitingText > 0);
@@ -219,6 +234,11 @@ try {
   hodPage.on('console', (m) => m.type() === 'error' && hodErrors.push(m.text()));
 
   await open(hodPage, `/transfers`, 'h3:has-text("Department Transfers")');
+  await hodPage
+    .getByText('Awaiting your approval')
+    .first()
+    .waitFor({ timeout: 30_000 })
+    .catch(() => undefined);
   const queue = await hodPage.getByText('Awaiting your approval').count();
   check('the receiving Head sees it in their queue', queue > 0);
   await hodPage.screenshot({ path: 'screenshots/transfers-hod-queue.png', fullPage: true });

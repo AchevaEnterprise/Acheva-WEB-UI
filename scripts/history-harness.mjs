@@ -67,7 +67,20 @@ async function signIn(email) {
     page.on('console', (m) => m.type() === 'error' && consoleErrors.push(m.text()));
 
     // ── A: reachable from the sidebar ─────────────────────────────────────
-    await page.goto(`${APP}/dashboard`, { waitUntil: 'networkidle', timeout: 30_000 });
+    // `domcontentloaded`, never `networkidle`: the shell opens the messaging
+    // SSE stream for the whole session, so the network never falls quiet and
+    // `networkidle` times out on every page. (This harness had been failing
+    // outright since the stream moved into the layout.)
+    await page.goto(`${APP}/dashboard`, {
+      waitUntil: 'domcontentloaded',
+      timeout: 30_000,
+    });
+    // `attached`, not visible: the shell renders the sidebar collapsed at
+    // this viewport, and the check below counts it rather than clicking it.
+    await page
+      .locator('nav, aside, app-side-bar')
+      .first()
+      .waitFor({ state: 'attached', timeout: 30_000 });
     await page.waitForTimeout(600);
     const historyLink = page.locator('nav, aside, app-side-bar').getByText('History', { exact: true }).first();
     check(await historyLink.count() > 0, 'History appears in the sidebar menu');
@@ -76,8 +89,17 @@ async function signIn(email) {
     // Errors raised by the dashboard (the Highcharts NG0100 among them) are
     // not this page's to answer for — only judge what History itself logs.
     consoleErrors.length = 0;
-    await page.goto(`${APP}/history`, { waitUntil: 'networkidle', timeout: 30_000 });
-    await page.waitForTimeout(1200);
+    await page.goto(`${APP}/history`, {
+      waitUntil: 'domcontentloaded',
+      timeout: 30_000,
+    });
+    // Wait for the table the checks below read, rather than a fixed sleep.
+    await page
+      .locator('table th')
+      .first()
+      .waitFor({ timeout: 30_000 })
+      .catch(() => undefined);
+    await page.waitForTimeout(600);
 
     const headers = await page.locator('table th').allInnerTexts();
     check(

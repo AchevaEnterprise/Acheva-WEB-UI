@@ -77,8 +77,18 @@ const check = (ok, m, d = '') => {
     page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
     page.on('pageerror', (e) => errors.push(String(e)));
 
-    await page.goto(`${APP}${route}`, { waitUntil: 'networkidle', timeout: 40_000 });
-    await page.waitForTimeout(2500);
+    // See the note in history-harness.mjs: the shell's SSE stream means
+    // `networkidle` never fires, which had been failing this harness outright.
+    await page.goto(`${APP}${route}`, {
+      waitUntil: 'domcontentloaded',
+      timeout: 40_000,
+    });
+    await page
+      .getByRole('button', { name: /^Export$/i })
+      .first()
+      .waitFor({ timeout: 40_000 })
+      .catch(() => undefined);
+    await page.waitForTimeout(1500);
 
     const exportBtn = page.getByRole('button', { name: /^Export$/i });
     check((await exportBtn.count()) > 0, 'Export button is present');
@@ -97,7 +107,22 @@ const check = (ok, m, d = '') => {
     check(Boolean(src && src.startsWith('blob:')), 'preview is the generated PDF blob');
 
     for (const [label, ext] of [['Download PDF', '.pdf'], ['Download Excel', '.xlsx']]) {
-      const waitFor = page.waitForEvent('download', { timeout: 30_000 });
+      /**
+       * Match the download by EXTENSION, not just "the next one".
+       *
+       * The preview iframe holds a PDF blob, and headless Chromium — which
+       * has no PDF viewer — reports that blob as a download of its own
+       * before anything is clicked. A bare `waitForEvent('download')` on the
+       * Excel pass therefore caught the preview's stray PDF and reported
+       * "Download Excel → …​.pdf", which reads exactly like the Excel button
+       * being wired to the wrong handler. It is not: clicking Excel alone
+       * yields a .xlsx. A real browser renders the preview inline and emits
+       * no such download at all.
+       */
+      const waitFor = page.waitForEvent('download', {
+        timeout: 30_000,
+        predicate: (d) => d.suggestedFilename().endsWith(ext),
+      });
       await dialog.getByRole('button', { name: new RegExp(label, 'i') }).click();
       try {
         const dl = await waitFor;

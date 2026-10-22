@@ -31,6 +31,31 @@ const signIn = async (p,e,pw='Password8@') => {
   if(!r.ok) throw new Error(`${p} ${e} → ${r.status}`); return (await r.json()).data;
 };
 const student = await signIn('/auth/students/signin','sim.chm300.1@acheva.sim');
+
+/**
+ * The API must never hand back a body it has not decrypted.
+ *
+ * `POST /messaging/conversations/:id/messages` used to return the SAVED
+ * document, whose `body` is the `enc.v1.…` envelope, while `GET` returned
+ * plaintext. Nothing looked broken on the wire — but every portal runs bodies
+ * through `readable-text.ts`, so the sender saw **"Message unavailable"** in
+ * place of the message they had just typed, in all three apps, until they
+ * reloaded. Checked here at the API, because the UI's safety net is designed
+ * to hide exactly this and would keep hiding it.
+ */
+{
+  const H = {Authorization:`Bearer ${student.accessToken}`,'Content-Type':'application/json'};
+  const thread = await fetch(`${API}/messaging/support`,{method:'POST',headers:H}).then(r=>r.json());
+  const id = thread?.data?._id ?? thread?.data?.id;
+  const text = `Envelope guard ${Date.now()}`;
+  const posted = await fetch(`${API}/messaging/conversations/${id}/messages`,
+    {method:'POST',headers:H,body:JSON.stringify({body:text})}).then(r=>r.json());
+  const returned = posted?.data?.body ?? '';
+  console.log('\n── the send response is decrypted ──');
+  check(returned === text, 'POST returns the plaintext body, not the stored envelope',
+    /^enc\./.test(returned) ? `got ciphertext: ${returned.slice(0,32)}…` : `got ${JSON.stringify(returned).slice(0,48)}`);
+}
+
 const browser = await chromium.launch({headless:true});
 const ctx = await browser.newContext({viewport:{width:1440,height:900},deviceScaleFactor:2,colorScheme:'light'});
 await ctx.addInitScript(([t,r,a])=>{localStorage.setItem('token',t);localStorage.setItem('refresh_token',r);localStorage.setItem('active_account',a);},[student.accessToken,student.refreshToken,JSON.stringify(student)]);
