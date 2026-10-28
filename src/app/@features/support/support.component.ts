@@ -16,6 +16,7 @@ import {
   IStreamEvent,
 } from '../messaging/models/messaging.model';
 import { MessagingService } from '../messaging/services/messaging.service';
+import { sendFailureText } from '../messaging/utils/send-failure';
 
 /**
  * Support — one thread with the Acheva desk.
@@ -142,7 +143,7 @@ export class SupportComponent implements OnInit {
           this.messages.update((rows) =>
             rows.map((row) => (row.id === localId ? resp.data : row))
           ),
-        error: () => {
+        error: (err: unknown) => {
           this.messages.update((rows) =>
             rows.map((row) =>
               row.id === localId
@@ -153,7 +154,7 @@ export class SupportComponent implements OnInit {
           this.toast.showNotification(
             'error',
             'Not sent',
-            'That message did not go through. Check your connection and try again.'
+            sendFailureText(err)
           );
         },
       });

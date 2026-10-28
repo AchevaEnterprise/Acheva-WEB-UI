@@ -12,7 +12,17 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ActivatedRoute, Router } from '@angular/router';
-import { finalize, forkJoin, Observable, switchMap, throwError } from 'rxjs';
+import {
+  catchError,
+  finalize,
+  forkJoin,
+  map,
+  Observable,
+  of,
+  Subscription,
+  switchMap,
+  throwError,
+} from 'rxjs';
 import { RoleAccessDirective } from '../../../../@core/directives/role-access.directive';
 import { IPaginator } from '../../../../@core/models/paginator.model';
 import { ResultManagementDashboardTab } from '../../../../@core/models/school.model';
@@ -41,6 +51,7 @@ import {
   IResult,
   IResultQuery,
   ISendSelectedResult,
+  IStrandedResult,
 } from '../../models/results.model';
 import { ResultsService } from '../../services/results.service';
 import { isInternalCohort } from '../../utils/workflow';
@@ -296,10 +307,78 @@ export class ResultManagementComponent implements OnInit {
     return this.fileTableRef()?.activeRow() !== null;
   }
 
+  /** The list request in flight — superseded by the next `getResults`. */
+  private resultsRequest?: Subscription;
+
+  /**
+   * Results this person approved or returned that never reached the next
+   * desk. Refreshed with every list load, so a send that fails mid-action
+   * shows up here straight away with a way to finish it.
+   */
+  stranded = signal<IStrandedResult[]>([]);
+  resendingStranded = signal<boolean>(false);
+  readonly anyResendable = computed(() =>
+    this.stranded().some((r) => r.canResend)
+  );
+
+  loadStranded(): void {
+    this.resultService
+      .getStrandedResults()
+      .pipe(catchError(() => of(null)))
+      .subscribe((resp) => this.stranded.set(resp?.data ?? []));
+  }
+
+  resendStranded(): void {
+    const sendable = this.stranded().filter((r) => r.canResend);
+    if (!sendable.length) return;
+    this.resendingStranded.set(true);
+
+    forkJoin(
+      sendable.map((result) =>
+        this.resultService.resendResult(result._id).pipe(
+          map(() => null),
+          catchError((err: { error?: { message?: string } }) =>
+            of(
+              `${result.courseCode}: ${err?.error?.message ?? 'could not be sent'}`
+            )
+          )
+        )
+      )
+    )
+      .pipe(finalize(() => this.resendingStranded.set(false)))
+      .subscribe((outcomes) => {
+        const failures = outcomes.filter((o): o is string => !!o);
+        const sent = outcomes.length - failures.length;
+        if (sent) {
+          this.toast.showNotification(
+            'success',
+            'Results Sent',
+            `${sent} result${sent === 1 ? ' was' : 's were'} sent on to the next person.`
+          );
+        }
+        if (failures.length) {
+          this.toast.showNotification('error', 'Not Sent', failures.join(' '));
+        }
+        if (
+          this.currentRole() === RoleEnum.COURSE_COORDINATOR &&
+          this.activeSegment().value === 'DRAFT'
+        ) {
+          this.getGroupedResults();
+        } else {
+          this.getResults();
+        }
+      });
+  }
+
   getResults(params?: Partial<IResultQuery>) {
+    this.loadStranded();
+    // Drop the previous request. Without this a slow response for the tab
+    // you just LEFT could land after the new tab's and repaint the table
+    // with the old tab's rows — under the new tab's action buttons.
+    this.resultsRequest?.unsubscribe();
     this.loadingResults.set(true);
 
-    this.resultService
+    this.resultsRequest = this.resultService
       .getResults({
         status: this.activeSegment().value,
         ...params,
@@ -328,6 +407,7 @@ export class ResultManagementComponent implements OnInit {
   }
 
   getGroupedResults() {
+    this.loadStranded();
     this.loadingResults.set(true);
 
     this.resultService
@@ -424,7 +504,7 @@ export class ResultManagementComponent implements OnInit {
       .open(ConfirmationComponent, {
         width: '600px',
         data: {
-          message: `You're about to send ${selectedResults.length} results to the Course Coordinator. This action is irreversible, Are you sure you want to continue?`,
+          message: `You're about to send ${selectedResults.length} ${selectedResults.length === 1 ? 'result' : 'results'} to the Course Coordinator. You won't be able to edit ${selectedResults.length === 1 ? 'it' : 'them'} unless the coordinator returns ${selectedResults.length === 1 ? 'it' : 'them'} to you. Continue?`,
         },
       })
       .afterClosed()
@@ -460,21 +540,33 @@ export class ResultManagementComponent implements OnInit {
               this.toast.showNotification(
                 'error',
                 'Some Results Failed',
-                `${failedCount} of ${totalCount} results failed to be sent, ${(failed[0] as { error: string }).error}`
+                `${failedCount} of ${totalCount} results could not be sent: ${(failed[0] as { error: string }).error}`
               );
             } else {
               this.toast.showNotification(
                 'success',
                 'Result Sent',
-                'Result has been sent to the Course Cordinator'
+                'Result has been sent to the Course Coordinator'
               );
-
-              this.getResults();
-              selectedResults.forEach((result) => {
-                this.fileTableRef()!.selection.deselect(result);
-              });
             }
+
+            // Refresh either way: on a partial failure the ones that DID go
+            // used to linger in Drafts, still selected, until a reload.
+            this.getResults();
+            selectedResults.forEach((result) => {
+              this.fileTableRef()?.selection.deselect(result);
+            });
           }
+        },
+        // sendSelectedResult raises a refused forward as an error; with no
+        // handler here the lecturer saw nothing at all — no toast, no change.
+        error: (err: { error?: { message?: string } }) => {
+          this.toast.showNotification(
+            'error',
+            'Result Not Sent',
+            err?.error?.message ?? 'The result could not be sent.'
+          );
+          this.getResults();
         },
       });
   }
@@ -775,7 +867,7 @@ export class ResultManagementComponent implements OnInit {
       .open(ConfirmationComponent, {
         width: '600px',
         data: {
-          message: `You're about to publish ${selectedResults.length} results. This action is irreversible, Are you sure you want to continue?`,
+          message: `You're about to publish ${selectedResults.length} ${selectedResults.length === 1 ? 'result' : 'results'}. Students will see the scores straight away and this cannot be undone. Do you want to continue?`,
         },
       })
       .afterClosed()
@@ -1005,6 +1097,22 @@ export class ResultManagementComponent implements OnInit {
         'No Result(s) Selected',
         'You have not selected any result(s) to be sent'
       );
+      return false;
+    }
+    // Every action on this page acts on the active tab's status. Ticking a
+    // row in the moment after a tab switch — before the new list arrives —
+    // selected a row from the OLD tab, and the new tab's action ran on it:
+    // a PENDING result was approved and sent to the Course Advisor instead
+    // of the Dean. Refuse anything not at the tab's stage.
+    const stage = this.activeSegment().value;
+    if (selected.some((result) => result.status !== stage)) {
+      this.toast.showNotification(
+        'error',
+        'Selection out of date',
+        'One or more selected results are not at this stage. The list has been refreshed — select them again.'
+      );
+      this.fileTableRef()?.selection.clear();
+      this.getResults();
       return false;
     }
     return true;

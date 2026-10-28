@@ -39,6 +39,7 @@ import { CardComponent } from '../../../../@shared/components/card/card.componen
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
 import { SearchSelectComponent } from '../../../../@shared/components/forms/search-select/search-select.component';
 import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
+import { RoleEnum } from '../../../auth/model/auth.model';
 import { AuthenticationService } from '../../../auth/service/auth.service';
 import {
   ICreateResult,
@@ -87,6 +88,15 @@ export class CourseDetailsComponent implements OnInit {
 
   isLoading = signal<boolean>(false);
   searchingCourseCodes = signal<boolean>(false);
+
+  // A Course Advisor reaches this page to IMPORT a result that already
+  // cleared the approval chain on paper. It is recorded as IMPORTED and is
+  // never routed to a coordinator, so the course need not have one.
+  readonly isCourseAdvisor =
+    this.authService.activeAccount()?.role === RoleEnum.COURSE_ADVISOR;
+  readonly coordinatorPlaceholder = this.isCourseAdvisor
+    ? 'None assigned (not needed to import)'
+    : 'Course coordinator';
 
   school = signal<ISchool | null>(null);
   courses = signal<{ label: string; value: ICourse }[]>([]);
@@ -157,8 +167,10 @@ export class CourseDetailsComponent implements OnInit {
       this.form.get('courseCordinator')?.disable();
       this.form.get('courseLoad')?.disable();
 
-      // Fetch course codes if its a new result you are creating
+      // Fetch course codes if its a new result you are creating. Listen
+      // once — subscribing per search stacked a listener for every keystroke.
       this.getCourseCodes();
+      this.courseCodeListener();
     } else {
       this.form.get('school')?.disable();
       this.form.get('level')?.disable();
@@ -188,7 +200,6 @@ export class CourseDetailsComponent implements OnInit {
             value: course,
           }));
           this.courses.set(mappedCourses);
-          this.courseCodeListener();
         },
       });
   }
@@ -203,18 +214,26 @@ export class CourseDetailsComponent implements OnInit {
       ?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (selectedCourse: ICourse | string | null) => {
-          const { courseTitle, courseLoad, assignedTo, _id } =
+          const { courseTitle, courseLoad, assignedTo, _id, level, semester } =
             selectedCourse! as ICourse;
 
           const courseCordinator = assignedTo
             ? `${assignedTo?.firstname} ${assignedTo?.lastname}`
             : '';
 
+          // Level and semester belong to the course, exactly as when the
+          // page is opened from a course card. Left free, a 1st-semester
+          // course could be created as a 2nd-semester result — which also
+          // slipped past the duplicate check (it keys on semester).
           this.form.patchValue({
             courseTitle,
             courseLoad,
             courseCordinator,
+            level,
+            semester,
           });
+          this.form.get('level')?.disable();
+          this.form.get('semester')?.disable();
 
           this.router.navigate([], {
             queryParams: { courseId: _id },
@@ -325,6 +344,10 @@ export class CourseDetailsComponent implements OnInit {
   }
 
   submit(): void {
+    // A double-click lands both clicks before the button re-renders as
+    // disabled; the second POST then 409s beside the success toast.
+    if (this.isLoading()) return;
+
     const {
       session,
       admissionYear,
@@ -336,11 +359,23 @@ export class CourseDetailsComponent implements OnInit {
       courseCode,
     } = this.form.getRawValue();
 
-    if (!courseCordinator || !faculty || !department) {
+    if (!faculty || !department) {
       this.toast.showNotification(
         'error',
         'Invalid Result Details',
         'Ensure all fields are filled'
+      );
+      return;
+    }
+
+    // A lecturer's result goes to the course's coordinator next, so it
+    // cannot start without one. The field is read-only here, so say who can
+    // fix it rather than asking the lecturer to fill it in.
+    if (!courseCordinator && !this.isCourseAdvisor) {
+      this.toast.showNotification(
+        'error',
+        'No Course Coordinator',
+        'This course has no Course Coordinator yet. Ask your Head of Department to assign one before creating its result.'
       );
       return;
     }

@@ -61,6 +61,13 @@ export class CoursePreviewComponent {
     return /l/i.test(s) ? s : `${s}L`;
   });
 
+  /** "Mechanical Engineering Department", but never "Mathematics Department Department". */
+  departmentLabel = computed(() => {
+    const name = this.template().department?.name?.trim() ?? '';
+    if (!name) return '';
+    return /department$/i.test(name) ? name : `${name} Department`;
+  });
+
   semesterLabel = computed(
     () => SEMESTER_LABELS[this.template().semester ?? ''] ?? ''
   );

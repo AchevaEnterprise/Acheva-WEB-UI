@@ -17,6 +17,7 @@ import { PasswordValidityComponent } from '../../component/password-validity/pas
 import { SvgBackgroudComponent } from '../../component/svg-backgroud/svg-backgroud.component';
 import { IResetPassword } from '../../model/auth.model';
 import { AuthenticationService } from '../../service/auth.service';
+import { authErrorText } from '../../utils/auth-error';
 
 @Component({
   selector: 'app-create-new-password',
@@ -117,6 +118,10 @@ export class CreateNewPasswordComponent implements OnInit, OnDestroy {
 
               this.router.navigate(['/auth/login']);
             }
+          },
+          error: (err: unknown) => {
+            const text = authErrorText(err);
+            this.toast.showNotification('error', text.title, text.message);
           },
         })
     );

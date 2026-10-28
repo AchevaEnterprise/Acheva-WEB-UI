@@ -13,7 +13,7 @@
           label="Back"
           type="outline"
           class="btn-sm"
-          icon="images/general/arrow-left.svg"
+          icon="icons/general/back-arrow-icon.svg"
           (clickEvent)="goBack()"
         />
       </div>
@@ -284,8 +284,10 @@
                   track trackHistory($index)
                 ) {
                   <li>
-                    <span class="fw-600">{{ entry.action | titlecase }}</span>
-                    by {{ entry.lecturerRole | titlecase }}
+                    <span class="fw-600">{{
+                      activityActionLabel(entry.action)
+                    }}</span>
+                    by {{ activityRoleLabel(entry.lecturerRole) }}
                     <span class="text-neutral-400">
                       · {{ entry.timestamp | date: 'MMM d, y · h:mm a' }}
                     </span>

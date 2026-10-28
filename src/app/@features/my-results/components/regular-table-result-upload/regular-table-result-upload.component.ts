@@ -7,6 +7,7 @@ import {
   input,
   output,
   signal,
+  untracked,
 } from '@angular/core';
 import {
   AbstractControl,
@@ -122,13 +123,20 @@ export class RegularTableResultUploadComponent {
       const students = this.students();
       const refresh = this.refreshTable();
 
-      if (refresh) {
-        this.initializeFormRows(students);
-        void this.hydrateAndActivate();
-      } else if (students?.length > 0 && this.rows.length === 0) {
-        this.initializeFormRows(students);
-        void this.hydrateAndActivate();
-      }
+      // Only the inputs above may re-run this. The rebuild below reads and
+      // writes the table's own signals (allRows, dataSource, readonly); left
+      // tracked, a rebuild re-triggered itself forever and froze the tab —
+      // which is what made Reference/Unregistered stop responding after an
+      // upload, when refreshTable stays true.
+      untracked(() => {
+        if (refresh) {
+          this.initializeFormRows(students);
+          void this.hydrateAndActivate();
+        } else if (students?.length > 0 && this.rows.length === 0) {
+          this.initializeFormRows(students);
+          void this.hydrateAndActivate();
+        }
+      });
     });
 
     // Registration gating: flag + disable unregistered rows. Touches form
@@ -146,7 +154,15 @@ export class RegularTableResultUploadComponent {
       const registered = new Set(regNos);
       for (const row of rows) {
         const regNo = String(row.getRawValue().registrationNumber ?? '');
-        const gated = !registered.has(regNo) && !overridden.has(regNo);
+        // A row that already holds a saved score was enabled on an earlier
+        // visit — "Enable" is not stored server-side, only notified — so it
+        // stays open. Re-gating it made the lecturer re-enable every scored
+        // row on every visit, re-notifying the Course Advisor each time.
+        const scored = this.GRADE_COLUMNS.some(
+          (column) => (row.get(column)?.value ?? null) !== null
+        );
+        const gated =
+          !registered.has(regNo) && !overridden.has(regNo) && !scored;
         row.patchValue({ unregistered: gated }, { emitEvent: false });
         if (!baseEditable) continue;
         for (const column of this.GRADE_COLUMNS) {
@@ -245,6 +261,10 @@ export class RegularTableResultUploadComponent {
       );
 
     return this.fb.group({
+      // The saved entry's id. Hydration seeds it as the row's serverId; without
+      // it every seeded row had serverId null, so clearing a score saved in an
+      // earlier visit only deleted it locally and the server kept it.
+      _id: [student._id ?? null],
       registrationNumber: [student.registrationNumber, Validators.required],
       fullName: [
         this.titlecasePipe.transform(student.fullName),
@@ -328,8 +348,12 @@ export class RegularTableResultUploadComponent {
       ctrl.markAsDirty();
     };
 
-    // A single score outside 0–100.
-    if (value !== null && (value < 0 || value > 100)) {
+    // A single score outside 0–100, or with a decimal — scores are whole
+    // numbers; only GPA and CGPA may carry a fraction.
+    if (
+      value !== null &&
+      (value < 0 || value > 100 || !Number.isInteger(value))
+    ) {
       revert();
       this.handleRowInput(index);
       return;
@@ -459,6 +483,17 @@ export class RegularTableResultUploadComponent {
           },
           { emitEvent: false }
         );
+      } else if (
+        local &&
+        !local.serverId &&
+        raw._id &&
+        raw.total !== null &&
+        raw.total !== undefined
+      ) {
+        // A baseline seeded before rows carried their entry id: backfill it,
+        // or clearing this row would never reach the server. (Only for rows
+        // with a saved entry — a row without one carries the STUDENT's id.)
+        toSeed.push({ ...local, serverId: raw._id });
       } else if (!local && raw.total !== null && raw.total !== undefined) {
         // Seed a synced baseline from server-provided scores.
         toSeed.push({

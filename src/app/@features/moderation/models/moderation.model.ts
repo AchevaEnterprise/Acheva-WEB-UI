@@ -34,6 +34,7 @@ export enum ModerationStatus {
   REJECTED_OFFERING_HOD = 'REJECTED_OFFERING_HOD',
   REJECTED_DEAN = 'REJECTED_DEAN',
   CANCELLED = 'CANCELLED',
+  CLOSED = 'CLOSED',
 }
 
 export enum ModerationAction {
@@ -46,6 +47,7 @@ export enum ModerationAction {
   FORWARDED = 'FORWARDED',
   PUBLISHED = 'PUBLISHED',
   CANCELLED = 'CANCELLED',
+  CLOSED = 'CLOSED',
 }
 
 // ─── Lightweight populated shapes ─────────────────────────────────────────────

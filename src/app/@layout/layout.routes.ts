@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { LayoutComponent } from './layout.component';
+import { menuAccessGuard } from '../@core/guards/menu-access.guard';
 
 export const routes: Routes = [
   {
@@ -74,6 +75,7 @@ export const routes: Routes = [
       },
       {
         path: 'user-settings',
+        canActivate: [menuAccessGuard],
         data: {
           title: 'User Settings',
         },
@@ -107,6 +109,7 @@ export const routes: Routes = [
       },
       {
         path: 'students',
+        canActivate: [menuAccessGuard],
         data: {
           title: 'Students',
         },
@@ -115,6 +118,7 @@ export const routes: Routes = [
       },
       {
         path: 'registration',
+        canActivate: [menuAccessGuard],
         data: {
           title: 'Course Registration',
         },
@@ -135,6 +139,7 @@ export const routes: Routes = [
       },
       {
         path: 'transfers',
+        canActivate: [menuAccessGuard],
         data: {
           title: 'Department Transfers',
         },
@@ -145,6 +150,7 @@ export const routes: Routes = [
       },
       {
         path: 'dues-management',
+        canActivate: [menuAccessGuard],
         data: {
           title: 'Dues Management',
         },

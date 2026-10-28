@@ -14,7 +14,6 @@ import {
   of,
   switchMap,
 } from 'rxjs';
-import { LevelsEnum } from '../../../../@core/models/school.model';
 import { ToastService } from '../../../../@core/utility/toast.service';
 import { CardComponent } from '../../../../@shared/components/card/card.component';
 import { EmptyStateComponent } from '../../../../@shared/components/empty-state/empty-state.component';
@@ -116,10 +115,11 @@ export class CoursesComponent {
             return of(courses);
           } else {
             // No results with course code, try course title
+            // No level filter: `level: EXCEPTION` matched no course at all,
+            // so every title search came back empty.
             const courseTitleParams = {
               courseCode: '',
               courseTitle: query.trim(),
-              level: LevelsEnum.EXCEPTION,
             };
 
             return this.courseService

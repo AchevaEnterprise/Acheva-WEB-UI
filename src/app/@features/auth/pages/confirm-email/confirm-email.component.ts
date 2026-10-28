@@ -9,6 +9,7 @@ import { ButtonComponent } from '../../../../@shared/components/forms/button/but
 import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
 import { SvgBackgroudComponent } from '../../component/svg-backgroud/svg-backgroud.component';
 import { AuthenticationService } from '../../service/auth.service';
+import { authErrorText } from '../../utils/auth-error';
 
 @Component({
   selector: 'app-confirm-email',
@@ -66,6 +67,10 @@ export class ConfirmEmailComponent implements OnDestroy {
                 res.message
               );
             }
+          },
+          error: (err: unknown) => {
+            const text = authErrorText(err);
+            this.toast.showNotification('error', text.title, text.message);
           },
         })
     );

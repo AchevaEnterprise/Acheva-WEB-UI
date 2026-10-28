@@ -237,10 +237,20 @@ export class CreateModerationComponent implements OnInit {
 
   private persist(submitImmediately: boolean): void {
     const s = this.student();
-    if (!s || !this.courseId) return;
+    // A request is already in flight — a double-click must not create a
+    // second moderation for the same student and course.
+    if (!s || !this.courseId || this.saving()) return;
 
     this.letterBody.markAsTouched();
     this.letterBody.updateValueAndValidity();
+    if (this.letterBody.hasError('maxlength')) {
+      this.toastService.showNotification(
+        'warning',
+        'Letter too long',
+        'The letter is longer than the 20,000-character limit. Please shorten it and try again.'
+      );
+      return;
+    }
     if (this.letterBody.invalid) {
       this.toastService.showNotification(
         'warning',

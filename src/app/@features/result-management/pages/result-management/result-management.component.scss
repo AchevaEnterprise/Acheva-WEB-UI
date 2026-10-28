@@ -1,0 +1,27 @@
+/*
+ * A forward that failed after its approve committed. Brand blue, not an
+ * alarm: nothing is lost, it just has not reached the next desk yet.
+ */
+
+.stranded {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+  padding: 1rem 1.5rem;
+  border: 1px solid #7bf;
+  border-radius: 8px;
+  background: rgb(119 187 255 / 12%);
+  color: #1a6fd1;
+
+  ul {
+    margin: 0.5rem 0 0;
+    padding-left: 1.25rem;
+    color: #46546a;
+  }
+
+  &__missing {
+    color: #d8315b;
+  }
+}

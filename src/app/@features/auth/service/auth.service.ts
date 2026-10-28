@@ -55,16 +55,28 @@ export class AuthenticationService {
 
   public get isAuthenticated(): boolean {
     const token = this.getToken;
+    if (!token) return false;
 
-    if (token && !this.jwtHelper.isTokenExpired(token)) return true;
-    return false;
+    // A token that is not a JWT at all (edited, truncated) makes the helper
+    // THROW, which failed the route guard mid-navigation and left a blank
+    // page at "/" instead of the login screen. Unreadable means signed out.
+    try {
+      return !this.jwtHelper.isTokenExpired(token);
+    } catch {
+      return false;
+    }
   }
 
   public signIn(payload: ILogIn): Observable<IAPIResponse<IAuthProfile>> {
     return this.http
-      .post<
-        IAPIResponse<IAuthProfile>
-      >(`${this.authUrl}/lecturers/signin`, payload)
+      .post<IAPIResponse<IAuthProfile>>(
+        `${this.authUrl}/lecturers/signin`,
+        payload,
+        {
+          // The login page explains its own failures (see authErrorText).
+          headers: { 'X-Silent-Error': 'true' },
+        }
+      )
       .pipe(
         tap((resp) => {
           const { accessToken, refreshToken, ...rest } = resp.data;
@@ -190,7 +202,8 @@ export class AuthenticationService {
   ): Observable<IAPIResponse<{ token: string }>> {
     return this.http.patch<IAPIResponse<{ token: string }>>(
       `${this.authUrl}/verify-email/${accountId}`,
-      { token }
+      { token },
+      { headers: { 'X-Silent-Error': 'true' } }
     );
   }
 
@@ -211,7 +224,8 @@ export class AuthenticationService {
       {
         ...payload,
         requestId,
-      }
+      },
+      { headers: { 'X-Silent-Error': 'true' } }
     );
   }
 

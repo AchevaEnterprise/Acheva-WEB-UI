@@ -26,7 +26,11 @@
         <div class="cm-blocked__icon">!</div>
         <div class="flex-1">
           <h4 class="acva-para-2 fw-600 mb-1">
-            A moderation already exists for this course
+            @if (eligibility()?.existing) {
+              A moderation already exists for this course
+            } @else {
+              Moderation is not available for this student
+            }
           </h4>
           <p class="acva-para-1 text-neutral-500">
             {{ eligibility()?.reason }}
@@ -59,7 +63,11 @@
             placeholder="Dear HOD, I write to request the moderation of…"
           ></quill-editor>
 
-          @if (letterBody.touched && letterBody.invalid) {
+          @if (letterBody.touched && letterBody.hasError('maxlength')) {
+            <p class="acva-caption text-[#D8315B] mt-2">
+              The letter is too long — keep it under 20,000 characters.
+            </p>
+          } @else if (letterBody.touched && letterBody.invalid) {
             <p class="acva-caption text-[#D8315B] mt-2">
               The letter cannot be empty.
             </p>

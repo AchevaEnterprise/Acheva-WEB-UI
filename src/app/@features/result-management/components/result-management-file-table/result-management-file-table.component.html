@@ -124,6 +124,16 @@
               (keydown)="viewResult(result)"
             >
               {{ result.semester }}
+              <!-- Without session and intake, two results for one course
+                   (e.g. MTH 103 for two sessions) were identical rows. -->
+              @if (result.session) {
+                <span class="block acva-caption text-neutral-500">
+                  {{ result.session }}
+                  @if (result.admissionYear) {
+                    · {{ result.admissionYear }} intake
+                  }
+                </span>
+              }
             </td>
           </ng-container>
 

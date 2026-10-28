@@ -37,6 +37,11 @@ export class VerifyEmailComponent implements OnDestroy {
         .subscribe({
           next: (res) => {
             if (res.status) {
+              // Arriving from a refused sign-in there is no account id in the
+              // URL; the resend reply carries it, and "Continue" needs it.
+              const id = (res.data as { user?: { id?: string } } | null)?.user
+                ?.id;
+              if (id) this.accountId.set(id);
               this.toast.showNotification(
                 'success',
                 'Verification Email Sent',

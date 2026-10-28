@@ -20,6 +20,7 @@ export enum RoleEnum {
 
 export interface ISignUp {
   firstname: string | null;
+  middlename?: string;
   lastname: string | null;
   email: string;
   password: string;
@@ -27,7 +28,7 @@ export interface ISignUp {
   faculty: string;
   department: string;
   school: string;
-  title?: string | string[];
+  titles?: string[];
   role: RoleEnum;
 }
 

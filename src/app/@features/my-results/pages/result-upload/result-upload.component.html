@@ -104,7 +104,7 @@
     </div>
 
     <app-card
-      label="Result Analtyics"
+      label="Result Analytics"
       [showDivider]="true"
       dividerClass="!mt-4"
     >
@@ -207,13 +207,14 @@
         />
       }
 
-      <app-button
-        *appRoleAccess="[RoleEnum.COURSE_ADVISOR]"
-        label="Publish"
-        class="btn-md"
-        [loading]="publishing()"
-        (clickEvent)="confirmPublish()"
-      />
+      @if (canPublish()) {
+        <app-button
+          label="Publish"
+          class="btn-md"
+          [loading]="publishing()"
+          (clickEvent)="confirmPublish()"
+        />
+      }
 
       @if (!isUploaded() && !readOnly()) {
         <app-button
@@ -249,7 +250,7 @@
            is rendered as the official grade report and handed over. -->
       <app-button
         label="Export"
-        icon="icons/general/download-icon.svg"
+        icon="icons/general/export-icon.svg"
         class="btn-md"
         [disabled]="!resultId"
         (clickEvent)="exportResult()"

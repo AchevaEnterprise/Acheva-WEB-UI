@@ -46,7 +46,7 @@ import { SkeletonTableComponent } from '../../../../@shared/components/skeleton/
 import { PaginatorComponent } from '../../../../@shared/components/paginator/paginator.component';
 import { RoleEnum } from '../../../auth/model/auth.model';
 import { AuthenticationService } from '../../../auth/service/auth.service';
-import { IResult } from '../../models/results.model';
+import { IResult, ResultStatusEnum } from '../../models/results.model';
 import { isResultReadonlyForLecturer } from '../../utils/workflow';
 
 export interface FileTableFilter {
@@ -172,6 +172,28 @@ export class ResultManagementFileTableComponent implements OnInit, OnDestroy {
 
   //** Whether the lecturer may select this row for an action (send/resend). */
   isRowDisabled(result: IResult): boolean {
+    // A Head or Dean sees results they already passed on (an external result
+    // now with the students' department HOD, one the Dean returned to the
+    // HOD). Those can be opened, but only a result on their own desk can be
+    // selected for an action — the API refuses the rest anyway.
+    // A Course Advisor may publish only a COMPLETE result sent to them. Their
+    // own unsent import drafts carry no handler yet, so only COMPLETE rows are
+    // held to it.
+    const handlerGated =
+      this.userRole === RoleEnum.HOD ||
+      this.userRole === RoleEnum.DEAN ||
+      (this.userRole === RoleEnum.COURSE_ADVISOR &&
+        result.status === ResultStatusEnum.COMPLETE);
+    if (handlerGated) {
+      const myId = this.authService.activeAccount()?.id;
+      // Lists send the id; a populated handler would carry it as `_id`.
+      const handler: unknown = result.receivingHandler;
+      const handlerId =
+        handler && typeof handler === 'object' && '_id' in handler
+          ? String((handler as { _id: unknown })._id)
+          : String(handler ?? '');
+      return !!myId && handlerId !== myId;
+    }
     return (
       this.userRole === RoleEnum.LECTURER && isResultReadonlyForLecturer(result)
     );

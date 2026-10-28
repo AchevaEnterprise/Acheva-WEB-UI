@@ -1,6 +1,6 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import {
   IAPIPaginatedResponse,
@@ -28,6 +28,7 @@ import {
   IResultComment,
   IResultEntriesQuery,
   IResultQuery,
+  IStrandedResult,
   IResultStatusCount,
   ISendSelectedResult,
   IUpdateResultEntry,
@@ -68,6 +69,27 @@ export class ResultsService {
       {
         params,
       }
+    );
+  }
+
+  /**
+   * Results approved or returned by me whose forward never landed. Silent:
+   * it runs on every visit to Result Management, and a failure here must not
+   * put an error toast over a page that is otherwise working.
+   */
+  getStrandedResults(): Observable<IAPIResponse<IStrandedResult[]>> {
+    return this.http.get<IAPIResponse<IStrandedResult[]>>(
+      `${this.resultsUrl}/stranded`,
+      { headers: new HttpHeaders({ 'X-Silent-Error': 'true' }) }
+    );
+  }
+
+  /** Send a stranded result on to whoever its status says holds it next. */
+  resendResult(resultId: string): Observable<IAPIResponse<unknown>> {
+    return this.http.post<IAPIResponse<unknown>>(
+      `${this.resultsUrl}/${resultId}/resend`,
+      {},
+      { headers: new HttpHeaders({ 'X-Silent-Error': 'true' }) }
     );
   }
 
@@ -204,11 +226,28 @@ export class ResultsService {
     let params = new HttpParams();
     params = params.append('role', role);
 
-    return this.http.post<IAPIResponse<unknown>>(
-      `${this.resultsUrl}/selected`,
-      payload,
-      { params }
-    );
+    // The bulk send answers 201 even when every item failed, listing the
+    // failures in the body. Callers only looked at `status`, so a failed
+    // forward (after the approve had already committed) toasted "Result
+    // Sent" while the result stayed on the sender's desk. Raise it in the
+    // same shape as an HTTP error so every caller's error path shows why.
+    return this.http
+      .post<IAPIResponse<unknown>>(`${this.resultsUrl}/selected`, payload, {
+        params,
+      })
+      .pipe(
+        map((resp) => {
+          const failure = firstSendFailure(resp?.data);
+          if (failure) {
+            throw {
+              error: {
+                message: `It was not forwarded: ${failure}. It stays with you — use Resend at the top of Result Management once that is sorted.`,
+              },
+            };
+          }
+          return resp;
+        })
+      );
   }
 
   sendBulkResult(
@@ -441,4 +480,22 @@ export class ResultsService {
       { params }
     );
   }
+}
+
+/** First failure reason in a `/results/selected` response, or null if all sent. */
+function firstSendFailure(data: unknown): string | null {
+  if (!data || typeof data !== 'object') return null;
+  const { failedCount, failed } = data as {
+    failedCount?: unknown;
+    failed?: unknown;
+  }; // narrowed field-by-field below
+  if (typeof failedCount !== 'number' || failedCount < 1) return null;
+  const first: unknown = Array.isArray(failed)
+    ? (failed as unknown[])[0]
+    : null;
+  const reason =
+    first && typeof first === 'object' && 'error' in first
+      ? String((first as { error: unknown }).error)
+      : '';
+  return reason || 'the next approver could not be reached.';
 }

@@ -144,6 +144,41 @@ export const errorHandlerInterceptor: HttpInterceptorFn = (req, next) => {
         );
       }
 
+      // These used to fail in silence: a press of "Send" while offline, or a
+      // sign-in after the rate limit, just stopped spinning with no word.
+      // Status 0 (no response at all) is toasted for WRITES only — the user
+      // pressed something and must know it did not land; a failed read
+      // already shows as an empty page, and polls would toast every tick.
+      const isWrite = !['GET', 'HEAD', 'OPTIONS'].includes(req.method);
+      if (error.status === 0 && isWrite) {
+        toast.showNotification(
+          'error',
+          'Could Not Connect',
+          "Your last action didn't reach Acheva. Check your internet connection and try again."
+        );
+      }
+
+      if (error.status === HttpStatusCode.TooManyRequests) {
+        toast.showNotification(
+          'error',
+          'Too Many Attempts',
+          "You've tried that too many times in a short while. Please wait a minute and try again."
+        );
+      }
+
+      if (
+        error.status === HttpStatusCode.BadGateway ||
+        error.status === HttpStatusCode.ServiceUnavailable ||
+        error.status === HttpStatusCode.GatewayTimeout
+      ) {
+        toast.showNotification(
+          'error',
+          'Service Unavailable',
+          error.error?.message ||
+            'Acheva is temporarily unavailable. Please try again in a few minutes.'
+        );
+      }
+
       return throwError(() => error);
     })
   );

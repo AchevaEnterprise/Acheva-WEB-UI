@@ -16,7 +16,11 @@ import { UploadDialogComponent } from '../../../../@shared/components/upload-dia
 import { AuthenticationService } from '../../../auth/service/auth.service';
 import { LecturersService } from '../../../user-settings/service/lecturer.service';
 import { AddStudentDialogComponent } from '../../components/add-student-dialog/add-student-dialog.component';
-import { IStudent, IStudentAcademicFlags } from '../../models/student.model';
+import {
+  IStudent,
+  IStudentAcademicFlags,
+  IStudentImportSummary,
+} from '../../models/student.model';
 import { StudentService } from '../../services/student.service';
 
 @Component({
@@ -163,15 +167,32 @@ export class StudentsComponent implements OnInit {
       .pipe(finalize(() => this.uploading.set(false)))
       .subscribe({
         next: (resp) => {
-          if (resp.status) {
-            this.toastService.showNotification(
-              'success',
-              'Student List Uploaded',
-              'Student list has been uploaded successfully'
-            );
+          if (!resp.status) return;
+          // Say what the file actually did — "uploaded successfully" for a
+          // file that added nobody sent advisors looking for students who
+          // were never created.
+          // The service types this response loosely (`IAPIResponse<any>`);
+          // every field is read optionally below, so a missing one is safe.
+          const summary = (resp.data ?? {}) as Partial<IStudentImportSummary>;
+          const added = summary.newStudentsCount ?? 0;
+          const updated = summary.updatedStudentsCount ?? 0;
+          const conflicts = summary.conflicts ?? [];
+          const skipped = (summary.skippedCount ?? 0) + conflicts.length;
+          const parts = [`${added} added`, `${updated} updated`];
+          if (skipped > 0) parts.push(`${skipped} skipped`);
+          const detail =
+            conflicts[0]?.reason ??
+            (skipped > 0
+              ? 'Rows without a name or registration number were skipped.'
+              : '');
 
-            this.getStudents();
-          }
+          this.toastService.showNotification(
+            added + updated > 0 ? 'success' : 'warning',
+            added + updated > 0 ? 'Student list uploaded' : 'No students added',
+            `${parts.join(', ')}.${detail ? ` ${detail}` : ''}`
+          );
+
+          this.getStudents();
         },
       });
   }

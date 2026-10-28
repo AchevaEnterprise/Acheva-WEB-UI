@@ -49,6 +49,7 @@ export const MODERATION_REJECTED_STATUSES: readonly ModerationStatus[] = [
 export const MODERATION_TERMINAL_STATUSES: readonly ModerationStatus[] = [
   ModerationStatus.PUBLISHED,
   ModerationStatus.CANCELLED,
+  ModerationStatus.CLOSED,
 ];
 
 const STATUS_LABELS: Record<ModerationStatus, string> = {
@@ -66,8 +67,9 @@ const STATUS_LABELS: Record<ModerationStatus, string> = {
   [ModerationStatus.PUBLISHED]: 'Published',
   [ModerationStatus.REJECTED_HOME_HOD]: 'Rejected (Home HOD)',
   [ModerationStatus.REJECTED_OFFERING_HOD]: 'Rejected (Offering HOD)',
-  [ModerationStatus.REJECTED_DEAN]: 'Rejected (Dean)',
+  [ModerationStatus.REJECTED_DEAN]: 'Returned by Dean',
   [ModerationStatus.CANCELLED]: 'Cancelled',
+  [ModerationStatus.CLOSED]: 'Closed',
 };
 
 export type ModerationStatusVariant =
@@ -88,7 +90,11 @@ export function moderationStatusVariant(
   if (status === ModerationStatus.DRAFT) return 'draft';
   if (status === ModerationStatus.APPROVED_READY_TO_PUBLISH) return 'ready';
   if (status === ModerationStatus.PUBLISHED) return 'published';
-  if (status === ModerationStatus.CANCELLED) return 'cancelled';
+  if (
+    status === ModerationStatus.CANCELLED ||
+    status === ModerationStatus.CLOSED
+  )
+    return 'cancelled';
   if (MODERATION_REJECTED_STATUSES.includes(status)) return 'rejected';
   return 'pending';
 }
@@ -200,7 +206,9 @@ export type ModerationActionKind =
   | 'hodModerate'
   // Dean
   | 'deanApprove'
-  | 'deanReject';
+  | 'deanReject'
+  // HOD, after a Dean rejection they cannot rectify
+  | 'hodClose';
 
 export interface IModerationAction {
   kind: ModerationActionKind;
@@ -256,10 +264,11 @@ export function getAvailableActions(
       actions.push(publish());
       return actions;
     }
+    // A Dean rejection goes back to the HOD, who resubmits or closes it —
+    // it is not the advisor's to cancel.
     if (
       mod.status === ModerationStatus.REJECTED_HOME_HOD ||
-      mod.status === ModerationStatus.REJECTED_OFFERING_HOD ||
-      mod.status === ModerationStatus.REJECTED_DEAN
+      mod.status === ModerationStatus.REJECTED_OFFERING_HOD
     ) {
       actions.push(cancel('Cancel request'));
       return actions;
@@ -290,6 +299,26 @@ export function getAvailableActions(
     case ModerationStatus.PENDING_OFFERING_HOD: {
       actions.push(moderate());
       actions.push(reject('offeringHodReject', 'Reject to Course Advisor'));
+      return actions;
+    }
+
+    case ModerationStatus.REJECTED_DEAN: {
+      // Returned by the Dean to the HOD who moderated it: rectify and
+      // resubmit, or close it for good when it cannot be rectified.
+      actions.push({
+        ...moderate(),
+        label: 'Re-moderate & resubmit',
+        description:
+          'Address the Dean’s reason, enter the corrected scores (they must total a grade E) and send it back to the Dean.',
+      });
+      actions.push({
+        kind: 'hodClose',
+        label: 'Close permanently',
+        tone: 'destructive',
+        description:
+          'Close this request for good, with a reason. The Course Advisor is told why and can raise a new request later if circumstances change.',
+        flow: 'reject',
+      });
       return actions;
     }
 
@@ -390,8 +419,12 @@ function reject(kind: ModerationActionKind, label: string): IModerationAction {
     kind,
     label,
     tone: 'destructive',
+    // The Dean's rejection goes back to the HOD who moderated the score
+    // (`deanReject` on the API), not to the Course Advisor.
     description:
-      'Capture a reason and return the request to the Course Advisor.',
+      kind === 'deanReject'
+        ? 'Capture a reason and return the request to the Head of Department who moderated it.'
+        : 'Capture a reason and return the request to the Course Advisor.',
     flow: 'reject',
   };
 }

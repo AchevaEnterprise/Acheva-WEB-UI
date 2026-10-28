@@ -133,11 +133,15 @@ export class SideBarComponent {
   }
 
   switchToRole(role: RoleEnum) {
+    // The menu's own label — never the raw enum token (COURSE_COORDINATOR).
+    const label =
+      this.roles().find((option) => option.role === role)?.label ?? 'this role';
+
     if (this.activeRole() === role) {
       this.toast.showNotification(
         'error',
         'Active role',
-        `You are already operating as a ${role}`
+        `You are already working as ${label}`
       );
 
       return;
@@ -154,7 +158,7 @@ export class SideBarComponent {
             this.toast.showNotification(
               'success',
               'Role Switched',
-              `You are operating as a ${role}`
+              `You are now working as ${label}`
             );
 
             this.router.navigate(['/dashboard']);

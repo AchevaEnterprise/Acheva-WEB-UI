@@ -1,10 +1,12 @@
 import {
   DestroyRef,
   Component,
+  effect,
   HostListener,
   inject,
   OnInit,
   signal,
+  untracked,
   viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -44,6 +46,7 @@ import { AuthenticationService } from '../../../auth/service/auth.service';
 import {
   ICreateResultEntry,
   IResult,
+  ResultStatusEnum,
   SegmentValue,
 } from '../../../result-management/models/results.model';
 import { RegistrationService } from '../../../registration/services/registration.service';
@@ -92,6 +95,23 @@ export class ResultUploadComponent implements OnInit, CanComponentDeactivate {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   readonly sync = inject(ResultSyncService);
+
+  /**
+   * The analytics card and the Save Changes gate are server figures, read on
+   * load. Without this they stayed frozen while the lecturer typed — every
+   * score in, "Total Pass: 0" and Save still disabled until a reload. Each
+   * time the sync engine drains a batch (pending > 0 → 0) re-read them; the
+   * table itself is left alone so nobody loses their cursor.
+   */
+  private lastPendingCount = 0;
+  readonly refreshWhenSynced = effect(() => {
+    const pending = this.sync.pendingCount();
+    const drained = this.lastPendingCount > 0 && pending === 0;
+    this.lastPendingCount = pending;
+    if (drained && this.sync.failedCount() === 0) {
+      untracked(() => this.refreshAnalytics());
+    }
+  });
   private readonly registrationService = inject(RegistrationService);
 
   readonly resultId = this.route.snapshot.queryParamMap.get('resultId');
@@ -188,6 +208,8 @@ export class ResultUploadComponent implements OnInit, CanComponentDeactivate {
    * See `isResultReadonlyForLecturer` for the exact rule.
    */
   readOnly = signal<boolean>(false);
+  /** True only for the Course Advisor a COMPLETE result was sent to. */
+  canPublish = signal<boolean>(false);
   /** Registration gating for the REGULAR table — null until roster known. */
   registeredRegNos = signal<string[] | null>(null);
 
@@ -240,9 +262,76 @@ export class ResultUploadComponent implements OnInit, CanComponentDeactivate {
     this.readOnly.set(
       this.userRole === RoleEnum.LECTURER && isResultReadonlyForLecturer(result)
     );
+
+    // Publish belongs to the Course Advisor the COMPLETE result was sent to —
+    // the server refuses anyone else, so nobody else is offered the button.
+    const handler: unknown = result.receivingHandler;
+    const handlerId =
+      handler && typeof handler === 'object' && '_id' in handler
+        ? String((handler as { _id: unknown })._id)
+        : String(handler ?? '');
+    this.canPublish.set(
+      this.userRole === RoleEnum.COURSE_ADVISOR &&
+        result.status === ResultStatusEnum.COMPLETE &&
+        handlerId === this.authService.activeAccount()?.id
+    );
   }
 
   setResultEntriesDetails(resultEntries: unknown) {
+    const { entries, studentsWithoutEntries } = resultEntries as {
+      entries: Partial<IStudentGrade>[];
+      studentsWithoutEntries?: Partial<IStudentGrade>[];
+    };
+
+    const studentResultEntries = [
+      ...entries,
+      ...(studentsWithoutEntries ?? []),
+    ];
+
+    if (studentsWithoutEntries && studentsWithoutEntries.length < 1)
+      this.resultEntryCompleted.set(true);
+
+    this.applyAnalytics(resultEntries);
+
+    // Set student's result entries
+    const activeCategory = this.activeSegment().value as SegmentValue;
+    this.students.update((students) => {
+      students[activeCategory] = studentResultEntries;
+      return students;
+    });
+  }
+
+  /** Re-read the server's figures without rebuilding the grade table. */
+  private refreshAnalytics(): void {
+    if (!this.resultId) return;
+
+    forkJoin([
+      this.resultsService.getResult(this.resultId),
+      this.resultsService.getResultEntries(this.resultId, {
+        category: this.activeSegment().value,
+      }),
+    ])
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: ([result, resultEntries]) => {
+          if (result.status)
+            this.averageTotal.set(result.data.analytics.averageTotal);
+          if (!resultEntries.status) return;
+
+          const { studentsWithoutEntries } = resultEntries.data as {
+            studentsWithoutEntries?: unknown[];
+          };
+          this.resultEntryCompleted.set(
+            !!studentsWithoutEntries && studentsWithoutEntries.length < 1
+          );
+          this.applyAnalytics(resultEntries.data);
+        },
+        // A background refresh: the figures simply stay as they were.
+        error: () => undefined,
+      });
+  }
+
+  private applyAnalytics(resultEntries: unknown): void {
     const {
       analytics,
       totalPass,
@@ -253,7 +342,6 @@ export class ResultUploadComponent implements OnInit, CanComponentDeactivate {
       studentsWithoutEntries,
     } = resultEntries as {
       analytics: Record<string, number>;
-      total: number;
       totalPass: number;
       totalFail: number;
       percentagePass: number;
@@ -271,27 +359,14 @@ export class ResultUploadComponent implements OnInit, CanComponentDeactivate {
       analytics['F'] || 0,
     ];
 
-    const studentResultEntries = [
-      ...entries,
-      ...(studentsWithoutEntries ?? []),
-    ];
-
-    if (studentsWithoutEntries && studentsWithoutEntries.length < 1)
-      this.resultEntryCompleted.set(true);
-
     this.analyticsChartData.set(analyticsData);
-    this.totalStudent.set(studentResultEntries.length);
+    this.totalStudent.set(
+      entries.length + (studentsWithoutEntries?.length ?? 0)
+    );
     this.totalStudentPass.set(totalPass || 0);
     this.totalStudentFail.set(totalFail || 0);
     this.percentagePass.set(percentagePass || 0);
     this.percentageFail.set(percentageFail || 0);
-
-    // Set student's result entries
-    const activeCategory = this.activeSegment().value as SegmentValue;
-    this.students.update((students) => {
-      students[activeCategory] = studentResultEntries;
-      return students;
-    });
   }
 
   categoryListener() {
@@ -320,7 +395,7 @@ export class ResultUploadComponent implements OnInit, CanComponentDeactivate {
       width: '600px',
       data: {
         message:
-          'Are you sure you want to save these changes?  if you save these changes, You can now send to the course coordinator.',
+          'Your scores are saved as you type. Continue to Result Management, where you can send this result to the Course Coordinator?',
         subTitle: 'Kindly confirm this action',
       },
     });
@@ -539,16 +614,31 @@ export class ResultUploadComponent implements OnInit, CanComponentDeactivate {
       )
       .subscribe({
         next: (resp) => {
-          if (resp.status) {
-            this.isUploaded.set(true);
-            this.getResultAndEntries();
+          if (!resp.status) return;
 
+          this.isUploaded.set(true);
+          this.getResultAndEntries();
+
+          // Say what was actually recorded. "Uploaded successfully" used to
+          // appear even when not one row of the file had been saved.
+          const { recorded, skipped } = resp.data;
+          if (recorded === 0) {
             this.toast.showNotification(
-              'success',
-              'Upload Successful',
-              'Result document has been uploaded successfully'
+              'error',
+              'Nothing Imported',
+              'None of the rows in this file could be recorded. Check that the registration numbers belong to this class, then try again.'
             );
+            return;
           }
+
+          const skippedNote = skipped.length
+            ? ` ${skipped.length} row${skipped.length === 1 ? ' was' : 's were'} skipped.`
+            : '';
+          this.toast.showNotification(
+            'success',
+            'Results Imported',
+            `Scores for ${recorded} student${recorded === 1 ? '' : 's'} were recorded.${skippedNote}`
+          );
         },
       });
   }

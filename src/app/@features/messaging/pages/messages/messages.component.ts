@@ -30,6 +30,7 @@ import {
 import { MessagingService } from '../../services/messaging.service';
 import { listTimestamp } from '../../utils/message-day';
 import { readablePreview } from '../../utils/readable-text';
+import { sendFailureText } from '../../utils/send-failure';
 
 /**
  * Messages — the familiar two-pane chat layout: threads on the left, the open
@@ -207,7 +208,7 @@ export class MessagesComponent implements OnInit {
           );
           this.bumpConversation(conversation.id, body);
         },
-        error: () => {
+        error: (err: unknown) => {
           // Kept, marked failed. Dropping it would lose what someone typed.
           this.messages.update((rows) =>
             rows.map((row) =>
@@ -219,7 +220,7 @@ export class MessagesComponent implements OnInit {
           this.toast.showNotification(
             'error',
             'Not sent',
-            'That message did not go through. Check your connection and try again.'
+            sendFailureText(err)
           );
         },
       });
