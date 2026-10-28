@@ -1,6 +1,40 @@
 <div id="container">
   <h3 class="acva-heading-5 fw-500">Result Management</h3>
 
+  @if (stranded().length) {
+    <section class="stranded" role="status" aria-live="polite">
+      <div class="stranded__text">
+        <p class="acva-para-2 fw-500">
+          {{ stranded().length }}
+          {{ stranded().length === 1 ? 'result was' : 'results were' }}
+          approved or returned by you but did not reach the next person.
+        </p>
+        <ul class="acva-para-1">
+          @for (item of stranded(); track item._id) {
+            <li>
+              {{ item.courseCode }} · {{ item.session }} ·
+              {{ item.admissionYear }} intake — goes to the
+              {{ item.nextRoleLabel }}
+              @if (!item.canResend) {
+                <span class="stranded__missing"
+                  >(no {{ item.nextRoleLabel }} is assigned yet — ask your
+                  administrator)</span
+                >
+              }
+            </li>
+          }
+        </ul>
+      </div>
+      <app-button
+        label="Resend"
+        class="btn-md"
+        [loading]="resendingStranded()"
+        [disabled]="!anyResendable()"
+        (clickEvent)="resendStranded()"
+      />
+    </section>
+  }
+
   <!-- SEGMENTS -->
   <div class="mt-8">
     <div class="flex justify-between flex-wrap gap-4 items-center">
@@ -16,7 +50,7 @@
             *appRoleAccess="[RoleEnum.LECTURER]"
             label="Send to CC"
             class="btn-md"
-            matTooltip="Send to Course Cordinator"
+            matTooltip="Send to Course Coordinator"
             [disabled]="!resultIsSelected"
             [loading]="sendingToCC()"
             (clickEvent)="confirmSendToCC()"

@@ -24,7 +24,10 @@ export const SHEET_COLUMNS: readonly SheetColumn[] = [
   {
     header: 'NAMES',
     value: (e) => e.fullName.toUpperCase(),
-    width: 150,
+    // 115, not 150: with pdfmake's 4pt cell padding the columns must sum to
+    // under ~455 to fit A4's 539pt between margins. At 150 the table ran
+    // past the right edge and the REMARK column was cut off. Long names wrap.
+    width: 115,
     align: 'left',
   },
   {

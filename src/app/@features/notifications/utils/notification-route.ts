@@ -42,6 +42,10 @@ export function notificationRoute(
       if (!meta.transferId) return null;
       return { commands: ['/transfers', meta.transferId] };
     }
+    case 'message':
+      // Announcements arrive as notifications too; they open the Messages
+      // page, where the thread sits at the top with its unread pill.
+      return { commands: ['/messages'] };
     default:
       return null;
   }

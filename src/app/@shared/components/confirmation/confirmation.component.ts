@@ -19,6 +19,14 @@ export class ConfirmationComponent {
     MAT_DIALOG_DATA
   );
 
+  /** The subtitle, closed with a full stop only if the caller didn't — callers
+   *  pass both bare phrases and whole sentences, and "later.." reads as a typo. */
+  readonly subTitleText = this.data.subTitle
+    ? /[.!?]$/.test(this.data.subTitle.trim())
+      ? this.data.subTitle.trim()
+      : `${this.data.subTitle.trim()}.`
+    : '';
+
   cancel() {
     this.dialogRef.close(false);
   }

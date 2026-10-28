@@ -280,7 +280,7 @@
           <div class="profile-rail__insights">
             <h4 class="profile-rail__insights-title">
               <mat-icon>lightbulb</mat-icon>
-              AI Insights
+              Insights
             </h4>
 
             <app-ai-insight-card
@@ -291,17 +291,10 @@
               (clickEvent)="openCarryovers()"
             />
 
-            <app-ai-insight-card
-              variant="success"
-              title="Optimal Load"
-              description="18 units is the recommended balance for maintaining a 3.7+ CGPA based on previous performance."
-            />
-
-            <app-ai-insight-card
-              variant="info"
-              title="Graduation Path"
-              description="Student is currently tracking for a First Class (3.5+ requirement)."
-            />
+            <!-- "Optimal Load" and "Graduation Path" were fixed sentences, not
+                 computed — a 2.90 student read "tracking for a First Class".
+                 Acheva asserts no degree class (see root CLAUDE.md, transcript);
+                 restore them only once they are derived from the record. -->
           </div>
         </aside>
       </section>

@@ -28,6 +28,7 @@ export enum HistoryModerationAction {
   FORWARDED = 'FORWARDED',
   PUBLISHED = 'PUBLISHED',
   CANCELLED = 'CANCELLED',
+  CLOSED = 'CLOSED',
 }
 
 export type HistoryAction = HistoryResultAction | HistoryModerationAction;

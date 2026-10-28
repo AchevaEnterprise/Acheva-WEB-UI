@@ -61,6 +61,17 @@ export interface IStudentAcademicFlags {
   studentIdsWithFailedCourses: string[];
 }
 
+/** What `POST /lecturers/students/import` actually did with the file. */
+export interface IStudentImportSummary {
+  readonly newStudentsCount: number;
+  readonly updatedStudentsCount: number;
+  readonly skippedCount?: number;
+  readonly conflicts: ReadonlyArray<{
+    readonly registrationNumber?: string;
+    readonly reason?: string;
+  }>;
+}
+
 export interface IStudentPerformance {
   _id: string;
   courseCode: string;

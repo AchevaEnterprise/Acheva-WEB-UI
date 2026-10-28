@@ -51,6 +51,9 @@ const ACTION_LABELS: Readonly<Record<string, HistoryBadge>> = {
    * verdict: nobody rejected it, and calling it an approval would be false.
    */
   CANCELLED: { label: 'Cancelled', tone: 'neutral' },
+
+  /** Closed by the HOD after a Dean rejection they could not rectify. */
+  CLOSED: { label: 'Closed', tone: 'neutral' },
 };
 
 /** The STATUS column: the verdict this lecturer gave when it left their table. */

@@ -69,6 +69,8 @@ export interface IResult {
   _id: string;
   course: ICourse;
   session: string;
+  /** The cohort's intake year — tells two results of one course apart. */
+  admissionYear?: string;
   level: string;
   semester: string;
   department: IDepartment;
@@ -165,6 +167,20 @@ export interface IResultEntriesQuery {
   category?: string;
   fullName?: string;
   limit?: string;
+}
+
+/** A result this person approved or returned whose forward never landed. */
+export interface IStrandedResult {
+  readonly _id: string;
+  readonly courseCode: string;
+  readonly courseTitle: string;
+  readonly session: string;
+  readonly semester: string;
+  readonly admissionYear: string;
+  readonly status: string;
+  readonly nextRoleLabel: string;
+  /** False when nobody holds the next office — Resend would be refused. */
+  readonly canResend: boolean;
 }
 
 export interface ISendSelectedResult {

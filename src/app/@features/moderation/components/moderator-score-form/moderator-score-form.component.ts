@@ -25,6 +25,8 @@ import {
  * submit button ever enables. Pages own the network call; this component is
  * presentational + a single submit event.
  */
+const WHOLE = Validators.pattern(/^\d+$/);
+
 @Component({
   selector: 'app-moderator-score-form',
   standalone: true,
@@ -52,15 +54,26 @@ export class ModeratorScoreFormComponent {
   // differently, so 30/30/70 is one school's split rather than a rule. Each
   // component is a score in 0-100; the constraint that matters is the total,
   // which moderation already holds to the E band below.
+  // Whole numbers only — only GPA and CGPA may carry a decimal.
   form = new FormGroup({
     test: new FormControl<number | null>(null, {
-      validators: [Validators.required, Validators.min(0), Validators.max(100)],
+      validators: [
+        Validators.required,
+        Validators.min(0),
+        Validators.max(100),
+        WHOLE,
+      ],
     }),
     lab: new FormControl<number | null>(null, {
-      validators: [Validators.min(0), Validators.max(100)],
+      validators: [Validators.min(0), Validators.max(100), WHOLE],
     }),
     exam: new FormControl<number | null>(null, {
-      validators: [Validators.required, Validators.min(0), Validators.max(100)],
+      validators: [
+        Validators.required,
+        Validators.min(0),
+        Validators.max(100),
+        WHOLE,
+      ],
     }),
     comment: new FormControl<string>('', {
       nonNullable: true,

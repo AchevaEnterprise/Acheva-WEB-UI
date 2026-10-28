@@ -154,48 +154,34 @@ export class CreateAccountComponent implements OnInit, OnDestroy {
   verifyRole() {
     this.form.controls['role'].valueChanges.subscribe({
       next: (role: RoleEnum) => {
+        const { fullname, title, faculty, department } = this.form.controls;
+
+        // Start from nothing on every change. Validators used to be only
+        // ADDED, so picking Lecturer and then HOD left the hidden Full Name
+        // and Title required — the button stayed disabled with every
+        // visible field filled and nothing on screen saying why.
+        [fullname, title, faculty, department].forEach((control) =>
+          control.clearValidators()
+        );
+
         if (role === RoleEnum.LECTURER) {
-          this.form.controls['fullname'].setValidators([
+          fullname.setValidators([
             Validators.required,
             Validators.pattern(/[a-zA-Z-?]+\s[a-zA-Z-?]+$/),
           ]);
-          this.form.controls['title'].setValidators(Validators.required);
-          this.form.controls['faculty'].setValidators(Validators.required);
-          this.form.controls['department'].setValidators(Validators.required);
+          title.setValidators(Validators.required);
+          faculty.setValidators(Validators.required);
+          department.setValidators(Validators.required);
         } else if (role === RoleEnum.HOD) {
-          this.form.controls['faculty'].setValidators(Validators.required);
-          this.form.controls['department'].setValidators(Validators.required);
+          faculty.setValidators(Validators.required);
+          department.setValidators(Validators.required);
         } else if (role === RoleEnum.DEAN) {
-          this.form.controls['faculty'].setValidators(Validators.required);
-        } else {
-          if (
-            this.form.controls['fullname'].hasValidator(Validators.required)
-          ) {
-            this.form.controls['fullname'].removeValidators([
-              Validators.required,
-              Validators.pattern(/[a-zA-Z]+\s[a-zA-Z]+$/),
-            ]);
-          } else if (
-            this.form.controls['title'].hasValidator(Validators.required)
-          ) {
-            this.form.controls['title'].removeValidators(Validators.required);
-          } else if (
-            this.form.controls['faculty'].hasValidator(Validators.required)
-          ) {
-            this.form.controls['faculty'].removeValidators(Validators.required);
-          } else if (
-            this.form.controls['department'].hasValidator(Validators.required)
-          ) {
-            this.form.controls['department'].removeValidators(
-              Validators.required
-            );
-          }
+          faculty.setValidators(Validators.required);
         }
 
-        this.form.controls['fullname'].updateValueAndValidity();
-        this.form.controls['title'].updateValueAndValidity();
-        this.form.controls['faculty'].updateValueAndValidity();
-        this.form.controls['department'].updateValueAndValidity();
+        [fullname, title, faculty, department].forEach((control) =>
+          control.updateValueAndValidity()
+        );
       },
     });
   }
@@ -307,18 +293,28 @@ export class CreateAccountComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const [firstname, lastname] = fullname ? fullname.split(' ') : [null, null];
+    // First and last word; anything between is the middle name. A plain
+    // split(' ') dropped the third word of a three-part name and turned a
+    // double space into an empty surname.
+    const names = fullname ? fullname.trim().split(/\s+/) : [];
+    const firstname = names[0] ?? null;
+    const lastname = names.length > 1 ? names[names.length - 1] : null;
+    const middlename =
+      names.length > 2 ? names.slice(1, -1).join(' ') : undefined;
 
     this.isLoading.set(true);
     const payload = {
       firstname,
+      middlename,
       lastname,
       email,
       password,
       confirmPassword: confirm_password,
       faculty: faculty,
       department: department,
-      title,
+      // The API takes `titles` (an array); a lone `title` was stripped by
+      // its whitelist, so the title picked here was never saved.
+      titles: title ? [title] : undefined,
       role,
       school: school,
     } satisfies ISignUp;
@@ -336,7 +332,9 @@ export class CreateAccountComponent implements OnInit, OnDestroy {
                 'Your account was created successfully'
               );
               this.router.navigate(['/auth/confirm-email'], {
-                queryParams: { accountId: res.data._id as string },
+                // The email too — "Resend" on that page sends to it, and
+                // without it the resend went out as `null` (a 500).
+                queryParams: { accountId: res.data._id as string, email },
               });
             }
           },

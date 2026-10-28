@@ -33,6 +33,7 @@
               type="number"
               min="0"
               max="100"
+              step="1"
               class="border border-neutral-300 rounded-[8px] p-2 my-4 w-full bg-white"
               [class.border-red-500]="
                 row.get('test').invalid && row.get('test').touched
@@ -58,6 +59,7 @@
               type="number"
               min="0"
               max="100"
+              step="1"
               class="border border-neutral-300 rounded-[8px] p-2 w-full bg-white"
               [class.border-red-500]="
                 row.get('lab').invalid && row.get('lab').touched
@@ -83,6 +85,7 @@
               type="number"
               min="0"
               max="100"
+              step="1"
               class="border border-neutral-300 rounded-[8px] p-2 w-full bg-white"
               [class.border-red-500]="
                 row.get('exam').invalid && row.get('exam').touched

@@ -222,6 +222,14 @@ export class ModerationService {
     );
   }
 
+  /** After a Dean rejection, the HOD it came back to closes it for good. */
+  hodClose(id: string, body: IRejectPayload): Observable<ModerationResponse> {
+    return this.http.patch<ModerationResponse>(
+      `${this.baseUrl}/${id}/hod/close`,
+      { reason: body.reason }
+    );
+  }
+
   deanReject(id: string, body: IRejectPayload): Observable<ModerationResponse> {
     return this.http.patch<ModerationResponse>(
       `${this.baseUrl}/${id}/dean/reject`,

@@ -3,7 +3,9 @@
 </h2>
 
 <mat-dialog-content>
-  <p class="acva-caption mb-8">{{ data.subTitle }}.</p>
+  @if (data.subTitle) {
+    <p class="acva-caption mb-8">{{ subTitleText }}</p>
+  }
   <div class="grid place-content-center gap-4 text-center">
     <app-svg [src]="'images/general/confirmation.svg'" />
     <p>

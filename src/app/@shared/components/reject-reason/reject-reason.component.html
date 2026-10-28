@@ -4,12 +4,17 @@
 
 <mat-dialog-content>
   <p class="acva-caption mb-8">
-    Kindly drop a comment to guide the recipent on possible reasons why.
+    Say why you are rejecting it, so the recipient knows what to fix. A reason
+    is required.
   </p>
   <app-comment [resultId]="data.resultId" [formControl]="commentCtrl" />
 </mat-dialog-content>
 
 <mat-dialog-actions class="gap-4">
   <app-button label="Cancel" type="outline" (clickEvent)="cancel()" />
-  <app-button label="Confirm" (clickEvent)="confrim()" />
+  <app-button
+    label="Confirm"
+    [disabled]="!hasReason()"
+    (clickEvent)="confrim()"
+  />
 </mat-dialog-actions>

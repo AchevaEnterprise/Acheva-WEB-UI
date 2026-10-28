@@ -13,12 +13,14 @@ export interface INotification {
 /** Routing context the backend attaches so a notification/activity can deep-link. */
 export interface INotificationMeta {
   /** What the notification points at. Absent → not navigable (legacy). */
-  type?: 'result' | 'moderation' | 'transfer';
+  type?: 'result' | 'moderation' | 'transfer' | 'message';
   /** For `result` — the result's status at the time (drives the target page). */
   status?: string;
   /** For `moderation` — the moderation id to open. */
   moderationId?: string;
   /** For `transfer` — the department-transfer request to open. */
   transferId?: string;
+  /** On `type: 'message'` (announcements and new messages). */
+  conversationId?: string;
   [key: string]: unknown;
 }

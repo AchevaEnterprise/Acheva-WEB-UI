@@ -7,6 +7,7 @@ import {
   input,
   output,
   signal,
+  untracked,
 } from '@angular/core';
 import {
   AbstractControl,
@@ -108,21 +109,28 @@ export class UnregisteredTableResultUploadComponent {
       const students = this.students();
       const refresh = this.refreshTable();
 
-      if (refresh) {
-        // Excel upload replaced the set — rebuild from it.
-        this.initialisedFromData = students.length > 0;
-        this.initializeFormRows(students);
-        void this.hydrateAndActivate();
-      } else if (students.length > 0 && !this.initialisedFromData) {
-        // First real server data arrived (replaces any placeholder blanks).
-        this.initialisedFromData = true;
-        this.initializeFormRows(students);
-        void this.hydrateAndActivate();
-      } else if (students.length === 0 && this.rows.length === 0) {
-        // Empty category — show blank rows for manual entry.
-        this.initializeFormRows(students);
-        void this.hydrateAndActivate();
-      }
+      // Only the inputs above may re-run this. The rebuild below reads and
+      // writes the table's own signals (allRows, dataSource, readonly); left
+      // tracked, a rebuild re-triggered itself forever and froze the tab —
+      // which is what made Reference/Unregistered stop responding after an
+      // upload, when refreshTable stays true.
+      untracked(() => {
+        if (refresh) {
+          // Excel upload replaced the set — rebuild from it.
+          this.initialisedFromData = students.length > 0;
+          this.initializeFormRows(students);
+          void this.hydrateAndActivate();
+        } else if (students.length > 0 && !this.initialisedFromData) {
+          // First real server data arrived (replaces any placeholder blanks).
+          this.initialisedFromData = true;
+          this.initializeFormRows(students);
+          void this.hydrateAndActivate();
+        } else if (students.length === 0 && this.rows.length === 0) {
+          // Empty category — show blank rows for manual entry.
+          this.initializeFormRows(students);
+          void this.hydrateAndActivate();
+        }
+      });
     });
 
     effect(() => {
@@ -206,6 +214,10 @@ export class UnregisteredTableResultUploadComponent {
     ) => new FormControl({ value: value ?? null, disabled }, numberValidator);
 
     return this.fb.group({
+      // The saved entry's id. Hydration seeds it as the row's serverId; without
+      // it every seeded row had serverId null, so clearing a score saved in an
+      // earlier visit only deleted it locally and the server kept it.
+      _id: [student?._id ?? null],
       registrationNumber: [student?.registrationNumber, Validators.required],
       fullName: [
         this.titlecasePipe.transform(student?.fullName),
@@ -248,7 +260,11 @@ export class UnregisteredTableResultUploadComponent {
       ctrl.markAsDirty();
     };
 
-    if (value !== null && (value < 0 || value > 100)) {
+    // Scores are whole numbers; only GPA and CGPA may carry a fraction.
+    if (
+      value !== null &&
+      (value < 0 || value > 100 || !Number.isInteger(value))
+    ) {
       revert();
       this.handleRowInput(index);
       return;
@@ -393,6 +409,17 @@ export class UnregisteredTableResultUploadComponent {
           },
           { emitEvent: false }
         );
+      } else if (
+        local &&
+        !local.serverId &&
+        raw._id &&
+        raw.total !== null &&
+        raw.total !== undefined
+      ) {
+        // A baseline seeded before rows carried their entry id: backfill it,
+        // or clearing this row would never reach the server. (Only for rows
+        // with a saved entry — a row without one carries the STUDENT's id.)
+        toSeed.push({ ...local, serverId: raw._id });
       } else if (!local && raw.total !== null && raw.total !== undefined) {
         toSeed.push({
           key: ResultEntryStore.buildKey(rid, reg),

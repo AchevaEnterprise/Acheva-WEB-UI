@@ -363,6 +363,8 @@ export class ModerationDetailComponent implements OnInit {
         return this.moderationService.offeringHodReject(mod._id, body);
       case 'deanReject':
         return this.moderationService.deanReject(mod._id, body);
+      case 'hodClose':
+        return this.moderationService.hodClose(mod._id, body);
       default:
         return null;
     }
@@ -439,6 +441,35 @@ export class ModerationDetailComponent implements OnInit {
     if (typeof mod.currentHandler === 'string') return '—';
     const h = mod.currentHandler;
     return `${h.firstname ?? ''} ${h.lastname ?? ''}`.trim() || '—';
+  }
+
+  /** Activity log verb — raw tokens like `MODERATION_SUBMITTED` never reach the page. */
+  activityActionLabel(action: string | null | undefined): string {
+    const labels: Readonly<Record<string, string>> = {
+      CREATED: 'Created',
+      SUBMITTED: 'Submitted',
+      APPROVED: 'Approved',
+      REJECTED: 'Rejected',
+      ASSIGNED: 'Assigned',
+      MODERATION_SUBMITTED: 'Score moderated',
+      FORWARDED: 'Forwarded',
+      PUBLISHED: 'Published',
+      CANCELLED: 'Cancelled',
+      CLOSED: 'Closed',
+    };
+    return action ? (labels[action] ?? action) : '—';
+  }
+
+  /** Office that acted — "Course Advisor", never `Course_advisor` / "Hod". */
+  activityRoleLabel(role: string | null | undefined): string {
+    const labels: Readonly<Record<string, string>> = {
+      COURSE_ADVISOR: 'Course Advisor',
+      COURSE_COORDINATOR: 'Course Coordinator',
+      HOD: 'HOD',
+      DEAN: 'Dean',
+      LECTURER: 'Lecturer',
+    };
+    return role ? (labels[role] ?? role) : '—';
   }
 
   trackAction(_index: number, action: IModerationAction): string {

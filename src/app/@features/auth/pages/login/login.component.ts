@@ -24,12 +24,15 @@ import {
 } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
-import { Router, RouterLink } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize, Subscription } from 'rxjs';
 import { ButtonComponent } from '../../../../@shared/components/forms/button/button.component';
 import { SvgComponent } from '../../../../@shared/components/svg/svg.component';
 import { AuthBannerComponent } from '../../component/auth-banner/auth-banner.component';
 import { AuthenticationService } from '../../service/auth.service';
+import { authErrorText } from '../../utils/auth-error';
+import { ToastService } from '../../../../@core/utility/toast.service';
 
 @Component({
   selector: 'app-login',
@@ -53,6 +56,8 @@ import { AuthenticationService } from '../../service/auth.service';
 export class LoginComponent implements AfterViewInit, OnDestroy {
   private readonly authService = inject(AuthenticationService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+  private readonly toast = inject(ToastService);
 
   showPassword = signal(false);
   isLoading = signal(false);
@@ -90,6 +95,9 @@ export class LoginComponent implements AfterViewInit, OnDestroy {
   }
 
   submitForm() {
+    // Enter in the password field reaches here even while the button is
+    // disabled — an invalid form or a sign-in already in flight stops here.
+    if (this.form.invalid || this.isLoading()) return;
     this.isLoading.set(true);
 
     this.sub.add(
@@ -98,10 +106,58 @@ export class LoginComponent implements AfterViewInit, OnDestroy {
         .pipe(finalize(() => this.isLoading.set(false)))
         .subscribe({
           next: (res) => {
-            if (res.status) this.router.navigate(['/dashboard']);
+            if (res.status) void this.router.navigateByUrl(this.afterSignIn());
           },
+          error: (err: unknown) => this.explainFailure(err),
         })
     );
+  }
+
+  /**
+   * Back to the page the guard turned them away from — only an in-app path,
+   * never another origin (`//evil.example` is protocol-relative).
+   */
+  private afterSignIn(): string {
+    const redirect = this.route.snapshot.queryParamMap.get('redirect');
+    return redirect?.startsWith('/') && !redirect.startsWith('//')
+      ? redirect
+      : '/dashboard';
+  }
+
+  private explainFailure(err: unknown): void {
+    const status = err instanceof HttpErrorResponse ? err.status : 0;
+    const raw: unknown =
+      err instanceof HttpErrorResponse
+        ? (err.error as { message?: unknown } | null)?.message
+        : undefined;
+    const message = typeof raw === 'string' ? raw : '';
+
+    // Wrong password (400) and unknown email (404) read the same: the page
+    // must not tell a stranger which addresses have accounts. A student's
+    // credentials land here too, hence the pointer to their own portal.
+    if (status === 404 || (status === 400 && /credential/i.test(message))) {
+      this.toast.showNotification(
+        'error',
+        'Incorrect email or password',
+        'Check your email and password and try again. Students sign in on the student portal.'
+      );
+      return;
+    }
+
+    if (status === 403 && /not verified/i.test(message)) {
+      this.toast.showNotification(
+        'warning',
+        'Verify your email first',
+        'Press "Resend Email" to get a new verification code.'
+      );
+      void this.router.navigate(['/auth/verify-email'], {
+        queryParams: { email: this.form.value.email as string },
+      });
+      return;
+    }
+
+    const text = authErrorText(err);
+    this.toast.showNotification('error', text.title, text.message);
   }
 
   ngOnDestroy(): void {
