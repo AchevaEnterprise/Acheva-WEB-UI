@@ -17,6 +17,10 @@ export function transferStatusLabel(status: TransferStatus | string): string {
       return 'Draft';
     case TransferStatus.PENDING_RECEIVING_HOD:
       return 'Awaiting approval';
+    case TransferStatus.APPROVED:
+      // Approved, but the student has not moved: that waits for the end of
+      // the session. "Transferred" here would claim something untrue.
+      return 'Approved · moves at session end';
     case TransferStatus.COMPLETED:
       return 'Transferred';
     case TransferStatus.REJECTED:
@@ -41,6 +45,7 @@ export function transferStatusTone(
     case TransferStatus.REJECTED:
       return 'negative';
     case TransferStatus.PENDING_RECEIVING_HOD:
+    case TransferStatus.APPROVED:
       return 'brand';
     default:
       return 'neutral';
@@ -94,7 +99,10 @@ export function getTransferActions(
   return {
     canEdit: mine && editable,
     canSubmit: mine && editable,
-    canCancel: mine && editable,
+    // An approved transfer has not happened yet, so the advisor holding it
+    // can still withdraw it if the student changes their mind.
+    canCancel:
+      mine && (editable || transfer.status === TransferStatus.APPROVED),
     canDecide: mine && transfer.status === TransferStatus.PENDING_RECEIVING_HOD,
   };
 }

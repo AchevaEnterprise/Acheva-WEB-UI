@@ -9,6 +9,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
+import { EMPTY } from 'rxjs';
 
 import { LayoutComponent } from './layout.component';
 
@@ -37,6 +38,9 @@ describe('LayoutComponent', () => {
             accounts: signal([]),
             getToken: 'test-token',
             loadInitialSession: () => undefined,
+            // The shell re-reads the account on load to follow office
+            // changes; nothing to re-read in a test.
+            refreshAccount: () => EMPTY,
             logout: () => undefined,
           },
         },

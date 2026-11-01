@@ -23,6 +23,8 @@
     "test:transcript-paywall": "node scripts/transcript-paywall-harness.mjs",
     "test:ui-sweep": "node scripts/ui-sweep-harness.mjs",
     "test:transfers-ui": "node scripts/transfers-ui-harness.mjs",
+    "test:handover-ui": "node scripts/advisor-handover-ui-harness.mjs",
+    "test:transfer-effect": "node scripts/transfer-effect-ui-harness.mjs",
     "test:e2e-chain": "node scripts/e2e-signup-to-publish.mjs"
   },
   "private": true,

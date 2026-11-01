@@ -14,6 +14,10 @@ export interface IHandoverCounts {
   readonly moderations: number;
   /** Advisory threads with their students. */
   readonly conversations: number;
+  /** Transfer letters they raised that have not taken effect yet. */
+  readonly transfers: number;
+  /** Students in the cohort — they follow the post by derivation. */
+  readonly students: number;
 }
 
 export interface IHandoverParty {

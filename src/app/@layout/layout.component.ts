@@ -12,7 +12,8 @@ import {
   Router,
   RouterOutlet,
 } from '@angular/router';
-import { filter } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { filter, switchMap } from 'rxjs';
 import { DEFAULT_INTERRUPTSOURCES, Idle } from '@ng-idle/core';
 import { Keepalive } from '@ng-idle/keepalive';
 import { Store } from '@ngrx/store';
@@ -21,6 +22,7 @@ import { loadProfileLinkedAccounts } from '../@core/store/profile/profile.action
 import { linkedAccountsSelector } from '../@core/store/profile/profile.selector';
 import { AuthenticationService } from '../@features/auth/service/auth.service';
 import { MessagingService } from '../@features/messaging/services/messaging.service';
+import { ToastService } from '../@core/utility/toast.service';
 import { SideBarComponent } from './side-bar/side-bar.component';
 import { ToolBarComponent } from './tool-bar/tool-bar.component';
 
@@ -38,6 +40,7 @@ export class LayoutComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly messaging = inject(MessagingService);
+  private readonly toast = inject(ToastService);
   private readonly destroyRef = inject(DestroyRef);
 
   /**
@@ -75,6 +78,62 @@ export class LayoutComponent implements OnInit {
     this.messaging.start();
     this.destroyRef.onDestroy(() => this.messaging.stop());
     // this.store.dispatch(loadProfile());
+
+    this.followOfficeChanges();
+  }
+
+  /**
+   * Keep the signed-in account in step with the office the server says this
+   * person holds.
+   *
+   * Once on load — so a reload heals a snapshot that went stale while the
+   * tab was closed — and again whenever the stream says a Head changed it.
+   * A handover then shows up in a tab that is already open: the incoming
+   * advisor gains Course Advisor and their cohort, the outgoing one loses
+   * both, and neither has to sign out.
+   */
+  private followOfficeChanges(): void {
+    this.authService
+      .refreshAccount()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ error: () => undefined });
+
+    this.messaging.accountChanged$
+      .pipe(
+        switchMap(() => {
+          const before = this.authService.activeAccount();
+          return this.authService
+            .refreshAccount()
+            .pipe(
+              filter(() => {
+                const after = this.authService.activeAccount();
+                return (
+                  before?.role !== after?.role ||
+                  before?.assignedLevel !== after?.assignedLevel
+                );
+              })
+            );
+        }),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe({
+        next: () => {
+          const account = this.authService.activeAccount();
+          const level = account?.assignedLevel;
+          const advising = !!level && level !== 'NONE';
+          this.toast.showNotification(
+            advising ? 'success' : 'warning',
+            'Your role was updated',
+            advising
+              ? `Your Head of Department made you Course Advisor for ${level} level.`
+              : 'Your Head of Department changed your role. You are no longer a Course Advisor.'
+          );
+          // The page on screen may belong to an office this person no longer
+          // holds; the dashboard is right for every office.
+          void this.router.navigate(['/dashboard']);
+        },
+        error: () => undefined,
+      });
   }
 
   /** Re-read the flag on every navigation, and once for the route we landed on. */

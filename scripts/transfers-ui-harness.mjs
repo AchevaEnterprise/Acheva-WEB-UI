@@ -6,9 +6,15 @@
  * `active_account` null, which renders an empty sidebar and makes every menu
  * assertion pass on nothing.
  *
- * It creates a real transfer request and RESTORES the student afterwards.
+ * It creates a real transfer request, has the receiving Head APPROVE it
+ * through the UI, and withdraws it afterwards. Approval only schedules the
+ * move for the end of the session, so the student is never actually moved.
  *
  *   npm run test:transfers-ui
+ *   TU_APP=http://localhost:4210 TU_API=http://localhost:3100 npm run test:transfers-ui
+ *
+ * A TU_API other than :3000 reroutes the app's calls there (the dev build is
+ * compiled against :3000).
  *
  * Note: every navigation waits on a SELECTOR, never `networkidle`. The shell
  * opens the messaging SSE stream for the whole session, so the network never
@@ -84,6 +90,11 @@ const newContext = async (browser, session) => {
     deviceScaleFactor: 2,
     colorScheme: 'light',
   });
+  if (API !== 'http://localhost:3000') {
+    await context.route(/^http:\/\/localhost:3000\//, (route) =>
+      route.continue({ url: route.request().url().replace('http://localhost:3000', API) })
+    );
+  }
   await context.addInitScript(
     ([t, r, a]) => {
       localStorage.setItem('token', t);
@@ -129,8 +140,12 @@ try {
   check('the letter editor renders', editor > 0);
 
   const selects = caPage.locator('select');
-  check('the composer offers student, faculty, department, level and semester',
-    (await selects.count()) >= 5, `${await selects.count()} selects`);
+  check('the composer offers student, faculty, department and level',
+    (await selects.count()) === 4, `${await selects.count()} selects`);
+  // A transferred student always starts a new session's first semester,
+  // so there is nothing to choose — and nothing should be offered.
+  check('no semester is offered — the move always starts a first semester',
+    (await caPage.locator('option', { hasText: '2ND SEMESTER' }).count()) === 0);
 
   // The page loads the advisor's own cohort through the same API the app
   // uses, so a populated list is itself the proof that call is right.
@@ -149,6 +164,20 @@ try {
   await standing.first().waitFor({ timeout: 30_000 }).catch(() => undefined);
   check('picking a student reports their current standing',
     (await caPage.getByText(/Currently .* level in/i).count()) > 0);
+
+  // The registrar's rule: one level at most, either way.
+  const standingText = await caPage.getByText(/Currently .* level in/i).first().innerText();
+  const currentLevel = Number(standingText.match(/Currently (\d{3})/)?.[1]);
+  const offered = (await selects.nth(3).locator('option').allInnerTexts())
+    .map((label) => label.match(/(\d{3})/)?.[1])
+    .filter(Boolean)
+    .map(Number);
+  const expected = [currentLevel - 100, currentLevel, currentLevel + 100].filter((l) => l >= 100);
+  check('only levels within one of the student’s are offered',
+    JSON.stringify(offered) === JSON.stringify(expected),
+    `at ${currentLevel}: offered ${offered.join(', ')}`);
+  check('the page says when the move happens',
+    (await caPage.getByText(/after finishing .* starts .* first semester/i).count()) > 0);
 
   // Faculty → department is a two-step picker; the second must populate from
   // the first, and must not offer the department they are already in.
@@ -255,6 +284,44 @@ try {
 
   await hodPage.screenshot({ path: 'screenshots/transfers-hod-detail.png', fullPage: true });
 
+  // ── The Head approves — which SCHEDULES the move ─────────────────────
+  await hodPage.locator('button', { hasText: 'Approve the transfer' }).first().click();
+  // Wait for the dialog's content, not just its frame — it animates in.
+  await hodPage
+    .locator('mat-dialog-container button', { hasText: 'Confirm' })
+    .waitFor({ timeout: 15_000 });
+  await hodPage
+    .locator('mat-dialog-container', { hasText: /finish/i })
+    .waitFor({ timeout: 5_000 })
+    .catch(() => undefined);
+  const confirmText = await hodPage.locator('mat-dialog-container').innerText();
+  check('the confirmation says the student finishes the session first',
+    /finish the current session/i.test(confirmText), confirmText.replace(/\s+/g, ' ').slice(0, 90));
+  await hodPage.locator('mat-dialog-container button', { hasText: 'Confirm' }).click();
+  await hodPage.getByText(/Approved — moves when/).first().waitFor({ timeout: 30_000 }).catch(() => undefined);
+  check('the page shows it approved for the end of the session',
+    (await hodPage.getByText(/Approved — moves when/).count()) > 0);
+  // The page replaces its copy with the action's response; if that response
+  // is not populated the departments and the advisor's name go blank.
+  const scheduledText = await hodPage.locator('.td-scheduled').first().innerText().catch(() => '');
+  check('after approving, departments are still named (not "—")',
+    /Mathematics/i.test(scheduledText) && /Physics/i.test(scheduledText) && !/ in —/.test(scheduledText),
+    scheduledText.replace(/\s+/g, ' ').slice(0, 120));
+  check('the badge reads in words, not a token',
+    (await hodPage.getByText('Approved · moves at session end').count()) > 0 &&
+      (await hodPage.getByText(/\bAPPROVED\b/).count()) === 0);
+
+  const stillHere = await api('GET', `/transfers/${transferId}`, caSession.accessToken);
+  check('approval did not move the student', stillHere.body?.data?.status === 'APPROVED' &&
+    String(stillHere.body?.data?.student?.level ?? '') === String(currentLevel),
+    `status=${stillHere.body?.data?.status} level=${stillHere.body?.data?.student?.level}`);
+  await hodPage.screenshot({ path: 'screenshots/transfers-hod-approved.png', fullPage: true });
+
+  // The advisor can still withdraw it before the session closes.
+  await open(caPage, `/transfers/${transferId}`, '.td-letter');
+  check('the advisor is offered “Withdraw the transfer” while it waits',
+    (await caPage.locator('button', { hasText: 'Withdraw the transfer' }).count()) > 0);
+
   // ── Overflow at the DESKTOP width too ────────────────────────────────
   // The first version of this page only checked 1000px, where the grid is
   // already single-column — so the two-column layout's overflow went unseen
@@ -305,8 +372,9 @@ try {
   // run reports "0/0 passed", which looks like success.
   check('the harness ran to completion', false, String(error).split('\n')[0]);
 } finally {
-  // The harness only SUBMITTED it, so the student was never moved; deleting
-  // the request is the whole cleanup.
+  // Approval only schedules the move, so the student was never moved;
+  // withdrawing the request is the whole cleanup. (If the run stopped before
+  // approval, return it first so the advisor holds it again.)
   if (transferId) {
     await api('PATCH', `/transfers/${transferId}/reject`, hodSession.accessToken, {
       reason: 'Harness cleanup — not a real decision.',

@@ -90,7 +90,8 @@ export class HandoverCourseAdvisorComponent implements OnInit {
       moved.resultsInFlight +
         moved.publishedResultLinks +
         moved.moderations +
-        moved.conversations ===
+        moved.conversations +
+        moved.transfers ===
       0
     );
   });

@@ -158,11 +158,14 @@ export class TransferDetailComponent implements OnInit {
       width: '440px',
       data: {
         message: `Accept ${transfer.snapshot.fullName} into your department?`,
-        // Said plainly, because this is the irreversible bit.
+        // Said plainly: the move is NOT immediate, and once made it cannot
+        // be undone.
         subTitle:
-          `They move to ${transfer.toLevel} level immediately, with their ` +
-          `record. A transfer cannot be reversed — correcting one means ` +
-          `raising a new transfer in the other direction.`,
+          `They finish the current session — both semesters — where they ` +
+          `are, then start the next session at ${transfer.toLevel} level, ` +
+          `first semester, in your department, with their record. Once it ` +
+          `takes effect it cannot be reversed; correcting it means a new ` +
+          `transfer in the other direction.`,
       },
     });
 
@@ -184,7 +187,8 @@ export class TransferDetailComponent implements OnInit {
               this.toastService.showNotification(
                 'success',
                 'Transfer approved',
-                `${transfer.snapshot.fullName} is now in your department.`
+                `${transfer.snapshot.fullName} joins your department when ` +
+                  `${resp.data.completesSession ?? 'the current session'} closes.`
               );
             },
             error: (err) =>

@@ -30,7 +30,10 @@
             {{ departmentName(request.fromDepartment) }}
             <span class="td-arrow" aria-hidden="true">→</span>
             {{ departmentName(request.toDepartment) }} ·
-            {{ request.toLevel }} level, {{ request.toSemester | titlecase }}
+            {{ request.toLevel }} level
+            @if (request.startsSession) {
+              from {{ request.startsSession }}, first semester
+            }
           </p>
           <p class="acva-caption text-neutral-500 m-0 mt-1">
             Raised by {{ nameOf(request.submittedBy) | titlecase }}
@@ -70,9 +73,46 @@
               [disabled]="busy()"
               (clickEvent)="submit()"
             />
+          } @else if (actions().canCancel) {
+            <app-button
+              type="outline"
+              label="Withdraw the transfer"
+              class="btn-md"
+              [disabled]="busy()"
+              (clickEvent)="withdraw()"
+            />
           }
         </div>
       </header>
+
+      <!-- Approved is not moved. Saying so where the status is read stops
+           anyone treating the student as already in the new department. -->
+      @if (request.status === 'APPROVED') {
+        <section class="td-scheduled mt-4">
+          <p class="acva-para-1 fw-500 m-0">
+            Approved — moves when {{ request.completesSession }} closes
+          </p>
+          <p class="acva-para-1 m-0 mt-1">
+            {{ request.snapshot.fullName | titlecase }} finishes both semesters
+            of {{ request.completesSession }} in
+            {{ departmentName(request.fromDepartment) }}, then starts
+            {{ request.startsSession }} at {{ request.toLevel }} level in
+            {{ departmentName(request.toDepartment) }}. It takes effect when the
+            administrator closes the session.
+          </p>
+        </section>
+      }
+      @if (request.status === 'COMPLETED' && request.startsSession) {
+        <section class="td-scheduled mt-4">
+          <p class="acva-para-1 fw-500 m-0">
+            Transferred for {{ request.startsSession }}
+          </p>
+          <p class="acva-para-1 m-0 mt-1">
+            Now {{ request.toLevel }} level in
+            {{ departmentName(request.toDepartment) }}.
+          </p>
+        </section>
+      }
 
       @if (request.rejectionReason && request.status === 'REJECTED') {
         <section class="td-returned mt-4">

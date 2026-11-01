@@ -4,8 +4,10 @@
   <div class="mt-4">
     <h3 class="acva-heading-5 fw-500">New transfer request</h3>
     <p class="acva-para-1 text-neutral-500">
-      Write to the Head of the receiving department. Their approval moves the
-      student out of {{ myDepartmentName() | titlecase }}.
+      Write to the Head of the receiving department. Once they approve, the
+      student finishes the current session in
+      {{ myDepartmentName() | titlecase }} and starts the next one in the new
+      department.
     </p>
   </div>
 
@@ -153,26 +155,39 @@
             </select>
           </label>
 
-          <div class="grid grid-cols-2 gap-3">
-            <label class="tl-field">
-              <span class="acva-caption text-neutral-500">Level</span>
-              <select class="tl-select" [formControl]="levelCtrl">
-                <option value="">Level…</option>
-                @for (level of levels; track level) {
-                  <option [value]="level">{{ level }}</option>
-                }
-              </select>
-            </label>
+          <label class="tl-field">
+            <span class="acva-caption text-neutral-500">Level</span>
+            <select
+              class="tl-select"
+              [formControl]="levelCtrl"
+              aria-label="Level to transfer into"
+            >
+              <option value="">
+                {{ selectedStudent() ? 'Level…' : 'Pick a student first' }}
+              </option>
+              @for (level of levels(); track level) {
+                <option [value]="level">{{ level }} level</option>
+              }
+            </select>
+          </label>
+          @if (eligibility()?.currentLevel; as currentLevel) {
+            <p class="acva-caption text-neutral-500 m-0">
+              At most one level from {{ currentLevel }} — they can continue,
+              repeat the level or step back one, never jump two.
+            </p>
+          }
 
-            <label class="tl-field">
-              <span class="acva-caption text-neutral-500">Semester</span>
-              <select class="tl-select" [formControl]="semesterCtrl">
-                @for (semester of semesters; track semester) {
-                  <option [value]="semester">{{ semester }}</option>
-                }
-              </select>
-            </label>
-          </div>
+          <!-- No semester to choose: a transferred student always starts a
+               new session, first semester. Shown, not asked. -->
+          @if (eligibility()?.startsSession; as startsSession) {
+            <div class="tl-when acva-caption">
+              <span class="text-neutral-500">Moves</span>
+              <span>
+                after finishing {{ eligibility()?.completesSession }} (both
+                semesters); starts {{ startsSession }}, first semester
+              </span>
+            </div>
+          }
         </section>
 
         <!--

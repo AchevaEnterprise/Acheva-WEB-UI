@@ -118,6 +118,39 @@ export class AuthenticationService {
       );
   }
 
+  /**
+   * Re-read the signed-in account from the server and replace the stored one.
+   *
+   * The account in local storage is a snapshot from sign-in. When a Head
+   * hands a cohort over, the incoming advisor's snapshot still says they
+   * advise nothing and the outgoing one's still says they do — so the menu,
+   * the role switcher and the Students page all followed the stale copy.
+   * The server already acts on the live office (its auth guard re-reads it
+   * per request); this keeps the screen in step with it.
+   *
+   * Same shape as sign-in minus the tokens, so nothing that reads
+   * `activeAccount()` — `id` included — has to change.
+   */
+  refreshAccount(): Observable<IAPIResponse<Omit<IAuthProfile, 'accessToken' | 'refreshToken'>>> {
+    return this.http
+      .get<IAPIResponse<Omit<IAuthProfile, 'accessToken' | 'refreshToken'>>>(
+        `${this.authUrl}/lecturers/me`,
+        // Background housekeeping: a failure leaves the old snapshot in
+        // place, which is no worse than before, and is not worth a toast.
+        { headers: { 'X-Silent-Error': 'true' } }
+      )
+      .pipe(
+        tap((resp) => {
+          if (!resp.status || !resp.data) return;
+          this.activeAccount.set(resp.data);
+          localStorage.setItem(
+            STORAGE_KEYS.ACTIVE_ACCOUNT,
+            JSON.stringify(this.activeAccount())
+          );
+        })
+      );
+  }
+
   loadInitialSession() {
     const account = localStorage.getItem(STORAGE_KEYS.ACTIVE_ACCOUNT);
     if (account) this.activeAccount.set(JSON.parse(account));
