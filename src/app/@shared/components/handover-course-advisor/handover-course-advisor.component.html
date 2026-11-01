@@ -37,7 +37,9 @@
 
       <p class="acva-para-1 m-0">
         <span class="count">{{ p.moved.students }}</span>
-        student(s){{ p.admissionYear ? ' of the ' + p.admissionYear + ' intake' : '' }}
+        student(s){{
+          p.admissionYear ? ' of the ' + p.admissionYear + ' intake' : ''
+        }}
         — their records, results and course registrations.
       </p>
 
@@ -75,8 +77,8 @@
            request, and their open tab is told to refresh. -->
       <p class="panel__foot acva-caption">
         {{ p.from.name }} stops being a Course Advisor the moment you confirm,
-        including in any tab they already have open. {{ p.to.name }} becomes
-        one at once and sees the whole cohort.
+        including in any tab they already have open. {{ p.to.name }} becomes one
+        at once and sees the whole cohort.
       </p>
 
       <!-- Said plainly, because people reasonably assume a reassignment

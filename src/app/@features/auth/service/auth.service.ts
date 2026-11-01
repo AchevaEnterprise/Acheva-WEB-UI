@@ -131,7 +131,9 @@ export class AuthenticationService {
    * Same shape as sign-in minus the tokens, so nothing that reads
    * `activeAccount()` — `id` included — has to change.
    */
-  refreshAccount(): Observable<IAPIResponse<Omit<IAuthProfile, 'accessToken' | 'refreshToken'>>> {
+  refreshAccount(): Observable<
+    IAPIResponse<Omit<IAuthProfile, 'accessToken' | 'refreshToken'>>
+  > {
     return this.http
       .get<IAPIResponse<Omit<IAuthProfile, 'accessToken' | 'refreshToken'>>>(
         `${this.authUrl}/lecturers/me`,

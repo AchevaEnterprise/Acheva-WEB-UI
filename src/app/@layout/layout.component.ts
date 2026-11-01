@@ -102,17 +102,15 @@ export class LayoutComponent implements OnInit {
       .pipe(
         switchMap(() => {
           const before = this.authService.activeAccount();
-          return this.authService
-            .refreshAccount()
-            .pipe(
-              filter(() => {
-                const after = this.authService.activeAccount();
-                return (
-                  before?.role !== after?.role ||
-                  before?.assignedLevel !== after?.assignedLevel
-                );
-              })
-            );
+          return this.authService.refreshAccount().pipe(
+            filter(() => {
+              const after = this.authService.activeAccount();
+              return (
+                before?.role !== after?.role ||
+                before?.assignedLevel !== after?.assignedLevel
+              );
+            })
+          );
         }),
         takeUntilDestroyed(this.destroyRef)
       )
