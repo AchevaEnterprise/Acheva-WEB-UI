@@ -20,12 +20,16 @@
     "test:messaging-surfaces": "node scripts/messaging-surfaces-harness.mjs",
     "test:payments": "node scripts/payments-harness.mjs",
     "test:dues-collections": "node scripts/dues-collections-harness.mjs",
-    "test:transcript-paywall": "node scripts/transcript-paywall-harness.mjs",
+    "test:transcript-download": "node scripts/transcript-download-harness.mjs",
     "test:ui-sweep": "node scripts/ui-sweep-harness.mjs",
     "test:transfers-ui": "node scripts/transfers-ui-harness.mjs",
     "test:handover-ui": "node scripts/advisor-handover-ui-harness.mjs",
     "test:transfer-effect": "node scripts/transfer-effect-ui-harness.mjs",
-    "test:e2e-chain": "node scripts/e2e-signup-to-publish.mjs"
+    "test:school-fees-ui": "node scripts/school-fees-ui-harness.mjs",
+    "test:empty-pages": "node scripts/empty-pages-harness.mjs",
+    "test:e2e-chain": "node scripts/e2e-signup-to-publish.mjs",
+    "test:admin-console-ui": "node scripts/admin-console-ui-harness.mjs",
+    "test:extra-year-ui": "node scripts/extra-year-ui-harness.mjs"
   },
   "private": true,
   "dependencies": {

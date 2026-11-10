@@ -206,6 +206,7 @@ export class LecturerManagementComponent implements OnInit {
           lecturerId: lecturer._id,
           level: lecturer.assignedLevel,
           departmentId: this.userDepartmentId,
+          extraYearIntakes: lecturer.extraYearIntakes ?? [],
         },
       })
       .afterClosed()

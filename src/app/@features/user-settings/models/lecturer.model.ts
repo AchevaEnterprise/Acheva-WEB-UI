@@ -16,4 +16,6 @@ export interface ILecturer {
   accessLevel: string;
   accountType: 'LECTURER';
   assignedLevel: string;
+  /** Finished sets whose extra-year students this advisor answers for. */
+  extraYearIntakes?: string[];
 }

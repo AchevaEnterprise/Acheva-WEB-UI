@@ -91,21 +91,16 @@
 
       <app-card label="How it may be paid" [showDivider]="true">
         <div content class="card-body">
-          <div class="schedule-head">
-            <p class="acva-para-1 text-neutral-500 m-0">
-              One to three instalments. A student pays them in order, and may
-              finish in a later semester — the plan runs for the whole session.
-            </p>
-            @if (canEditAmounts()) {
-              <button
-                type="button"
-                class="link-btn acva-para-1"
-                (click)="suggestSplit()"
-              >
-                Split evenly
-              </button>
-            }
-          </div>
+          <p class="acva-para-1 text-neutral-500 m-0">
+            Students may split the total into up to three payments, and may
+            finish in a later semester — the plan runs for the whole session.
+            <span class="rule">
+              They choose how much to pay each time: at least
+              {{ minimumPercent }}% of the total{{
+                hasTotal() ? ' (' + money(minimumPaymentKobo()) + ')' : ''
+              }}, and their last allowed payment clears the balance.
+            </span>
+          </p>
 
           <div formArrayName="instalments" class="instalments">
             @for (row of instalments.controls; track $index) {
@@ -114,23 +109,10 @@
                   {{ $index + 1 }}
                 </span>
 
-                <div class="input-style-1 acheva-input instalment__amount">
-                  <p class="acva-para-2 fw-400 label-text">Amount</p>
-                  <mat-form-field [style.width.%]="100" appearance="outline">
-                    <span matTextPrefix class="prefix">₦&nbsp;</span>
-                    <input
-                      matInput
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      formControlName="amount"
-                      placeholder="0.00"
-                    />
-                  </mat-form-field>
-                </div>
-
                 <div class="input-style-1 acheva-input instalment__date">
-                  <p class="acva-para-2 fw-400 label-text">Due by</p>
+                  <p class="acva-para-2 fw-400 label-text">
+                    Payment {{ $index + 1 }} due by
+                  </p>
                   <mat-form-field [style.width.%]="100" appearance="outline">
                     <input
                       matInput
@@ -143,11 +125,11 @@
                   </mat-form-field>
                 </div>
 
-                @if (canEditAmounts() && instalments.length > 1) {
+                @if (canEditAmounts() && paymentCount() > 1) {
                   <button
                     type="button"
                     class="instalment__remove"
-                    aria-label="Remove this instalment"
+                    aria-label="Remove this payment"
                     (click)="removeInstalment($index)"
                   >
                     <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -167,41 +149,16 @@
               class="add-btn acva-para-1"
               (click)="addInstalment()"
             >
-              + Add an instalment
+              + Allow another payment
             </button>
           }
-
-          <!-- The running difference, always visible. Being told "that does
-               not add up" only on submit is how a wrong figure gets published. -->
-          <div
-            class="tally"
-            [class.tally--ok]="balances()"
-            [class.tally--off]="!balances() && totalKobo() > 0"
-          >
-            <div class="tally__row acva-para-1">
-              <span>Scheduled</span>
-              <span class="fw-500">{{ money(scheduledKobo()) }}</span>
-            </div>
-            <div class="tally__row acva-para-1">
-              <span>Total</span>
-              <span class="fw-500">{{ money(totalKobo()) }}</span>
-            </div>
-            <div class="tally__row tally__row--verdict acva-para-1 fw-500">
-              <span>{{ differenceLabel() }}</span>
-              @if (balances()) {
-                <svg class="tally__tick" viewBox="0 0 24 24" aria-hidden="true">
-                  <polyline points="4 12.5 9.5 18 20 6.5" />
-                </svg>
-              }
-            </div>
-          </div>
         </div>
       </app-card>
     </form>
 
     <!-- What students will see. Rendered from the same figures, so it cannot
          claim anything the plan does not say. -->
-    @if (balances() && form.get('title')?.value) {
+    @if (hasTotal() && form.get('title')?.value) {
       <app-card label="What your students will see" [showDivider]="true">
         <div content class="card-body preview">
           <p class="acva-para-2 fw-500 m-0">{{ form.get('title')?.value }}</p>
@@ -213,18 +170,21 @@
           <p class="preview__total acva-heading-6 fw-500 m-0">
             {{ money(totalKobo()) }}
           </p>
+          <p class="acva-para-1 m-0">
+            @if (paymentCount() === 1) {
+              Paid in one payment.
+            } @else {
+              In up to {{ paymentCount() }} payments, each at least
+              {{ money(minimumPaymentKobo()) }}.
+            }
+          </p>
           <ul class="preview__list">
             @for (row of instalments.controls; track $index) {
               <li class="acva-para-1">
-                <span class="preview__label">
-                  Instalment {{ $index + 1 }}
-                </span>
-                <span class="fw-500">
-                  {{ moneyFromNaira(row.get('amount')?.value || 0) }}
-                </span>
+                <span class="preview__label">Payment {{ $index + 1 }}</span>
                 <span class="text-neutral-500">
                   @if (row.get('dueDate')?.value) {
-                    due {{ row.get('dueDate')?.value | date: 'd MMM y' }}
+                    due by {{ row.get('dueDate')?.value | date: 'dd/MM/yyyy' }}
                   } @else {
                     no date set
                   }
@@ -251,7 +211,7 @@
           label="Publish to students"
           class="btn-sm"
           [loading]="saving()"
-          [disabled]="!config() || !balances()"
+          [disabled]="!config() || !hasTotal()"
           (clickEvent)="publish()"
         />
       } @else if (isPublished()) {

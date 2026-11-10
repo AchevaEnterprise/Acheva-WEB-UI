@@ -1,0 +1,139 @@
+<div class="advising">
+  <header class="advising__head">
+    <h3 class="acva-heading-5 fw-500 m-0">Previously Advised Sets</h3>
+    <p class="acva-para-1 text-neutral-500 m-0">
+      Every set you have advised, for reference. Open one to see its students
+      and their records.
+    </p>
+  </header>
+
+  @if (loading()) {
+    <app-skeleton-table [cols]="4" [rows]="4" />
+  } @else {
+    @if (current(); as now) {
+      <p class="current acva-para-1 m-0">
+        You are advising the
+        <span class="fw-500">{{ now.admissionYear }} set</span>, now
+        {{ now.level }} Level · {{ now.total }}
+        {{ now.total === 1 ? 'student' : 'students' }}.
+      </p>
+    }
+
+    @if (previous().length === 0) {
+      <app-empty-state
+        iconSrc="images/general/empty-doc.svg"
+        description="No earlier sets yet. When a set you advise finishes final year, or you hand it over, it is kept here."
+      />
+    } @else {
+      <section class="panel">
+        <div class="table-wrap">
+          <table class="set-table set-table--rows">
+            <thead>
+              <tr>
+                <th>Set</th>
+                <th>Advised</th>
+                <th>Outcome</th>
+                <th>Students</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (set of previous(); track set.id) {
+                <tr
+                  tabindex="0"
+                  [class.is-selected]="selected()?.id === set.id"
+                  (click)="open(set)"
+                  (keydown.enter)="open(set)"
+                >
+                  <td class="fw-500">{{ set.admissionYear }} set</td>
+                  <td>{{ span(set) || '—' }}</td>
+                  <td>
+                    <span
+                      class="chip"
+                      [class.chip--tint]="set.status === 'COMPLETED'"
+                      [class.chip--muted]="set.status !== 'COMPLETED'"
+                    >
+                      {{ outcome(set) }}
+                    </span>
+                  </td>
+                  <td class="text-neutral-500">
+                    {{ set.graduated }} graduated · {{ set.extraYear }} extra
+                    year
+                    @if (set.awaitingResults) {
+                      · {{ set.awaitingResults }} awaiting results
+                    }
+                    · {{ set.inProgramme }} in programme
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      @if (selected(); as set) {
+        <section class="panel">
+          <header class="panel__head">
+            <p class="acva-para-2 fw-500 m-0">{{ set.admissionYear }} set</p>
+            <span class="acva-caption text-neutral-500"
+              >{{ set.total }} students</span
+            >
+          </header>
+          @if (loadingStudents()) {
+            <app-skeleton-table [cols]="4" [rows]="5" />
+          } @else {
+            <div class="table-wrap">
+              <table class="set-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Reg. No.</th>
+                    <th>Now</th>
+                    <th><span class="sr-only">Record</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (student of students(); track student._id) {
+                    <tr>
+                      <td class="fw-500">{{ student.fullName | titlecase }}</td>
+                      <td>{{ student.registrationNumber }}</td>
+                      <td>
+                        <span
+                          class="chip"
+                          [class.chip--brand]="
+                            student.academicStanding === 'EXTRA_YEAR'
+                          "
+                          [class.chip--tint]="
+                            student.academicStanding === 'GRADUATED'
+                          "
+                          [class.chip--outline]="
+                            student.academicStanding === 'AWAITING_RESULTS'
+                          "
+                          [class.chip--muted]="
+                            student.academicStanding === 'IN_PROGRAMME'
+                          "
+                        >
+                          {{ student.standingLabel }}
+                        </span>
+                      </td>
+                      <td class="text-right">
+                        <a
+                          class="link acva-para-1"
+                          [routerLink]="[
+                            '/students',
+                            student.registrationNumber,
+                          ]"
+                        >
+                          View record
+                        </a>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </section>
+      }
+    }
+  }
+</div>

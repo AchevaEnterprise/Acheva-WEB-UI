@@ -14,7 +14,14 @@
  *      in the admin app, and the desk's reply must reach the student with no
  *      reload — across two apps, two account types and one SSE stream.
  *
- * Needs all three dev servers: staff 4200, student 4201, admin 4300, API 3000.
+ * Needs all three dev servers: staff 4200, student 4201, admin 4300, API 3000
+ * (or MS_API, to which the apps' :3000 calls are rerouted).
+ *
+ * Both ways of sending are used: Enter, and CLICKING Send. The admin desk's
+ * Send button once submitted its <form> natively — `(ngSubmit)` with no
+ * forms module imported never fires — so a click reloaded the page and the
+ * reply was lost, and every check here pressed Enter, which hid it (found
+ * 2026-11-10). The portals' Send is a `type="button"`, so never affected.
  *
  *   npm run test:messaging-surfaces
  *   MS_STUDENT_APP=... MS_ADMIN_APP=... npm run test:messaging-surfaces
@@ -25,12 +32,21 @@ const API = process.env.MS_API ?? 'http://localhost:3000';
 const STUDENT_APP = process.env.MS_STUDENT_APP ?? 'http://localhost:4201';
 const ADMIN_APP = process.env.MS_ADMIN_APP ?? 'http://localhost:4300';
 const APP = STUDENT_APP;
+/** The apps call :3000; send them to MS_API when that is somewhere else. */
+const reroute = async (context) => {
+  if (API === 'http://localhost:3000') return;
+  await context.route(/^http:\/\/localhost:3000\//, (route) =>
+    route.continue({ url: route.request().url().replace('http://localhost:3000', API) }),
+  );
+};
 let failures=0; const check=(ok,m,d='')=>{console.log(`  ${ok?'✓':'✗'} ${m}${d?` — ${d}`:''}`); if(!ok)failures++;};
 const signIn = async (p,e,pw='Password8@') => {
   const r = await fetch(`${API}${p}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:e,password:pw})});
   if(!r.ok) throw new Error(`${p} ${e} → ${r.status}`); return (await r.json()).data;
 };
 const student = await signIn('/auth/students/signin','sim.chm300.1@acheva.sim');
+// Past the details gate, which has its own harness (test:admin-console-ui).
+student.detailsRequired = false;
 
 /**
  * The API must never hand back a body it has not decrypted.
@@ -58,6 +74,7 @@ const student = await signIn('/auth/students/signin','sim.chm300.1@acheva.sim');
 
 const browser = await chromium.launch({headless:true});
 const ctx = await browser.newContext({viewport:{width:1440,height:900},deviceScaleFactor:2,colorScheme:'light'});
+await reroute(ctx);
 await ctx.addInitScript(([t,r,a])=>{localStorage.setItem('token',t);localStorage.setItem('refresh_token',r);localStorage.setItem('active_account',a);},[student.accessToken,student.refreshToken,JSON.stringify(student)]);
 const page = await ctx.newPage();
 page.on('console', m => m.type()==='error' && console.log('  !', m.text().slice(0,120)));
@@ -74,8 +91,14 @@ check(/advisor|dr\.|sim/i.test(title), 'the thread is with their own Course Advi
 
 const msg = `Student→CA ${Date.now()}: could you check my CHM 301 grade?`;
 await page.locator('.composer__input').fill(msg);
-await page.keyboard.press('Enter');
+// A marker that a reload would wipe.
+await page.evaluate(() => { window.__sameDocument = true; });
+await page.locator('app-chat-thread').getByRole('button', { name: 'Send' }).click();
 await page.waitForTimeout(2500);
+check(
+  await page.evaluate(() => window.__sameDocument === true),
+  'clicking Send sends in place — the page does not reload',
+);
 check(await page.getByText(msg).count() > 0, 'the message sends and shows in the thread');
 await page.screenshot({path:'screenshots/advisor-student.png'});
 
@@ -94,6 +117,7 @@ const browser2 = await chromium.launch({ headless: true });
 
 // ── the student, on the support page ───────────────────────────────────────
 const sCtx = await browser2.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2, colorScheme: 'light' });
+await reroute(sCtx);
 await sCtx.addInitScript(([t, r, a]) => {
   localStorage.setItem('token', t); localStorage.setItem('refresh_token', r); localStorage.setItem('active_account', a);
 }, [student.accessToken, student.refreshToken, JSON.stringify(student)]);
@@ -113,6 +137,7 @@ await sPage.screenshot({ path: 'screenshots/support-student.png' });
 
 // ── the desk, in the admin app ─────────────────────────────────────────────
 const aCtx = await browser2.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2, colorScheme: 'light' });
+await reroute(aCtx);
 await aCtx.addInitScript(([t, a]) => {
   localStorage.setItem('acheva-admin-token', t); localStorage.setItem('acheva-admin-account', a);
 }, [admin.accessToken, JSON.stringify(admin)]);
@@ -140,8 +165,13 @@ await aPage.screenshot({ path: 'screenshots/support-admin.png' });
 // ── the desk replies, and it lands live on the student's screen ────────────
 const reply = `Desk reply ${Date.now()}: checking with your department now.`;
 await aPage.locator('.composer__input').fill(reply);
-await aPage.keyboard.press('Enter');
+await aPage.evaluate(() => { window.__sameDocument = true; });
+await aPage.locator('app-chat-thread').getByRole('button', { name: 'Send' }).click();
 await aPage.waitForTimeout(3000);
+check(
+  await aPage.evaluate(() => window.__sameDocument === true),
+  'the desk’s Send button sends in place too',
+);
 check(await aPage.getByText(reply).count() > 0, 'the reply appears on the desk side');
 
 await sPage.waitForTimeout(2000);

@@ -1,5 +1,5 @@
-/* Departmental dues. A form about money, so the running arithmetic is the
-   loudest thing on the page after the inputs themselves. */
+/* Departmental dues: the total, and how many payments a student may split it
+   into. Students choose each amount within the 30% rule, stated in the card. */
 
 $border: #e5e7eb;
 $brand: #2793ff;
@@ -68,12 +68,10 @@ $muted: #6b7c8d;
 
 /* ── Schedule ────────────────────────────────────────────────────────────── */
 
-.schedule-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
+.rule {
+  display: block;
+  margin-top: 8px;
+  color: $ink;
 }
 
 .link-btn {
@@ -99,7 +97,7 @@ $muted: #6b7c8d;
 
 .instalment {
   display: grid;
-  grid-template-columns: 24px minmax(0, 1fr) minmax(0, 1fr) 36px;
+  grid-template-columns: 24px minmax(0, 1fr) 36px;
   align-items: start;
   gap: 12px;
 }
@@ -168,65 +166,6 @@ $muted: #6b7c8d;
 .add-btn:focus-visible {
   outline: 2px solid $brand;
   outline-offset: 1px;
-}
-
-/* ── The tally ───────────────────────────────────────────────────────────── */
-
-.tally {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 12px 16px;
-  border-radius: 8px;
-  background: #f7f9fb;
-  border: 1px solid $border;
-}
-
-.tally__row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  color: $muted;
-}
-
-.tally__row--verdict {
-  margin-top: 4px;
-  padding-top: 8px;
-  border-top: 1px solid $border;
-  color: $ink;
-}
-
-/* Brand blue for "correct", not green — green is off-palette across Acheva. */
-
-.tally--ok {
-  background: #f2f8ff;
-  border-color: #bcdcff;
-}
-
-.tally--ok .tally__row--verdict {
-  color: #12508f;
-  border-top-color: #bcdcff;
-}
-
-.tally--off {
-  background: #fdf2f2;
-  border-color: #f0c8c8;
-}
-
-.tally--off .tally__row--verdict {
-  color: #8a1f1f;
-  border-top-color: #f0c8c8;
-}
-
-.tally__tick {
-  width: 18px;
-  height: 18px;
-  fill: none;
-  stroke: currentcolor;
-  stroke-width: 2.2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
 }
 
 /* ── Student preview ─────────────────────────────────────────────────────── */

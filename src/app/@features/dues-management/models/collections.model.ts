@@ -61,7 +61,8 @@ export interface IDuesCollectionPlan {
 }
 
 export interface IDuesCollectionsPage {
-  readonly session: string;
+  /** Null before the university opens its first session. */
+  readonly session: string | null;
   /** `null` when the department has published no plan for the session. */
   readonly plan: IDuesCollectionPlan | null;
   readonly summary: IDuesCollectionSummary | null;

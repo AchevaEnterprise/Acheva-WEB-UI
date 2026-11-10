@@ -89,6 +89,34 @@ export const MENU: IMenu[] = [
     ],
   },
   {
+    // A finished set's students who still owe courses — one list per set,
+    // so a career's worth never crowds the set being advised now.
+    label: 'Extra Year',
+    active_icon: 'icons/menu/students-active.svg',
+    inactive_icon: 'icons/menu/students-inactive.svg',
+    route: 'extra-year',
+    isActive: true,
+    accessRole: [RoleEnum.COURSE_ADVISOR],
+  },
+  {
+    label: 'Advised Sets',
+    active_icon: 'icons/menu/history-active.svg',
+    inactive_icon: 'icons/menu/history-inactive.svg',
+    route: 'advised-sets',
+    isActive: true,
+    accessRole: [RoleEnum.COURSE_ADVISOR],
+  },
+  {
+    // Who has paid — the Head for the department, an advisor for their own
+    // students, so they can remind those who have not (2026-11-09).
+    label: 'School Fees',
+    active_icon: 'icons/menu/payment-history-active.svg',
+    inactive_icon: 'icons/menu/payment-history-inactive.svg',
+    route: 'school-fees',
+    isActive: true,
+    accessRole: [RoleEnum.HOD, RoleEnum.COURSE_ADVISOR],
+  },
+  {
     label: 'Registration',
     active_icon: 'icons/menu/courses-active.svg',
     inactive_icon: 'icons/menu/courses-inactive.svg',

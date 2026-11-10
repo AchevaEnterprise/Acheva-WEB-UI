@@ -4,13 +4,21 @@
   } @else if (!hasPlan()) {
     <!-- No plan is a legitimate answer, not an error. -->
     <div class="empty">
-      <p class="acva-para-2 fw-500 m-0">
-        No dues published for {{ page()?.session }}
-      </p>
-      <p class="acva-para-1 text-neutral-500 m-0">
-        Set this session's departmental dues under User Settings, then publish
-        them. Payments and this table appear once students begin to pay.
-      </p>
+      @if (page() && !page()!.session) {
+        <p class="acva-para-2 fw-500 m-0">No academic session is open yet</p>
+        <p class="acva-para-1 text-neutral-500 m-0">
+          Dues belong to a session. Once your university opens one, set its dues
+          under User Settings and this table fills in as students pay.
+        </p>
+      } @else {
+        <p class="acva-para-2 fw-500 m-0">
+          No dues published for {{ page()?.session }}
+        </p>
+        <p class="acva-para-1 text-neutral-500 m-0">
+          Set this session's departmental dues under User Settings, then publish
+          them. Payments and this table appear once students begin to pay.
+        </p>
+      }
     </div>
   } @else {
     <header class="collections__head">

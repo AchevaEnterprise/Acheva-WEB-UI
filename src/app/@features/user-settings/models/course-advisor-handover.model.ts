@@ -18,6 +18,8 @@ export interface IHandoverCounts {
   readonly transfers: number;
   /** Students in the cohort — they follow the post by derivation. */
   readonly students: number;
+  /** Finished sets whose extra-year students go to the incoming advisor. */
+  readonly extraYearSets?: number;
 }
 
 export interface IHandoverParty {
@@ -35,6 +37,8 @@ export interface IHandoverPreview {
   readonly level: string;
   readonly admissionYear: string | null;
   readonly moved: IHandoverCounts;
+  /** Intakes of those finished sets, e.g. ["2022"]. */
+  readonly extraYearIntakes?: readonly string[];
 }
 
 export interface IHandoverResult extends IHandoverPreview {

@@ -1,0 +1,248 @@
+<div class="fees">
+  <header class="fees__head">
+    <h3 class="acva-heading-5 fw-500 m-0">School Fees</h3>
+    <p class="acva-para-1 text-neutral-500 m-0">
+      @if (isAdvisor()) {
+        Who among your students has paid
+      } @else {
+        Who in your department has paid
+      }
+      @if (list()?.session; as session) {
+        their {{ session }} school fees
+      } @else {
+        their school fees
+      }
+      — so you can remind those who have not. One payment opens first-semester
+      registration; second semester needs the fee in full.
+    </p>
+  </header>
+
+  @if (loading() && !list()) {
+    <app-skeleton-table [cols]="6" [rows]="6" />
+  }
+  @if (unavailable()) {
+    <app-empty-state
+      iconSrc="images/general/empty-doc.svg"
+      description="School fees are not available here yet. Once Acheva sets them up for your university, this list fills in."
+    />
+  }
+  @if (list(); as current) {
+    @if (!current.session) {
+      <app-empty-state
+        iconSrc="images/general/empty-doc.svg"
+        description="No academic session is open yet. School fees appear here once your university opens one."
+      />
+    } @else if (!current.published) {
+      <app-empty-state
+        iconSrc="images/general/empty-doc.svg"
+        [description]="
+          'School fees for ' +
+          current.session +
+          ' have not been published yet. Acheva sets them; this list fills in once students can pay.'
+        "
+      />
+    } @else {
+      <div
+        class="tiles"
+        role="group"
+        aria-label="Filter by how much has been paid"
+      >
+        @for (tile of tiles(); track tile.status) {
+          <button
+            type="button"
+            class="tile"
+            [class.tile--on]="status() === tile.status"
+            [attr.aria-pressed]="status() === tile.status"
+            (click)="chooseStatus(tile.status)"
+          >
+            <span class="tile__count acva-heading-5">{{ tile.count }}</span>
+            <span class="tile__label acva-para-1">{{ tile.label }}</span>
+          </button>
+        }
+        <div class="tile tile--money">
+          <span class="tile__count acva-para-2 fw-500">{{
+            money(summary()?.collectedKobo ?? 0)
+          }}</span>
+          <span class="tile__label acva-para-1">
+            paid · {{ money(summary()?.outstandingKobo ?? 0) }} outstanding
+          </span>
+        </div>
+      </div>
+
+      @if (
+        (summary()?.overdue ?? 0) > 0 ||
+        (summary()?.optionRequired ?? 0) > 0 ||
+        (summary()?.noFee ?? 0) > 0 ||
+        (summary()?.uncheckedReceipts ?? 0) > 0
+      ) {
+        <p class="note acva-para-1 m-0">
+          @if ((summary()?.overdue ?? 0) > 0) {
+            {{ summary()!.overdue }}
+            {{ summary()!.overdue === 1 ? 'student has' : 'students have' }}
+            missed a payment date.
+          }
+          @if ((summary()?.optionRequired ?? 0) > 0) {
+            {{ summary()!.optionRequired }}
+            {{ summary()!.optionRequired === 1 ? 'has' : 'have' }}
+            not chosen an option, so no fee applies to them yet.
+          }
+          @if ((summary()?.uncheckedReceipts ?? 0) > 0) {
+            {{ summary()!.uncheckedReceipts }}
+            {{
+              summary()!.uncheckedReceipts === 1
+                ? 'receipt counts'
+                : 'receipts count'
+            }}
+            but {{ summary()!.uncheckedReceipts === 1 ? 'has' : 'have' }} not
+            been checked yet.
+          }
+          @if ((summary()?.noFee ?? 0) > 0) {
+            {{ summary()!.noFee }}
+            {{ summary()!.noFee === 1 ? 'is' : 'are' }} on a level with no fee
+            set.
+          }
+        </p>
+      }
+
+      <div class="filters">
+        <input
+          class="filters__search acva-para-1"
+          type="search"
+          placeholder="Search by name or registration number"
+          aria-label="Search by name or registration number"
+          (input)="onSearch($event)"
+        />
+        <select
+          class="filters__select acva-para-1"
+          aria-label="Filter by level"
+          [value]="level()"
+          (change)="chooseLevel($any($event.target).value)"
+        >
+          <option value="">Every level</option>
+          @for (option of current.levels; track option) {
+            <option [value]="option">{{ option }} Level fee</option>
+          }
+        </select>
+        <select
+          class="filters__select acva-para-1"
+          aria-label="Filter by status"
+          [value]="status()"
+          (change)="chooseStatus($any($event.target).value)"
+        >
+          <option value="">Every status</option>
+          <option value="PAID">Paid in full</option>
+          <option value="PARTIAL">Part paid</option>
+          <option value="NOT_STARTED">Not started</option>
+          <option value="OPTION_REQUIRED">No option chosen</option>
+          <option value="NO_FEE">No fee set</option>
+        </select>
+      </div>
+
+      <section class="panel">
+        @if (loading()) {
+          <app-skeleton-table [cols]="6" [rows]="6" />
+        } @else if (rows().length === 0) {
+          <app-empty-state
+            iconSrc="images/general/empty-doc.svg"
+            description="Nobody matches these filters."
+          />
+        } @else {
+          <div class="table-wrap">
+            <table class="fee-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Reg. No.</th>
+                  <th>Level</th>
+                  <th>Paid</th>
+                  <th>Status</th>
+                  <th>Next payment</th>
+                  <th><span class="sr-only">Record</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of rows(); track row._id) {
+                  <tr>
+                    <td class="fw-500">
+                      {{ row.fullName | titlecase }}
+                      @if (row.option) {
+                        <span class="cell-sub acva-caption">{{
+                          row.option
+                        }}</span>
+                      }
+                    </td>
+                    <td>{{ row.registrationNumber }}</td>
+                    <td>{{ row.standingLabel }}</td>
+                    <td>
+                      {{ money(row.paidKobo) }}
+                      @if (row.totalKobo !== null) {
+                        <span class="cell-sub acva-caption"
+                          >of {{ money(row.totalKobo) }}</span
+                        >
+                      }
+                      @if (row.receipts.length > 0) {
+                        <button
+                          type="button"
+                          class="receipt-link acva-caption"
+                          (click)="openReceipts(row)"
+                        >
+                          {{ row.receipts.length }}
+                          {{
+                            row.receipts.length === 1 ? 'receipt' : 'receipts'
+                          }}
+                          @if (unchecked(row) > 0) {
+                            · not yet checked
+                          }
+                        </button>
+                      }
+                    </td>
+                    <td>
+                      <span
+                        class="chip"
+                        [class.chip--brand]="row.status === 'PAID'"
+                        [class.chip--tint]="row.status === 'PARTIAL'"
+                        [class.chip--outline]="row.status === 'NOT_STARTED'"
+                        [class.chip--muted]="
+                          row.status === 'OPTION_REQUIRED' ||
+                          row.status === 'NO_FEE'
+                        "
+                        >{{ statusLabel(row) }}</span
+                      >
+                    </td>
+                    <td>
+                      @if (row.status === 'PAID') {
+                        <span class="text-neutral-500">—</span>
+                      } @else if (row.nextDueDate) {
+                        {{ date(row.nextDueDate) }}
+                        @if (row.overdue) {
+                          <span class="chip chip--outline chip--small"
+                            >Overdue</span
+                          >
+                        }
+                      } @else {
+                        <span class="text-neutral-500">—</span>
+                      }
+                    </td>
+                    <td class="text-right">
+                      <a
+                        class="link acva-para-1"
+                        [routerLink]="['/students', row.registrationNumber]"
+                      >
+                        View record
+                      </a>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <app-paginator
+            [paginator]="paginator()"
+            [pageSizeOptions]="[25, 50, 100]"
+            (pageEvent)="onPage($event)"
+          />
+        }
+      </section>
+    }
+  }
+</div>

@@ -109,6 +109,8 @@ await ctx.addInitScript(
   [
     token,
     JSON.stringify({
+      // Past the details gate, which has its own harness (test:admin-console-ui).
+      detailsRequired: false,
       id: STUDENT.id,
       fullName: 'Abigail Baker',
       registrationNumber: STUDENT.regNo,

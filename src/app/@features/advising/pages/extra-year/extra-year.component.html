@@ -1,0 +1,122 @@
+<div class="advising">
+  <header class="advising__head">
+    <h3 class="acva-heading-5 fw-500 m-0">Extra Year</h3>
+    <p class="acva-para-1 text-neutral-500 m-0">
+      Students from sets you saw through final year who still owe courses, and
+      those waiting on final results that decide whether they graduate. They
+      stay with you while you advise a new set.
+    </p>
+  </header>
+
+  @if (loading()) {
+    <app-skeleton-table [cols]="4" [rows]="4" />
+  } @else if (sets().length === 0) {
+    <app-empty-state
+      iconSrc="images/general/empty-doc.svg"
+      description="No extra-year students. When a set you advise finishes final year, anyone who still owes a course appears here."
+    />
+  } @else {
+    <div class="set-tabs" role="tablist" aria-label="Your sets">
+      @for (set of sets(); track set.admissionYear) {
+        <button
+          type="button"
+          role="tab"
+          class="set-tab acva-para-1"
+          [class.set-tab--on]="selected() === set.admissionYear"
+          [attr.aria-selected]="selected() === set.admissionYear"
+          (click)="choose(set.admissionYear)"
+        >
+          {{ set.admissionYear }} set
+          <span class="set-tab__count">{{ set.students }}</span>
+        </button>
+      }
+    </div>
+
+    <section class="panel">
+      @for (set of sets(); track set.admissionYear) {
+        @if (set.admissionYear === selected()) {
+          <header class="panel__head">
+            <p class="acva-para-2 fw-500 m-0">
+              Extra year · {{ set.admissionYear }} set
+            </p>
+            <span class="acva-caption text-neutral-500">
+              @if (set.completedSession) {
+                Finished final year in {{ set.completedSession }} ·
+              }
+              {{ set.students }}
+              {{ set.students === 1 ? 'student' : 'students' }}
+              @if (set.awaitingResults) {
+                · {{ set.awaitingResults }} awaiting results
+              }
+            </span>
+          </header>
+        }
+      }
+
+      @if (loadingStudents()) {
+        <app-skeleton-table [cols]="5" [rows]="4" />
+      } @else {
+        <div class="table-wrap">
+          <table class="set-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Reg. No.</th>
+                <th>Year</th>
+                <th>Still owes</th>
+                <th>Results not out</th>
+                <th><span class="sr-only">Record</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (student of students(); track student._id) {
+                <tr>
+                  <td class="fw-500">{{ student.fullName | titlecase }}</td>
+                  <td>{{ student.registrationNumber }}</td>
+                  <td>
+                    <span
+                      class="chip"
+                      [class.chip--brand]="
+                        student.academicStanding !== 'AWAITING_RESULTS'
+                      "
+                      [class.chip--tint]="
+                        student.academicStanding === 'AWAITING_RESULTS'
+                      "
+                      >{{ student.standingLabel }}</span
+                    >
+                  </td>
+                  <td>
+                    <span class="chip-row">
+                      @for (code of student.owes; track code) {
+                        <span class="chip chip--tint">{{ code }}</span>
+                      } @empty {
+                        <span class="text-neutral-500">—</span>
+                      }
+                    </span>
+                  </td>
+                  <td>
+                    <span class="chip-row">
+                      @for (code of student.awaiting; track code) {
+                        <span class="chip chip--outline">{{ code }}</span>
+                      } @empty {
+                        <span class="text-neutral-500">—</span>
+                      }
+                    </span>
+                  </td>
+                  <td class="text-right">
+                    <a
+                      class="link acva-para-1"
+                      [routerLink]="['/students', student.registrationNumber]"
+                    >
+                      View record
+                    </a>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  }
+</div>
