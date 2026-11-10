@@ -47,7 +47,7 @@ $tint: rgb(119 187 255 / 18%);
   cursor: pointer;
 
   &:hover {
-    border-color: #77bbff;
+    border-color: #7bf;
   }
 
   &__count {
@@ -125,7 +125,7 @@ $tint: rgb(119 187 255 / 18%);
   }
 
   &:focus-visible {
-    outline: 2px solid #77bbff;
+    outline: 2px solid #7bf;
     outline-offset: -2px;
   }
 }
@@ -162,7 +162,7 @@ $tint: rgb(119 187 255 / 18%);
   &--outline {
     background: transparent;
     color: $brand;
-    box-shadow: inset 0 0 0 1px #77bbff;
+    box-shadow: inset 0 0 0 1px #7bf;
   }
 }
 

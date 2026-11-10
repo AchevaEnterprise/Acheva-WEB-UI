@@ -26,6 +26,7 @@
     "test:handover-ui": "node scripts/advisor-handover-ui-harness.mjs",
     "test:transfer-effect": "node scripts/transfer-effect-ui-harness.mjs",
     "test:school-fees-ui": "node scripts/school-fees-ui-harness.mjs",
+    "test:copied-dean": "node scripts/copied-dean-harness.mjs",
     "test:empty-pages": "node scripts/empty-pages-harness.mjs",
     "test:e2e-chain": "node scripts/e2e-signup-to-publish.mjs",
     "test:admin-console-ui": "node scripts/admin-console-ui-harness.mjs",

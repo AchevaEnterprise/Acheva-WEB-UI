@@ -88,6 +88,12 @@ export interface IResult {
   workflowHistory: Array<unknown>;
   receivingHandler: string;
   rejectedBy?: string[];
+  /**
+   * Deans copied when the result reached another department's Head as
+   * APPROVED — that Head's Dean, for accountability. They follow it; they
+   * act on nothing.
+   */
+  copiedDeans?: string[];
   analytics: {
     total: number;
     totalPass: number;

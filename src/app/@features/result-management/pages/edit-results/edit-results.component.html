@@ -83,7 +83,9 @@
         {{
           isRestrictedViewer()
             ? 'View only — published result shared with you for your students'
-            : 'View only — already sent for approval'
+            : isCopiedDean()
+              ? 'View only — copied to you: sent to a department in your faculty'
+              : 'View only — already sent for approval'
         }}
       </span>
     }

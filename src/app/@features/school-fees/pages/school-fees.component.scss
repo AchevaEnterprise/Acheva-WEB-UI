@@ -41,7 +41,7 @@ $tint: rgb(119 187 255 / 18%);
   cursor: pointer;
 
   &:hover {
-    border-color: #77bbff;
+    border-color: #7bf;
   }
 
   &__count {
@@ -176,7 +176,7 @@ $tint: rgb(119 187 255 / 18%);
   &--outline {
     background: transparent;
     color: $brand;
-    box-shadow: inset 0 0 0 1px #77bbff;
+    box-shadow: inset 0 0 0 1px #7bf;
   }
 
   &--muted {
@@ -201,6 +201,7 @@ $tint: rgb(119 187 255 / 18%);
 }
 
 /* A receipt uploaded for a payment made elsewhere — counted, checked later. */
+
 .receipt-link {
   display: block;
   margin-top: 4px;
