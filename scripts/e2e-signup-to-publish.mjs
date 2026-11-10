@@ -98,9 +98,31 @@ async function as(portal, email) {
     await page.getByRole('button', { name: /log in/i }).click();
     if ((await resp).status() === 429) { console.log('   … sign-in rate limit, waiting a minute'); await page.waitForTimeout(62_000); continue; }
     await page.waitForURL((u) => !u.pathname.includes('/auth/'), { timeout: 30_000 });
+    // A student who has just signed up is held on "Complete your details"
+    // until they give what their transcript prints (2026-11-09) — as a real
+    // one would, the chain fills it in.
+    if (portal === 'student' && new URL(page.url()).pathname === '/details') {
+      await completeDetails(page);
+    }
     return { context, page };
   }
   throw new Error(`could not sign in as ${email}`);
+}
+
+/** Fill the student portal's "Complete your details" form and save it. */
+async function completeDetails(page) {
+  const pick = async (id, option) => {
+    await page.locator(`mat-select#${id}`).click();
+    await page.locator('mat-option').filter({ hasText: new RegExp(`^\\s*${option}\\s*$`) }).click();
+  };
+  await page.getByText('Complete Your Details').waitFor({ timeout: 30_000 });
+  await pick('details-sex', 'Female');
+  await page.locator('#details-dob').fill('2003-04-12');
+  await pick('details-state', 'Imo');
+  await pick('details-entry', 'UTME');
+  await page.getByRole('button', { name: 'Save and continue' }).click();
+  await page.waitForURL((u) => u.pathname !== '/details', { timeout: 30_000 });
+  ok('the new student completed their details before using the portal');
 }
 
 /** Put a staff session into `role` with the sidebar's Switch Roles menu. */

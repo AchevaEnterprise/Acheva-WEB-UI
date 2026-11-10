@@ -65,6 +65,11 @@
                   ? lecturer.assignedLevel + ' Level'
                   : 'N/A'
               }}
+              @if (lecturer.extraYearIntakes?.length) {
+                <span class="block acva-caption text-neutral-500">
+                  Extra years: {{ lecturer.extraYearIntakes.join(', ') }} set
+                </span>
+              }
             </td>
           </ng-container>
 
@@ -81,13 +86,26 @@
               @if (
                 !lecturer.assignedLevel || lecturer.assignedLevel === 'NONE'
               ) {
-                <app-button
-                  label="Assign"
-                  type="outline"
-                  class="btn-sm"
-                  [disabled]="!lecturer.isActive"
-                  (clickEvent)="confirmAssignAsCourseAdvisor(lecturer)"
-                />
+                <span class="actions">
+                  <app-button
+                    label="Assign"
+                    type="outline"
+                    class="btn-sm"
+                    [disabled]="!lecturer.isActive"
+                    (clickEvent)="confirmAssignAsCourseAdvisor(lecturer)"
+                  />
+                  <!-- Between sets but still answering for a finished set's
+                       extra-year students: those can be handed over. -->
+                  @if (lecturer.extraYearIntakes?.length) {
+                    <app-button
+                      label="Hand over"
+                      type="outline"
+                      class="btn-sm"
+                      [disabled]="!lecturer.isActive"
+                      (clickEvent)="confirmHandover(lecturer)"
+                    />
+                  }
+                </span>
               } @else {
                 <span class="actions">
                   <app-button

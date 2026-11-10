@@ -39,6 +39,9 @@ import { formatNaira, toKobo, toNaira } from '../../../utils/naira';
 /** One to three. Four is not a payment plan. */
 const MAX_INSTALMENTS = 3;
 
+/** The smallest share of the total one payment may be — the server's rule too. */
+const MIN_PAYMENT_PERCENT = 30;
+
 /** The form's shape, so `getRawValue()` is narrowed in exactly one place. */
 interface IDuesFormValue {
   readonly title: string;
@@ -46,7 +49,6 @@ interface IDuesFormValue {
   /** Naira as typed — converted to kobo at the boundary. */
   readonly totalAmount: number;
   readonly instalments: readonly {
-    readonly amount: number;
     readonly dueDate: Date;
     readonly note: string;
   }[];
@@ -58,16 +60,16 @@ interface IDuesFormValue {
  *
  * ## This page sets policy; it does not take money
  *
- * A Head decides the amount and the schedule here. Collection lives elsewhere
- * (backlog item 19) and reads this as its source of truth, so nothing on this
- * page touches a provider, a balance or a transaction.
+ * A Head decides the total, how many payments a student may split it into
+ * (one to three) and when each is due. Collection lives elsewhere and reads
+ * this as its source of truth.
  *
- * ## The rule the form exists to enforce
+ * ## The student chooses each amount (2026-11-09)
  *
- * **The instalments must add up to the total, exactly.** The running
- * difference is shown the whole time rather than raised on submit, because
- * being told "that does not add up" after filling three dates is the kind of
- * friction that ends with somebody publishing a wrong figure.
+ * The Head no longer types instalment amounts. Each time a student pays they
+ * choose how much, at least 30% of the total (or whatever is left), and their
+ * last allowed payment clears the balance. The page says so, with the floor
+ * in naira, so a Head knows what they are offering.
  *
  * ## Why the money fields lock
  *
@@ -139,7 +141,8 @@ export class DepartmentalDuesComponent implements OnInit {
    * Anything the template depends on has to live in a signal.
    */
   readonly totalNaira = signal(0);
-  readonly instalmentTotals = signal<number[]>([]);
+  /** How many payments are allowed — the rows on screen, as a signal. */
+  readonly paymentCount = signal(0);
   private readonly formValid = signal(false);
 
   readonly form: FormGroup = this.fb.group({
@@ -156,24 +159,21 @@ export class DepartmentalDuesComponent implements OnInit {
     return this.form.get('instalments') as FormArray;
   }
 
-  /** Kobo, so the comparison is exact — never compare naira floats. */
+  /** Kobo, so the arithmetic is exact — never compute with naira floats. */
   readonly totalKobo = computed(() => toKobo(this.totalNaira()));
-  readonly scheduledKobo = computed(() =>
-    this.instalmentTotals().reduce((sum, amount) => sum + toKobo(amount), 0)
+  readonly hasTotal = computed(() => this.totalKobo() > 0);
+  /** 30% of the total, rounded up — the least a student may pay at once. */
+  readonly minimumPaymentKobo = computed(() =>
+    Math.ceil((this.totalKobo() * MIN_PAYMENT_PERCENT) / 100)
   );
-  readonly differenceKobo = computed(
-    () => this.totalKobo() - this.scheduledKobo()
-  );
-  readonly balances = computed(
-    () => this.totalKobo() > 0 && this.differenceKobo() === 0
-  );
+  readonly minimumPercent = MIN_PAYMENT_PERCENT;
 
   readonly canEditAmounts = computed(() => this.editability().amounts);
   readonly isPublished = computed(() => this.config()?.status === 'ACTIVE');
   readonly isClosed = computed(() => this.config()?.status === 'CLOSED');
 
   readonly canSave = computed(
-    () => this.formValid() && this.balances() && !this.saving()
+    () => this.formValid() && this.hasTotal() && !this.saving()
   );
 
   ngOnInit(): void {
@@ -189,7 +189,7 @@ export class DepartmentalDuesComponent implements OnInit {
 
     this.instalments.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => this.syncInstalmentTotals());
+      .subscribe(() => this.paymentCount.set(this.instalments.length));
 
     this.form.statusChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -205,16 +205,8 @@ export class DepartmentalDuesComponent implements OnInit {
    * hand at exactly those points.
    */
   private refreshFormState(): void {
-    this.syncInstalmentTotals();
+    this.paymentCount.set(this.instalments.length);
     this.formValid.set(this.form.valid);
-  }
-
-  private syncInstalmentTotals(): void {
-    this.instalmentTotals.set(
-      this.instalments.controls.map(
-        (control) => Number(control.get('amount')?.value) || 0
-      )
-    );
   }
 
   private load(): void {
@@ -265,24 +257,18 @@ export class DepartmentalDuesComponent implements OnInit {
     this.instalments.clear({ emitEvent: false });
     for (const instalment of config.instalments) {
       this.instalments.push(
-        this.instalmentGroup(
-          toNaira(instalment.amount),
-          new Date(instalment.dueDate),
-          instalment.note
-        ),
+        this.instalmentGroup(new Date(instalment.dueDate), instalment.note),
         { emitEvent: false }
       );
     }
-    this.syncInstalmentTotals();
+    this.paymentCount.set(this.instalments.length);
   }
 
   private instalmentGroup(
-    amount: number | null = null,
     dueDate: Date | null = null,
     note: string | null = null
   ): FormGroup {
     return this.fb.group({
-      amount: [amount, [Validators.required, Validators.min(0.01)]],
       dueDate: [dueDate, [Validators.required]],
       note: [note ?? '', [Validators.maxLength(120)]],
     });
@@ -300,49 +286,11 @@ export class DepartmentalDuesComponent implements OnInit {
     this.refreshFormState();
   }
 
+  // Reads the signal, not `instalments.length`: a FormArray is not reactive,
+  // so a computed over it never noticed a row being added.
   readonly canAddInstalment = computed(
-    () => this.instalments.length < MAX_INSTALMENTS && this.canEditAmounts()
+    () => this.paymentCount() < MAX_INSTALMENTS && this.canEditAmounts()
   );
-
-  /**
-   * Fill the schedule with an even split of the total.
-   *
-   * The split comes from the server so the odd kobo lands on the same
-   * instalment at both ends — a locally computed split that is one kobo out
-   * would be rejected on save with an error the Head cannot act on.
-   */
-  suggestSplit(): void {
-    const total = this.totalKobo();
-    if (total <= 0) {
-      this.toast.showNotification(
-        'warning',
-        'Enter a total first',
-        'There is nothing to split until the total amount is set.'
-      );
-      return;
-    }
-
-    this.dues
-      .split(total, this.instalments.length)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (resp) => {
-          resp.data.instalments.forEach((kobo, index) => {
-            this.instalments
-              .at(index)
-              ?.get('amount')
-              ?.setValue(toNaira(kobo), { emitEvent: false });
-          });
-          this.refreshFormState();
-        },
-        error: () =>
-          this.toast.showNotification(
-            'error',
-            'Could not split the total',
-            'Please try again.'
-          ),
-      });
-  }
 
   save(): void {
     if (!this.canSave()) return;
@@ -357,8 +305,9 @@ export class DepartmentalDuesComponent implements OnInit {
         name: raw.title,
         description: raw.description || undefined,
         amount: toKobo(raw.totalAmount),
+        // No amounts: the student chooses each one, and the server stores an
+        // even split as the suggestion it offers them.
         instalments: raw.instalments.map((instalment) => ({
-          amount: toKobo(instalment.amount),
           dueDate: new Date(instalment.dueDate).toISOString(),
           note: instalment.note || undefined,
         })),
@@ -441,16 +390,4 @@ export class DepartmentalDuesComponent implements OnInit {
   money(kobo: number): string {
     return formatNaira(kobo);
   }
-
-  moneyFromNaira(naira: number): string {
-    return formatNaira(toKobo(naira));
-  }
-
-  readonly differenceLabel = computed(() => {
-    const difference = this.differenceKobo();
-    if (difference === 0) return 'The schedule adds up.';
-    return difference > 0
-      ? `${formatNaira(difference)} still to schedule`
-      : `${formatNaira(Math.abs(difference))} over the total`;
-  });
 }

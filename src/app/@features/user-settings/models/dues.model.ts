@@ -57,8 +57,11 @@ export interface IUpsertDues {
   readonly description?: string;
   /** KOBO. */
   readonly amount: number;
+  /**
+   * When each allowed payment is due — no amounts. The student chooses each
+   * one (2026-11-09); the server stores an even split as the suggestion.
+   */
   readonly instalments: readonly {
-    readonly amount: number;
     readonly dueDate: string;
     readonly note?: string;
   }[];

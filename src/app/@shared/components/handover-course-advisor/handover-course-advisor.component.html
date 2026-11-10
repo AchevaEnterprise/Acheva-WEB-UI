@@ -1,9 +1,17 @@
 <div class="handover">
-  <h2 class="acva-heading-6 fw-600 m-0">Hand over this cohort</h2>
+  <h2 class="acva-heading-6 fw-500 m-0">Hand over this advisor’s students</h2>
   <p class="acva-para-1 text-neutral-500">
-    <strong>{{ data.lecturer }}</strong> currently advises level
-    <strong>{{ data.level }}</strong
-    >. Choose who takes it on.
+    @if (holdsSet) {
+      {{ data.lecturer }} currently advises level {{ data.level }}
+      @if (extraYearSets) {
+        , and the extra-year students of the {{ extraYearSets }}
+      }
+      . Choose who takes them on.
+    } @else {
+      {{ data.lecturer }} looks after the extra-year students of the
+      {{ extraYearSets }}. Choose who takes them on — the new advisor keeps
+      their own set too.
+    }
   </p>
 
   <mat-form-field appearance="outline" class="w-full">
@@ -22,8 +30,8 @@
     <!-- Nobody eligible: an advisor holds one cohort, so anyone already
          advising a different level cannot take this one as well. -->
     <p class="note note--warn acva-para-1">
-      Nobody in this department can take this cohort right now. An advisor holds
-      one level at a time, so unassign someone first.
+      Nobody in this department can take this set right now. An advisor holds
+      one set at a time, so it must go to a lecturer who is not advising one.
     </p>
   }
 
@@ -42,6 +50,15 @@
         }}
         — their records, results and course registrations.
       </p>
+      @if (p.extraYearIntakes?.length) {
+        <p class="acva-para-1 m-0">
+          Including the extra-year students of the
+          @for (year of p.extraYearIntakes; track year; let last = $last) {
+            {{ year }} set{{ last ? '' : ', ' }}
+          }
+          .
+        </p>
+      }
 
       @if (nothingToMove()) {
         <p class="acva-para-1 text-neutral-500 m-0">

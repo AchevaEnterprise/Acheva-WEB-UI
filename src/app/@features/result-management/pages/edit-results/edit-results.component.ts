@@ -154,6 +154,19 @@ export class EditResultsComponent implements OnInit, CanComponentDeactivate {
 
   result = signal<IResult | null>(null);
 
+  /**
+   * A Dean copied when this result reached a department in their faculty.
+   * They follow it; they act on nothing, so the page is view-only.
+   */
+  isCopiedDean = computed(() => {
+    const myId = this.authService.activeAccount()?.id;
+    return (
+      this.userRole === RoleEnum.DEAN &&
+      !!myId &&
+      (this.result()?.copiedDeans ?? []).some((dean) => String(dean) === myId)
+    );
+  });
+
   /** True when the viewer is a secondary CA (reference/unregistered) with a restricted scope. */
   isRestrictedViewer = computed(
     () => this.result()?.viewerScope?.access === 'RESTRICTED'
@@ -213,7 +226,9 @@ export class EditResultsComponent implements OnInit, CanComponentDeactivate {
     }
 
     this.readOnly.set(
-      this.userRole === RoleEnum.LECTURER && isResultReadonlyForLecturer(result)
+      (this.userRole === RoleEnum.LECTURER &&
+        isResultReadonlyForLecturer(result)) ||
+        this.isCopiedDean()
     );
   }
 

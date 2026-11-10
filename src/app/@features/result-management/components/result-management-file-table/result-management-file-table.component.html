@@ -146,6 +146,11 @@
               (keydown)="viewResult(result)"
             >
               {{ result.department?.name || 'N/A' }}
+              @if (isCopiedToMe(result)) {
+                <span class="block acva-caption text-[#2793FF]">
+                  Copied to you
+                </span>
+              }
             </td>
           </ng-container>
 

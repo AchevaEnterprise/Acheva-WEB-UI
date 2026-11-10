@@ -52,6 +52,9 @@ export class UnassignCourseAdvisorComponent {
         );
         this.dialogRef.close(resp);
       },
+      // Refused while they still have students; the error toast says why
+      // and points to Hand over.
+      error: () => this.dialogRef.close(),
     });
   }
 }

@@ -117,6 +117,39 @@ export const routes: Routes = [
           import('../@features/students/students.routes').then((m) => m.routes),
       },
       {
+        path: 'extra-year',
+        canActivate: [menuAccessGuard],
+        data: {
+          title: 'Extra Year',
+        },
+        loadComponent: () =>
+          import(
+            '../@features/advising/pages/extra-year/extra-year.component'
+          ).then((m) => m.ExtraYearComponent),
+      },
+      {
+        path: 'school-fees',
+        canActivate: [menuAccessGuard],
+        data: {
+          title: 'School Fees',
+        },
+        loadComponent: () =>
+          import('../@features/school-fees/pages/school-fees.component').then(
+            (m) => m.SchoolFeesComponent
+          ),
+      },
+      {
+        path: 'advised-sets',
+        canActivate: [menuAccessGuard],
+        data: {
+          title: 'Previously Advised Sets',
+        },
+        loadComponent: () =>
+          import(
+            '../@features/advising/pages/advised-sets/advised-sets.component'
+          ).then((m) => m.AdvisedSetsComponent),
+      },
+      {
         path: 'registration',
         canActivate: [menuAccessGuard],
         data: {

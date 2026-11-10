@@ -200,6 +200,19 @@ export class ResultManagementFileTableComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * A Dean copied on a result sent to a department in their faculty. It is
+   * here to be followed, not acted on — the row says so.
+   */
+  isCopiedToMe(result: IResult): boolean {
+    const myId = this.authService.activeAccount()?.id;
+    return (
+      this.userRole === RoleEnum.DEAN &&
+      !!myId &&
+      (result.copiedDeans ?? []).some((dean) => String(dean) === myId)
+    );
+  }
+
+  /**
    * Rows we still grey out + blur. A lecturer can now open a result that has
    * left their custody (read-only), so they are no longer blurred — only the
    * Course Coordinator's not-yet-received results stay blurred.

@@ -68,7 +68,15 @@ export class HandoverCourseAdvisorComponent implements OnInit {
     lecturerId: string;
     level: string;
     departmentId: string;
+    /** Finished sets whose extra-year students go with the handover. */
+    extraYearIntakes?: string[];
   }>(MAT_DIALOG_DATA);
+
+  /** False for an advisor between sets who still has extra-year students. */
+  readonly holdsSet = !!this.data.level && this.data.level !== 'NONE';
+  readonly extraYearSets = (this.data.extraYearIntakes ?? [])
+    .map((year) => `${year} set`)
+    .join(', ');
 
   readonly toCtrl = new FormControl<string>('');
 
@@ -115,7 +123,9 @@ export class HandoverCourseAdvisorComponent implements OnInit {
             (lecturer) =>
               String(lecturer._id) !== String(this.data.lecturerId) &&
               lecturer.isActive !== false &&
-              (!lecturer.assignedLevel ||
+              // Extra-year students alone may go to anyone, set or not.
+              (!this.holdsSet ||
+                !lecturer.assignedLevel ||
                 lecturer.assignedLevel === 'NONE' ||
                 String(lecturer.assignedLevel) === String(this.data.level))
           );
@@ -174,8 +184,10 @@ export class HandoverCourseAdvisorComponent implements OnInit {
           this.handingOver.set(false);
           this.toast.showNotification(
             'success',
-            'Cohort handed over',
-            `${resp.data.to.name} now advises level ${resp.data.level}.`
+            'Students handed over',
+            this.holdsSet
+              ? `${resp.data.to.name} now advises level ${resp.data.level}.`
+              : `${resp.data.to.name} now looks after the extra-year students of the ${this.extraYearSets}.`
           );
           this.dialogRef.close(resp.data);
         },

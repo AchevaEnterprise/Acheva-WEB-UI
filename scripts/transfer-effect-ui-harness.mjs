@@ -130,10 +130,18 @@ const settings = await Settings.findOne({ school });
 const [start] = settings.activeSession.split('/').map(Number);
 const nextSession = `${start + 1}/${start + 2}`;
 
+// Since 2026-11-09 a rollover also decides graduations and extra years and
+// walks every advisor up a level with their set — all restored below.
 const studentSnapshot = await Students.find({ school })
-  .project({ level: 1, department: 1, faculty: 1, admissionYear: 1, originalAdmissionYear: 1, transferredFrom: 1 })
+  .project({
+    level: 1, department: 1, faculty: 1, admissionYear: 1, originalAdmissionYear: 1, transferredFrom: 1,
+    academicStanding: 1, extraYear: 1, graduatedSession: 1, pendingSession: 1, standingClosedSession: 1,
+  })
   .toArray();
-const lecturerSnapshot = await Lecturers.find({ school }).project({ assignedLevelAdmissionYear: 1 }).toArray();
+const lecturerSnapshot = await Lecturers.find({ school })
+  .project({ assignedLevel: 1, assignedLevelAdmissionYear: 1, extraYearIntakes: 1, setFollowedSession: 1, role: 1, otherRoles: 1 })
+  .toArray();
+const harnessStartedAt = new Date();
 const settingsSnapshot = {
   activeSession: settings.activeSession,
   activeSemester: settings.activeSemester,
@@ -147,16 +155,19 @@ let rolloverAttempted = false;
 
 try {
   const studentSession = await signIn(STUDENT, '/auth/students/signin');
+  // Past the details gate, which has its own harness (test:admin-console-ui).
+  studentSession.account.detailsRequired = false;
   const caSession = await signIn(OLD_CA);
   const hodSession = await signIn(PHYSICS_HOD);
 
   // ── The student's tab, open before anything happens ─────────────────────
   const studentPage = await (await newContext(browser, studentSession)).newPage();
   await studentPage.goto(`${STUDENT_APP}/dashboard`, { waitUntil: 'domcontentloaded' });
-  await studentPage.getByText(/Department, \d{3}L/).first().waitFor({ timeout: 30_000 });
-  const headerBefore = await studentPage.getByText(/Department, \d{3}L/).first().innerText();
-  check('before: the student’s dashboard says Mathematics, 300L',
-    /Mathematics/i.test(headerBefore) && /300L/.test(headerBefore), headerBefore);
+  await studentPage.getByText(/Department, \d{3} Level/).first().waitFor({ timeout: 30_000 });
+  const headerBefore = await studentPage.getByText(/Department, \d{3} Level/).first().innerText();
+  // "300 Level" since 2026-11-09 — the same label that reads "Extra Year 1".
+  check('before: the student’s dashboard says Mathematics, 300 Level',
+    /Mathematics/i.test(headerBefore) && /300 Level/.test(headerBefore), headerBefore);
   await studentPage.waitForTimeout(2500); // let the stream connect
 
   const before = await studentRowsFor(browser, caSession);
@@ -181,9 +192,12 @@ try {
   const adminSession = await signIn(ADMIN, '/auth/admins/login');
   // The dashboard's dues and chart were loaded for Mathematics; once the move
   // lands they must be fetched again, not left showing the old department.
+  // Generous: the window opens BEFORE the rollover is sent, and a rollover now
+  // also decides every final-year standing and walks every advisor up — some
+  // 30s from a laptop to the remote test database.
   const duesRefetched = studentPage
     .waitForRequest((request) => /\/transactions\/dues\/my-standing/.test(request.url()), {
-      timeout: 40_000,
+      timeout: 120_000,
     })
     .then(() => true)
     .catch(() => false);
@@ -200,9 +214,9 @@ try {
   await studentPage.getByText('Your department has changed').first().waitFor({ timeout: 25_000 }).catch(() => undefined);
   check('the student’s open portal tells them they have moved',
     (await studentPage.getByText('Your department has changed').count()) > 0);
-  const headerAfter = await studentPage.getByText(/Department, \d{3}L/).first().innerText();
-  check('…and the dashboard now says Physics, 200L — without a reload',
-    /Physics/i.test(headerAfter) && /200L/.test(headerAfter), headerAfter);
+  const headerAfter = await studentPage.getByText(/Department, \d{3} Level/).first().innerText();
+  check('…and the dashboard now says Physics, 200 Level — without a reload',
+    /Physics/i.test(headerAfter) && /200 Level/.test(headerAfter), headerAfter);
   check('…and its dues are fetched again for the new department', await duesRefetched);
   await studentPage.screenshot({ path: 'screenshots/transfer-student-dashboard.png' });
 
@@ -216,8 +230,16 @@ try {
     .waitFor({ timeout: 30_000 })
     .catch(() => undefined);
   const profileText = (await studentPage.locator('app-profile').innerText()).replace(/\s+/g, ' ');
-  const newCa = await Lecturers.findOne({ department: new mongoose.Types.ObjectId(PHYSICS_DEPT), assignedLevelAdmissionYear: String(start) });
-  const newCaName = [newCa?.firstname, newCa?.lastname].filter(Boolean).join(' ');
+  // Any advisor of the student's new set — the test seed has two Physics
+  // advisors on one intake, which follow-the-set no longer hides.
+  const newCas = await Lecturers.find({
+    department: new mongoose.Types.ObjectId(PHYSICS_DEPT),
+    assignedLevelAdmissionYear: String(start),
+  }).toArray();
+  const nameOf = (ca) => [ca?.firstname, ca?.lastname].filter(Boolean).join(' ');
+  const newCa =
+    newCas.find((ca) => nameOf(ca) && profileText.toLowerCase().includes(nameOf(ca).toLowerCase())) ?? newCas[0];
+  const newCaName = nameOf(newCa);
   check('the student’s profile shows Physics at 200 level',
     /Physics Department, 200/i.test(profileText), profileText.match(/[A-Za-z ]+Department, \d{3}/)?.[0] ?? '');
   // The page title-cases names ("Refca-physics Routingtest").
@@ -255,17 +277,39 @@ try {
               admissionYear: fields.admissionYear ?? null,
               originalAdmissionYear: fields.originalAdmissionYear ?? null,
               transferredFrom: fields.transferredFrom ?? [],
+              academicStanding: fields.academicStanding ?? 'IN_PROGRAMME',
+              extraYear: fields.extraYear ?? 0,
+              graduatedSession: fields.graduatedSession ?? null,
+              pendingSession: fields.pendingSession ?? null,
+              standingClosedSession: fields.standingClosedSession ?? null,
             },
           },
         },
       }))
     );
     await Lecturers.bulkWrite(
-      lecturerSnapshot.map(({ _id, assignedLevelAdmissionYear }) => ({
-        updateOne: { filter: { _id }, update: { $set: { assignedLevelAdmissionYear: assignedLevelAdmissionYear ?? null } } },
+      lecturerSnapshot.map(({ _id, ...fields }) => ({
+        updateOne: {
+          filter: { _id },
+          update: {
+            $set: {
+              assignedLevel: fields.assignedLevel ?? 'NONE',
+              assignedLevelAdmissionYear: fields.assignedLevelAdmissionYear ?? null,
+              extraYearIntakes: fields.extraYearIntakes ?? [],
+              setFollowedSession: fields.setFollowedSession ?? null,
+              role: fields.role,
+              otherRoles: fields.otherRoles ?? [],
+            },
+          },
+        },
       }))
     );
     await Settings.updateOne({ school }, { $set: settingsSnapshot });
+    await db.collection('advisedsets').deleteMany({ createdAt: { $gte: harnessStartedAt } });
+    await db.collection('notifications').deleteMany({
+      createdAt: { $gte: harnessStartedAt },
+      'meta.type': { $in: ['standing', 'advising'] },
+    });
   }
   if (transferId) await Transfers.deleteOne({ _id: new mongoose.Types.ObjectId(transferId) });
   const back = await Students.findOne({ _id: student._id });

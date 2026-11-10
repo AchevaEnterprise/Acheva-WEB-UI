@@ -87,12 +87,15 @@ const APPS = {
       level: '100',
       session: '2023/2024',
       department: DEPT, faculty: FAC, school: SCH,
+      // Past the details gate, which has its own harness (test:admin-console-ui).
+      detailsRequired: false,
     },
   },
   admin: {
     url: 'http://localhost:4300',
     routes: [
       'dashboard', 'schools', 'faculty', 'department', 'courses',
+      'lecturers', 'students', 'logs',
       'admins', 'registration', 'fees', 'support', 'settings',
     ],
     // The admin app keys localStorage differently from the other two, and
