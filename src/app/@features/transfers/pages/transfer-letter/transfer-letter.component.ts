@@ -113,16 +113,18 @@ export class TransferLetterComponent implements OnInit {
   readonly facultyCtrl = new FormControl<string>('', { nonNullable: true });
   readonly departmentCtrl = new FormControl<string>('', { nonNullable: true });
   readonly levelCtrl = new FormControl<string>('', { nonNullable: true });
-  readonly semesterCtrl = new FormControl<string>('1ST SEMESTER', {
-    nonNullable: true,
-  });
   readonly letterBody = new FormControl<string>('', {
     nonNullable: true,
     validators: [letterBodyRequired, Validators.maxLength(20000)],
   });
 
-  readonly levels = ['100', '200', '300', '400', '500', '600'];
-  readonly semesters = ['1ST SEMESTER', '2ND SEMESTER', '3RD SEMESTER'];
+  /**
+   * Only the levels the registrar allows: one either side of where the
+   * student is (200 → 100, 200 or 300 — never 100 → 300). Supplied by the
+   * server with the eligibility check, which enforces the same rule, so the
+   * picker can never offer a level that is refused on send.
+   */
+  readonly levels = computed(() => this.eligibility()?.allowedLevels ?? []);
 
   readonly editorModules = {
     toolbar: [
@@ -238,6 +240,9 @@ export class TransferLetterComponent implements OnInit {
   pickStudent(student: IStudent): void {
     this.selectedStudent.set(student);
     this.eligibility.set(null);
+    // The allowed levels belong to the student, so a level picked for the
+    // previous one may not be allowed for this one.
+    this.levelCtrl.setValue('');
     this.checkingEligibility.set(true);
 
     this.transfersService
@@ -294,7 +299,6 @@ export class TransferLetterComponent implements OnInit {
       student: this.selectedStudent()!._id,
       toDepartment: this.departmentCtrl.value,
       toLevel: this.levelCtrl.value,
-      toSemester: this.semesterCtrl.value,
       letterBody: this.letterBody.value,
     };
   }
@@ -310,7 +314,6 @@ export class TransferLetterComponent implements OnInit {
       ? this.transfersService.updateDraft(existing._id, {
           letterBody: this.letterBody.value,
           toLevel: this.levelCtrl.value,
-          toSemester: this.semesterCtrl.value,
         })
       : this.transfersService.create(this.payload());
 
@@ -349,7 +352,6 @@ export class TransferLetterComponent implements OnInit {
       ? this.transfersService.updateDraft(existing._id, {
           letterBody: this.letterBody.value,
           toLevel: this.levelCtrl.value,
-          toSemester: this.semesterCtrl.value,
         })
       : this.transfersService.create(this.payload());
 

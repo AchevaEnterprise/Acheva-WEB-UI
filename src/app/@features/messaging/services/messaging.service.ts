@@ -12,6 +12,7 @@ import { environment } from '../../../../environments/environment';
 import { IAPIResponse } from '../../../@core/models/api-response.model';
 import { AuthenticationService } from '../../auth/service/auth.service';
 import {
+  IAccountChangedEvent,
   IConversationPage,
   IDirectory,
   IInboxPage,
@@ -43,6 +44,16 @@ export class MessagingService {
    */
   private readonly events = new Subject<IStreamEvent>();
   readonly stream$ = this.events.asObservable();
+
+  /**
+   * `account:changed` — a Head changed which office this person holds (a
+   * cohort handed over, assigned or unassigned). Kept off `stream$`, which
+   * carries chat only: it is not a message, has no conversation, and must
+   * never move the unread badge. `LayoutComponent` listens and re-reads the
+   * account.
+   */
+  private readonly accountChanges = new Subject<IAccountChangedEvent>();
+  readonly accountChanged$ = this.accountChanges.asObservable();
 
   /** Unread across every conversation except support. Sidebar: Messages. */
   readonly unreadTotal = signal(0);
@@ -365,6 +376,18 @@ export class MessagingService {
       };
 
       const type = (body?.type ?? lineType) as IStreamEvent['type'];
+
+      // Not chat: route it to its own channel and stop here, before the
+      // conversation check below would discard it.
+      if ((type as string) === 'account:changed') {
+        const reason = (body?.payload as { reason?: unknown } | undefined)
+          ?.reason;
+        this.accountChanges.next({
+          reason: typeof reason === 'string' ? reason : 'unknown',
+        });
+        return null;
+      }
+
       // Self-describing body (`{ type, payload }`), or a bare payload beside
       // an `event:` line. Nothing else is a frame this app sent.
       const payload = (body?.payload ??

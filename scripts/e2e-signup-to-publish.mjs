@@ -108,8 +108,18 @@ async function ensureRole(page, role, menuLabel) {
   const current = await page.evaluate(() => JSON.parse(localStorage.getItem('active_account') || '{}').role);
   if (current === role) return;
   await page.getByRole('button', { name: /switch roles/i }).click();
+  // Wait for the switch to FINISH, never a fixed time. It was a 2.5 s sleep;
+  // against a remote Atlas a switch takes ~3 s, so the next navigation cut
+  // the response off — the server switched, the browser never stored it, and
+  // the page loaded in the old role.
+  const switched = page.waitForResponse((r) => /\/switch-role$/.test(new URL(r.url()).pathname), { timeout: 30_000 });
   await page.getByRole('menuitem', { name: menuLabel }).click();
-  await page.waitForTimeout(2500);
+  await switched;
+  await page.waitForFunction(
+    (want) => JSON.parse(localStorage.getItem('active_account') || '{}').role === want,
+    role,
+    { timeout: 15_000 },
+  );
 }
 
 const token = (page) => page.evaluate(() => (localStorage.getItem('token') ?? '').replace(/^"|"$/g, ''));
@@ -217,7 +227,9 @@ try {
   await lect.page.locator('mat-dialog-container input[type=file]').setInputFiles(sheet);
   await lect.page.locator('mat-dialog-container').getByRole('button', { name: /confirm/i }).click();
   const imported = lect.page.locator('app-toast', { hasText: /Results Imported|Nothing Imported|Invalid/ }).first();
-  await imported.waitFor({ timeout: 30_000 }).catch(() => {});
+  // Generous: the import writes row by row, and against a remote Atlas
+  // (~220 ms a round trip from a developer machine) ten rows took 98 s.
+  await imported.waitFor({ timeout: Number(env('IMPORT_TIMEOUT_MS', 180_000)) }).catch(() => {});
   const importText = (await imported.innerText().catch(() => '')).replace(/\s+/g, ' ');
   check(/Results Imported/.test(importText), importText, `import failed: ${importText || 'no message'}`);
   const entries = await db.collection('resultentries').countDocuments({ result: new ObjectId(resultId) });
@@ -268,6 +280,23 @@ try {
   }
 
   // ── 9. The student signs in and sees the grade (UI) ──
+  // The student is told: an email "your result is out" leaves through the
+  // server's outbox a few seconds after publishing (run the server with
+  // EMAIL_DELIVERY=log so it is logged, not sent). Polled, never slept.
+  if (r.status === 'PUBLISHED') {
+    const student = await db.collection('students').findOne({ email: studentEmail });
+    let notice = null;
+    for (let waited = 0; waited < 60_000 && notice?.status !== 'SENT'; waited += 1_000) {
+      notice = await db.collection('emailoutbox').findOne({
+        kind: 'RESULT_PUBLISHED',
+        recipient: student?._id,
+        'resultMovement.result': new ObjectId(resultId),
+      });
+      if (notice?.status !== 'SENT') await new Promise((resolve) => setTimeout(resolve, 1_000));
+    }
+    check(notice?.status === 'SENT', `the student is emailed that the result is out (${studentEmail})`, `email ${notice?.status ?? 'never queued'}`);
+  }
+
   step(9, 'Student signs in and sees the published grade');
   const stu = await as('student', studentEmail);
   await stu.page.goto(`${STUDENT}/results`, { waitUntil: 'domcontentloaded' });

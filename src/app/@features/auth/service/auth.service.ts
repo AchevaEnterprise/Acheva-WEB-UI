@@ -37,6 +37,14 @@ export class AuthenticationService {
   accounts = signal<Partial<IAccount>[]>([]);
   activeAccount = signal<Partial<IAccount> | null>(null);
 
+  /**
+   * Bumped whenever THIS tab changes the account itself — sign-in, switching
+   * role, switching account. `refreshAccount` compares it before applying a
+   * response, so a background re-read that left before a role switch cannot
+   * land after it and put the old role back.
+   */
+  private accountRevision = 0;
+
   setToken(token: string) {
     localStorage.setItem(STORAGE_KEYS.TOKEN, token);
   }
@@ -85,6 +93,7 @@ export class AuthenticationService {
           this.setRefreshToken(refreshToken);
 
           // Sets the signal state for the active account
+          this.accountRevision += 1;
           this.activeAccount.set(rest);
           localStorage.setItem(
             STORAGE_KEYS.ACTIVE_ACCOUNT,
@@ -118,6 +127,47 @@ export class AuthenticationService {
       );
   }
 
+  /**
+   * Re-read the signed-in account from the server and replace the stored one.
+   *
+   * The account in local storage is a snapshot from sign-in. When a Head
+   * hands a cohort over, the incoming advisor's snapshot still says they
+   * advise nothing and the outgoing one's still says they do — so the menu,
+   * the role switcher and the Students page all followed the stale copy.
+   * The server already acts on the live office (its auth guard re-reads it
+   * per request); this keeps the screen in step with it.
+   *
+   * Same shape as sign-in minus the tokens, so nothing that reads
+   * `activeAccount()` — `id` included — has to change.
+   */
+  refreshAccount(): Observable<
+    IAPIResponse<Omit<IAuthProfile, 'accessToken' | 'refreshToken'>>
+  > {
+    const revisionAtRequest = this.accountRevision;
+    return this.http
+      .get<IAPIResponse<Omit<IAuthProfile, 'accessToken' | 'refreshToken'>>>(
+        `${this.authUrl}/lecturers/me`,
+        // Background housekeeping: a failure leaves the old snapshot in
+        // place, which is no worse than before, and is not worth a toast.
+        { headers: { 'X-Silent-Error': 'true' } }
+      )
+      .pipe(
+        tap((resp) => {
+          if (!resp.status || !resp.data) return;
+          // The tab switched role (or account) while this was in flight: that
+          // response is newer than this one, so this one is discarded.
+          // Found by the end-to-end run, which switches role straight after
+          // signing in and was being put back into the old role.
+          if (this.accountRevision !== revisionAtRequest) return;
+          this.activeAccount.set(resp.data);
+          localStorage.setItem(
+            STORAGE_KEYS.ACTIVE_ACCOUNT,
+            JSON.stringify(this.activeAccount())
+          );
+        })
+      );
+  }
+
   loadInitialSession() {
     const account = localStorage.getItem(STORAGE_KEYS.ACTIVE_ACCOUNT);
     if (account) this.activeAccount.set(JSON.parse(account));
@@ -143,6 +193,7 @@ export class AuthenticationService {
             this.setRefreshToken(refreshToken);
 
             // Sets the signal state for the active account
+            this.accountRevision += 1;
             this.activeAccount.set(rest);
             localStorage.setItem(
               STORAGE_KEYS.ACTIVE_ACCOUNT,
@@ -170,6 +221,7 @@ export class AuthenticationService {
             const { accessToken, ...rest } = res.data;
             this.setToken(accessToken);
 
+            this.accountRevision += 1;
             this.activeAccount.set(rest);
             localStorage.setItem(
               STORAGE_KEYS.ACTIVE_ACCOUNT,

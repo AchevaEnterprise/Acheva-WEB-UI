@@ -75,6 +75,18 @@ export interface IInboxPage {
   readonly nextCursor: string | null;
 }
 
+/**
+ * Pushed when a Head changes which office this person holds — see
+ * `MessagingService.accountChanged$`.
+ */
+export interface IAccountChangedEvent {
+  readonly reason:
+    | 'advisor-handover'
+    | 'advisor-assigned'
+    | 'advisor-unassigned'
+    | string;
+}
+
 /** What the live stream pushes down. */
 export interface IStreamEvent {
   readonly type: 'message:new' | 'message:read' | 'conversation:new';

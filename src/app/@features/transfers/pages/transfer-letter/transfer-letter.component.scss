@@ -2,6 +2,16 @@
   display: block;
 }
 
+.tl-when {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: rgb(39 147 255 / 6%);
+  color: #0b4f99;
+}
+
 .tl-card {
   border: 1px solid #e5e7eb;
   border-radius: 8px;

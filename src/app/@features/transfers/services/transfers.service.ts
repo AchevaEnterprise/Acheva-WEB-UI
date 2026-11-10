@@ -50,7 +50,7 @@ export class TransfersService {
 
   updateDraft(
     id: string,
-    payload: { letterBody?: string; toLevel?: string; toSemester?: string }
+    payload: { letterBody?: string; toLevel?: string }
   ): Observable<IAPIResponse<IDepartmentTransfer>> {
     return this.http.patch<IAPIResponse<IDepartmentTransfer>>(
       `${this.url}/${id}/draft`,

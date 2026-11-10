@@ -35,6 +35,14 @@
     <div class="panel">
       <p class="panel__head acva-caption">WHAT MOVES TO {{ p.to.name }}</p>
 
+      <p class="acva-para-1 m-0">
+        <span class="count">{{ p.moved.students }}</span>
+        student(s){{
+          p.admissionYear ? ' of the ' + p.admissionYear + ' intake' : ''
+        }}
+        — their records, results and course registrations.
+      </p>
+
       @if (nothingToMove()) {
         <p class="acva-para-1 text-neutral-500 m-0">
           Nothing is currently in flight — only the cohort itself changes hands.
@@ -57,8 +65,21 @@
             <span class="count">{{ p.moved.conversations }}</span>
             <span>conversation(s) with students</span>
           </li>
+          <li>
+            <span class="count">{{ p.moved.transfers }}</span>
+            <span>transfer letter(s) not yet in effect</span>
+          </li>
         </ul>
       }
+
+      <!-- The outgoing advisor's access ends with the click, not at their
+           next sign-in — the server re-reads each person's office on every
+           request, and their open tab is told to refresh. -->
+      <p class="panel__foot acva-caption">
+        {{ p.from.name }} stops being a Course Advisor the moment you confirm,
+        including in any tab they already have open. {{ p.to.name }} becomes one
+        at once and sees the whole cohort.
+      </p>
 
       <!-- Said plainly, because people reasonably assume a reassignment
            rewrites everything and would be surprised later to find the

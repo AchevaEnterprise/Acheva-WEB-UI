@@ -3,6 +3,8 @@ import { IDepartment, IFaculty } from '../../../@core/models/school.model';
 export enum TransferStatus {
   DRAFT = 'DRAFT',
   PENDING_RECEIVING_HOD = 'PENDING_RECEIVING_HOD',
+  /** Approved; the student moves when `completesSession` closes. */
+  APPROVED = 'APPROVED',
   COMPLETED = 'COMPLETED',
   REJECTED = 'REJECTED',
   CANCELLED = 'CANCELLED',
@@ -98,6 +100,10 @@ export interface IDepartmentTransfer {
   toFaculty: IFaculty | string;
   toLevel: string;
   toSemester: string;
+  /** The session the student finishes here first — set on approval. */
+  completesSession: string | null;
+  /** The session they start in the new department, first semester. */
+  startsSession: string | null;
   status: TransferStatus;
   letterBody: string;
   snapshot: ITransferSnapshot;
@@ -119,12 +125,17 @@ export interface ITransferEligibility {
   currentDepartment: string | null;
   currentLevel: string | null;
   inFlight: { id: string; status: TransferStatus } | null;
+  /** The ONLY levels the student may be placed at: one either side. */
+  allowedLevels: string[];
+  /** The active session — the one they must finish before moving. */
+  completesSession: string | null;
+  /** The session they would start in the new department. */
+  startsSession: string | null;
 }
 
 export interface ICreateTransfer {
   student: string;
   toDepartment: string;
   toLevel: string;
-  toSemester: string;
   letterBody: string;
 }
